@@ -1,6 +1,7 @@
 /* @flow */
 'use strict';
 
+var R = require('ramda');
 var uuid = require('node-uuid');
 var db = require('../services/db');
 var log = require('../services/log')('transfers');
@@ -64,6 +65,17 @@ exports.create = function *create() {
   });
 
   log.debug('transfer completed');
+
+  var getSubscriptions = R.compose(db.get.bind(db), R.prepend('people'), R.append('subscriptions'), R.of);
+  var filterSubscriptions = R.compose(R.filter(R.propEq('event', 'transfer.create')), R.map(R.compose(R.head, R.values, R.head, R.values)), R.filter(R.identity), R.unnest);
+  var subscriptions = filterSubscriptions([
+    yield getSubscriptions(transfer.source.owner),
+    yield getSubscriptions(transfer.destination.owner)
+  ]);
+
+  R.forEach(function (subscription) {
+    log.debug('notifying ' + subscription.owner + ' at ' + subscription.target);
+  }, subscriptions);
 
   this.body = transfer;
   this.status = 201;

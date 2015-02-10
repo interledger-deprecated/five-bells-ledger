@@ -1,0 +1,10 @@
+{
+  "alice": {
+    "id": "alice",
+    "balance": 100
+  },
+  "bob": {
+    "id": "bob",
+    "balance": 0
+  }
+}

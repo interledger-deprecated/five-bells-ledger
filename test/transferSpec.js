@@ -5,55 +5,24 @@ var uuid = require('node-uuid');
 var expect = require('chai').expect;
 var app = require('../app');
 var db = require('../services/db');
+var dbHelper = require('./helpers/db');
 
 function request() {
   return superagent(app.listen());
 }
 
 describe('Transfers', function () {
-  beforeEach(function () {
-    var _this = this;
-
-    // Create some example data
-    this.exampleTransfer = {
-      id: uuid.v4(),
-      source: {
-        owner: 'alice',
-        amount: '10'
-      },
-      destination: {
-        owner: 'bob',
-        amount: '10'
-      }
-    };
-
-    this.existingTransfer = {
-      id: uuid.v4(),
-      source: {
-        owner: 'alice',
-        amount: '10'
-      },
-      destination: {
-        owner: 'bob',
-        amount: '10'
-      }
-    };
+  beforeEach(function *() {
+    // Define example data
+    this.exampleTransfer = require('./data/transfer1');
+    this.existingTransfer = require('./data/transfer2');
 
     // Reset database
-    return db.transaction(function *(tr) {
-      yield tr.remove(['holds']);
-      yield tr.remove(['transfers']);
-      yield tr.remove(['people']);
-      tr.create(['people'], {
-        id: 'alice',
-        balance: 100
-      });
-      tr.create(['people'], {
-        id: 'bob',
-        balance: 0
-      });
-      tr.create(['transfers'], _this.existingTransfer);
-    });
+    yield dbHelper.reset();
+
+    // Store some example data
+    yield db.put(['people'], require('./data/people'));
+    yield db.create(['transfers'], this.existingTransfer);
   });
 
   describe('GET /v1/transfers/:uuid', function () {
@@ -78,6 +47,19 @@ describe('Transfers', function () {
       // Check balances
       expect(yield db.get(['people', 'alice', 'balance'])).to.equal(90);
       expect(yield db.get(['people', 'bob', 'balance'])).to.equal(10);
+    });
+
+    it.only('should trigger subscriptions', function *() {
+      var subscription = require('./data/subscription1.json');
+      yield db.create(['people', subscription.owner, 'subscriptions', subscription.id], subscription);
+      yield request()
+        .put('/v1/transfers/'+this.exampleTransfer.id)
+        .send(this.exampleTransfer)
+        .expect(201)
+        .expect(this.exampleTransfer)
+        .end();
+
+      // TODO: Expect subscription to trigger
     });
 
     it('should return 409 if the transfer already exists', function *() {

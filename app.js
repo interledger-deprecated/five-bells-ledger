@@ -8,6 +8,7 @@ var messages = require('./controllers/messages');
 var transfers = require('./controllers/transfers');
 var holds = require('./controllers/holds');
 var people = require('./controllers/people');
+var subscriptions = require('./controllers/subscriptions');
 var compress = require('koa-compress');
 var logger = require('koa-logger');
 var serve = require('koa-static');
@@ -37,6 +38,9 @@ app.use(route.get('/v1/holds/:id', holds.fetch));
 app.use(route.post('/v1/holds', holds.create));
 
 app.use(route.get('/v1/people/:id', people.fetch));
+
+app.use(route.get('/v1/subscriptions/:id', subscriptions.fetch));
+app.use(route.post('/v1/subscriptions', subscriptions.create));
 
 // Serve static files
 app.use(serve(path.join(__dirname, 'public')));

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "title": "Subscription",
+  "description": "A registration for wanting to receive notifications about resource changes.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Unique identifier for this subscription",
+      "$ref": "Uuid.json"
+    },
+    "owner": {
+      "description": "Owner of this value quantity",
+      "$ref": "Identifier.json"
+    },
+    "event": {
+      "description": "Event identifier",
+      "$ref": "EventId.json"
+    },
+    "target": {
+      "description": "Target REST hook to call",
+      "type": "string"
+    }
+  },
+  "required": ["owner", "event", "target"]
+}

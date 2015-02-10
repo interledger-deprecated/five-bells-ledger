@@ -1,0 +1,6 @@
+{
+  "id": "f49697a6-d52c-4f46-84c8-9070a31feab7",
+  "owner": "alice",
+  "event": "transfer.create",
+  "target": "http://192.0.2.1/test"
+}

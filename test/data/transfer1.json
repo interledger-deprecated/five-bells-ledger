@@ -1,0 +1,11 @@
+{
+  "id": "155dff3f-4915-44df-a707-acc4b527bcbd",
+  "source": {
+    "owner": "alice",
+    "amount": "10"
+  },
+  "destination": {
+    "owner": "bob",
+    "amount": "10"
+  }
+}
