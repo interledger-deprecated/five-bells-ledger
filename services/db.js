@@ -2,12 +2,13 @@
 
 var co = require('co');
 var Database = require('fowl').Database;
+var config = require('./config');
 
 var db = new Database({
   idProp: 'id'
 });
 
-db.open();
+db.open(config.fdb.cluster);
 
 // Add co support for transactions
 db._transaction = db.transaction;
