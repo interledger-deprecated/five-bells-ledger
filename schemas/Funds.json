@@ -28,5 +28,5 @@
       "default": "[host ledger]"
     }
   },
-  "required": ["owner", "amount"]
+  "required": ["owner"]
 }
