@@ -6,6 +6,7 @@ var uuid = require('node-uuid');
 var db = require('../services/db');
 var log = require('../services/log')('transfers');
 var request = require('../services/request');
+var jsonld = require('../services/jsonld');
 var UnprocessableEntityError = require('../errors/unprocessable-entity-error');
 var InsufficientFundsError = require('../errors/insufficient-funds-error');
 var NotFoundError = require('../errors/not-found-error');
@@ -18,6 +19,7 @@ exports.fetch = function *fetch(id) {
   var transfer = yield db.get(['transfers', id]);
   if (!transfer) throw new NotFoundError('Unknown transfer ID');
 
+  jsonld.setContext(this, 'transfer.jsonld');
   this.body = transfer;
 };
 

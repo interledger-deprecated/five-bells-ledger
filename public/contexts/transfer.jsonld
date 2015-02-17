@@ -1,0 +1,13 @@
+{
+  "@context": {
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "id": "@id",
+
+    "destination": "https://5bells.net/funds",
+    "source": "https://5bells.net/funds",
+    "amount": {
+      "@id": "https://5bells.net/amount",
+      "@type": "xsd:decimal"
+    }
+  }
+}
