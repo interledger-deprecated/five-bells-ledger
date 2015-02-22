@@ -10,7 +10,6 @@ var holds = require('./controllers/holds');
 var people = require('./controllers/people');
 var subscriptions = require('./controllers/subscriptions');
 var compress = require('koa-compress');
-var logger = require('koa-logger');
 var serve = require('koa-static');
 var route = require('koa-route');
 var cors = require('koa-cors');
@@ -18,11 +17,12 @@ var errorHandler = require('./middlewares/error-handler');
 var koa = require('koa');
 var path = require('path');
 var log = require('./services/log');
+var logger = require('koa-mag');
 var config = require('./services/config');
 var app = module.exports = koa();
 
 // Logger
-app.use(logger({ reporter: log('koa') }));
+app.use(logger());
 // app.use(logger());
 app.use(errorHandler);
 app.use(cors({ expose: ['link'] }));
@@ -37,7 +37,7 @@ app.use(route.get('/transfers/:id', transfers.fetch));
 app.use(route.put('/transfers/:uuid', transfers.create));
 
 app.use(route.get('/holds/:id', holds.fetch));
-app.use(route.post('/holds', holds.create));
+app.use(route.put('/holds/:uuid', holds.create));
 
 app.use(route.get('/people/:id', people.fetch));
 

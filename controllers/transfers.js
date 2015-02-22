@@ -13,7 +13,7 @@ var NotFoundError = require('../errors/not-found-error');
 var AlreadyExistsError = require('../errors/already-exists-error');
 
 exports.fetch = function *fetch(id) {
-  request.uri('id', id, 'Uuid');
+  request.validateUriParameter('id', id, 'Uuid');
   log.debug('fetching transfer ID '+id);
 
   var transfer = yield db.get(['transfers', id]);
@@ -23,9 +23,21 @@ exports.fetch = function *fetch(id) {
   this.body = transfer;
 };
 
-exports.create = function *create() {
+exports.create = function *create(id) {
   var _this = this;
-  var transfer = yield request.body(this, 'Transfer');
+
+  request.validateUriParameter('id', id, 'Uuid');
+  var transfer = yield request.validateBody(this, 'Transfer');
+
+  if ("undefined" !== transfer.id) {
+    request.assert.strictEqual(
+      transfer.id,
+      id,
+      "Transfer ID must match the one in the URL"
+    );
+  } else {
+    transfer.id = id;
+  }
 
   log.debug('preparing transfer ID '+transfer.id);
   log.debug(''+transfer.source.owner+' -> '+transfer.destination.owner+' : '+transfer.destination.amount);
@@ -46,7 +58,7 @@ exports.create = function *create() {
     if ("undefined" === typeof recipient) {
       throw new UnprocessableEntityError('Recipient does not exist.');
     }
-    if (0 >= transfer.source.amount) {
+    if (transfer.source.amount <= 0) {
       throw new UnprocessableEntityError('Amount must be a positive number excluding zero.');
     }
     if (transfer.source.amount !== transfer.destination.amount) {

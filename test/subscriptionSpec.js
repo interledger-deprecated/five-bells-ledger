@@ -26,20 +26,20 @@ describe('Subscriptions', function () {
     yield db.create(['subscriptions'], this.existingSubscription);
   });
 
-  describe('GET /v1/subscriptions/:uuid', function () {
+  describe('GET /subscriptions/:uuid', function () {
     it('should return 200', function *() {
       yield request()
-        .get('/v1/subscriptions/'+this.existingSubscription.id)
+        .get('/subscriptions/'+this.existingSubscription.id)
         .expect(200)
         .expect(this.existingSubscription)
         .end();
     });
   });
 
-  describe('POST /v1/subscriptions', function () {
+  describe('POST /subscriptions', function () {
     it('should return 201', function *() {
       yield request()
-        .post('/v1/subscriptions')
+        .post('/subscriptions')
         .send(this.exampleSubscription)
         .expect(201)
         .expect(this.exampleSubscription)
@@ -53,14 +53,14 @@ describe('Subscriptions', function () {
   //
   //   it('should return 409 if the transfer already exists', function *() {
   //     yield request()
-  //       .put('/v1/transfers/'+this.exampleTransfer.id)
+  //       .put('/transfers/'+this.exampleTransfer.id)
   //       .send(this.exampleTransfer)
   //       .expect(201)
   //       .expect(this.exampleTransfer)
   //       .end();
   //
   //     yield request()
-  //       .put('/v1/transfers/'+this.exampleTransfer.id)
+  //       .put('/transfers/'+this.exampleTransfer.id)
   //       .send(this.exampleTransfer)
   //       .expect(409)
   //       .end();
@@ -70,7 +70,7 @@ describe('Subscriptions', function () {
   //     this.exampleTransfer.source.amount = "0";
   //     this.exampleTransfer.destination.amount = "0";
   //     yield request()
-  //       .put('/v1/transfers/'+this.exampleTransfer.id)
+  //       .put('/transfers/'+this.exampleTransfer.id)
   //       .send(this.exampleTransfer)
   //       .expect(422)
   //       .end();
@@ -80,7 +80,7 @@ describe('Subscriptions', function () {
   //     this.exampleTransfer.source.amount = "101";
   //     this.exampleTransfer.destination.amount = "101";
   //     yield request()
-  //       .put('/v1/transfers/'+this.exampleTransfer.id)
+  //       .put('/transfers/'+this.exampleTransfer.id)
   //       .send(this.exampleTransfer)
   //       .expect(422)
   //       .end();
@@ -89,7 +89,7 @@ describe('Subscriptions', function () {
   //   it('should return 422 if the sender doesn\'t exist', function *() {
   //     this.exampleTransfer.source.owner = "alois";
   //     yield request()
-  //       .put('/v1/transfers/'+this.exampleTransfer.id)
+  //       .put('/transfers/'+this.exampleTransfer.id)
   //       .send(this.exampleTransfer)
   //       .expect(422)
   //       .end();
@@ -98,7 +98,7 @@ describe('Subscriptions', function () {
   //   it('should return 422 if the recipient doesn\'t exist', function *() {
   //     this.exampleTransfer.destination.owner = "blob";
   //     yield request()
-  //       .put('/v1/transfers/'+this.exampleTransfer.id)
+  //       .put('/transfers/'+this.exampleTransfer.id)
   //       .send(this.exampleTransfer)
   //       .expect(422)
   //       .end();
@@ -107,7 +107,7 @@ describe('Subscriptions', function () {
   //   it('should return 422 if source and destination amounts don\'t match', function *() {
   //     this.exampleTransfer.destination.owner = "blob";
   //     yield request()
-  //       .put('/v1/transfers/'+this.exampleTransfer.id)
+  //       .put('/transfers/'+this.exampleTransfer.id)
   //       .send(this.exampleTransfer)
   //       .expect(422)
   //       .end();

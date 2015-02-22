@@ -6,7 +6,7 @@ var log = require('../services/log')('subscriptions');
 var request = require('../services/request');
 
 exports.fetch = function *fetch(id) {
-  request.uri('id', id, 'Uuid');
+  request.validateUriParameter('id', id, 'Uuid');
   log.debug('fetching subscription ID '+id);
 
   this.body = yield db.get(['subscriptions', id]);
@@ -15,7 +15,7 @@ exports.fetch = function *fetch(id) {
 
 exports.create = function *create() {
   var _this = this;
-  var subscription = yield request.body(this, 'Subscription');
+  var subscription = yield request.validateBody(this, 'Subscription');
 
   // Generate a unique subscription ID outside of the transaction block
   if (!subscription.id) subscription.id = uuid.v4();

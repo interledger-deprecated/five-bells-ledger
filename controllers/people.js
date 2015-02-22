@@ -8,7 +8,7 @@ var request = require('../services/request');
 var NotFoundError = require('../errors/not-found-error');
 
 exports.fetch = function *fetch(id) {
-  request.uri('id', id, 'Identifier');
+  request.validateUriParameter('id', id, 'Identifier');
   log.debug('fetching person ID '+id);
 
   var person = yield db.get(['people', id]);

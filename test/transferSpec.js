@@ -25,20 +25,20 @@ describe('Transfers', function () {
     yield db.create(['transfers'], this.existingTransfer);
   });
 
-  describe('GET /v1/transfers/:uuid', function () {
+  describe('GET /transfers/:uuid', function () {
     it('should return 200', function *() {
       yield request()
-        .get('/v1/transfers/'+this.existingTransfer.id)
+        .get('/transfers/'+this.existingTransfer.id)
         .expect(200)
         .expect(this.existingTransfer)
         .end();
     });
   });
 
-  describe('PUT /v1/transfers/:uuid', function () {
+  describe('PUT /transfers/:uuid', function () {
     it('should return 201', function *() {
       yield request()
-        .put('/v1/transfers/'+this.exampleTransfer.id)
+        .put('/transfers/'+this.exampleTransfer.id)
         .send(this.exampleTransfer)
         .expect(201)
         .expect(this.exampleTransfer)
@@ -49,11 +49,11 @@ describe('Transfers', function () {
       expect(yield db.get(['people', 'bob', 'balance'])).to.equal(10);
     });
 
-    it.only('should trigger subscriptions', function *() {
+    it('should trigger subscriptions', function *() {
       var subscription = require('./data/subscription1.json');
       yield db.create(['people', subscription.owner, 'subscriptions', subscription.id], subscription);
       yield request()
-        .put('/v1/transfers/'+this.exampleTransfer.id)
+        .put('/transfers/'+this.exampleTransfer.id)
         .send(this.exampleTransfer)
         .expect(201)
         .expect(this.exampleTransfer)
@@ -64,14 +64,14 @@ describe('Transfers', function () {
 
     it('should return 409 if the transfer already exists', function *() {
       yield request()
-        .put('/v1/transfers/'+this.exampleTransfer.id)
+        .put('/transfers/'+this.exampleTransfer.id)
         .send(this.exampleTransfer)
         .expect(201)
         .expect(this.exampleTransfer)
         .end();
 
       yield request()
-        .put('/v1/transfers/'+this.exampleTransfer.id)
+        .put('/transfers/'+this.exampleTransfer.id)
         .send(this.exampleTransfer)
         .expect(409)
         .end();
@@ -81,7 +81,7 @@ describe('Transfers', function () {
       this.exampleTransfer.source.amount = "0";
       this.exampleTransfer.destination.amount = "0";
       yield request()
-        .put('/v1/transfers/'+this.exampleTransfer.id)
+        .put('/transfers/'+this.exampleTransfer.id)
         .send(this.exampleTransfer)
         .expect(422)
         .end();
@@ -91,7 +91,7 @@ describe('Transfers', function () {
       this.exampleTransfer.source.amount = "101";
       this.exampleTransfer.destination.amount = "101";
       yield request()
-        .put('/v1/transfers/'+this.exampleTransfer.id)
+        .put('/transfers/'+this.exampleTransfer.id)
         .send(this.exampleTransfer)
         .expect(422)
         .end();
@@ -100,7 +100,7 @@ describe('Transfers', function () {
     it('should return 422 if the sender doesn\'t exist', function *() {
       this.exampleTransfer.source.owner = "alois";
       yield request()
-        .put('/v1/transfers/'+this.exampleTransfer.id)
+        .put('/transfers/'+this.exampleTransfer.id)
         .send(this.exampleTransfer)
         .expect(422)
         .end();
@@ -109,7 +109,7 @@ describe('Transfers', function () {
     it('should return 422 if the recipient doesn\'t exist', function *() {
       this.exampleTransfer.destination.owner = "blob";
       yield request()
-        .put('/v1/transfers/'+this.exampleTransfer.id)
+        .put('/transfers/'+this.exampleTransfer.id)
         .send(this.exampleTransfer)
         .expect(422)
         .end();
@@ -118,7 +118,7 @@ describe('Transfers', function () {
     it('should return 422 if source and destination amounts don\'t match', function *() {
       this.exampleTransfer.destination.owner = "blob";
       yield request()
-        .put('/v1/transfers/'+this.exampleTransfer.id)
+        .put('/transfers/'+this.exampleTransfer.id)
         .send(this.exampleTransfer)
         .expect(422)
         .end();
