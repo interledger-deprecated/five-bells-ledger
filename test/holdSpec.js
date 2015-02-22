@@ -1,7 +1,6 @@
 /*global describe, it*/
 'use strict';
 var superagent = require('supertest-promised');
-var uuid = require('node-uuid');
 var expect = require('chai').expect;
 var app = require('../app');
 var db = require('../services/db');

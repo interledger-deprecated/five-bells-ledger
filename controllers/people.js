@@ -1,7 +1,7 @@
 /* @flow */
 'use strict';
 
-var uuid = require('node-uuid');
+var uuid = require('uuid4');
 var db = require('../services/db');
 var log = require('../services/log')('people');
 var request = require('../services/request');

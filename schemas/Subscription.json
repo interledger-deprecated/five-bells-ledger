@@ -13,11 +13,15 @@
       "$ref": "Identifier.json"
     },
     "event": {
-      "description": "Event identifier",
+      "description": "Event identifier for the type of event",
       "$ref": "EventId.json"
     },
+    "subject": {
+      "description": "URI of the resource to watch",
+      "type": "string"
+    },
     "target": {
-      "description": "Target REST hook to call",
+      "description": "Target callback URI",
       "type": "string"
     }
   },

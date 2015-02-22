@@ -2,7 +2,6 @@
 'use strict';
 
 var R = require('ramda');
-var uuid = require('node-uuid');
 var db = require('../services/db');
 var log = require('../services/log')('transfers');
 var request = require('../services/request');
@@ -12,6 +11,19 @@ var InsufficientFundsError = require('../errors/insufficient-funds-error');
 var NotFoundError = require('../errors/not-found-error');
 var AlreadyExistsError = require('../errors/already-exists-error');
 
+/**
+ * @api {get} /transfers/:id Get local transfer object
+ * @apiName GetTransfer
+ * @apiGroup Transfer
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Use this to query about the details or status of a local transfer.
+ *
+ * @apiParam {String} id Transfer [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ *
+ * @apiUse NotFoundError
+ * @apiUse InvalidUriParameterError
+ */
 exports.fetch = function *fetch(id) {
   request.validateUriParameter('id', id, 'Uuid');
   log.debug('fetching transfer ID '+id);
@@ -23,6 +35,33 @@ exports.fetch = function *fetch(id) {
   this.body = transfer;
 };
 
+/**
+ * @api {put} /transfers/:id Make a local transfer
+ * @apiName PutTransfer
+ * @apiGroup Transfer
+ * @apiVersion 1.0.0
+ *
+ * @apiParam {String} id Transfer [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ *
+ * @apiParamExample {json} Request Body Example
+ *    {
+ *      "id": "155dff3f-4915-44df-a707-acc4b527bcbd",
+ *      "source": {
+ *        "owner": "alice",
+ *        "amount": "10"
+ *      },
+ *      "destination": {
+ *        "owner": "bob",
+ *        "amount": "10"
+ *      }
+ *    }
+ *
+ * @apiUse InsufficientFundsError
+ * @apiUse UnprocessableEntityError
+ * @apiUse AlreadyExistsError
+ * @apiUse InvalidUriParameterError
+ * @apiUse InvalidBodyError
+ */
 exports.create = function *create(id) {
   var _this = this;
 

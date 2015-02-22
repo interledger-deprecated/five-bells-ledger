@@ -2,6 +2,9 @@
 'use strict';
 
 // Node 0.10 Promise polyfill
+require("babel/register")({
+  ignore: false
+});
 if (!global.Promise) global.Promise = require('bluebird');
 
 var messages = require('./controllers/messages');

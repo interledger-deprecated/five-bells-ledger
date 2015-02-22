@@ -1,6 +1,5 @@
 'use strict';
 
-var uuid = require('node-uuid');
 var db = require('../services/db');
 var log = require('../services/log')('holds');
 var request = require('../services/request');
@@ -9,6 +8,19 @@ var InsufficientFundsError = require('../errors/insufficient-funds-error');
 var NotFoundError = require('../errors/not-found-error');
 var AlreadyExistsError = require('../errors/already-exists-error');
 
+/**
+ * @api {get} /holds/:id Get local hold object
+ * @apiName GetHold
+ * @apiGroup Hold
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Use this to query about the details or status of a funds hold.
+ *
+ * @apiParam {String} id Hold [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ *
+ * @apiUse NotFoundError
+ * @apiUse InvalidUriParameterError
+ */
 exports.fetch = function *fetch(id) {
   request.validateUriParameter('id', id, 'Uuid');
   log.debug('fetching hold ID '+id);
@@ -17,6 +29,29 @@ exports.fetch = function *fetch(id) {
   if (!this.body) throw new NotFoundError('Unknown hold ID');
 };
 
+/**
+ * @api {put} /holds/:id Place a hold on funds
+ * @apiName PutHold
+ * @apiGroup Hold
+ * @apiVersion 1.0.0
+ *
+ * @apiParam {String} id Hold [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ *
+ * @apiParamExample {json} Request Body Example
+ *    {
+ *      "id": "155dff3f-4915-44df-a707-acc4b527bcbd",
+ *      "source": {
+ *        "owner": "alice",
+ *        "amount": "10"
+ *      }
+ *    }
+ *
+ * @apiUse InsufficientFundsError
+ * @apiUse UnprocessableEntityError
+ * @apiUse AlreadyExistsError
+ * @apiUse InvalidUriParameterError
+ * @apiUse InvalidBodyError
+ */
 exports.create = function *create(id) {
   var _this = this;
 
