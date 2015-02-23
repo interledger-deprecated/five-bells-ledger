@@ -14,11 +14,27 @@ exports.fetch = function *fetch(id) {
   var person = yield db.get(['people', id]);
   if (!person) throw new NotFoundError('Unknown person ID');
 
-  console.log(person);
-
-  // Move the ID field to its canonical name
-  person.id = person.id;
-  delete person.id;
-
   this.body = person;
 };
+
+exports.putResource = function *putResource(id) {
+  request.validateUriParameter('id', id, 'Identifier');
+  var person = yield request.validateBody(this, 'Person');
+
+  person.id = id;
+
+  var created = false;
+  yield db.transaction(function *(tr) {
+    var existingPerson = yield tr.get(['people', id]);
+
+    if (existingPerson) {
+      created = true;
+    }
+
+    tr.put(['people', id], person);
+  });
+  log.debug((created ? 'created' : 'updated') + ' person ID '+id);
+
+  this.body = person;
+  this.status = created ? 201 : 200;
+}
