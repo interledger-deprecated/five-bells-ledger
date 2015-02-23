@@ -62,7 +62,7 @@ exports.create = function *create() {
   log.debug('preparing subscription ID '+subscription.id);
 
   // Validate and store subscription in database
-  yield storeSubscription(subscription);
+  yield *storeSubscription(subscription);
 
   log.debug('subscription created');
 
@@ -77,7 +77,7 @@ exports.update = function *update() {
   log.debug('updating subscription ID '+subscription.id);
 
   // Validate and store subscription in database
-  yield storeSubscription(subscription);
+  yield *storeSubscription(subscription);
 
   log.debug('update completed');
 
@@ -90,7 +90,7 @@ exports.update = function *update() {
 function *storeSubscription(subscription) {
   yield db.transaction(function *(tr) {
     // Check prerequisites
-    yield validateSubscriptionSemantics(subscription, tr);
+    yield *validateSubscriptionSemantics(subscription, tr);
 
     // Store subscription in database
     // TODO: Who to subscribe to should be defined by a separate `subject` field.
