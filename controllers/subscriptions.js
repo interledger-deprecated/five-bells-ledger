@@ -27,30 +27,19 @@ exports.fetch = function *fetch(id) {
 };
 
 /**
- * @api {get} /transfers/:id Make a local transfer
- * @apiName PutTransfer
- * @apiGroup Transfer
+ * @api {post} /subscriptions Subscribe to an event
+ * @apiName PostSubscription
+ * @apiGroup Subscription
  * @apiVersion 1.0.0
  *
- * @apiParam {String} id Transfer [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
- *
  * @apiParamExample {json} Request Body Example
- *    {
- *      "id": "155dff3f-4915-44df-a707-acc4b527bcbd",
- *      "source": {
- *        "owner": "alice",
- *        "amount": "10"
- *      },
- *      "destination": {
- *        "owner": "bob",
- *        "amount": "10"
- *      }
- *    }
+ *     {
+ *       "id": "f49697a6-d52c-4f46-84c8-9070a31feab7",
+ *       "owner": "alice",
+ *       "event": "transfer.create",
+ *       "target": "http://192.0.2.1/test"
+ *     }
  *
- * @apiUse InsufficientFundsError
- * @apiUse UnprocessableEntityError
- * @apiUse AlreadyExistsError
- * @apiUse InvalidUriParameterError
  * @apiUse InvalidBodyError
  */
 exports.create = function *create() {
@@ -70,9 +59,17 @@ exports.create = function *create() {
   this.status = 201;
 };
 
-exports.update = function *update() {
+exports.update = function *update(id) {
   var _this = this;
+
+  request.validateUriParameter('id', id, 'Uuid');
   var subscription = yield request.validateBody(this, 'Subscription');
+
+  if ("undefined" !== subscription.id) {
+    request.assert.strictEqual(subscription.id, id, "Subscription ID must match the one in the URL");
+  } else {
+    subscription.id = id;
+  }
 
   log.debug('updating subscription ID '+subscription.id);
 
@@ -82,7 +79,38 @@ exports.update = function *update() {
   log.debug('update completed');
 
   this.body = subscription;
-}
+};
+
+/**
+ * @api {delete} /subscriptions/:id Cancel a subscription
+ * @apiName DeleteSubscription
+ * @apiGroup Subscription
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription End a subscription.
+ *
+ * @apiParam {String} id Subscription [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ *
+ * @apiUse NotFoundError
+ * @apiUse InvalidUriParameterError
+ */
+exports.remove = function *remove(id) {
+  request.validateUriParameter('id', id, 'Uuid');
+
+  log.debug('deleting subscription ID '+id);
+
+  yield db.transaction(function *(tr) {
+    var subscription = yield tr.get(['subscriptions', id]);
+
+    if (!subscription) {
+      throw new NotFoundError('Unknown subscription ID');
+    }
+
+    tr.remove(['subscriptions', id]);
+  });
+
+  this.status = 204;
+};
 
 /**
  * Store a subscription in the database.

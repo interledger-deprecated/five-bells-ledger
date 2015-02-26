@@ -116,4 +116,13 @@ describe('Subscriptions', function () {
   //   it('should return 403 if the authorization is forged');
   //   it('should return 403 if the authorization is not applicable');
   });
+
+  describe('DELETE /subscriptions/:uuid', function () {
+    it('should return 204', function *() {
+      yield request()
+        .delete('/subscriptions/'+this.existingSubscription.id)
+        .expect(204)
+        .end();
+    });
+  });
 });

@@ -46,6 +46,7 @@ app.use(route.get('/people/:id', people.fetch));
 
 app.use(route.get('/subscriptions/:id', subscriptions.fetch));
 app.use(route.post('/subscriptions', subscriptions.create));
+app.use(route.delete('/subscriptions/:id', subscriptions.remove));
 
 // Serve static files
 app.use(serve(path.join(__dirname, 'public')));

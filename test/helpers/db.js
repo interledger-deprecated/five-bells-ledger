@@ -5,5 +5,6 @@ exports.reset = function () {
     yield tr.remove(['holds']);
     yield tr.remove(['transfers']);
     yield tr.remove(['people']);
+    yield tr.remove(['subscriptions']);
   });
 };
