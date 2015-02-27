@@ -30,8 +30,9 @@ app.use(route.put('/holds/:uuid', holds.create));
 
 app.use(route.get('/people/:id', people.fetch));
 
-app.use(route.get('/subscriptions/:id', subscriptions.fetch));
 app.use(route.post('/subscriptions', subscriptions.create));
+app.use(route.get('/subscriptions/:id', subscriptions.fetch));
+app.use(route.put('/subscriptions/:id', subscriptions.update));
 app.use(route.delete('/subscriptions/:id', subscriptions.remove));
 
 // Serve static files

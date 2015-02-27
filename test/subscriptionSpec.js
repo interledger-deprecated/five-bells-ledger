@@ -33,6 +33,13 @@ describe('Subscriptions', function () {
         .expect(this.existingSubscription)
         .end();
     });
+
+    it('should return 404 for a non-existant subscription', function *() {
+      yield request()
+        .get('/subscriptions/'+this.exampleSubscription.id)
+        .expect(404)
+        .end();
+    });
   });
 
   describe('POST /subscriptions', function () {
@@ -44,10 +51,23 @@ describe('Subscriptions', function () {
         .expect(this.exampleSubscription)
         .end();
 
-      // Check balances
       // Check that the subscription landed in the database
       expect(yield db.get(['people', 'alice', 'subscriptions', this.exampleSubscription.id]))
         .to.deep.equal(this.exampleSubscription);
+    });
+
+    it('should return 200 when updating the target URL', function *() {
+      this.existingSubscription.target = 'http://192.0.2.1/test2';
+      yield request()
+        .put('/subscriptions/'+this.existingSubscription.id)
+        .send(this.existingSubscription)
+        .expect(200)
+        .expect(this.existingSubscription)
+        .end();
+
+      // Check that the subscription url is changed in the database
+      expect(yield db.get(['people', 'bob', 'subscriptions', this.existingSubscription.id]))
+        .to.deep.equal(this.existingSubscription);
     });
   //
   //   it('should return 409 if the transfer already exists', function *() {
