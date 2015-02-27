@@ -1,4 +1,9 @@
 language: node_js
 node_js:
   - "0.12"
+env: FDB_VERSION=3.0.6
+before_install:
+  - wget https://foundationdb.com/downloads/I_accept_the_FoundationDB_Community_License_Agreement/key-value-store/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb
+  - dpkg -i foundationdb-clients_${FDB_VERSION}-1_amd64.deb
+  - rm foundationdb-clients_${FDB_VERSION}-1_amd64.deb
 script: MOCHA_REPORTER=tap npm test --coverage
