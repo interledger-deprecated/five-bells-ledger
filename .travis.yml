@@ -3,11 +3,12 @@ node_js:
   - "0.12"
 env: FDB_VERSION=3.0.6
 before_install:
+# We want to compile with g++ 4.8 when rather than the default g++
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update -qq
-  - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.8-dev; fi
-  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - sudo apt-get install -qq gcc-4.8 g++-4.8
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+# We also need libfdb
   - wget https://foundationdb.com/downloads/I_accept_the_FoundationDB_Community_License_Agreement/key-value-store/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb
   - sudo dpkg -i foundationdb-clients_${FDB_VERSION}-1_amd64.deb
   - rm foundationdb-clients_${FDB_VERSION}-1_amd64.deb
