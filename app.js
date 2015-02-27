@@ -1,7 +1,6 @@
 /* @flow */
 'use strict';
 
-var messages = require('./controllers/messages');
 var transfers = require('./controllers/transfers');
 var holds = require('./controllers/holds');
 var people = require('./controllers/people');
@@ -22,12 +21,6 @@ var app = module.exports = koa();
 app.use(logger());
 app.use(errorHandler);
 app.use(cors({ expose: ['link'] }));
-
-app.use(route.get('/', messages.home));
-app.use(route.get('/messages', messages.list));
-app.use(route.get('/messages/:id', messages.fetch));
-app.use(route.post('/messages', messages.create));
-app.use(route.get('/async', messages.delay));
 
 app.use(route.get('/transfers/:id', transfers.fetch));
 app.use(route.put('/transfers/:uuid', transfers.create));

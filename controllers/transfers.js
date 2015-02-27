@@ -68,7 +68,7 @@ exports.create = function *create(id) {
   request.validateUriParameter('id', id, 'Uuid');
   var transfer = yield request.validateBody(this, 'Transfer');
 
-  if ("undefined" !== transfer.id) {
+  if ("undefined" !== typeof transfer.id) {
     request.assert.strictEqual(
       transfer.id,
       id,
