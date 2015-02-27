@@ -7,6 +7,19 @@ var log = require('../services/log')('people');
 var request = require('../services/request');
 var NotFoundError = require('../errors/not-found-error');
 
+/**
+ * @api {get} /people/:id Fetch user info
+ * @apiName GetPerson
+ * @apiGroup Person
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Get information about a user.
+ *
+ * @apiParam {String} id Person's unique identifier
+ *
+ * @apiUse NotFoundError
+ * @apiUse InvalidUriParameterError
+ */
 exports.fetch = function *fetch(id) {
   request.validateUriParameter('id', id, 'Identifier');
   log.debug('fetching person ID '+id);
