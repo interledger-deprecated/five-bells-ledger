@@ -1,12 +1,6 @@
 /* @flow */
 'use strict';
 
-// Node 0.10 Promise polyfill
-require("babel/register")({
-  ignore: false
-});
-if (!global.Promise) global.Promise = require('bluebird');
-
 var messages = require('./controllers/messages');
 var transfers = require('./controllers/transfers');
 var holds = require('./controllers/holds');
@@ -26,7 +20,6 @@ var app = module.exports = koa();
 
 // Logger
 app.use(logger());
-// app.use(logger());
 app.use(errorHandler);
 app.use(cors({ expose: ['link'] }));
 
