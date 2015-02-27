@@ -30,6 +30,19 @@ exports.fetch = function *fetch(id) {
   this.body = person;
 };
 
+/**
+ * @api {put} /people/:id Update a user
+ * @apiName PutPerson
+ * @apiGroup Person
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Create or update a user.
+ *
+ * @apiParam {String} id Person's unique identifier
+ *
+ * @apiUse InvalidUriParameterError
+ * @apiUse InvalidBodyError
+ */
 exports.putResource = function *putResource(id) {
   request.validateUriParameter('id', id, 'Identifier');
   var person = yield request.validateBody(this, 'Person');
