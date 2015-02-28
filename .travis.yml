@@ -1,16 +1,17 @@
 language: node_js
 node_js:
-  - "0.12"
+- '0.12'
 env: FDB_VERSION=3.0.6
 before_install:
-# We want to compile with g++ 4.8 when rather than the default g++
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq gcc-4.8 g++-4.8
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
-# We also need FoundationDB
-  - wget https://foundationdb.com/downloads/I_accept_the_FoundationDB_Community_License_Agreement/key-value-store/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb
-  - wget https://foundationdb.com/downloads/I_accept_the_FoundationDB_Community_License_Agreement/key-value-store/${FDB_VERSION}/foundationdb-server_${FDB_VERSION}-1_amd64.deb
-  - sudo dpkg -i foundationdb-server_${FDB_VERSION}-1_amd64.deb foundationdb-clients_${FDB_VERSION}-1_amd64.deb
-  - rm foundationdb-server_${FDB_VERSION}-1_amd64.deb foundationdb-clients_${FDB_VERSION}-1_amd64.deb
+- sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+- sudo apt-get update -qq
+- sudo apt-get install -qq gcc-4.8 g++-4.8
+- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+- wget https://foundationdb.com/downloads/I_accept_the_FoundationDB_Community_License_Agreement/key-value-store/${FDB_VERSION}/foundationdb-clients_${FDB_VERSION}-1_amd64.deb
+- wget https://foundationdb.com/downloads/I_accept_the_FoundationDB_Community_License_Agreement/key-value-store/${FDB_VERSION}/foundationdb-server_${FDB_VERSION}-1_amd64.deb
+- sudo dpkg -i foundationdb-server_${FDB_VERSION}-1_amd64.deb foundationdb-clients_${FDB_VERSION}-1_amd64.deb
+- rm foundationdb-server_${FDB_VERSION}-1_amd64.deb foundationdb-clients_${FDB_VERSION}-1_amd64.deb
 script: MOCHA_REPORTER=tap npm test --coverage
+notifications:
+  slack:
+    secure: bltLEOkw+Kv8g1EUYKbu848r+Fx8Rhhc54wagwgaHPYYRi/ipV5xyQMP4NRJvoMKFNAws16ytUcRXqaNz4tolOx1XWckcjb3KYwFAku9rumSfxjiJGN97UsJadjL8OXnSJrwtPv7yyWnqrhj8UB16MLNx4HTRLjblUWFJDqdbaI=
