@@ -1,6 +1,7 @@
 /* @flow */
 'use strict';
 
+var health = require('./controllers/health');
 var transfers = require('./controllers/transfers');
 var holds = require('./controllers/holds');
 var people = require('./controllers/people');
@@ -21,6 +22,8 @@ var app = module.exports = koa();
 app.use(logger());
 app.use(errorHandler);
 app.use(cors({ expose: ['link'] }));
+
+app.use(route.get('/health', health.get));
 
 app.use(route.get('/transfers/:id', transfers.fetch));
 app.use(route.put('/transfers/:uuid', transfers.create));
