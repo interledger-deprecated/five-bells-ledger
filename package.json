@@ -16,8 +16,6 @@
     "co-body": "^1.0.0",
     "co-views": "^0.2.0",
     "fowl": "git://github.com/justmoon/fowl",
-    "is-my-json-valid": "^2.3.0",
-    "jayschema": "^0.3.1",
     "koa": "^0.17.0",
     "koa-compress": "^1.0.6",
     "koa-cors": "0.0.14",
