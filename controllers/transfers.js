@@ -17,9 +17,11 @@ var AlreadyExistsError = require('../errors/already-exists-error');
  * @apiGroup Transfer
  * @apiVersion 1.0.0
  *
- * @apiDescription Use this to query about the details or status of a local transfer.
+ * @apiDescription Use this to query about the details or status of a local
+ *   transfer.
  *
- * @apiParam {String} id Transfer [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ * @apiParam {String} id Transfer
+ *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
@@ -46,12 +48,12 @@ exports.fetch = function *fetch(id) {
  * @apiParamExample {json} Request Body Example
  *    {
  *      "id": "155dff3f-4915-44df-a707-acc4b527bcbd",
- *      "source": {
- *        "owner": "alice",
+ *      "source_funds": {
+ *        "account": "alice",
  *        "amount": "10"
  *      },
- *      "destination": {
- *        "owner": "bob",
+ *      "destination_funds": {
+ *        "account": "bob",
  *        "amount": "10"
  *      }
  *    }
@@ -63,8 +65,6 @@ exports.fetch = function *fetch(id) {
  * @apiUse InvalidBodyError
  */
 exports.create = function *create(id) {
-  var _this = this;
-
   request.validateUriParameter('id', id, 'Uuid');
   var transfer = yield request.validateBody(this, 'Transfer');
 
@@ -79,7 +79,7 @@ exports.create = function *create(id) {
   }
 
   log.debug('preparing transfer ID '+transfer.id);
-  log.debug(''+transfer.source.owner+' -> '+transfer.destination.owner+' : '+transfer.destination.amount);
+  log.debug(''+transfer.source_funds.account+' -> '+transfer.destination_funds.account+' : '+transfer.destination_funds.amount);
 
   yield db.transaction(function *(tr) {
     // Don't process the transfer twice
@@ -88,8 +88,8 @@ exports.create = function *create(id) {
     }
 
     // Check prerequisites
-    var sender = yield tr.get(['people', transfer.source.owner]);
-    var recipient = yield tr.get(['people', transfer.destination.owner]);
+    var sender = yield tr.get(['people', transfer.source_funds.account]);
+    var recipient = yield tr.get(['people', transfer.destination_funds.account]);
 
     if ("undefined" === typeof sender) {
       throw new UnprocessableEntityError('Sender does not exist.');
@@ -97,24 +97,24 @@ exports.create = function *create(id) {
     if ("undefined" === typeof recipient) {
       throw new UnprocessableEntityError('Recipient does not exist.');
     }
-    if (transfer.source.amount <= 0) {
+    if (transfer.source_funds.amount <= 0) {
       throw new UnprocessableEntityError('Amount must be a positive number excluding zero.');
     }
-    if (transfer.source.amount !== transfer.destination.amount) {
+    if (transfer.source_funds.amount !== transfer.destination_funds.amount) {
       throw new UnprocessableEntityError('Source and destination amounts do not match.');
     }
-    if (sender.balance < transfer.source.amount) {
-      throw new InsufficientFundsError('Sender has insufficient funds.', transfer.source.owner);
+    if (sender.balance < transfer.source_funds.amount) {
+      throw new InsufficientFundsError('Sender has insufficient funds.', transfer.source_funds.account);
     }
 
     // Store transfer in database
     tr.put(['transfers', transfer.id], transfer);
 
     // Update balances
-    log.debug('sender balance: '+sender.balance+' -> '+(+sender.balance - +transfer.destination.amount));
-    log.debug('recipient balance: '+recipient.balance+' -> '+(+recipient.balance + +transfer.destination.amount));
-    tr.put(['people', transfer.source.owner, 'balance'], +sender.balance - +transfer.destination.amount);
-    tr.put(['people', transfer.destination.owner, 'balance'], +recipient.balance + +transfer.destination.amount);
+    log.debug('sender balance: '+sender.balance+' -> '+(+sender.balance - +transfer.destination_funds.amount));
+    log.debug('recipient balance: '+recipient.balance+' -> '+(+recipient.balance + +transfer.destination_funds.amount));
+    tr.put(['people', transfer.source_funds.account, 'balance'], +sender.balance - +transfer.destination_funds.amount);
+    tr.put(['people', transfer.destination_funds.account, 'balance'], +recipient.balance + +transfer.destination_funds.amount);
   });
 
   log.debug('transfer completed');
@@ -122,8 +122,8 @@ exports.create = function *create(id) {
   var getSubscriptions = R.compose(db.get.bind(db), R.prepend('people'), R.append('subscriptions'), R.of);
   var filterSubscriptions = R.compose(R.filter(R.propEq('event', 'transfer.create')), R.map(R.compose(R.head, R.values, R.head, R.values)), R.filter(R.identity), R.unnest);
   var subscriptions = filterSubscriptions([
-    yield getSubscriptions(transfer.source.owner),
-    yield getSubscriptions(transfer.destination.owner)
+    yield getSubscriptions(transfer.source_funds.account),
+    yield getSubscriptions(transfer.destination_funds.account)
   ]);
 
   R.forEach(function (subscription) {

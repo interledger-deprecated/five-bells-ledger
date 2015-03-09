@@ -1,11 +1,11 @@
 {
   "id": "44793135-7022-4fd7-bd00-3a14c1e896c6",
-  "source": {
-    "owner": "alice",
+  "source_funds": {
+    "account": "alice",
     "amount": "10"
   },
-  "destination": {
-    "owner": "bob",
+  "destination_funds": {
+    "account": "bob",
     "amount": "10"
   }
 }
