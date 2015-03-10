@@ -92,7 +92,7 @@ rules:
   no-unused-vars: [2, {vars: 'all', args: 'after-used'}]
   no-use-before-define: 2
   no-void: 2
-  no-var: 0
+  no-var: 2
   no-warning-comments: [0, {terms: ['todo', 'fixme', 'xxx'], location: 'start'}]
   no-with: 2
   no-wrap-func: 2
@@ -147,3 +147,28 @@ rules:
   wrap-iife: 0
   wrap-regex: 0
   yoda: [2, 'never']
+ecmaFeatures:
+  arrowFunctions: true
+  binaryLiterals: true
+  blockBindings: true
+  classes: true
+  defaultParams: true
+  destructuring: true
+  forOf: true
+  generators: true
+# not sure about the implications of globalReturn
+# globalReturn: true
+  jsx: true
+  objectLiteralComputedProperties: true
+  objectLiteralShorthandMethods: true
+  objectLiteralShorthandProperties: true
+# duplicate properties may be required but we are not
+# sure at this point
+# objectLiteralDuplicateProperties: true
+  octalLiterals: true
+  regexUFlag: true
+  regexYFlag: true
+  restParams: true
+  spread: true
+  templateStrings: true
+  unicodeCodePointEscapes: true
