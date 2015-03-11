@@ -1,5 +1,5 @@
 var co = require('co');
-var validate = require('./validate');
+var validate = require('../services/validate');
 var parse = require('co-body');
 var assert = require('assert');
 var InvalidBodyError = require('../errors/invalid-body-error');

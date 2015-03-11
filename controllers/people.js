@@ -4,7 +4,7 @@
 var uuid = require('uuid4');
 var db = require('../services/db');
 var log = require('../services/log')('people');
-var request = require('../services/request');
+var request = require('../utils/request');
 var NotFoundError = require('../errors/not-found-error');
 
 /**
