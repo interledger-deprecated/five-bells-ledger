@@ -39,6 +39,75 @@ exports.fetch = function *fetch(id) {
   this.body = transfer;
 };
 
+function isConditionMet(transfer) {
+  // TODO Do the useful
+  return false;
+}
+
+function *updateStateIfNecessary(tr, transfer) {
+  // Check prerequisites
+  let sender = yield tr.get(['people', transfer.source_funds.account]);
+  let recipient =
+    yield tr.get(['people', transfer.destination_funds.account]);
+
+  if (typeof sender === 'undefined') {
+    throw new UnprocessableEntityError('Sender does not exist.');
+  }
+  if (typeof recipient === 'undefined') {
+    throw new UnprocessableEntityError('Recipient does not exist.');
+  }
+
+  if (transfer.state === 'proposed') {
+    let sourceFunds = Array.isArray(transfer.source_funds)
+                        ? transfer.source_funds
+                        : [transfer.source_funds];
+    let authorized = true;
+    sourceFunds.forEach(function (funds) {
+      if (!funds.authorization) {
+        authorized = false;
+      } else {
+        // TODO Validate authorization public keys
+      }
+    });
+
+    if (authorized) {
+      log.debug(`transfer transitioned from proposed to prepared`);
+      transfer.state = 'prepared';
+      if (sender.balance < transfer.source_funds.amount) {
+        throw new InsufficientFundsError('Sender has insufficient funds.',
+                                         transfer.source_funds.account);
+      }
+
+      log.debug('sender balance: ' + sender.balance + ' -> ' +
+                (+sender.balance - +transfer.destination_funds.amount));
+      tr.put(['people', transfer.source_funds.account, 'balance'],
+             +sender.balance - +transfer.destination_funds.amount);
+      // TODO Take money out of sender's account
+    }
+  }
+
+  if (transfer.state === 'prepared') {
+    if (!transfer.execution_condition || isConditionMet(transfer)) {
+      log.debug(`transfer transitioned from prepared to accepted`);
+      transfer.state = 'accepted';
+    }
+  }
+
+  if (transfer.state === 'accepted') {
+    // In a real-world / asynchronous implementation, the response from the
+    // external ledger would trigger the state transition from 'accepted' to
+    // 'completed' or 'failed'.
+    log.debug('recipient balance: ' + recipient.balance + ' -> ' +
+        (+recipient.balance + +transfer.destination_funds.amount));
+
+    tr.put(['people', transfer.destination_funds.account, 'balance'],
+     +recipient.balance + +transfer.destination_funds.amount);
+
+    log.debug(`transfer transitioned from accepted to completed`);
+    transfer.state = 'completed';
+  }
+}
+
 /**
  * @api {put} /transfers/:id Make a local transfer
  * @apiName PutTransfer
@@ -81,10 +150,14 @@ exports.create = function *create(id) {
     transfer.id = id;
   }
 
-  log.debug('preparing transfer ID ' + transfer.id);
+  transfer.state = 'proposed';
+
+  log.debug('submitted new transfer ID ' + transfer.id);
   log.debug('' + transfer.source_funds.account + ' -> ' +
             transfer.destination_funds.account + ' : ' +
             transfer.destination_funds.amount);
+
+  // TODO Validate signatures in authorizations
 
   yield db.transaction(function *(tr) {
     // Don't process the transfer twice
@@ -92,16 +165,6 @@ exports.create = function *create(id) {
       throw new AlreadyExistsError('This transfer already exists');
     }
 
-    // Check prerequisites
-    let sender = yield tr.get(['people', transfer.source_funds.account]);
-    let recipient = yield tr.get(['people', transfer.destination_funds.account]);
-
-    if (typeof sender === 'undefined') {
-      throw new UnprocessableEntityError('Sender does not exist.');
-    }
-    if (typeof recipient === 'undefined') {
-      throw new UnprocessableEntityError('Recipient does not exist.');
-    }
     if (transfer.source_funds.amount <= 0) {
       throw new UnprocessableEntityError(
         'Amount must be a positive number excluding zero.');
@@ -110,27 +173,14 @@ exports.create = function *create(id) {
       throw new UnprocessableEntityError(
         'Source and destination amounts do not match.');
     }
-    if (sender.balance < transfer.source_funds.amount) {
-      throw new InsufficientFundsError('Sender has insufficient funds.',
-                                       transfer.source_funds.account);
-    }
+
+    yield updateStateIfNecessary(tr, transfer);
 
     // Store transfer in database
     tr.put(['transfers', transfer.id], transfer);
-
-    // Update balances
-    log.debug('sender balance: ' + sender.balance + ' -> ' +
-              (+sender.balance - +transfer.destination_funds.amount));
-    log.debug('recipient balance: ' + recipient.balance + ' -> ' +
-              (+recipient.balance + +transfer.destination_funds.amount));
-
-    tr.put(['people', transfer.source_funds.account, 'balance'],
-           +sender.balance - +transfer.destination_funds.amount);
-    tr.put(['people', transfer.destination_funds.account, 'balance'],
-           +recipient.balance + +transfer.destination_funds.amount);
   });
 
-  log.debug('transfer completed');
+  log.debug('changes written to database');
 
   function getSubscriptions(account) {
     return db.get(['people', account, 'subscriptions']);
