@@ -6,10 +6,10 @@ const db = require('../services/db');
 const log = require('../services/log')('transfers');
 const request = require('../utils/request');
 const jsonld = require('../utils/jsonld');
-const UnprocessableEntityError = require('../errors/unprocessable-entity-error');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
 const NotFoundError = require('../errors/not-found-error');
-const AlreadyExistsError = require('../errors/already-exists-error');
+const UnprocessableEntityError =
+  require('../errors/unprocessable-entity-error');
 
 /**
  * @api {get} /transfers/:id Get local transfer object
@@ -25,6 +25,9 @@ const AlreadyExistsError = require('../errors/already-exists-error');
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
+ *
+ * @param {String} id Transfer UUID
+ * @returns {void}
  */
 exports.fetch = function *fetch(id) {
   request.validateUriParameter('id', id, 'Uuid');
@@ -39,12 +42,40 @@ exports.fetch = function *fetch(id) {
   this.body = transfer;
 };
 
-function isConditionMet(transfer) {
-  // TODO Do the useful
-  return false;
+function updateTransferObject(originalTransfer, transfer) {
+  // Clients may add authorizations
+  originalTransfer.source_funds.forEach(function (funds, i) {
+    if (!funds.authorization &&
+        transfer.source_funds[i].authorization) {
+      funds.authorization = transfer.source_funds[i].authorization;
+    }
+  });
+
+  // Clients may fulfill the execution condition
+  if (!originalTransfer.execution_condition_fulfillment &&
+      transfer.execution_condition_fulfillment) {
+    originalTransfer.execution_condition_fulfillment =
+      transfer.execution_condition_fulfillment;
+  }
+
+  // The old and new objects should now be exactly equal
+  if (!_.isEqual(originalTransfer, transfer)) {
+    // If they aren't, this means the user tried to update something they're not
+    // supposed to be able to modify.
+    // TODO InvalidTransformationError
+    throw new Error();
+  }
+
+  return originalTransfer;
 }
 
-function *updateStateIfNecessary(tr, transfer) {
+function isConditionMet(transfer) {
+  // TODO Do the useful!
+  return !transfer.execution_condition ||
+         transfer.execution_condition_fulfillment;
+}
+
+function *processStateTransitions(tr, transfer) {
   // Check prerequisites
   let sender = yield tr.get(['people', transfer.source_funds.account]);
   let recipient =
@@ -67,6 +98,7 @@ function *updateStateIfNecessary(tr, transfer) {
         authorized = false;
       } else {
         // TODO Validate authorization public keys
+        _.noop();
       }
     });
 
@@ -78,16 +110,16 @@ function *updateStateIfNecessary(tr, transfer) {
                                          transfer.source_funds.account);
       }
 
+      // Take money out of sender's account
       log.debug('sender balance: ' + sender.balance + ' -> ' +
                 (+sender.balance - +transfer.destination_funds.amount));
       tr.put(['people', transfer.source_funds.account, 'balance'],
              +sender.balance - +transfer.destination_funds.amount);
-      // TODO Take money out of sender's account
     }
   }
 
   if (transfer.state === 'prepared') {
-    if (!transfer.execution_condition || isConditionMet(transfer)) {
+    if (isConditionMet(transfer)) {
       log.debug(`transfer transitioned from prepared to accepted`);
       transfer.state = 'accepted';
     }
@@ -135,6 +167,9 @@ function *updateStateIfNecessary(tr, transfer) {
  * @apiUse AlreadyExistsError
  * @apiUse InvalidUriParameterError
  * @apiUse InvalidBodyError
+ *
+ * @param {String} id Transfer UUID
+ * @returns {void}
  */
 exports.create = function *create(id) {
   request.validateUriParameter('id', id, 'Uuid');
@@ -152,29 +187,36 @@ exports.create = function *create(id) {
 
   transfer.state = 'proposed';
 
-  log.debug('submitted new transfer ID ' + transfer.id);
+  log.debug('putting transfer ID ' + transfer.id);
   log.debug('' + transfer.source_funds.account + ' -> ' +
             transfer.destination_funds.account + ' : ' +
             transfer.destination_funds.amount);
 
+  // Do all static verification (signatures, validity, etc.) here
+  if (transfer.source_funds.amount <= 0) {
+    throw new UnprocessableEntityError(
+      'Amount must be a positive number excluding zero.');
+  }
+  if (transfer.source_funds.amount !== transfer.destination_funds.amount) {
+    throw new UnprocessableEntityError(
+      'Source and destination amounts do not match.');
+  }
   // TODO Validate signatures in authorizations
+  // TODO Validate that the execution_condition_fulfillment is correct
 
   yield db.transaction(function *(tr) {
-    // Don't process the transfer twice
-    if (yield tr.get(['transfers', transfer.id])) {
-      throw new AlreadyExistsError('This transfer already exists');
+    let originalTransfer = yield tr.get(['transfers', transfer.id]);
+    if (originalTransfer) {
+      log.debug('found an existing transfer with this ID');
+
+      // This method will update the original transfer object using the new
+      // version, but only allowing specific fields to change.
+      transfer = updateTransferObject(originalTransfer, transfer);
+    } else {
+      log.debug('this is a new transfer');
     }
 
-    if (transfer.source_funds.amount <= 0) {
-      throw new UnprocessableEntityError(
-        'Amount must be a positive number excluding zero.');
-    }
-    if (transfer.source_funds.amount !== transfer.destination_funds.amount) {
-      throw new UnprocessableEntityError(
-        'Source and destination amounts do not match.');
-    }
-
-    yield updateStateIfNecessary(tr, transfer);
+    yield processStateTransitions(tr, transfer);
 
     // Store transfer in database
     tr.put(['transfers', transfer.id], transfer);
