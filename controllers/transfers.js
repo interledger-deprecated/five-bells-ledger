@@ -28,7 +28,7 @@ const AlreadyExistsError = require('../errors/already-exists-error');
  */
 exports.fetch = function *fetch(id) {
   request.validateUriParameter('id', id, 'Uuid');
-  log.debug(`fetching transfer ID ${id}`);
+  log.debug('fetching transfer ID ' + id);
 
   let transfer = yield db.get(['transfers', id]);
   if (!transfer) {
@@ -81,8 +81,10 @@ exports.create = function *create(id) {
     transfer.id = id;
   }
 
-  log.debug(`preparing transfer ID ${transfer.id}`);
-  log.debug(`${transfer.source_funds.account} -> ${transfer.destination_funds.account} : ${transfer.destination_funds.amount}`);
+  log.debug('preparing transfer ID ' + transfer.id);
+  log.debug('' + transfer.source_funds.account + ' -> ' +
+            transfer.destination_funds.account + ' : ' +
+            transfer.destination_funds.amount);
 
   yield db.transaction(function *(tr) {
     // Don't process the transfer twice
