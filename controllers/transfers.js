@@ -2,12 +2,15 @@
 'use strict';
 
 const _ = require('lodash');
+const diff = require('deep-diff');
 const db = require('../services/db');
 const log = require('../services/log')('transfers');
-const request = require('../utils/request');
+const requestUtil = require('../utils/request');
 const jsonld = require('../utils/jsonld');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
 const NotFoundError = require('../errors/not-found-error');
+const InvalidModificationError =
+  require('../errors/invalid-modification-error');
 const UnprocessableEntityError =
   require('../errors/unprocessable-entity-error');
 
@@ -30,7 +33,7 @@ const UnprocessableEntityError =
  * @returns {void}
  */
 exports.fetch = function *fetch(id) {
-  request.validateUriParameter('id', id, 'Uuid');
+  requestUtil.validateUriParameter('id', id, 'Uuid');
   log.debug('fetching transfer ID ' + id);
 
   let transfer = yield db.get(['transfers', id]);
@@ -39,10 +42,17 @@ exports.fetch = function *fetch(id) {
   }
 
   jsonld.setContext(this, 'transfer.jsonld');
+
+  // Externally we want to use a full URI ID
+  transfer.id = requestUtil.getBaseUri(this) + this.originalUrl;
+
   this.body = transfer;
 };
 
 function updateTransferObject(originalTransfer, transfer) {
+  // Ignore internally managed properties
+  transfer.state = originalTransfer.state;
+
   // Clients may add authorizations
   originalTransfer.source_funds.forEach(function (funds, i) {
     if (!funds.authorization &&
@@ -63,7 +73,9 @@ function updateTransferObject(originalTransfer, transfer) {
     // If they aren't, this means the user tried to update something they're not
     // supposed to be able to modify.
     // TODO InvalidTransformationError
-    throw new Error();
+    throw new InvalidModificationError(
+      'Transfer may not be modified in this way',
+      diff(originalTransfer, transfer));
   }
 
   return originalTransfer;
@@ -86,7 +98,7 @@ function *processStateTransitions(tr, transfer) {
   });
 
   for (let sender of Object.keys(debitAccounts)) {
-    let debitAmounts = debitAccounts[sender];
+    let debitAmounts = _.pluck(debitAccounts[sender], 'amount');
     let accountObj = yield tr.get(['people', sender]);
 
     if (typeof accountObj === 'undefined') {
@@ -101,7 +113,7 @@ function *processStateTransitions(tr, transfer) {
   }
 
   for (let recipient of Object.keys(creditAccounts)) {
-    let creditAmounts = creditAccounts[recipient];
+    let creditAmounts = _.pluck(creditAccounts[recipient], 'amount');
     let accountObj = yield tr.get(['people', recipient]);
 
     if (typeof accountObj === 'undefined') {
@@ -144,7 +156,7 @@ function *processStateTransitions(tr, transfer) {
         }
 
         // Take money out of senders' accounts
-        log.debug(' sender ' + sender + ' balance: ' + debitAccount.balance
+        log.debug('sender ' + sender + ' balance: ' + debitAccount.balance
                   + ' -> ' + (debitAccount.balance - debitAccount.totalAmount));
         tr.put(['people', sender, 'balance'],
                debitAccount.balance - debitAccount.totalAmount);
@@ -211,18 +223,19 @@ function *processStateTransitions(tr, transfer) {
  * @returns {void}
  */
 exports.create = function *create(id) {
-  request.validateUriParameter('id', id, 'Uuid');
-  let transfer = yield request.validateBody(this, 'Transfer');
+  requestUtil.validateUriParameter('id', id, 'Uuid');
+  let transfer = yield requestUtil.validateBody(this, 'Transfer');
+  console.log(transfer);
 
   if (typeof transfer.id !== 'undefined') {
-    request.assert.strictEqual(
+    requestUtil.assert.strictEqual(
       transfer.id,
-      id,
+      requestUtil.getBaseUri(this) + this.originalUrl,
       'Transfer ID must match the one in the URL'
     );
-  } else {
-    transfer.id = id;
   }
+
+  transfer.id = id;
 
   log.debug('putting transfer ID ' + transfer.id);
   log.debug('' + transfer.source_funds[0].account + ' -> ' +
@@ -311,6 +324,9 @@ exports.create = function *create(id) {
   // subscriptions.forEach(function (subscription) {
   //   log.debug('notifying ' + subscription.owner + ' at ' + subscription.target);
   // }, subscriptions);
+
+  // Externally we want to use a full URI ID
+  transfer.id = requestUtil.getBaseUri(this) + this.originalUrl;
 
   this.body = transfer;
   this.status = 201;

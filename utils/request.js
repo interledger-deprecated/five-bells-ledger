@@ -1,12 +1,21 @@
-var co = require('co');
-var validate = require('../services/validate');
-var parse = require('co-body');
-var assert = require('assert');
-var InvalidBodyError = require('../errors/invalid-body-error');
-var InvalidUriParameterError = require('../errors/invalid-uri-parameter-error');
+'use strict';
+
+const co = require('co');
+const validate = require('../services/validate');
+const parse = require('co-body');
+const assert = require('assert');
+const InvalidBodyError = require('../errors/invalid-body-error');
+const InvalidUriParameterError =
+  require('../errors/invalid-uri-parameter-error');
 
 /**
  * Validate path parameter.
+ *
+ * @param {String} paramId Name of URL parameter.
+ * @param {String} paramValue Value of URL parameter.
+ * @param {String} schema Name of JSON schema.
+ *
+ * @returns {void}
  */
 exports.validateUriParameter = function (paramId, paramValue, schema) {
   let validationResult = validate(schema, paramValue);
@@ -18,6 +27,11 @@ exports.validateUriParameter = function (paramId, paramValue, schema) {
 
 /**
  * Parse the request body JSON and optionally validate it against a schema.
+ *
+ * @param {Object} ctx Koa context.
+ * @param {String} schema Name of JSON schema.
+ *
+ * @returns {Object} Parsed JSON body
  */
 exports.validateBody = co.wrap(function *(ctx, schema) {
   let json = yield parse(ctx);
@@ -28,10 +42,23 @@ exports.validateBody = co.wrap(function *(ctx, schema) {
       throw new InvalidBodyError('JSON request body is not a valid ' + schema,
         validationResult.errors);
     }
+    // TODO Might be good to do this for safety:
+    // return validationResult.cleanInstance;
   }
 
   return json;
 });
+
+/**
+ * Get the base URI.
+ *
+ * @param {Object} ctx Koa context.
+ *
+ * @returns {String} Base URI.
+ */
+exports.getBaseUri = function (ctx) {
+  return 'http://' + ctx.request.header.host;
+};
 
 exports.assert = function (value, message) {
   try {

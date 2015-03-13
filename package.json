@@ -16,6 +16,7 @@
     "co": "^4.1.0",
     "co-body": "^1.0.0",
     "co-views": "^0.2.0",
+    "deep-diff": "^0.3.0",
     "fowl": "git://github.com/justmoon/fowl",
     "koa": "^0.17.0",
     "koa-compress": "^1.0.6",
