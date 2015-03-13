@@ -23,7 +23,7 @@
     "koa-mag": "^1.0.4",
     "koa-route": "^2.4.0",
     "koa-static": "^1.4.5",
-    "lodash": "^3.3.1",
+    "lodash": "^3.5.0",
     "mag": "^0.9.1",
     "mag-colored-output": "^1.0.0",
     "mag-format-message": "^0.1.1",

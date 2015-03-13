@@ -9,9 +9,10 @@ var InvalidUriParameterError = require('../errors/invalid-uri-parameter-error');
  * Validate path parameter.
  */
 exports.validateUriParameter = function (paramId, paramValue, schema) {
-  var validationResult = validate(schema, paramValue);
+  let validationResult = validate(schema, paramValue);
   if (!validationResult.valid) {
-    throw new InvalidUriParameterError(paramId + ' is not a valid ' + schema, validationResult.errors);
+    throw new InvalidUriParameterError(paramId + ' is not a valid ' + schema,
+      validationResult.errors);
   }
 };
 
@@ -19,12 +20,13 @@ exports.validateUriParameter = function (paramId, paramValue, schema) {
  * Parse the request body JSON and optionally validate it against a schema.
  */
 exports.validateBody = co.wrap(function *(ctx, schema) {
-  var json = yield parse(ctx);
+  let json = yield parse(ctx);
 
   if (schema) {
-    var validationResult = validate(schema, json);
+    let validationResult = validate(schema, json);
     if (!validationResult.valid) {
-      throw new InvalidBodyError('JSON request body is not a valid '+schema, validationResult.errors);
+      throw new InvalidBodyError('JSON request body is not a valid ' + schema,
+        validationResult.errors);
     }
   }
 
@@ -39,12 +41,13 @@ exports.assert = function (value, message) {
   }
 };
 
-['equal', 'notEqual', 'deepEqual', 'notDeepEqual', 'strictEqual', 'notStrictEqual'].forEach(function (method) {
+['equal', 'notEqual', 'deepEqual', 'notDeepEqual', 'strictEqual',
+ 'notStrictEqual'].forEach(function (method) {
   exports.assert[method] = function (actual, expected, message) {
     try {
       assert[method](actual, expected, message);
     } catch (err) {
       throw new InvalidBodyError(err.message);
     }
-  }
+  };
 });

@@ -76,18 +76,46 @@ function isConditionMet(transfer) {
 }
 
 function *processStateTransitions(tr, transfer) {
+  // Calculate per-account totals
+  let debitAccounts = _.groupBy(transfer.source_funds, function (debit) {
+    return debit.account;
+  });
+
+  let creditAccounts = _.groupBy(transfer.destination_funds, function (credit) {
+    return credit.account;
+  });
+
+  for (let sender of Object.keys(debitAccounts)) {
+    let debitAmounts = debitAccounts[sender];
+    let accountObj = yield tr.get(['people', sender]);
+
+    if (typeof accountObj === 'undefined') {
+      throw new UnprocessableEntityError(
+        'Sender `' + sender + '` does not exist.');
+    }
+
+    debitAccounts[sender] = {
+      balance: +accountObj.balance,
+      totalAmount: +_.sum(debitAmounts)
+    };
+  }
+
+  for (let recipient of Object.keys(creditAccounts)) {
+    let creditAmounts = creditAccounts[recipient];
+    let accountObj = yield tr.get(['people', recipient]);
+
+    if (typeof accountObj === 'undefined') {
+      throw new UnprocessableEntityError(
+        'Recipient `' + recipient + '` does not exist.');
+    }
+
+    creditAccounts[recipient] = {
+      balance: +accountObj.balance,
+      totalAmount: +_.sum(creditAmounts)
+    };
+  }
+
   // Check prerequisites
-  let sender = yield tr.get(['people', transfer.source_funds.account]);
-  let recipient =
-    yield tr.get(['people', transfer.destination_funds.account]);
-
-  if (typeof sender === 'undefined') {
-    throw new UnprocessableEntityError('Sender does not exist.');
-  }
-  if (typeof recipient === 'undefined') {
-    throw new UnprocessableEntityError('Recipient does not exist.');
-  }
-
   if (transfer.state === 'proposed') {
     let sourceFunds = Array.isArray(transfer.source_funds)
                         ? transfer.source_funds
@@ -105,16 +133,23 @@ function *processStateTransitions(tr, transfer) {
     if (authorized) {
       log.debug(`transfer transitioned from proposed to prepared`);
       transfer.state = 'prepared';
-      if (sender.balance < transfer.source_funds.amount) {
-        throw new InsufficientFundsError('Sender has insufficient funds.',
-                                         transfer.source_funds.account);
+
+      for (let sender of Object.keys(debitAccounts)) {
+        let debitAccount = debitAccounts[sender];
+
+        // Check senders' balances
+        if (debitAccount.balance < debitAccount.totalAmount) {
+          throw new InsufficientFundsError('Sender has insufficient funds.',
+                                           sender);
+        }
+
+        // Take money out of senders' accounts
+        log.debug(' sender ' + sender + ' balance: ' + debitAccount.balance
+                  + ' -> ' + (debitAccount.balance - debitAccount.totalAmount));
+        tr.put(['people', sender, 'balance'],
+               debitAccount.balance - debitAccount.totalAmount);
       }
 
-      // Take money out of sender's account
-      log.debug('sender balance: ' + sender.balance + ' -> ' +
-                (+sender.balance - +transfer.destination_funds.amount));
-      tr.put(['people', transfer.source_funds.account, 'balance'],
-             +sender.balance - +transfer.destination_funds.amount);
     }
   }
 
@@ -129,11 +164,15 @@ function *processStateTransitions(tr, transfer) {
     // In a real-world / asynchronous implementation, the response from the
     // external ledger would trigger the state transition from 'accepted' to
     // 'completed' or 'failed'.
-    log.debug('recipient balance: ' + recipient.balance + ' -> ' +
-        (+recipient.balance + +transfer.destination_funds.amount));
+    for (let recipient of Object.keys(creditAccounts)) {
+      let creditAccount = creditAccounts[recipient];
 
-    tr.put(['people', transfer.destination_funds.account, 'balance'],
-     +recipient.balance + +transfer.destination_funds.amount);
+      log.debug('recipient ' + recipient + ' balance: ' + creditAccount.balance
+                + ' -> ' + (creditAccount.balance + creditAccount.totalAmount));
+
+      tr.put(['people', recipient, 'balance'],
+             creditAccount.balance + creditAccount.totalAmount);
+    }
 
     log.debug(`transfer transitioned from accepted to completed`);
     transfer.state = 'completed';
@@ -185,22 +224,47 @@ exports.create = function *create(id) {
     transfer.id = id;
   }
 
-  transfer.state = 'proposed';
-
   log.debug('putting transfer ID ' + transfer.id);
-  log.debug('' + transfer.source_funds.account + ' -> ' +
-            transfer.destination_funds.account + ' : ' +
-            transfer.destination_funds.amount);
+  log.debug('' + transfer.source_funds[0].account + ' -> ' +
+            transfer.destination_funds[0].account + ' : ' +
+            transfer.destination_funds[0].amount);
 
   // Do all static verification (signatures, validity, etc.) here
-  if (transfer.source_funds.amount <= 0) {
+
+  // Verify debits
+  let asset = transfer.source_funds[0].asset,
+      totalDebits = 0,
+      totalCredits = 0;
+
+  transfer.source_funds.forEach(function (debit) {
+    if (debit.amount <= 0) {
+      throw new UnprocessableEntityError(
+        'Amount must be a positive number excluding zero.');
+    }
+    if (debit.asset && debit.asset !== asset) {
+      throw new UnprocessableEntityError(
+        'All debits must have the same asset type.');
+    }
+    totalDebits += debit.amount;
+  });
+
+  transfer.destination_funds.forEach(function (credit) {
+    if (credit.amount <= 0) {
+      throw new UnprocessableEntityError(
+        'Amount must be a positive number excluding zero.');
+    }
+    if (credit.asset && credit.asset !== asset) {
+      throw new UnprocessableEntityError(
+        'All debits must have the same asset type.');
+    }
+    totalCredits += credit.amount;
+  });
+
+  if (totalCredits > totalDebits) {
     throw new UnprocessableEntityError(
-      'Amount must be a positive number excluding zero.');
+      'Transfer may not create money.');
   }
-  if (transfer.source_funds.amount !== transfer.destination_funds.amount) {
-    throw new UnprocessableEntityError(
-      'Source and destination amounts do not match.');
-  }
+
   // TODO Validate signatures in authorizations
   // TODO Validate that the execution_condition_fulfillment is correct
 
@@ -214,6 +278,8 @@ exports.create = function *create(id) {
       transfer = updateTransferObject(originalTransfer, transfer);
     } else {
       log.debug('this is a new transfer');
+
+      transfer.state = 'proposed';
     }
 
     yield processStateTransitions(tr, transfer);
@@ -224,27 +290,27 @@ exports.create = function *create(id) {
 
   log.debug('changes written to database');
 
-  function getSubscriptions(account) {
-    return db.get(['people', account, 'subscriptions']);
-  }
-  let subscriptions = _(yield [
-    getSubscriptions(transfer.source_funds.account),
-    getSubscriptions(transfer.destination_funds.account)
-  ]).flatten().map(function (x) {
-    // Turning [{'abcdef...': { 'abcdef...': {}}}] into [{}]
-    return _.first(_.values(_.first(_.values(x))));
-  }).filter(function (x) {
-    return x && x.event === 'transfer.create';
-  }).value();
-
-  subscriptions = subscriptions.filter(function (subscription) {
-    console.log('subscription', subscription);
-    return false;
-  });
-
-  subscriptions.forEach(function (subscription) {
-    log.debug('notifying ' + subscription.owner + ' at ' + subscription.target);
-  }, subscriptions);
+  // function getSubscriptions(account) {
+  //   return db.get(['people', account, 'subscriptions']);
+  // }
+  // let subscriptions = _(yield [
+  //   getSubscriptions(transfer.source_funds.account),
+  //   getSubscriptions(transfer.destination_funds.account)
+  // ]).flatten().map(function (x) {
+  //   // Turning [{'abcdef...': { 'abcdef...': {}}}] into [{}]
+  //   return _.first(_.values(_.first(_.values(x))));
+  // }).filter(function (x) {
+  //   return x && x.event === 'transfer.create';
+  // }).value();
+  //
+  // subscriptions = subscriptions.filter(function (subscription) {
+  //   console.log('subscription', subscription);
+  //   return false;
+  // });
+  //
+  // subscriptions.forEach(function (subscription) {
+  //   log.debug('notifying ' + subscription.owner + ' at ' + subscription.target);
+  // }, subscriptions);
 
   this.body = transfer;
   this.status = 201;
