@@ -1,7 +1,7 @@
 /*global describe, it*/
 'use strict';
 var _ = require('lodash');
-var superagent = require('supertest-promised');
+var superagent = require('co-supertest');
 var expect = require('chai').expect;
 var app = require('../app');
 var db = require('../services/db');

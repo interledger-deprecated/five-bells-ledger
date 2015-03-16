@@ -19,7 +19,7 @@
     "co-views": "^0.2.0",
     "deep-diff": "^0.3.0",
     "fowl": "git://github.com/justmoon/fowl",
-    "koa": "^0.17.0",
+    "koa": "^0.18.1",
     "koa-compress": "^1.0.6",
     "koa-cors": "0.0.14",
     "koa-mag": "^1.0.4",
@@ -38,7 +38,7 @@
     "uuid4": "^1.0.0"
   },
   "devDependencies": {
-    "chai": "^1.10.0",
+    "chai": "^2.1.2",
     "co-mocha": "^1.1.0",
     "co-supertest": "0.0.8",
     "coveralls": "^2.11.2",
