@@ -40,9 +40,10 @@
   "devDependencies": {
     "chai": "^1.10.0",
     "co-mocha": "^1.1.0",
+    "co-supertest": "0.0.8",
     "coveralls": "^2.11.2",
     "istanbul": "git://github.com/gotwarlost/istanbul.git#harmony",
     "mocha": "^2.1.0",
-    "supertest-promised": "^0.1.0"
+    "supertest": "^0.15.0"
   }
 }

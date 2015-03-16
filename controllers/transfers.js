@@ -143,7 +143,7 @@ function *processStateTransitions(tr, transfer) {
     });
 
     if (authorized) {
-      log.debug(`transfer transitioned from proposed to prepared`);
+      log.debug('transfer transitioned from proposed to prepared');
       transfer.state = 'prepared';
 
       for (let sender of Object.keys(debitAccounts)) {
@@ -167,7 +167,7 @@ function *processStateTransitions(tr, transfer) {
 
   if (transfer.state === 'prepared') {
     if (isConditionMet(transfer)) {
-      log.debug(`transfer transitioned from prepared to accepted`);
+      log.debug('transfer transitioned from prepared to accepted');
       transfer.state = 'accepted';
     }
   }
@@ -186,7 +186,7 @@ function *processStateTransitions(tr, transfer) {
              creditAccount.balance + creditAccount.totalAmount);
     }
 
-    log.debug(`transfer transitioned from accepted to completed`);
+    log.debug('transfer transitioned from accepted to completed');
     transfer.state = 'completed';
   }
 }
@@ -281,8 +281,9 @@ exports.create = function *create(id) {
   // TODO Validate signatures in authorizations
   // TODO Validate that the execution_condition_fulfillment is correct
 
+  let originalTransfer;
   yield db.transaction(function *(tr) {
-    let originalTransfer = yield tr.get(['transfers', transfer.id]);
+    originalTransfer = yield tr.get(['transfers', transfer.id]);
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID');
 
@@ -329,5 +330,5 @@ exports.create = function *create(id) {
   transfer.id = requestUtil.getBaseUri(this) + this.originalUrl;
 
   this.body = transfer;
-  this.status = 201;
+  this.status = originalTransfer ? 200 : 201;
 };
