@@ -178,5 +178,41 @@ describe('Transfers', function () {
     it('should return 403 if the request is unauthorized');
     it('should return 403 if the authorization is forged');
     it('should return 403 if the authorization is not applicable');
+
+    it('should set the transfer state to "proposed" if no authorization is given', function *() {
+      const transfer = this.formatId(this.exampleTransfer, '/transfers/');
+      const transferWithoutAuthorization = _.cloneDeep(transfer);
+      delete transferWithoutAuthorization.source_funds[0].authorization;
+
+      yield this.request()
+        .put('/transfers/' + this.exampleTransfer.id)
+        .send(transferWithoutAuthorization)
+        .expect(201)
+        .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
+        .end();
+    });
+
+    it('should update the state from "proposed" to "completed" when authorization is added and no execution condition is given', function *() {
+      const transfer = this.formatId(this.exampleTransfer, '/transfers/');
+
+      const transferWithoutAuthorization = _.cloneDeep(transfer);
+      delete transferWithoutAuthorization.source_funds[0].authorization;
+
+      const transferWithAuthorization = _.cloneDeep(transfer);
+
+      yield this.request()
+        .put('/transfers/' + this.exampleTransfer.id)
+        .send(transferWithoutAuthorization)
+        .expect(201)
+        .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
+        .end();
+
+      yield this.request()
+        .put('/transfers/' + this.exampleTransfer.id)
+        .send(transferWithAuthorization)
+        .expect(200)
+        .expect(_.assign({}, transferWithAuthorization, {state: 'completed'}))
+        .end();
+    });
   });
 });
