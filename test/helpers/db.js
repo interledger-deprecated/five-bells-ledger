@@ -2,9 +2,9 @@ var db = require('../../services/db');
 
 exports.reset = function () {
   return db.transaction(function *(tr) {
-    yield tr.remove(['holds']);
-    yield tr.remove(['transfers']);
-    yield tr.remove(['people']);
-    yield tr.remove(['subscriptions']);
+    tr.remove(['holds']);
+    tr.remove(['transfers']);
+    tr.remove(['people']);
+    tr.remove(['subscriptions']);
   });
 };

@@ -16,7 +16,8 @@ db.transaction = function (generatorFunction) {
   // Turn the generator into a promise, then call upstream transaction().
   return db._transaction(function (tr) {
     var generator = generatorFunction.call(this, tr);
-    if ('function' === typeof generator.next) {
+    if (typeof generator === 'object' &&
+        typeof generator.next === 'function') {
       return co(generator);
     } else {
       return generator;
