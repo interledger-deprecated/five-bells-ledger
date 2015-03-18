@@ -123,9 +123,18 @@ describe('Transfers', function () {
         .end();
     });
 
-    it('should return 422 if the amount is zero', function *() {
+    it('should return 422 if the source amount is zero', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
       transfer.source_funds[0].amount = '0';
+      yield this.request()
+        .put('/transfers/' + this.exampleTransfer.id)
+        .send(transfer)
+        .expect(422)
+        .end();
+    });
+
+    it('should return 422 if the destination amount is zero', function *() {
+      const transfer = this.formatId(this.exampleTransfer, '/transfers/');
       transfer.destination_funds[0].amount = '0';
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
