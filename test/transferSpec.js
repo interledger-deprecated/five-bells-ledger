@@ -66,7 +66,8 @@ describe('Transfers', function () {
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transferWithoutId)
         .expect(201)
-        .expect(_.assign({}, this.formatId(this.exampleTransfer, '/transfers/'), {state: 'completed'}))
+        .expect(_.assign({}, this.formatId(this.exampleTransfer, '/transfers/'),
+                {state: 'completed'}))
         .end();
 
       // Check balances
@@ -76,7 +77,8 @@ describe('Transfers', function () {
 
     it('should trigger subscriptions', function *() {
       const subscription = require('./data/subscription1.json');
-      yield db.create(['people', subscription.owner, 'subscriptions', subscription.id], subscription);
+      yield db.create(['people', subscription.owner, 'subscriptions', subscription.id],
+                      subscription);
 
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
       yield this.request()
@@ -204,7 +206,8 @@ describe('Transfers', function () {
         .end();
     });
 
-    it('should update the state from "proposed" to "completed" when authorization is added and no execution condition is given', function *() {
+    it('should update the state from "proposed" to "completed" when authorization is added and ' +
+       'no execution condition is given', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
 
       const transferWithoutAuthorization = _.cloneDeep(transfer);
@@ -227,7 +230,8 @@ describe('Transfers', function () {
         .end();
     });
 
-    it('should update the state from "proposed" to "prepared" when authorization is added and an execution condition is present', function *() {
+    it('should update the state from "proposed" to "prepared" when authorization is added and an ' +
+       'execution condition is present', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
 
       const transferWithoutAuthorization = _.cloneDeep(transfer);
@@ -258,7 +262,8 @@ describe('Transfers', function () {
         .end();
     });
 
-    it('should update the state from "prepared" to "completed" when the execution criteria is met', function *() {
+    it('should update the state from "prepared" to "completed" when the execution criteria is met',
+       function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
 
       const transferWithoutAuthorization = _.cloneDeep(transfer);

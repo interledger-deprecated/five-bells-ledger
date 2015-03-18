@@ -1,0 +1,3 @@
+rules:
+  max-nested-callbacks: [1, 5]
+  max-len: [2, 100]

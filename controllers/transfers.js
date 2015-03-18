@@ -322,7 +322,8 @@ exports.create = function *create(id) {
   // });
   //
   // subscriptions.forEach(function (subscription) {
-  //   log.debug('notifying ' + subscription.owner + ' at ' + subscription.target);
+  //   log.debug('notifying ' + subscription.owner + ' at ' +
+  //             subscription.target);
   // }, subscriptions);
 
   // Externally we want to use a full URI ID

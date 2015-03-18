@@ -31,7 +31,7 @@ describe('Subscriptions', function () {
   describe('GET /subscriptions/:uuid', function () {
     it('should return 200', function *() {
       yield request()
-        .get('/subscriptions/'+this.existingSubscription.id)
+        .get('/subscriptions/' + this.existingSubscription.id)
         .expect(200)
         .expect(this.existingSubscription)
         .end();
@@ -39,7 +39,7 @@ describe('Subscriptions', function () {
 
     it('should return 404 for a non-existant subscription', function *() {
       yield request()
-        .get('/subscriptions/'+this.exampleSubscription.id)
+        .get('/subscriptions/' + this.exampleSubscription.id)
         .expect(404)
         .end();
     });
@@ -62,7 +62,7 @@ describe('Subscriptions', function () {
     it('should return 200 when updating the target URL', function *() {
       this.existingSubscription.target = 'http://192.0.2.1/test2';
       yield request()
-        .put('/subscriptions/'+this.existingSubscription.id)
+        .put('/subscriptions/' + this.existingSubscription.id)
         .send(this.existingSubscription)
         .expect(200)
         .expect(this.existingSubscription)
@@ -143,7 +143,7 @@ describe('Subscriptions', function () {
   describe('DELETE /subscriptions/:uuid', function () {
     it('should return 204', function *() {
       yield request()
-        .delete('/subscriptions/'+this.existingSubscription.id)
+        .delete('/subscriptions/' + this.existingSubscription.id)
         .expect(204)
         .end();
     });

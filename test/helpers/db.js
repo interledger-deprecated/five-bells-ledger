@@ -1,4 +1,6 @@
-var db = require('../../services/db');
+'use strict';
+
+const db = require('../../services/db');
 
 exports.reset = function () {
   return db.transaction(function *(tr) {

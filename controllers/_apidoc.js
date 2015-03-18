@@ -1,7 +1,8 @@
 /**
  * @apiDefine InvalidUriParameterError
  *
- * @apiError InvalidUriParameterError (One of) the provided URI parameter(s) was invalid.
+ * @apiError InvalidUriParameterError (One of) the provided URI parameter(s)
+ *   was invalid.
  *
  * @apiErrorExample InvalidUriParameterError
  *     HTTP/1.1 400 Bad Request
@@ -15,7 +16,8 @@
 /**
  * @apiDefine InvalidBodyError
  *
- * @apiError InvalidBodyError The submitted JSON entity does not match the required schema.
+ * @apiError InvalidBodyError The submitted JSON entity does not match the
+ *   required schema.
  *
  * @apiErrorExample InvalidBodyError
  *     HTTP/1.1 400 Bad Request
@@ -42,7 +44,8 @@
 /**
  * @apiDefine UnprocessableEntityError
  *
- * @apiError UnprocessableEntityError The provided entity is syntactically correct, but there is a generic semantic problem with it.
+ * @apiError UnprocessableEntityError The provided entity is syntactically
+ *   correct, but there is a generic semantic problem with it.
  *
  * @apiErrorExample UnprocessableEntityError
  *     HTTP/1.1 422 Unprocessable Entity
@@ -55,7 +58,8 @@
 /**
  * @apiDefine InsufficientFundsError
  *
- * @apiError InsufficientFundsError The source account does not have sufficient funds to satisfy the request.
+ * @apiError InsufficientFundsError The source account does not have sufficient
+ *   funds to satisfy the request.
  *
  * @apiErrorExample InsufficientFundsError
  *     HTTP/1.1 422 Unprocessable Entity
@@ -69,7 +73,8 @@
 /**
  * @apiDefine AlreadyExistsError
  *
- * @apiError AlreadyExistsError The specified entity already exists and may not be modified.
+ * @apiError AlreadyExistsError The specified entity already exists and may not
+ *   be modified.
  *
  * @apiErrorExample AlreadyExistsError
  *     HTTP/1.1 422 Unprocessable Entity

@@ -1,21 +1,21 @@
 /* @flow */
 'use strict';
 
-var health = require('./controllers/health');
-var transfers = require('./controllers/transfers');
-var people = require('./controllers/people');
-var subscriptions = require('./controllers/subscriptions');
-var compress = require('koa-compress');
-var serve = require('koa-static');
-var route = require('koa-route');
-var cors = require('koa-cors');
-var errorHandler = require('./middlewares/error-handler');
-var koa = require('koa');
-var path = require('path');
-var log = require('./services/log');
-var logger = require('koa-mag');
-var config = require('./services/config');
-var app = module.exports = koa();
+const health = require('./controllers/health');
+const transfers = require('./controllers/transfers');
+const people = require('./controllers/people');
+const subscriptions = require('./controllers/subscriptions');
+const compress = require('koa-compress');
+const serve = require('koa-static');
+const route = require('koa-route');
+const cors = require('koa-cors');
+const errorHandler = require('./middlewares/error-handler');
+const koa = require('koa');
+const path = require('path');
+const log = require('./services/log');
+const logger = require('koa-mag');
+const config = require('./services/config');
+const app = module.exports = koa();
 
 // Logger
 app.use(logger());
