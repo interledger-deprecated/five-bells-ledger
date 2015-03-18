@@ -4,8 +4,8 @@
   "description": "Five Bells ledger reference implementation",
   "private": true,
   "scripts": {
-    "start": "nodemon --harmony --harmony-modules app.js",
-    "test": "node --harmony node_modules/.bin/istanbul test -- _mocha --harmony -r co-mocha",
+    "start": "nodemon app.js",
+    "test": "node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
   },
   "engines": {
