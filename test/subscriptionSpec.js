@@ -1,16 +1,19 @@
-/*global describe, it*/
 'use strict';
-var superagent = require('co-supertest');
-var expect = require('chai').expect;
-var app = require('../app');
-var db = require('../services/db');
-var dbHelper = require('./helpers/db');
+
+const superagent = require('co-supertest');
+const expect = require('chai').expect;
+const app = require('../app');
+const db = require('../services/db');
+const dbHelper = require('./helpers/db');
+const logHelper = require('./helpers/log');
 
 function request() {
   return superagent(app.listen());
 }
 
 describe('Subscriptions', function () {
+  logHelper();
+
   beforeEach(function *() {
     // Define example data
     this.exampleTransfer = require('./data/transfer1');

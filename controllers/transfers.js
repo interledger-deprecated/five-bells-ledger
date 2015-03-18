@@ -225,7 +225,6 @@ function *processStateTransitions(tr, transfer) {
 exports.create = function *create(id) {
   requestUtil.validateUriParameter('id', id, 'Uuid');
   let transfer = yield requestUtil.validateBody(this, 'Transfer');
-  console.log(transfer);
 
   if (typeof transfer.id !== 'undefined') {
     requestUtil.assert.strictEqual(

@@ -6,8 +6,11 @@ const app = require('../app');
 const db = require('../services/db');
 const dbHelper = require('./helpers/db');
 const appHelper = require('./helpers/app');
+const logHelper = require('./helpers/log');
 
 describe('Transfers', function () {
+  logHelper();
+
   beforeEach(function *() {
     appHelper.create(this, app);
 
