@@ -214,5 +214,67 @@ describe('Transfers', function () {
         .expect(_.assign({}, transferWithAuthorization, {state: 'completed'}))
         .end();
     });
+
+    it('should update the state from "proposed" to "prepared" when authorization is added and an execution condition is present', function *() {
+      const transfer = this.formatId(this.exampleTransfer, '/transfers/');
+
+      const transferWithoutAuthorization = _.cloneDeep(transfer);
+      delete transferWithoutAuthorization.source_funds[0].authorization;
+      transferWithoutAuthorization.execution_condition = {
+        message: 'test',
+        signer: 'blah'
+      };
+
+      const transferWithAuthorization = _.cloneDeep(transfer);
+      transferWithAuthorization.execution_condition = {
+        message: 'test',
+        signer: 'blah'
+      };
+
+      yield this.request()
+        .put('/transfers/' + this.exampleTransfer.id)
+        .send(transferWithoutAuthorization)
+        .expect(201)
+        .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
+        .end();
+
+      yield this.request()
+        .put('/transfers/' + this.exampleTransfer.id)
+        .send(transferWithAuthorization)
+        .expect(200)
+        .expect(_.assign({}, transferWithAuthorization, {state: 'prepared'}))
+        .end();
+    });
+
+    it('should update the state from "prepared" to "completed" when the execution criteria is met', function *() {
+      const transfer = this.formatId(this.exampleTransfer, '/transfers/');
+
+      const transferWithoutAuthorization = _.cloneDeep(transfer);
+      transferWithoutAuthorization.execution_condition = {
+        message: 'test',
+        signer: 'blah'
+      };
+
+      const transferWithAuthorization = _.cloneDeep(transfer);
+      transferWithAuthorization.execution_condition = {
+        message: 'test',
+        signer: 'blah'
+      };
+      transferWithAuthorization.execution_condition_fulfillment = {};
+
+      yield this.request()
+        .put('/transfers/' + this.exampleTransfer.id)
+        .send(transferWithoutAuthorization)
+        .expect(201)
+        .expect(_.assign({}, transferWithoutAuthorization, {state: 'prepared'}))
+        .end();
+
+      yield this.request()
+        .put('/transfers/' + this.exampleTransfer.id)
+        .send(transferWithAuthorization)
+        .expect(200)
+        .expect(_.assign({}, transferWithAuthorization, {state: 'completed'}))
+        .end();
+    });
   });
 });
