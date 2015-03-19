@@ -37,7 +37,7 @@ describe('Subscriptions', function () {
         .end();
     });
 
-    it('should return 404 for a non-existant subscription', function *() {
+    it('should return 404 for a non-existent subscription', function *() {
       yield request()
         .get('/subscriptions/' + this.exampleSubscription.id)
         .expect(404)

@@ -10,7 +10,9 @@ module.exports = function InsufficientFundsError(message, accountIdentifier) {
   this.accountIdentifier = accountIdentifier;
 };
 
-module.exports.prototype.handler = function (ctx, log) {
+require('util').inherits(module.exports, UnprocessableEntityError);
+
+module.exports.prototype.handler = function *(ctx, log) {
   log.warn('Insufficient Funds: ' + this.message);
   ctx.status = 422;
   ctx.body = {
@@ -19,5 +21,3 @@ module.exports.prototype.handler = function (ctx, log) {
     owner: this.accountIdentifier
   };
 };
-
-require('util').inherits(module.exports, UnprocessableEntityError);
