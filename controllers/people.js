@@ -1,11 +1,10 @@
 /* @flow */
 'use strict';
 
-var uuid = require('uuid4');
-var db = require('../services/db');
-var log = require('../services/log')('people');
-var request = require('../utils/request');
-var NotFoundError = require('../errors/not-found-error');
+const db = require('../services/db');
+const log = require('../services/log')('people');
+const request = require('../utils/request');
+const NotFoundError = require('../errors/not-found-error');
 
 /**
  * @api {get} /people/:id Fetch user info
@@ -19,13 +18,18 @@ var NotFoundError = require('../errors/not-found-error');
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
+ *
+ * @param {String} id Person identifier (i.e. username)
+ * @returns {void}
  */
 exports.fetch = function *fetch(id) {
   request.validateUriParameter('id', id, 'Identifier');
-  log.debug('fetching person ID '+id);
+  log.debug('fetching person ID ' + id);
 
-  var person = yield db.get(['people', id]);
-  if (!person) throw new NotFoundError('Unknown person ID');
+  const person = yield db.get(['people', id]);
+  if (!person) {
+    throw new NotFoundError('Unknown person ID');
+  }
 
   this.body = person;
 };
@@ -42,16 +46,19 @@ exports.fetch = function *fetch(id) {
  *
  * @apiUse InvalidUriParameterError
  * @apiUse InvalidBodyError
+ *
+ * @param {String} id Person identifier (i.e. username)
+ * @return {void}
  */
 exports.putResource = function *putResource(id) {
   request.validateUriParameter('id', id, 'Identifier');
-  var person = yield request.validateBody(this, 'Person');
+  const person = yield request.validateBody(this, 'Person');
 
   person.id = id;
 
-  var created = false;
+  let created = false;
   yield db.transaction(function *(tr) {
-    var existingPerson = yield tr.get(['people', id]);
+    const existingPerson = yield tr.get(['people', id]);
 
     if (existingPerson) {
       created = true;
@@ -59,8 +66,8 @@ exports.putResource = function *putResource(id) {
 
     tr.put(['people', id], person);
   });
-  log.debug((created ? 'created' : 'updated') + ' person ID '+id);
+  log.debug((created ? 'created' : 'updated') + ' person ID ' + id);
 
   this.body = person;
   this.status = created ? 201 : 200;
-}
+};

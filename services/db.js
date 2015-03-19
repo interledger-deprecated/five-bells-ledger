@@ -1,10 +1,10 @@
 'use strict';
 
-var co = require('co');
-var Database = require('fowl').Database;
-var config = require('./config');
+const co = require('co');
+const Database = require('fowl').Database;
+const config = require('./config');
 
-var db = new Database({
+const db = new Database({
   idProp: 'id'
 });
 
@@ -15,12 +15,13 @@ db._transaction = db.transaction;
 db.transaction = function (generatorFunction) {
   // Turn the generator into a promise, then call upstream transaction().
   return db._transaction(function (tr) {
-    var generator = generatorFunction.call(this, tr);
-    if ('function' === typeof generator.next) {
+    const generator = generatorFunction.call(this, tr);
+    if (typeof generator === 'object' &&
+        typeof generator.next === 'function') {
       return co(generator);
-    } else {
-      return generator;
     }
+
+    return generator;
   });
 };
 

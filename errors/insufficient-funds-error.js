@@ -1,6 +1,6 @@
 'use strict';
 
-var UnprocessableEntityError = require('./unprocessable-entity-error');
+const UnprocessableEntityError = require('./unprocessable-entity-error');
 
 module.exports = function InsufficientFundsError(message, accountIdentifier) {
   Error.captureStackTrace(this, this.constructor);

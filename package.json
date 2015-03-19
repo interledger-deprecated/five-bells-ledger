@@ -4,8 +4,9 @@
   "description": "Five Bells ledger reference implementation",
   "private": true,
   "scripts": {
-    "start": "nodemon --harmony --harmony-modules app.js",
-    "test": "node --harmony node_modules/.bin/istanbul test -- _mocha --harmony -r co-mocha"
+    "start": "nodemon app.js",
+    "test": "node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
   },
   "engines": {
     "node": ">=0.12",
@@ -16,14 +17,15 @@
     "co": "^4.1.0",
     "co-body": "^1.0.0",
     "co-views": "^0.2.0",
+    "deep-diff": "^0.3.0",
     "fowl": "git://github.com/justmoon/fowl",
-    "koa": "^0.17.0",
+    "koa": "^0.18.1",
     "koa-compress": "^1.0.6",
     "koa-cors": "0.0.14",
     "koa-mag": "^1.0.4",
     "koa-route": "^2.4.0",
     "koa-static": "^1.4.5",
-    "lodash": "^3.3.1",
+    "lodash": "^3.5.0",
     "mag": "^0.9.1",
     "mag-colored-output": "^1.0.0",
     "mag-format-message": "^0.1.1",
@@ -36,10 +38,12 @@
     "uuid4": "^1.0.0"
   },
   "devDependencies": {
-    "chai": "^1.10.0",
+    "chai": "^2.1.2",
     "co-mocha": "^1.1.0",
+    "co-supertest": "0.0.8",
+    "coveralls": "^2.11.2",
     "istanbul": "git://github.com/gotwarlost/istanbul.git#harmony",
     "mocha": "^2.1.0",
-    "supertest-promised": "^0.1.0"
+    "supertest": "^0.15.0"
   }
 }

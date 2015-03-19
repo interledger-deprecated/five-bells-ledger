@@ -1,11 +1,14 @@
 {
   "id": "155dff3f-4915-44df-a707-acc4b527bcbd",
-  "source_funds": {
+  "source_funds": [{
     "account": "alice",
-    "amount": "10"
-  },
-  "destination_funds": {
+    "amount": "10",
+    "authorization": {
+      "algorithm": "ed25519-sha512"
+    }
+  }],
+  "destination_funds": [{
     "account": "bob",
     "amount": "10"
-  }
+  }]
 }

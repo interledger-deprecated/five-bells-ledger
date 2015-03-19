@@ -12,6 +12,8 @@ before_install:
 - sudo dpkg -i foundationdb-server_${FDB_VERSION}-1_amd64.deb foundationdb-clients_${FDB_VERSION}-1_amd64.deb
 - rm foundationdb-server_${FDB_VERSION}-1_amd64.deb foundationdb-clients_${FDB_VERSION}-1_amd64.deb
 script: MOCHA_REPORTER=tap npm test --coverage
+after_success:
+- npm run coveralls
 notifications:
   slack:
     secure: bltLEOkw+Kv8g1EUYKbu848r+Fx8Rhhc54wagwgaHPYYRi/ipV5xyQMP4NRJvoMKFNAws16ytUcRXqaNz4tolOx1XWckcjb3KYwFAku9rumSfxjiJGN97UsJadjL8OXnSJrwtPv7yyWnqrhj8UB16MLNx4HTRLjblUWFJDqdbaI=

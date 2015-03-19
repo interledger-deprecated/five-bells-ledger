@@ -1,10 +1,49 @@
 'use strict';
 
-var uuid = require('uuid4');
-var db = require('../services/db');
-var log = require('../services/log')('subscriptions');
-var request = require('../utils/request');
-var NotFoundError = require('../errors/not-found-error');
+const uuid = require('uuid4');
+const db = require('../services/db');
+const log = require('../services/log')('subscriptions');
+const request = require('../utils/request');
+const NotFoundError = require('../errors/not-found-error');
+const UnprocessableEntityError =
+require('../errors/unprocessable-entity-error');
+
+/**
+ * Validate a subscription semantically.
+ *
+ * We use schemas to validate data syntactically, this method takes care of all
+ * remaining validations.
+ *
+ * @param {Object} subscription Subscription
+ * @param {Object} tr Database transaction
+ * @returns {void}
+ */
+function *validateSubscriptionSemantics(subscription, tr) {
+  const owner = yield tr.get(['people', subscription.owner]);
+
+  if (typeof owner === 'undefined') {
+    throw new UnprocessableEntityError('Owner does not exist.');
+  }
+}
+
+/**
+ * Store a subscription in the database.
+ *
+ * @param {Object} subscription Subscription
+ * @returns {void}
+ */
+function *storeSubscription(subscription) {
+  yield db.transaction(function *(tr) {
+    // Check prerequisites
+    yield *validateSubscriptionSemantics(subscription, tr);
+
+    // Store subscription in database
+    // TODO: Who to subscribe to should be defined by a separate `subject`
+    //       field.
+    tr.put(['people', subscription.owner, 'subscriptions', subscription.id],
+           subscription);
+  });
+}
 
 /**
  * @api {get} /subscriptions/:id Get RESThook subscription
@@ -12,19 +51,26 @@ var NotFoundError = require('../errors/not-found-error');
  * @apiGroup Subscription
  * @apiVersion 1.0.0
  *
- * @apiDescription Use this to query about the details or status of a subscription.
+ * @apiDescription Use this to query about the details or status of a
+ *   subscription.
  *
- * @apiParam {String} id Subscription [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ * @apiParam {String} id Subscription
+ *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
+ *
+ * @param {String} id Transfer UUID
+ * @returns {void}
  */
 exports.fetch = function *fetch(id) {
   request.validateUriParameter('id', id, 'Uuid');
-  log.debug('fetching subscription ID '+id);
+  log.debug('fetching subscription ID ' + id);
 
   this.body = yield db.get(['subscriptions', id]);
-  if (!this.body) throw new NotFoundError('Unknown subscription ID');
+  if (!this.body) {
+    throw new NotFoundError('Unknown subscription ID');
+  }
 };
 
 /**
@@ -42,14 +88,17 @@ exports.fetch = function *fetch(id) {
  *     }
  *
  * @apiUse InvalidBodyError
+ *
+ * @returns {void}
  */
 exports.create = function *create() {
-  var _this = this;
-  var subscription = yield request.validateBody(this, 'Subscription');
+  const subscription = yield request.validateBody(this, 'Subscription');
 
   // Generate a unique subscription ID outside of the transaction block
-  if (!subscription.id) subscription.id = uuid();
-  log.debug('preparing subscription ID '+subscription.id);
+  if (!subscription.id) {
+    subscription.id = uuid();
+  }
+  log.debug('preparing subscription ID ' + subscription.id);
 
   // Validate and store subscription in database
   yield *storeSubscription(subscription);
@@ -61,18 +110,17 @@ exports.create = function *create() {
 };
 
 exports.update = function *update(id) {
-  var _this = this;
-
   request.validateUriParameter('id', id, 'Uuid');
-  var subscription = yield request.validateBody(this, 'Subscription');
+  const subscription = yield request.validateBody(this, 'Subscription');
 
-  if ("undefined" !== subscription.id) {
-    request.assert.strictEqual(subscription.id, id, "Subscription ID must match the one in the URL");
+  if (typeof subscription.id !== 'undefined') {
+    request.assert.strictEqual(subscription.id, id,
+      'Subscription ID must match the one in the URL');
   } else {
     subscription.id = id;
   }
 
-  log.debug('updating subscription ID '+subscription.id);
+  log.debug('updating subscription ID ' + subscription.id);
 
   // Validate and store subscription in database
   yield *storeSubscription(subscription);
@@ -90,18 +138,22 @@ exports.update = function *update(id) {
  *
  * @apiDescription End a subscription.
  *
- * @apiParam {String} id Subscription [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ * @apiParam {String} id Subscription
+ *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
+ *
+ * @param {String} id UUID of the subscription
+ * @returns {void}
  */
 exports.remove = function *remove(id) {
   request.validateUriParameter('id', id, 'Uuid');
 
-  log.debug('deleting subscription ID '+id);
+  log.debug('deleting subscription ID ' + id);
 
   yield db.transaction(function *(tr) {
-    var subscription = yield tr.get(['subscriptions', id]);
+    const subscription = yield tr.get(['subscriptions', id]);
 
     if (!subscription) {
       throw new NotFoundError('Unknown subscription ID');
@@ -112,31 +164,3 @@ exports.remove = function *remove(id) {
 
   this.status = 204;
 };
-
-/**
- * Store a subscription in the database.
- */
-function *storeSubscription(subscription) {
-  yield db.transaction(function *(tr) {
-    // Check prerequisites
-    yield *validateSubscriptionSemantics(subscription, tr);
-
-    // Store subscription in database
-    // TODO: Who to subscribe to should be defined by a separate `subject` field.
-    tr.put(['people', subscription.owner, 'subscriptions', subscription.id], subscription);
-  });
-}
-
-/**
- * Validate a subscription semantically.
- *
- * We use schemas to validate data syntactically, this method takes care of all
- * remaining validations.
- */
-function *validateSubscriptionSemantics(subscription, tr) {
-  var owner = yield tr.get(['people', subscription.owner]);
-
-  if ("undefined" === typeof owner) {
-    throw new UnprocessableEntityError('Owner does not exist.');
-  }
-}

@@ -5,30 +5,25 @@
   "type": "object",
   "properties": {
     "id": {
-      "description": "Unique ID",
-      "$ref": "Uuid.json"
+      "description": "Resource identifier",
+      "$ref": "Iri.json"
     },
     "source_funds": {
       "description": "Funds that go into the transfer",
-      "oneOf": [
-        { "$ref": "SourceFunds.json" },
-        {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "SourceFunds.json" }
-        }
-      ]
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "SourceFunds.json" }
     },
     "destination_funds": {
       "description": "Funds that come out of the transfer",
-      "oneOf": [
-        { "$ref": "DestinationFunds.json" },
-        {
-          "type": "array",
-          "minItems": 1,
-          "items": { "$ref": "DestinationFunds.json" }
-        }
-      ]
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "DestinationFunds.json" }
+    },
+    "expires": {
+      "description": "Time when the transfer expires",
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": ["source_funds", "destination_funds"]
