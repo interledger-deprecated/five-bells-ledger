@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema",
-  "title": "FundsAuthorization",
+  "title": "DebitAuthorization",
   "description": "An authorization for the collection of source funds.",
   "type": "object",
   "allOf": [

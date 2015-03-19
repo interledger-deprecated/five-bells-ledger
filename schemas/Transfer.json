@@ -12,13 +12,13 @@
       "description": "Funds that go into the transfer",
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "SourceFunds.json" }
+      "items": { "$ref": "Debit.json" }
     },
     "credits": {
       "description": "Funds that come out of the transfer",
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "DestinationFunds.json" }
+      "items": { "$ref": "Credit.json" }
     },
     "expires": {
       "description": "Time when the transfer expires",
