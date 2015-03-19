@@ -1,13 +1,13 @@
 {
   "id": "155dff3f-4915-44df-a707-acc4b527bcbd",
-  "source_funds": [{
+  "debits": [{
     "account": "alice",
     "amount": "10",
     "authorization": {
       "algorithm": "ed25519-sha512"
     }
   }],
-  "destination_funds": [{
+  "credits": [{
     "account": "bob",
     "amount": "10"
   }]

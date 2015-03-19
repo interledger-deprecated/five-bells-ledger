@@ -103,7 +103,7 @@ describe('Transfers', function () {
 
     it('should return 400 if the transfer is invalid', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
-      transfer.source_funds[0].amount = 'bogus';
+      transfer.debits[0].amount = 'bogus';
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
@@ -130,7 +130,7 @@ describe('Transfers', function () {
 
     it('should return 422 if the source amount is zero', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
-      transfer.source_funds[0].amount = '0';
+      transfer.debits[0].amount = '0';
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
@@ -140,7 +140,7 @@ describe('Transfers', function () {
 
     it('should return 422 if the destination amount is zero', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
-      transfer.destination_funds[0].amount = '0';
+      transfer.credits[0].amount = '0';
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
@@ -150,8 +150,8 @@ describe('Transfers', function () {
 
     it('should return 422 if the sender doesn\'t have enough money', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
-      transfer.source_funds[0].amount = '101';
-      transfer.destination_funds[0].amount = '101';
+      transfer.debits[0].amount = '101';
+      transfer.credits[0].amount = '101';
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
@@ -161,7 +161,7 @@ describe('Transfers', function () {
 
     it('should return 422 if the sender doesn\'t exist', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
-      transfer.source_funds[0].account = 'alois';
+      transfer.debits[0].account = 'alois';
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
@@ -171,7 +171,7 @@ describe('Transfers', function () {
 
     it('should return 422 if the recipient doesn\'t exist', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
-      transfer.destination_funds[0].account = 'blob';
+      transfer.credits[0].account = 'blob';
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
@@ -181,7 +181,7 @@ describe('Transfers', function () {
 
     it('should return 422 if source and destination amounts don\'t match', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
-      transfer.destination_funds[0].amount = '122';
+      transfer.credits[0].amount = '122';
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
@@ -196,7 +196,7 @@ describe('Transfers', function () {
     it('should set the transfer state to "proposed" if no authorization is given', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
       const transferWithoutAuthorization = _.cloneDeep(transfer);
-      delete transferWithoutAuthorization.source_funds[0].authorization;
+      delete transferWithoutAuthorization.debits[0].authorization;
 
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
@@ -211,7 +211,7 @@ describe('Transfers', function () {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
 
       const transferWithoutAuthorization = _.cloneDeep(transfer);
-      delete transferWithoutAuthorization.source_funds[0].authorization;
+      delete transferWithoutAuthorization.debits[0].authorization;
 
       const transferWithAuthorization = _.cloneDeep(transfer);
 
@@ -235,7 +235,7 @@ describe('Transfers', function () {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
 
       const transferWithoutAuthorization = _.cloneDeep(transfer);
-      delete transferWithoutAuthorization.source_funds[0].authorization;
+      delete transferWithoutAuthorization.debits[0].authorization;
       transferWithoutAuthorization.execution_condition = {
         message: 'test',
         signer: 'blah'

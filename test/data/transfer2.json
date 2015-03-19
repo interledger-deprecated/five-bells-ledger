@@ -1,10 +1,10 @@
 {
   "id": "44793135-7022-4fd7-bd00-3a14c1e896c6",
-  "source_funds": [{
+  "debits": [{
     "account": "alice",
     "amount": "10"
   }],
-  "destination_funds": [{
+  "credits": [{
     "account": "bob",
     "amount": "10"
   }]

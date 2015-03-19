@@ -54,10 +54,10 @@ function updateTransferObject(originalTransfer, transfer) {
   transfer.state = originalTransfer.state;
 
   // Clients may add authorizations
-  originalTransfer.source_funds.forEach(function (funds, i) {
+  originalTransfer.debits.forEach(function (funds, i) {
     if (!funds.authorization &&
-        transfer.source_funds[i].authorization) {
-      funds.authorization = transfer.source_funds[i].authorization;
+        transfer.debits[i].authorization) {
+      funds.authorization = transfer.debits[i].authorization;
     }
   });
 
@@ -89,11 +89,11 @@ function isConditionMet(transfer) {
 
 function *processStateTransitions(tr, transfer) {
   // Calculate per-account totals
-  let debitAccounts = _.groupBy(transfer.source_funds, function (debit) {
+  let debitAccounts = _.groupBy(transfer.debits, function (debit) {
     return debit.account;
   });
 
-  let creditAccounts = _.groupBy(transfer.destination_funds, function (credit) {
+  let creditAccounts = _.groupBy(transfer.credits, function (credit) {
     return credit.account;
   });
 
@@ -129,9 +129,9 @@ function *processStateTransitions(tr, transfer) {
 
   // Check prerequisites
   if (transfer.state === 'proposed') {
-    let sourceFunds = Array.isArray(transfer.source_funds)
-                        ? transfer.source_funds
-                        : [transfer.source_funds];
+    let sourceFunds = Array.isArray(transfer.debits)
+                        ? transfer.debits
+                        : [transfer.debits];
     let authorized = true;
     sourceFunds.forEach(function (funds) {
       if (!funds.authorization) {
@@ -203,11 +203,11 @@ function *processStateTransitions(tr, transfer) {
  * @apiParamExample {json} Request Body Example
  *    {
  *      "id": "155dff3f-4915-44df-a707-acc4b527bcbd",
- *      "source_funds": {
+ *      "debits": {
  *        "account": "alice",
  *        "amount": "10"
  *      },
- *      "destination_funds": {
+ *      "credits": {
  *        "account": "bob",
  *        "amount": "10"
  *      }
@@ -237,18 +237,18 @@ exports.create = function *create(id) {
   transfer.id = id;
 
   log.debug('putting transfer ID ' + transfer.id);
-  log.debug('' + transfer.source_funds[0].account + ' -> ' +
-            transfer.destination_funds[0].account + ' : ' +
-            transfer.destination_funds[0].amount);
+  log.debug('' + transfer.debits[0].account + ' -> ' +
+            transfer.credits[0].account + ' : ' +
+            transfer.credits[0].amount);
 
   // Do all static verification (signatures, validity, etc.) here
 
   // Verify debits
-  let asset = transfer.source_funds[0].asset,
+  let asset = transfer.debits[0].asset,
       totalDebits = 0,
       totalCredits = 0;
 
-  transfer.source_funds.forEach(function (debit) {
+  transfer.debits.forEach(function (debit) {
     if (debit.amount <= 0) {
       throw new UnprocessableEntityError(
         'Amount must be a positive number excluding zero.');
@@ -260,7 +260,7 @@ exports.create = function *create(id) {
     totalDebits += debit.amount;
   });
 
-  transfer.destination_funds.forEach(function (credit) {
+  transfer.credits.forEach(function (credit) {
     if (credit.amount <= 0) {
       throw new UnprocessableEntityError(
         'Amount must be a positive number excluding zero.');
@@ -307,8 +307,8 @@ exports.create = function *create(id) {
   //   return db.get(['people', account, 'subscriptions']);
   // }
   // let subscriptions = _(yield [
-  //   getSubscriptions(transfer.source_funds.account),
-  //   getSubscriptions(transfer.destination_funds.account)
+  //   getSubscriptions(transfer.debits.account),
+  //   getSubscriptions(transfer.credits.account)
   // ]).flatten().map(function (x) {
   //   // Turning [{'abcdef...': { 'abcdef...': {}}}] into [{}]
   //   return _.first(_.values(_.first(_.values(x))));
