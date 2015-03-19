@@ -2,9 +2,9 @@
 'use strict';
 
 const db = require('../services/db');
-const log = require('../services/log')('people');
-const request = require('../utils/request');
-const NotFoundError = require('../errors/not-found-error');
+const log = require('five-bells-shared/services/log')('people');
+const request = require('five-bells-shared/utils/request');
+const NotFoundError = require('five-bells-shared/errors/not-found-error');
 
 /**
  * @api {get} /people/:id Fetch user info

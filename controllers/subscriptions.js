@@ -2,11 +2,11 @@
 
 const uuid = require('uuid4');
 const db = require('../services/db');
-const log = require('../services/log')('subscriptions');
-const request = require('../utils/request');
-const NotFoundError = require('../errors/not-found-error');
+const log = require('five-bells-shared/services/log')('subscriptions');
+const request = require('five-bells-shared/utils/request');
+const NotFoundError = require('five-bells-shared/errors/not-found-error');
 const UnprocessableEntityError =
-require('../errors/unprocessable-entity-error');
+  require('five-bells-shared/errors/unprocessable-entity-error');
 
 /**
  * Validate a subscription semantically.

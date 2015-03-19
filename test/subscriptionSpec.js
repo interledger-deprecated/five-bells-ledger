@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 const app = require('../app');
 const db = require('../services/db');
 const dbHelper = require('./helpers/db');
-const logHelper = require('./helpers/log');
+const logHelper = require('five-bells-shared/testHelpers/log');
 
 function request() {
   return superagent(app.listen());
