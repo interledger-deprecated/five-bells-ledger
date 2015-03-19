@@ -10,4 +10,14 @@ module.exports = function InsufficientFundsError(message, accountIdentifier) {
   this.accountIdentifier = accountIdentifier;
 };
 
+module.exports.prototype.handler = function (ctx, log) {
+  log.warn('Insufficient Funds: ' + this.message);
+  ctx.status = 422;
+  ctx.body = {
+    id: this.name,
+    message: this.message,
+    owner: this.accountIdentifier
+  };
+};
+
 require('util').inherits(module.exports, UnprocessableEntityError);
