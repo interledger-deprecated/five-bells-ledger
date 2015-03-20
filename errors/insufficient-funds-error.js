@@ -1,6 +1,7 @@
 'use strict';
 
-const UnprocessableEntityError = require('./unprocessable-entity-error');
+const UnprocessableEntityError =
+  require('five-bells-shared/errors/unprocessable-entity-error');
 
 module.exports = function InsufficientFundsError(message, accountIdentifier) {
   Error.captureStackTrace(this, this.constructor);
@@ -10,3 +11,13 @@ module.exports = function InsufficientFundsError(message, accountIdentifier) {
 };
 
 require('util').inherits(module.exports, UnprocessableEntityError);
+
+module.exports.prototype.handler = function *(ctx, log) {
+  log.warn('Insufficient Funds: ' + this.message);
+  ctx.status = 422;
+  ctx.body = {
+    id: this.name,
+    message: this.message,
+    owner: this.accountIdentifier
+  };
+};

@@ -2,7 +2,7 @@
 
 const superagent = require('co-supertest');
 const app = require('../app');
-const logHelper = require('./helpers/log');
+const logHelper = require('five-bells-shared/testHelpers/log');
 
 function request() {
   return superagent(app.listen());

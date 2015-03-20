@@ -4,15 +4,15 @@
 const _ = require('lodash');
 const diff = require('deep-diff');
 const db = require('../services/db');
-const log = require('../services/log')('transfers');
-const requestUtil = require('../utils/request');
-const jsonld = require('../utils/jsonld');
+const log = require('five-bells-shared/services/log')('transfers');
+const requestUtil = require('five-bells-shared/utils/request');
+const jsonld = require('five-bells-shared/utils/jsonld');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
-const NotFoundError = require('../errors/not-found-error');
+const NotFoundError = require('five-bells-shared/errors/not-found-error');
 const InvalidModificationError =
-  require('../errors/invalid-modification-error');
+  require('five-bells-shared/errors/invalid-modification-error');
 const UnprocessableEntityError =
-  require('../errors/unprocessable-entity-error');
+  require('five-bells-shared/errors/unprocessable-entity-error');
 
 /**
  * @api {get} /transfers/:id Get local transfer object

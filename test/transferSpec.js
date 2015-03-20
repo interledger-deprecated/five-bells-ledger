@@ -6,7 +6,7 @@ const app = require('../app');
 const db = require('../services/db');
 const dbHelper = require('./helpers/db');
 const appHelper = require('./helpers/app');
-const logHelper = require('./helpers/log');
+const logHelper = require('five-bells-shared/testHelpers/log');
 
 describe('Transfers', function () {
   logHelper();
