@@ -49,6 +49,45 @@ exports.fetch = function *fetch(id) {
   this.body = transfer;
 };
 
+/**
+ * @api {get} /transfers/:id/state Get the state of a transfer
+ * @apiName GetTransferState
+ * @apiGroup Transfer
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Use this to get a signed receipt containing only the id of
+ *   transfer and its state.
+ *
+ * @apiParam {String} id Transfer
+ *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ *
+ * @apiUse NotFoundError
+ * @apiUse InvalidUriParameterError
+ *
+ * @param {String} id Transfer UUID
+ * @returns {void}
+ */
+exports.getState = function *getState(id) {
+  requestUtil.validateUriParameter('id', id, 'Uuid');
+  log.debug('fetching state receipt for transfer ID ' + id);
+
+  let transfer = yield db.get(['transfers', id]);
+  if (!transfer) {
+    throw new NotFoundError('Unknown transfer ID');
+  }
+
+  let transferState = {
+    id: requestUtil.getBaseUri(this) + '/transfers/' + transfer.id,
+    state: transfer.state,
+    signature: {
+      signer: 'blah.example',
+      signed: true
+    }
+  };
+
+  this.body = transferState;
+};
+
 function updateTransferObject(originalTransfer, transfer) {
   // Ignore internally managed properties
   transfer.state = originalTransfer.state;
