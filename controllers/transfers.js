@@ -44,7 +44,7 @@ exports.fetch = function *fetch(id) {
   jsonld.setContext(this, 'transfer.jsonld');
 
   // Externally we want to use a full URI ID
-  transfer.id = requestUtil.getBaseUri(this) + this.originalUrl;
+  transfer.id = this.bells.base + '/transfers/' + transfer.id;
 
   this.body = transfer;
 };
@@ -77,7 +77,7 @@ exports.getState = function *getState(id) {
   }
 
   let transferState = {
-    id: requestUtil.getBaseUri(this) + '/transfers/' + transfer.id,
+    id: this.bells.base + '/transfers/' + transfer.id,
     state: transfer.state,
     signature: {
       signer: 'blah.example',
@@ -268,8 +268,8 @@ exports.create = function *create(id) {
   if (typeof transfer.id !== 'undefined') {
     requestUtil.assert.strictEqual(
       transfer.id,
-      requestUtil.getBaseUri(this) + this.originalUrl,
-      'Transfer ID must match the one in the URL'
+      this.bells.base + '/transfers/' + id,
+      'Transfer ID must match the URI'
     );
   }
 
@@ -366,7 +366,7 @@ exports.create = function *create(id) {
   // }, subscriptions);
 
   // Externally we want to use a full URI ID
-  transfer.id = requestUtil.getBaseUri(this) + this.originalUrl;
+  transfer.id = this.bells.base + '/transfers/' + id;
 
   this.body = transfer;
   this.status = originalTransfer ? 200 : 201;
