@@ -5,6 +5,7 @@ const _ = require('lodash');
 const diff = require('deep-diff');
 const db = require('../services/db');
 const log = require('five-bells-shared/services/log')('transfers');
+const request = require('co-request');
 const requestUtil = require('five-bells-shared/utils/request');
 const jsonld = require('five-bells-shared/utils/jsonld');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
@@ -126,6 +127,32 @@ function isConditionMet(transfer) {
          transfer.execution_condition_fulfillment;
 }
 
+function *processSubscriptions(transfer) {
+  // TODO Get subscriptions for affected accounts only
+  // TODO Get subscriptions for specific events only
+  // const affectedAccounts = _([debitAccounts, creditAccounts])
+  //   .map(_.keys).flatten().value();
+  //
+  // function getSubscriptions(account) {
+  //   return db.get(['people', account, 'subscriptions']);
+  // }
+  // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
+  let subscriptions = yield db.get(['subscriptions']);
+
+  if (subscriptions) {
+    subscriptions = _(subscriptions).map(_.values).flatten().value();
+
+    for (let subscription of subscriptions) {
+      log.debug('notifying ' + subscription.owner + ' at ' +
+                subscription.target);
+      yield request.post(subscription.target, {
+        json: true,
+        body: transfer
+      });
+    }
+  }
+}
+
 function *processStateTransitions(tr, transfer) {
   // Calculate per-account totals
   let debitAccounts = _.groupBy(transfer.debits, function (debit) {
@@ -228,6 +255,8 @@ function *processStateTransitions(tr, transfer) {
     log.debug('transfer transitioned from accepted to completed');
     transfer.state = 'completed';
   }
+
+  yield processSubscriptions(transfer);
 }
 
 /**
@@ -341,29 +370,6 @@ exports.create = function *create(id) {
   });
 
   log.debug('changes written to database');
-
-  // function getSubscriptions(account) {
-  //   return db.get(['people', account, 'subscriptions']);
-  // }
-  // let subscriptions = _(yield [
-  //   getSubscriptions(transfer.debits.account),
-  //   getSubscriptions(transfer.credits.account)
-  // ]).flatten().map(function (x) {
-  //   // Turning [{'abcdef...': { 'abcdef...': {}}}] into [{}]
-  //   return _.first(_.values(_.first(_.values(x))));
-  // }).filter(function (x) {
-  //   return x && x.event === 'transfer.create';
-  // }).value();
-  //
-  // subscriptions = subscriptions.filter(function (subscription) {
-  //   console.log('subscription', subscription);
-  //   return false;
-  // });
-  //
-  // subscriptions.forEach(function (subscription) {
-  //   log.debug('notifying ' + subscription.owner + ' at ' +
-  //             subscription.target);
-  // }, subscriptions);
 
   // Externally we want to use a full URI ID
   transfer.id = this.bells.base + '/transfers/' + id;

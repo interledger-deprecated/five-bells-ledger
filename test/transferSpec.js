@@ -2,6 +2,7 @@
 'use strict';
 const _ = require('lodash');
 const expect = require('chai').expect;
+const nock = require('nock');
 const app = require('../app');
 const db = require('../services/db');
 const dbHelper = require('./helpers/db');
@@ -10,6 +11,7 @@ const logHelper = require('five-bells-shared/testHelpers/log');
 
 describe('Transfers', function () {
   logHelper();
+  nock.enableNetConnect('127.0.0.1');
 
   beforeEach(function *() {
     appHelper.create(this, app);
@@ -24,6 +26,10 @@ describe('Transfers', function () {
     // Store some example data
     yield db.put(['people'], require('./data/people'));
     yield db.create(['transfers'], this.existingTransfer);
+  });
+
+  afterEach(function *() {
+    nock.cleanAll();
   });
 
   describe('GET /transfers/:uuid', function () {
@@ -77,8 +83,11 @@ describe('Transfers', function () {
 
     it('should trigger subscriptions', function *() {
       const subscription = require('./data/subscription1.json');
-      yield db.create(['people', subscription.owner, 'subscriptions', subscription.id],
-                      subscription);
+      yield db.create(['subscriptions', subscription.id], subscription);
+
+      const notification = nock('http://subscriber.example')
+        .post('/notifications')
+        .reply(204);
 
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
       yield this.request()
@@ -88,7 +97,7 @@ describe('Transfers', function () {
         .expect(_.assign({}, transfer, {state: 'completed'}))
         .end();
 
-      // TODO: Expect subscription to trigger
+      notification.done();
     });
 
     it('should return 400 if the transfer ID is invalid', function *() {

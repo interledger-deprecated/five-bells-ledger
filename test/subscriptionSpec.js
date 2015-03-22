@@ -1,6 +1,7 @@
 'use strict';
 
 const superagent = require('co-supertest');
+const nock = require('nock');
 const expect = require('chai').expect;
 const app = require('../app');
 const db = require('../services/db');
@@ -13,6 +14,7 @@ function request() {
 
 describe('Subscriptions', function () {
   logHelper();
+  nock.enableNetConnect('127.0.0.1');
 
   beforeEach(function *() {
     // Define example data
@@ -55,12 +57,12 @@ describe('Subscriptions', function () {
         .end();
 
       // Check that the subscription landed in the database
-      expect(yield db.get(['people', 'alice', 'subscriptions', this.exampleSubscription.id]))
+      expect(yield db.get(['subscriptions', this.exampleSubscription.id]))
         .to.deep.equal(this.exampleSubscription);
     });
 
     it('should return 200 when updating the target URL', function *() {
-      this.existingSubscription.target = 'http://192.0.2.1/test2';
+      this.existingSubscription.target = 'http://subscriber2.example/hooks';
       yield request()
         .put('/subscriptions/' + this.existingSubscription.id)
         .send(this.existingSubscription)
@@ -69,7 +71,7 @@ describe('Subscriptions', function () {
         .end();
 
       // Check that the subscription url is changed in the database
-      expect(yield db.get(['people', 'bob', 'subscriptions', this.existingSubscription.id]))
+      expect(yield db.get(['subscriptions', this.existingSubscription.id]))
         .to.deep.equal(this.existingSubscription);
     });
   //

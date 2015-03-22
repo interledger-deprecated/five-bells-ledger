@@ -40,8 +40,7 @@ function *storeSubscription(subscription) {
     // Store subscription in database
     // TODO: Who to subscribe to should be defined by a separate `subject`
     //       field.
-    tr.put(['people', subscription.owner, 'subscriptions', subscription.id],
-           subscription);
+    tr.put(['subscriptions', subscription.id], subscription);
   });
 }
 
