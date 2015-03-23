@@ -1,11 +1,12 @@
 'use strict';
 
 const co = require('co');
-const Database = require('fowl').Database;
+const Database = require('fowler').Database;
 const config = require('./config');
 
 const db = new Database({
-  idProp: 'id'
+  idProp: 'id',
+  subspace: config.fdb.subspace
 });
 
 db.open(config.fdb.cluster);

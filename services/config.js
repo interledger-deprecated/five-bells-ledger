@@ -7,6 +7,7 @@ const config = exports;
 
 config.fdb = {};
 config.fdb.cluster = process.env.FDB_CLUSTER;
+config.fdb.subspace = 'five-bells-ledger';
 
 config.server = {};
 config.server.secure = false;
@@ -15,7 +16,10 @@ config.server.port = process.env.PORT || 3000;
 config.server.public_host = process.env.HOSTNAME || require('os').hostname();
 config.server.public_port = process.env.PUBLIC_PORT || config.server.port;
 
-if (process.env.NODE_ENV === 'test-sending') {
+if (process.env.NODE_ENV === 'test') {
+  config.server.public_host = 'localhost';
+  config.fdb.subspace = 'five-bells-ledger-' + config.server.port;
+} else if (process.env.NODE_ENV === 'test-sending') {
   config.fdb.cluster =
     path.resolve(__dirname, '../fdb-sending-ledger.cluster');
   config.server.public_host = 'localhost';
