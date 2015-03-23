@@ -141,7 +141,7 @@ function *processSubscriptions(transfer) {
   let subscriptions = yield db.get(['subscriptions']);
 
   if (subscriptions) {
-    subscriptions = _.values(subscriptions);
+    subscriptions = _.flatten(_.values(subscriptions).map(_.values));
 
     for (let subscription of subscriptions) {
       log.debug('notifying ' + subscription.owner + ' at ' +
