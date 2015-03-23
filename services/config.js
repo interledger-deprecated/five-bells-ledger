@@ -29,6 +29,11 @@ if (process.env.NODE_ENV === 'test') {
     path.resolve(__dirname, '../fdb-receiving-ledger.cluster');
   config.server.public_host = 'localhost';
   config.server.public_port = config.server.port = 3002;
+} else if (process.env.NODE_ENV === 'test-intermediary') {
+  exports.fdb.cluster =
+    path.resolve(__dirname, '../fdb-intermediary-ledger.cluster');
+  config.server.public_host = 'localhost';
+  config.server.public_port = config.server.port = 3003;
 } else if (process.env.NODE_ENV === 'unit') {
   config.server.public_host = 'localhost';
   config.server.port = 61337;
