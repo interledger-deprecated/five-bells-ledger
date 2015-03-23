@@ -34,8 +34,9 @@ if (process.env.NODE_ENV === 'test-sending') {
 // Calculate base_uri
 const isCustomPort = config.server.secure ?
   +config.server.public_port !== 443 : +config.server.public_port !== 80;
+config.server.base_host = config.server.public_host +
+  (isCustomPort ? ':' + config.server.public_port : '');
 config.server.base_uri = url.format({
   protocol: 'http' + (config.server.secure ? 's' : ''),
-  hostname: config.server.public_host,
-  port: isCustomPort ? config.server.public_port : undefined
+  host: config.server.base_host
 });

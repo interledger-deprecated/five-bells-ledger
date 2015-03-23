@@ -6,6 +6,11 @@ const log = require('five-bells-shared/services/log')('people');
 const request = require('five-bells-shared/utils/request');
 const NotFoundError = require('five-bells-shared/errors/not-found-error');
 
+exports.find = function *find() {
+  const people = yield db.get(['people']);
+  this.body = people;
+};
+
 /**
  * @api {get} /people/:id Fetch user info
  * @apiName GetPerson

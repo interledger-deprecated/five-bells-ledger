@@ -4,6 +4,7 @@
 const _ = require('lodash');
 const diff = require('deep-diff');
 const db = require('../services/db');
+const config = require('../services/config');
 const log = require('five-bells-shared/services/log')('transfers');
 const request = require('co-request');
 const requestUtil = require('five-bells-shared/utils/request');
@@ -140,14 +141,19 @@ function *processSubscriptions(transfer) {
   let subscriptions = yield db.get(['subscriptions']);
 
   if (subscriptions) {
-    subscriptions = _(subscriptions).map(_.values).flatten().value();
+    subscriptions = _.values(subscriptions);
 
     for (let subscription of subscriptions) {
       log.debug('notifying ' + subscription.owner + ' at ' +
                 subscription.target);
+
       yield request.post(subscription.target, {
         json: true,
-        body: transfer
+        body: {
+          event: 'transfer.update',
+          host: config.server.base_host,
+          resource: transfer
+        }
       });
     }
   }

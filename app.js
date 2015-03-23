@@ -29,6 +29,7 @@ app.use(route.get('/health', health.get));
 app.use(route.get('/transfers/:id', transfers.fetch));
 app.use(route.put('/transfers/:uuid', transfers.create));
 
+app.use(route.get('/people', people.find));
 app.use(route.get('/people/:id', people.fetch));
 
 app.use(route.post('/subscriptions', subscriptions.create));
