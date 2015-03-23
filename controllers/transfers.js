@@ -4,7 +4,9 @@
 const _ = require('lodash');
 const diff = require('deep-diff');
 const db = require('../services/db');
+const config = require('../services/config');
 const log = require('five-bells-shared/services/log')('transfers');
+const request = require('co-request');
 const requestUtil = require('five-bells-shared/utils/request');
 const jsonld = require('five-bells-shared/utils/jsonld');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
@@ -44,9 +46,48 @@ exports.fetch = function *fetch(id) {
   jsonld.setContext(this, 'transfer.jsonld');
 
   // Externally we want to use a full URI ID
-  transfer.id = requestUtil.getBaseUri(this) + this.originalUrl;
+  transfer.id = this.bells.base + '/transfers/' + transfer.id;
 
   this.body = transfer;
+};
+
+/**
+ * @api {get} /transfers/:id/state Get the state of a transfer
+ * @apiName GetTransferState
+ * @apiGroup Transfer
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Use this to get a signed receipt containing only the id of
+ *   transfer and its state.
+ *
+ * @apiParam {String} id Transfer
+ *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ *
+ * @apiUse NotFoundError
+ * @apiUse InvalidUriParameterError
+ *
+ * @param {String} id Transfer UUID
+ * @returns {void}
+ */
+exports.getState = function *getState(id) {
+  requestUtil.validateUriParameter('id', id, 'Uuid');
+  log.debug('fetching state receipt for transfer ID ' + id);
+
+  let transfer = yield db.get(['transfers', id]);
+  if (!transfer) {
+    throw new NotFoundError('Unknown transfer ID');
+  }
+
+  let transferState = {
+    id: this.bells.base + '/transfers/' + transfer.id,
+    state: transfer.state,
+    signature: {
+      signer: 'blah.example',
+      signed: true
+    }
+  };
+
+  this.body = transferState;
 };
 
 function updateTransferObject(originalTransfer, transfer) {
@@ -85,6 +126,37 @@ function isConditionMet(transfer) {
   // TODO Do the useful!
   return !transfer.execution_condition ||
          transfer.execution_condition_fulfillment;
+}
+
+function *processSubscriptions(transfer) {
+  // TODO Get subscriptions for affected accounts only
+  // TODO Get subscriptions for specific events only
+  // const affectedAccounts = _([debitAccounts, creditAccounts])
+  //   .map(_.keys).flatten().value();
+  //
+  // function getSubscriptions(account) {
+  //   return db.get(['people', account, 'subscriptions']);
+  // }
+  // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
+  let subscriptions = yield db.get(['subscriptions']);
+
+  if (subscriptions) {
+    subscriptions = _.flatten(_.values(subscriptions).map(_.values));
+
+    for (let subscription of subscriptions) {
+      log.debug('notifying ' + subscription.owner + ' at ' +
+                subscription.target);
+
+      yield request.post(subscription.target, {
+        json: true,
+        body: {
+          event: 'transfer.update',
+          host: config.server.base_host,
+          resource: transfer
+        }
+      });
+    }
+  }
 }
 
 function *processStateTransitions(tr, transfer) {
@@ -189,6 +261,8 @@ function *processStateTransitions(tr, transfer) {
     log.debug('transfer transitioned from accepted to completed');
     transfer.state = 'completed';
   }
+
+  yield processSubscriptions(transfer);
 }
 
 /**
@@ -229,8 +303,8 @@ exports.create = function *create(id) {
   if (typeof transfer.id !== 'undefined') {
     requestUtil.assert.strictEqual(
       transfer.id,
-      requestUtil.getBaseUri(this) + this.originalUrl,
-      'Transfer ID must match the one in the URL'
+      this.bells.base + '/transfers/' + id,
+      'Transfer ID must match the URI'
     );
   }
 
@@ -303,31 +377,8 @@ exports.create = function *create(id) {
 
   log.debug('changes written to database');
 
-  // function getSubscriptions(account) {
-  //   return db.get(['people', account, 'subscriptions']);
-  // }
-  // let subscriptions = _(yield [
-  //   getSubscriptions(transfer.debits.account),
-  //   getSubscriptions(transfer.credits.account)
-  // ]).flatten().map(function (x) {
-  //   // Turning [{'abcdef...': { 'abcdef...': {}}}] into [{}]
-  //   return _.first(_.values(_.first(_.values(x))));
-  // }).filter(function (x) {
-  //   return x && x.event === 'transfer.create';
-  // }).value();
-  //
-  // subscriptions = subscriptions.filter(function (subscription) {
-  //   console.log('subscription', subscription);
-  //   return false;
-  // });
-  //
-  // subscriptions.forEach(function (subscription) {
-  //   log.debug('notifying ' + subscription.owner + ' at ' +
-  //             subscription.target);
-  // }, subscriptions);
-
   // Externally we want to use a full URI ID
-  transfer.id = requestUtil.getBaseUri(this) + this.originalUrl;
+  transfer.id = this.bells.base + '/transfers/' + id;
 
   this.body = transfer;
   this.status = originalTransfer ? 200 : 201;
