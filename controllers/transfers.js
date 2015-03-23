@@ -44,9 +44,48 @@ exports.fetch = function *fetch(id) {
   jsonld.setContext(this, 'transfer.jsonld');
 
   // Externally we want to use a full URI ID
-  transfer.id = requestUtil.getBaseUri(this) + this.originalUrl;
+  transfer.id = this.bells.base + '/transfers/' + transfer.id;
 
   this.body = transfer;
+};
+
+/**
+ * @api {get} /transfers/:id/state Get the state of a transfer
+ * @apiName GetTransferState
+ * @apiGroup Transfer
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Use this to get a signed receipt containing only the id of
+ *   transfer and its state.
+ *
+ * @apiParam {String} id Transfer
+ *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ *
+ * @apiUse NotFoundError
+ * @apiUse InvalidUriParameterError
+ *
+ * @param {String} id Transfer UUID
+ * @returns {void}
+ */
+exports.getState = function *getState(id) {
+  requestUtil.validateUriParameter('id', id, 'Uuid');
+  log.debug('fetching state receipt for transfer ID ' + id);
+
+  let transfer = yield db.get(['transfers', id]);
+  if (!transfer) {
+    throw new NotFoundError('Unknown transfer ID');
+  }
+
+  let transferState = {
+    id: this.bells.base + '/transfers/' + transfer.id,
+    state: transfer.state,
+    signature: {
+      signer: 'blah.example',
+      signed: true
+    }
+  };
+
+  this.body = transferState;
 };
 
 function updateTransferObject(originalTransfer, transfer) {
@@ -229,8 +268,8 @@ exports.create = function *create(id) {
   if (typeof transfer.id !== 'undefined') {
     requestUtil.assert.strictEqual(
       transfer.id,
-      requestUtil.getBaseUri(this) + this.originalUrl,
-      'Transfer ID must match the one in the URL'
+      this.bells.base + '/transfers/' + id,
+      'Transfer ID must match the URI'
     );
   }
 
@@ -327,7 +366,7 @@ exports.create = function *create(id) {
   // }, subscriptions);
 
   // Externally we want to use a full URI ID
-  transfer.id = requestUtil.getBaseUri(this) + this.originalUrl;
+  transfer.id = this.bells.base + '/transfers/' + id;
 
   this.body = transfer;
   this.status = originalTransfer ? 200 : 201;

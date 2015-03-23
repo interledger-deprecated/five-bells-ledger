@@ -12,7 +12,7 @@ exports.create = function (context, app) {
   };
   context.formatId = function (sourceObj, baseUri) {
     let obj = _.cloneDeep(sourceObj);
-    obj.id = 'http://127.0.0.1:' + this.port + baseUri + sourceObj.id;
+    obj.id = 'http://localhost' + baseUri + sourceObj.id;
     return obj;
   };
 };
