@@ -286,7 +286,10 @@ describe('Transfers', function () {
         message: 'test',
         signer: 'blah'
       };
-      transferWithAuthorization.execution_condition_fulfillment = {};
+      transferWithAuthorization.execution_condition_fulfillment = {
+        message: 'test',
+        signer: 'blah'
+      };
 
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
