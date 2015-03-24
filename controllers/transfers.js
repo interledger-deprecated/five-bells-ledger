@@ -123,9 +123,10 @@ function updateTransferObject(originalTransfer, transfer) {
 }
 
 function isConditionMet(transfer) {
-  // TODO Do the useful!
+  // TODO Actually check the ledger's signature
   return !transfer.execution_condition ||
-         transfer.execution_condition_fulfillment;
+         _.isEqual(transfer.execution_condition,
+          transfer.execution_condition_fulfillment);
 }
 
 function *processSubscriptions(transfer) {
