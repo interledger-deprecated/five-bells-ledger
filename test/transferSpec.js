@@ -83,7 +83,7 @@ describe('Transfers', function () {
 
     it('should trigger subscriptions', function *() {
       const subscription = require('./data/subscription1.json');
-      yield db.create(['subscriptions', subscription.id], subscription);
+      yield db.create(['subscriptions'], subscription);
 
       const notification = nock('http://subscriber.example')
         .post('/notifications')
