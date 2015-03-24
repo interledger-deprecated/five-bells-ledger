@@ -90,6 +90,13 @@ exports.getState = function *getState(id) {
   this.body = transferState;
 };
 
+function isConditionMet(transfer) {
+  // TODO Actually check the ledger's signature
+  return !transfer.execution_condition ||
+         _.isEqual(transfer.execution_condition,
+          transfer.execution_condition_fulfillment);
+}
+
 function updateTransferObject(originalTransfer, transfer) {
   // Ignore internally managed properties
   transfer.state = originalTransfer.state;
@@ -103,8 +110,8 @@ function updateTransferObject(originalTransfer, transfer) {
   });
 
   // Clients may fulfill the execution condition
-  if (!originalTransfer.execution_condition_fulfillment &&
-      transfer.execution_condition_fulfillment) {
+  if (transfer.execution_condition_fulfillment &&
+      !isConditionMet(originalTransfer)) {
     originalTransfer.execution_condition_fulfillment =
       transfer.execution_condition_fulfillment;
   }
@@ -122,13 +129,6 @@ function updateTransferObject(originalTransfer, transfer) {
   return originalTransfer;
 }
 
-function isConditionMet(transfer) {
-  // TODO Actually check the ledger's signature
-  return !transfer.execution_condition ||
-         _.isEqual(transfer.execution_condition,
-          transfer.execution_condition_fulfillment);
-}
-
 function *processSubscriptions(transfer) {
   // TODO Get subscriptions for affected accounts only
   // TODO Get subscriptions for specific events only
@@ -139,6 +139,10 @@ function *processSubscriptions(transfer) {
   //   return db.get(['people', account, 'subscriptions']);
   // }
   // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
+  let externalTransfer = _.clone(transfer);
+  externalTransfer.id = 'http://' + config.server.public_host +
+    ':' + config.server.public_port +
+    '/transfers/' + transfer.id;
   let subscriptions = yield db.get(['subscriptions']);
 
   if (subscriptions) {
@@ -151,9 +155,12 @@ function *processSubscriptions(transfer) {
       yield request.post(subscription.target, {
         json: true,
         body: {
+          id: 'http://' + config.server.public_host +
+            ':' + config.server.public_port +
+            '/subscriptions/' + subscription.id,
           event: 'transfer.update',
           host: config.server.base_host,
-          resource: transfer
+          resource: externalTransfer
         }
       });
     }
