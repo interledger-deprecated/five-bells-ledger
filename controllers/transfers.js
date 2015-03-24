@@ -140,8 +140,7 @@ function *processSubscriptions(transfer) {
   // }
   // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
   let externalTransfer = _.clone(transfer);
-  externalTransfer.id = 'http://' + config.server.public_host +
-    ':' + config.server.public_port +
+  externalTransfer.id = config.server.base_uri +
     '/transfers/' + transfer.id;
   let subscriptions = yield db.get(['subscriptions']);
 
@@ -155,8 +154,7 @@ function *processSubscriptions(transfer) {
       yield request.post(subscription.target, {
         json: true,
         body: {
-          id: 'http://' + config.server.public_host +
-            ':' + config.server.public_port +
+          id: config.server.base_uri +
             '/subscriptions/' + subscription.id,
           event: 'transfer.update',
           host: config.server.base_host,
