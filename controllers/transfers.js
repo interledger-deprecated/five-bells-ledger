@@ -147,11 +147,11 @@ function *processSubscriptions(transfer) {
   if (subscriptions) {
     subscriptions = _.values(subscriptions);
 
-    for (let subscription of subscriptions) {
+    const notifications = subscriptions.map(function (subscription) {
       log.debug('notifying ' + subscription.owner + ' at ' +
                 subscription.target);
 
-      yield request.post(subscription.target, {
+      return request.post(subscription.target, {
         json: true,
         body: {
           id: config.server.base_uri +
@@ -161,7 +161,9 @@ function *processSubscriptions(transfer) {
           resource: externalTransfer
         }
       });
-    }
+    });
+
+    yield notifications;
   }
 }
 
