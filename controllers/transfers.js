@@ -151,7 +151,8 @@ function *processSubscriptions(transfer) {
       log.debug('notifying ' + subscription.owner + ' at ' +
                 subscription.target);
 
-      return request.post(subscription.target, {
+      return request(subscription.target, {
+        method: 'post',
         json: true,
         body: {
           id: config.server.base_uri +
