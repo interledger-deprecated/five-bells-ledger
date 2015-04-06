@@ -1,0 +1,12 @@
+machine:
+  pre:
+    - curl https://raw.githubusercontent.com/creationix/nvm/v0.23.3/install.sh | bash
+  services:
+    - docker
+  node:
+    version: iojs-1.6.3
+dependencies:
+  pre:
+    - docker pull cockroachdb/cockroach
+  post:
+    - docker run -p 8080:8080 -d cockroachdb/cockroach init -stores ssd="$(mktemp -d /tmp/dbXXX)"
