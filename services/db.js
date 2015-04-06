@@ -1,7 +1,7 @@
 'use strict';
 
 const co = require('co');
-const Database = require('fowler').Database;
+const Database = require('rowler').Database;
 const config = require('./config');
 
 const db = new Database({
