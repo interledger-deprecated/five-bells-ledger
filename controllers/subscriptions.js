@@ -22,7 +22,8 @@ function *validateSubscriptionSemantics(subscription, tr) {
   const owner = yield tr.get(['people', subscription.owner]);
 
   if (typeof owner === 'undefined') {
-    throw new UnprocessableEntityError('Owner does not exist.');
+    // TODO Add authentication and reenable this check
+    // throw new UnprocessableEntityError('Owner does not exist.');
   }
 }
 
