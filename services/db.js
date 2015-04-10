@@ -6,10 +6,11 @@ const config = require('./config');
 
 const db = new Database({
   idProp: 'id',
-  subspace: config.fdb.subspace
+  subspace: config.db.subspace,
+  uri: config.db.uri
 });
 
-db.open(config.fdb.cluster);
+db.open();
 
 // Add co support for transactions
 db._transaction = db.transaction;
