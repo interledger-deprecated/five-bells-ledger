@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const expect = require('chai').expect;
 const nock = require('nock');
+nock.enableNetConnect(['localhost', '127.0.0.1']);
 const app = require('../app');
 const db = require('../services/db');
 const dbHelper = require('./helpers/db');
@@ -11,7 +12,6 @@ const logHelper = require('five-bells-shared/testHelpers/log');
 
 describe('Transfers', function () {
   logHelper();
-  nock.enableNetConnect('127.0.0.1');
 
   beforeEach(function *() {
     appHelper.create(this, app);

@@ -2,6 +2,7 @@
 
 const superagent = require('co-supertest');
 const nock = require('nock');
+nock.enableNetConnect(['localhost', '127.0.0.1']);
 const expect = require('chai').expect;
 const app = require('../app');
 const db = require('../services/db');
@@ -14,7 +15,6 @@ function request() {
 
 describe('Subscriptions', function () {
   logHelper();
-  nock.enableNetConnect('127.0.0.1');
 
   beforeEach(function *() {
     // Define example data

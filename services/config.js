@@ -1,6 +1,5 @@
 'use strict';
 
-const path = require('path');
 const url = require('url');
 
 const config = exports;
@@ -23,6 +22,7 @@ if (process.env.NODE_ENV === 'test') {
   config.server.public_host = 'localhost';
   config.server.port = 61337;
   config.server.public_port = 80;
+  config.db.subspace = 'five-bells-ledger-unit-test-' + process.pid;
 }
 
 // Calculate base_uri

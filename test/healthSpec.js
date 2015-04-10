@@ -2,6 +2,7 @@
 
 const superagent = require('co-supertest');
 const nock = require('nock');
+nock.enableNetConnect(['localhost', '127.0.0.1']);
 const app = require('../app');
 const logHelper = require('five-bells-shared/testHelpers/log');
 
@@ -11,7 +12,6 @@ function request() {
 
 describe('Health', function () {
   logHelper();
-  nock.enableNetConnect('127.0.0.1');
 
   describe('GET /health', function () {
     it('should return 200', function *() {
