@@ -19,6 +19,9 @@ describe('Transfers', function () {
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transfer1'));
     this.existingTransfer = _.cloneDeep(require('./data/transfer2'));
+    this.multiCreditTransfer = _.cloneDeep(require('./data/transfer3'));
+    this.multiDebitTransfer = _.cloneDeep(require('./data/transfer4'));
+    this.multiDebitAndCreditTransfer = _.cloneDeep(require('./data/transfer5'));
 
     // Reset database
     yield dbHelper.reset();
@@ -303,6 +306,111 @@ describe('Transfers', function () {
         .send(transferWithAuthorization)
         .expect(200)
         .expect(_.assign({}, transferWithAuthorization, {state: 'completed'}))
+        .end();
+    });
+
+    it('should handle transfers with multiple credits', function*() {
+      const transfer = this.formatId(this.multiCreditTransfer, '/transfers/');
+
+      yield this.request()
+        .put('/transfers/' + this.multiCreditTransfer.id)
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .end();
+
+      yield this.request()
+        .get('/people/' + this.multiCreditTransfer.credits[0].account)
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'bob',
+          balance: '10'
+        }))
+        .end();
+
+      yield this.request()
+        .get('/people/' + this.multiCreditTransfer.credits[1].account)
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'dave',
+          balance: '10'
+        }))
+        .end();
+    });
+
+    it('should handle transfers with multiple debits', function*() {
+      const transfer = this.formatId(this.multiDebitTransfer, '/transfers/');
+
+      yield this.request()
+        .put('/transfers/' + this.multiDebitTransfer.id)
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .end();
+
+      yield this.request()
+        .get('/people/' + this.multiDebitTransfer.debits[0].account)
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'alice',
+          balance: '90'
+        }))
+        .end();
+
+      yield this.request()
+        .get('/people/' + this.multiDebitTransfer.debits[1].account)
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'candice',
+          balance: '40'
+        }))
+        .end();
+    });
+
+    it('should handle transfers with multiple debits and multiple credits', function*() {
+      const transfer = this.formatId(this.multiDebitAndCreditTransfer, '/transfers/');
+
+      yield this.request()
+        .put('/transfers/' + this.multiDebitAndCreditTransfer.id)
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .end();
+
+      yield this.request()
+        .get('/people/' + this.multiDebitAndCreditTransfer.debits[0].account)
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'alice',
+          balance: '50'
+        }))
+        .end();
+
+      yield this.request()
+        .get('/people/' + this.multiDebitAndCreditTransfer.debits[1].account)
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'candice',
+          balance: '30'
+        }))
+        .end();
+
+      yield this.request()
+        .get('/people/' + this.multiDebitAndCreditTransfer.credits[0].account)
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'bob',
+          balance: '30'
+        }))
+        .end();
+
+      yield this.request()
+        .get('/people/' + this.multiDebitAndCreditTransfer.credits[1].account)
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'dave',
+          balance: '40'
+        }))
         .end();
     });
   });

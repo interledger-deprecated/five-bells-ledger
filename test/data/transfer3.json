@@ -1,0 +1,17 @@
+{
+  "id": "3a8ce37e-3bb4-430d-82f5-713bafe4d9fc",
+  "debits": [{
+    "account": "alice",
+    "amount": "20",
+    "authorization": {
+      "algorithm": "ed25519-sha512"
+    }
+  }],
+  "credits": [{
+    "account": "bob",
+    "amount": "10"
+  }, {
+    "account": "dave",
+    "amount": "10"  
+  }]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "0A95BB26-FF60-454E-9EC2-6621B78233AB",
+  "debits": [{
+    "account": "alice",
+    "amount": "10",
+    "authorization": {
+      "algorithm": "ed25519-sha512"
+    }
+  }, {
+    "account": "candice",
+    "amount": "10",
+    "authorization": {
+      "algorithm": "ed25519-sha512"
+    }
+  }],
+  "credits": [{
+    "account": "bob",
+    "amount": "20"
+  }]
+}
