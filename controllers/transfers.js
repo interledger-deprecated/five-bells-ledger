@@ -340,7 +340,7 @@ exports.create = function *create(id) {
       throw new UnprocessableEntityError(
         'All debits must have the same asset type.');
     }
-    totalDebits += debit.amount;
+    totalDebits += parseFloat(debit.amount);
   });
 
   transfer.credits.forEach(function (credit) {
@@ -352,7 +352,7 @@ exports.create = function *create(id) {
       throw new UnprocessableEntityError(
         'All debits must have the same asset type.');
     }
-    totalCredits += credit.amount;
+    totalCredits += parseFloat(credit.amount);
   });
 
   if (totalCredits > totalDebits) {
