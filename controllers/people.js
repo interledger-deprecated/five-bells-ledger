@@ -29,6 +29,7 @@ exports.find = function *find() {
  */
 exports.fetch = function *fetch(id) {
   request.validateUriParameter('id', id, 'Identifier');
+  id = id.toLowerCase();
   log.debug('fetching person ID ' + id);
 
   const person = yield db.get(['people', id]);
@@ -57,6 +58,7 @@ exports.fetch = function *fetch(id) {
  */
 exports.putResource = function *putResource(id) {
   request.validateUriParameter('id', id, 'Identifier');
+  id = id.toLowerCase();
   const person = yield request.validateBody(this, 'Person');
 
   person.id = id;

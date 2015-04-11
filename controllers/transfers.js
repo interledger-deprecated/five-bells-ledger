@@ -36,6 +36,7 @@ const UnprocessableEntityError =
  */
 exports.fetch = function *fetch(id) {
   requestUtil.validateUriParameter('id', id, 'Uuid');
+  id = id.toLowerCase();
   log.debug('fetching transfer ID ' + id);
 
   let transfer = yield db.get(['transfers', id]);
@@ -71,6 +72,7 @@ exports.fetch = function *fetch(id) {
  */
 exports.getState = function *getState(id) {
   requestUtil.validateUriParameter('id', id, 'Uuid');
+  id = id.toLowerCase();
   log.debug('fetching state receipt for transfer ID ' + id);
 
   let transfer = yield db.get(['transfers', id]);
@@ -307,9 +309,11 @@ function *processStateTransitions(tr, transfer) {
  */
 exports.create = function *create(id) {
   requestUtil.validateUriParameter('id', id, 'Uuid');
+  id = id.toLowerCase();
   let transfer = yield requestUtil.validateBody(this, 'Transfer');
 
   if (typeof transfer.id !== 'undefined') {
+    transfer.id = transfer.id.toLowerCase();
     requestUtil.assert.strictEqual(
       transfer.id,
       this.bells.base + '/transfers/' + id,

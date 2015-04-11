@@ -65,6 +65,7 @@ function *storeSubscription(subscription) {
  */
 exports.fetch = function *fetch(id) {
   request.validateUriParameter('id', id, 'Uuid');
+  id = id.toLowerCase();
   log.debug('fetching subscription ID ' + id);
 
   this.body = yield db.get(['subscriptions', id]);
@@ -111,6 +112,7 @@ exports.create = function *create() {
 
 exports.update = function *update(id) {
   request.validateUriParameter('id', id, 'Uuid');
+  id = id.toLowerCase();
   const subscription = yield request.validateBody(this, 'Subscription');
 
   if (typeof subscription.id !== 'undefined') {
@@ -149,6 +151,7 @@ exports.update = function *update(id) {
  */
 exports.remove = function *remove(id) {
   request.validateUriParameter('id', id, 'Uuid');
+  id = id.toLowerCase();
 
   log.debug('deleting subscription ID ' + id);
 

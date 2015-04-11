@@ -205,6 +205,22 @@ describe('Transfers', function () {
     it('should return 403 if the authorization is forged');
     it('should return 403 if the authorization is not applicable');
 
+    it('should accept a transfer with an upper case ID but convert the ID' +
+      'to lower case', function *() {
+      const transfer = this.formatId(this.exampleTransfer, '/transfers/');
+      transfer.id = transfer.id.toUpperCase();
+
+      yield this.request()
+        .put('/transfers/' + this.exampleTransfer.id)
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {
+          id: transfer.id.toLowerCase(),
+          state: 'completed'
+        }))
+        .end();
+    });
+
     it('should set the transfer state to "proposed" if no authorization is given', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
       const transferWithoutAuthorization = _.cloneDeep(transfer);
