@@ -47,7 +47,7 @@ exports.fetch = function *fetch(id) {
   jsonld.setContext(this, 'transfer.jsonld');
 
   // Externally we want to use a full URI ID
-  transfer.id = this.bells.base + '/transfers/' + transfer.id;
+  transfer.id = config.server.base_uri + '/transfers/' + transfer.id;
 
   this.body = transfer;
 };
@@ -81,7 +81,7 @@ exports.getState = function *getState(id) {
   }
 
   let transferState = {
-    id: this.bells.base + '/transfers/' + transfer.id,
+    id: config.server.base_uri + '/transfers/' + transfer.id,
     state: transfer.state,
     signature: {
       signer: 'blah.example',
@@ -316,7 +316,7 @@ exports.create = function *create(id) {
     transfer.id = transfer.id.toLowerCase();
     requestUtil.assert.strictEqual(
       transfer.id,
-      this.bells.base + '/transfers/' + id,
+      config.server.base_uri + '/transfers/' + id,
       'Transfer ID must match the URI'
     );
   }
@@ -391,7 +391,7 @@ exports.create = function *create(id) {
   log.debug('changes written to database');
 
   // Externally we want to use a full URI ID
-  transfer.id = this.bells.base + '/transfers/' + id;
+  transfer.id = config.server.base_uri + '/transfers/' + id;
 
   this.body = transfer;
   this.status = originalTransfer ? 200 : 201;

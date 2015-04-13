@@ -13,7 +13,6 @@ const errorHandler = require('five-bells-shared/middlewares/error-handler');
 const koa = require('koa');
 const path = require('path');
 const log = require('five-bells-shared/services/log');
-const bells = require('five-bells-shared/middlewares/bells');
 const logger = require('koa-mag');
 const config = require('./services/config');
 const app = module.exports = koa();
@@ -22,7 +21,6 @@ const app = module.exports = koa();
 app.use(logger());
 app.use(errorHandler);
 app.use(cors({expose: ['link']}));
-app.use(bells(config));
 
 app.use(route.get('/health', health.get));
 
@@ -31,6 +29,7 @@ app.use(route.put('/transfers/:uuid', transfers.create));
 
 app.use(route.get('/people', people.find));
 app.use(route.get('/people/:id', people.fetch));
+app.use(route.put('/people/:id', people.putResource));
 
 app.use(route.post('/subscriptions', subscriptions.create));
 app.use(route.get('/subscriptions/:id', subscriptions.fetch));
