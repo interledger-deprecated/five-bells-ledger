@@ -331,18 +331,13 @@ exports.create = function *create(id) {
   // Do all static verification (signatures, validity, etc.) here
 
   // Verify debits
-  let asset = transfer.debits[0].asset,
-      totalDebits = 0,
+  let totalDebits = 0,
       totalCredits = 0;
 
   transfer.debits.forEach(function (debit) {
     if (debit.amount <= 0) {
       throw new UnprocessableEntityError(
         'Amount must be a positive number excluding zero.');
-    }
-    if (debit.asset && debit.asset !== asset) {
-      throw new UnprocessableEntityError(
-        'All debits must have the same asset type.');
     }
     totalDebits += parseFloat(debit.amount);
   });
@@ -351,10 +346,6 @@ exports.create = function *create(id) {
     if (credit.amount <= 0) {
       throw new UnprocessableEntityError(
         'Amount must be a positive number excluding zero.');
-    }
-    if (credit.asset && credit.asset !== asset) {
-      throw new UnprocessableEntityError(
-        'All debits must have the same asset type.');
     }
     totalCredits += parseFloat(credit.amount);
   });
