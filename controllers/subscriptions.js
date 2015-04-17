@@ -19,7 +19,7 @@ const UnprocessableEntityError =
  * @returns {void}
  */
 function *validateSubscriptionSemantics(subscription, tr) {
-  const owner = yield tr.get(['people', subscription.owner]);
+  const owner = yield tr.get(['accounts', subscription.owner]);
 
   if (typeof owner === 'undefined') {
     // TODO Add authentication and reenable this check

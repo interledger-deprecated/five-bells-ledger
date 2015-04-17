@@ -26,7 +26,7 @@ describe('Subscriptions', function () {
     yield dbHelper.reset();
 
     // Store some example data
-    yield db.put(['people'], require('./data/people'));
+    yield db.put(['accounts'], require('./data/accounts'));
     yield db.create(['subscriptions'], this.existingSubscription);
   });
 

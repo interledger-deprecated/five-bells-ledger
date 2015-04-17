@@ -138,7 +138,7 @@ function *processSubscriptions(transfer) {
   //   .map(_.keys).flatten().value();
   //
   // function getSubscriptions(account) {
-  //   return db.get(['people', account, 'subscriptions']);
+  //   return db.get(['accounts', account, 'subscriptions']);
   // }
   // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
   let externalTransfer = _.clone(transfer);
@@ -182,7 +182,7 @@ function *processStateTransitions(tr, transfer) {
 
   for (let sender of Object.keys(debitAccounts)) {
     let debitAmounts = _.pluck(debitAccounts[sender], 'amount');
-    let accountObj = yield tr.get(['people', sender]);
+    let accountObj = yield tr.get(['accounts', sender]);
 
     if (typeof accountObj === 'undefined') {
       throw new UnprocessableEntityError(
@@ -197,7 +197,7 @@ function *processStateTransitions(tr, transfer) {
 
   for (let recipient of Object.keys(creditAccounts)) {
     let creditAmounts = _.pluck(creditAccounts[recipient], 'amount');
-    let accountObj = yield tr.get(['people', recipient]);
+    let accountObj = yield tr.get(['accounts', recipient]);
 
     if (typeof accountObj === 'undefined') {
       throw new UnprocessableEntityError(
@@ -241,7 +241,7 @@ function *processStateTransitions(tr, transfer) {
         // Take money out of senders' accounts
         log.debug('sender ' + sender + ' balance: ' + debitAccount.balance
                   + ' -> ' + (debitAccount.balance - debitAccount.totalAmount));
-        tr.put(['people', sender, 'balance'],
+        tr.put(['accounts', sender, 'balance'],
                debitAccount.balance - debitAccount.totalAmount);
       }
 
@@ -265,7 +265,7 @@ function *processStateTransitions(tr, transfer) {
       log.debug('recipient ' + recipient + ' balance: ' + creditAccount.balance
                 + ' -> ' + (creditAccount.balance + creditAccount.totalAmount));
 
-      tr.put(['people', recipient, 'balance'],
+      tr.put(['accounts', recipient, 'balance'],
              creditAccount.balance + creditAccount.totalAmount);
     }
 

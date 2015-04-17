@@ -27,7 +27,7 @@ describe('Transfers', function () {
     yield dbHelper.reset();
 
     // Store some example data
-    yield db.put(['people'], require('./data/people'));
+    yield db.put(['accounts'], require('./data/accounts'));
     yield db.create(['transfers'], this.existingTransfer);
   });
 
@@ -64,8 +64,8 @@ describe('Transfers', function () {
         .end();
 
       // Check balances
-      expect(yield db.get(['people', 'alice', 'balance'])).to.equal(90);
-      expect(yield db.get(['people', 'bob', 'balance'])).to.equal(10);
+      expect(yield db.get(['accounts', 'alice', 'balance'])).to.equal(90);
+      expect(yield db.get(['accounts', 'bob', 'balance'])).to.equal(10);
     });
 
     it('should return 201 if the transfer does not have an ID set', function *() {
@@ -80,8 +80,8 @@ describe('Transfers', function () {
         .end();
 
       // Check balances
-      expect(yield db.get(['people', 'alice', 'balance'])).to.equal(90);
-      expect(yield db.get(['people', 'bob', 'balance'])).to.equal(10);
+      expect(yield db.get(['accounts', 'alice', 'balance'])).to.equal(90);
+      expect(yield db.get(['accounts', 'bob', 'balance'])).to.equal(10);
     });
 
     it('should trigger subscriptions', function *() {
@@ -336,7 +336,7 @@ describe('Transfers', function () {
         .end();
 
       yield this.request()
-        .get('/people/' + this.multiCreditTransfer.credits[0].account)
+        .get('/accounts/' + this.multiCreditTransfer.credits[0].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'bob',
@@ -345,7 +345,7 @@ describe('Transfers', function () {
         .end();
 
       yield this.request()
-        .get('/people/' + this.multiCreditTransfer.credits[1].account)
+        .get('/accounts/' + this.multiCreditTransfer.credits[1].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'dave',
@@ -365,7 +365,7 @@ describe('Transfers', function () {
         .end();
 
       yield this.request()
-        .get('/people/' + this.multiDebitTransfer.debits[0].account)
+        .get('/accounts/' + this.multiDebitTransfer.debits[0].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'alice',
@@ -374,7 +374,7 @@ describe('Transfers', function () {
         .end();
 
       yield this.request()
-        .get('/people/' + this.multiDebitTransfer.debits[1].account)
+        .get('/accounts/' + this.multiDebitTransfer.debits[1].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'candice',
@@ -394,7 +394,7 @@ describe('Transfers', function () {
         .end();
 
       yield this.request()
-        .get('/people/' + this.multiDebitAndCreditTransfer.debits[0].account)
+        .get('/accounts/' + this.multiDebitAndCreditTransfer.debits[0].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'alice',
@@ -403,7 +403,7 @@ describe('Transfers', function () {
         .end();
 
       yield this.request()
-        .get('/people/' + this.multiDebitAndCreditTransfer.debits[1].account)
+        .get('/accounts/' + this.multiDebitAndCreditTransfer.debits[1].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'candice',
@@ -412,7 +412,7 @@ describe('Transfers', function () {
         .end();
 
       yield this.request()
-        .get('/people/' + this.multiDebitAndCreditTransfer.credits[0].account)
+        .get('/accounts/' + this.multiDebitAndCreditTransfer.credits[0].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'bob',
@@ -421,7 +421,7 @@ describe('Transfers', function () {
         .end();
 
       yield this.request()
-        .get('/people/' + this.multiDebitAndCreditTransfer.credits[1].account)
+        .get('/accounts/' + this.multiDebitAndCreditTransfer.credits[1].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'dave',

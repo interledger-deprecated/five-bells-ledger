@@ -14,7 +14,7 @@ const balance = isNaN(+argv[1]) ? 0 : +argv[1];
 const identity = argv[2];
 
 // Create or update a user's balance
-db.create('people', {
+db.create('accounts', {
   id: argv[0].toLowerCase(),
   balance: balance,
   identity: identity
