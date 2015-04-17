@@ -1,18 +1,22 @@
 {
   "alice": {
     "id": "alice",
-    "balance": 100
+    "name": "Alice",
+    "balance": "100"
   },
   "bob": {
     "id": "bob",
-    "balance": 0
+    "name": "Bob",
+    "balance": "0"
   },
   "candice": {
     "id": "candice",
-    "balance": 50
+    "name": "Candice",
+    "balance": "50"
   },
   "dave": {
     "id": "dave",
-    "balance": 0
+    "name": "Dave",
+    "balance": "0"
   }
 }
