@@ -3,7 +3,7 @@
 
 const health = require('./controllers/health');
 const transfers = require('./controllers/transfers');
-const people = require('./controllers/people');
+const accounts = require('./controllers/accounts');
 const subscriptions = require('./controllers/subscriptions');
 const compress = require('koa-compress');
 const serve = require('koa-static');
@@ -27,9 +27,9 @@ app.use(route.get('/health', health.get));
 app.use(route.get('/transfers/:id', transfers.fetch));
 app.use(route.put('/transfers/:uuid', transfers.create));
 
-app.use(route.get('/people', people.find));
-app.use(route.get('/people/:id', people.fetch));
-app.use(route.put('/people/:id', people.putResource));
+app.use(route.get('/accounts', accounts.find));
+app.use(route.get('/accounts/:id', accounts.fetch));
+app.use(route.put('/accounts/:id', accounts.putResource));
 
 app.use(route.post('/subscriptions', subscriptions.create));
 app.use(route.get('/subscriptions/:id', subscriptions.fetch));
