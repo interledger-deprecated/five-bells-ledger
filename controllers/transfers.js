@@ -3,6 +3,8 @@
 
 const _ = require('lodash');
 const diff = require('deep-diff');
+const crypto = require('crypto');
+const tweetnacl = require('tweetnacl');
 const db = require('../services/db');
 const config = require('../services/config');
 const log = require('five-bells-shared/services/log')('transfers');
@@ -15,6 +17,12 @@ const InvalidModificationError =
   require('five-bells-shared/errors/invalid-modification-error');
 const UnprocessableEntityError =
   require('five-bells-shared/errors/unprocessable-entity-error');
+
+function hashJSON (json) {
+  let str = JSON.stringify(json);
+  let hash = crypto.createHash('sha512').update(str).digest('base64');
+  return hash;
+}
 
 /**
  * @api {get} /transfers/:id Get local transfer object
@@ -80,16 +88,26 @@ exports.getState = function *getState(id) {
     throw new NotFoundError('Unknown transfer ID');
   }
 
-  let transferState = {
+  let message = {
     id: config.server.base_uri + '/transfers/' + transfer.id,
-    state: transfer.state,
-    signature: {
-      signer: 'blah.example',
-      signed: true
-    }
+    state: transfer.state
+  };
+  let messageHash = hashJSON(message);
+  let signature = tweetnacl.util.encodeBase64(
+    tweetnacl.sign.detached(
+      tweetnacl.util.decodeBase64(messageHash),
+      tweetnacl.util.decodeBase64(config.keys.ed25519.secret)));
+
+  let transferStateReceipt = {
+    message: message,
+    messageHash: messageHash,
+    algorithm: 'ed25519-sha512',
+    signer: config.server.base_uri,
+    public_key: config.keys.ed25519.public,
+    signature: signature
   };
 
-  this.body = transferState;
+  this.body = transferStateReceipt;
 };
 
 function isConditionMet(transfer) {
