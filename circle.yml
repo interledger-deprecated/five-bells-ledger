@@ -7,6 +7,7 @@ machine:
     version: iojs-1.6.3
 dependencies:
   pre:
-    - docker pull cockroachdb/cockroach:alpha-1599-g97fd958
+    - docker pull cockroachdb/cockroach:alpha-1687-g7fe09f2
   post:
-    - docker run -p 8080:8080 -d cockroachdb/cockroach:alpha-1599-g97fd958 init -stores ssd="$(mktemp -d /tmp/dbXXX)"
+    - docker run -p 8080:8080 -v /data cockroachdb/cockroach:alpha-1687-g7fe09f2 init /data
+    - docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockroach:alpha-1687-g7fe09f2 start -stores ssd=/data -gossip self://
