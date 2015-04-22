@@ -10,6 +10,8 @@ const config = require('../services/config');
 const log = require('five-bells-shared/services/log')('transfers');
 const request = require('co-request');
 const requestUtil = require('five-bells-shared/utils/request');
+const verifyExecutionCondition =
+  require('five-bells-shared/utils/verifyExecutionCondition');
 const jsonld = require('five-bells-shared/utils/jsonld');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
 const NotFoundError = require('five-bells-shared/errors/not-found-error');
@@ -100,7 +102,7 @@ exports.getState = function *getState(id) {
 
   let transferStateReceipt = {
     message: message,
-    messageHash: messageHash,
+    message_hash: messageHash,
     algorithm: 'ed25519-sha512',
     signer: config.server.base_uri,
     public_key: config.keys.ed25519.public,
@@ -109,13 +111,6 @@ exports.getState = function *getState(id) {
 
   this.body = transferStateReceipt;
 };
-
-function isConditionMet(transfer) {
-  // TODO Actually check the ledger's signature
-  return !transfer.execution_condition ||
-         _.isEqual(transfer.execution_condition,
-          transfer.execution_condition_fulfillment);
-}
 
 function updateTransferObject(originalTransfer, transfer) {
   // Ignore internally managed properties
@@ -130,8 +125,7 @@ function updateTransferObject(originalTransfer, transfer) {
   });
 
   // Clients may fulfill the execution condition
-  if (transfer.execution_condition_fulfillment &&
-      !isConditionMet(originalTransfer)) {
+  if (transfer.execution_condition_fulfillment) {
     originalTransfer.execution_condition_fulfillment =
       transfer.execution_condition_fulfillment;
   }
@@ -267,7 +261,16 @@ function *processStateTransitions(tr, transfer) {
   }
 
   if (transfer.state === 'prepared') {
-    if (isConditionMet(transfer)) {
+
+    if (transfer.execution_condition &&
+      transfer.execution_condition_fulfillment) {
+        // This will throw an error if the fulfillment is invalid
+        verifyExecutionCondition(transfer.execution_condition,
+          transfer.execution_condition_fulfillment);
+        log.debug('transfer transitioned from prepared to accepted');
+        transfer.state = 'accepted';
+
+    } else if (!transfer.execution_condition) {
       log.debug('transfer transitioned from prepared to accepted');
       transfer.state = 'accepted';
     }

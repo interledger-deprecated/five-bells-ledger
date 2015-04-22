@@ -11,5 +11,18 @@
     "account": "bob",
     "amount": "10"
   }],
+  "execution_condition": {
+    "message": {
+      "id": "http://ledger.example/transfers/75833f8f-7aa8-4ebd-a2a4-1205ff1bc746",
+      "state": "completed"
+    },
+    "message_hash": "pOIzV3+7usPTEtiBrAxloVA1a1nfKU/pv4+Y5Q4G7yrgl7HyTy38aZ7UDJUsMoSYKUu+hzhBEQdL6ET9l3EEUw==",
+    "signer": "http://ledger.example",
+    "algorithm": "ed25519-sha512",
+    "public_key": "3ZP+J7A218nsjJfizMbIU89bgpa6KCe+v4ahwxNBaTM="
+  },
+  "execution_condition_fulfillment": {
+    "signature": "1PTuuQlU8BrimsS6CcMsDPmTC45hohkPAsj9HH2cPoGOzbMxFEjzsRwraDFZb12FTHKM96rtJvXt1E9MPayiBA=="
+  },
   "state": "completed"
 }

@@ -10,6 +10,7 @@ const dbHelper = require('./helpers/db');
 const appHelper = require('./helpers/app');
 const logHelper = require('five-bells-shared/testHelpers/log');
 const tweetnacl = require('tweetnacl');
+const validate = require('five-bells-shared/services/validate');
 
 function hashJSON (json) {
   let str = JSON.stringify(json);
@@ -69,7 +70,7 @@ describe('Transfer State', function () {
         .get('/transfers/' + this.completedTransfer.id + '/state')
         .expect(200, {
           message: stateReceipt,
-          messageHash: stateReceiptHash,
+          message_hash: stateReceiptHash,
           algorithm: 'ed25519-sha512',
           signer: config.server.base_uri,
           public_key: config.keys.ed25519.public,
@@ -100,11 +101,39 @@ describe('Transfer State', function () {
         .get('/transfers/' + transfer.id + '/state')
         .expect(200, {
           message: stateReceipt,
-          messageHash: stateReceiptHash,
+          message_hash: stateReceiptHash,
           algorithm: 'ed25519-sha512',
           signer: config.server.base_uri,
           public_key: config.keys.ed25519.public,
           signature: signature
+        })
+        .end();
+    });
+
+    it('should return a valid TransferStateReceipt', function *(){
+      const transfer = _.cloneDeep(this.completedTransfer);
+      transfer.state = 'prepared';
+
+      yield db.create(['transfers'], transfer);
+
+      const stateReceipt = {
+        id: this.formatId(transfer, '/transfers/').id,
+        state: transfer.state
+      };
+      const stateReceiptHash = hashJSON(stateReceipt);
+      const signature = tweetnacl.util.encodeBase64(
+        tweetnacl.sign.detached(
+          tweetnacl.util.decodeBase64(stateReceiptHash),
+          this.keyPair.secretKey));
+
+      yield this.request()
+        .get('/transfers/' + transfer.id + '/state')
+        .expect(function(res) {
+          let validationResult = validate('TransferStateReceipt', res.body);
+          if (!validationResult.valid) {
+            console.log(validationResult);
+            throw new Error('Not a valid TransferStateReceipt');
+          }
         })
         .end();
     });

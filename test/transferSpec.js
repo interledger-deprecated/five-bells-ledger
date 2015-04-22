@@ -9,6 +9,7 @@ const db = require('../services/db');
 const dbHelper = require('./helpers/db');
 const appHelper = require('./helpers/app');
 const logHelper = require('five-bells-shared/testHelpers/log');
+const tweetnacl = require('tweetnacl');
 
 describe('Transfers', function () {
   logHelper();
@@ -22,6 +23,7 @@ describe('Transfers', function () {
     this.multiCreditTransfer = _.cloneDeep(require('./data/transfer3'));
     this.multiDebitTransfer = _.cloneDeep(require('./data/transfer4'));
     this.multiDebitAndCreditTransfer = _.cloneDeep(require('./data/transfer5'));
+    this.completedTransfer = _.cloneDeep(require('./data/transfer_completed'));
 
     // Reset database
     yield dbHelper.reset();
@@ -187,7 +189,7 @@ describe('Transfers', function () {
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
-        // .expect(422)
+        .expect(422)
         .end();
     });
 
@@ -197,7 +199,18 @@ describe('Transfers', function () {
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
-        // .expect(422)
+        .expect(422)
+        .end();
+    });
+
+    it('should return 422 if the signature is invalid', function *() {
+      const transfer = this.formatId(this.completedTransfer, '/transfers/');
+      transfer.execution_condition_fulfillment.signature = 'aW52YWxpZA==';
+
+      yield this.request()
+        .put('/transfers/' + this.completedTransfer.id)
+        .send(transfer)
+        .expect(422)
         .end();
     });
 
@@ -258,70 +271,51 @@ describe('Transfers', function () {
         .end();
     });
 
-    it('should update the state from "proposed" to "prepared" when authorization is added and an ' +
-       'execution condition is present', function *() {
-      const transfer = this.formatId(this.exampleTransfer, '/transfers/');
+    it('should update the state from "proposed" to "prepared" when' +
+      'authorization is added and an execution condition is present',
+      function *() {
+      const transfer = this.formatId(this.completedTransfer, '/transfers/');
+      delete transfer.execution_condition_fulfillment;
 
       const transferWithoutAuthorization = _.cloneDeep(transfer);
       delete transferWithoutAuthorization.debits[0].authorization;
-      transferWithoutAuthorization.execution_condition = {
-        message: 'test',
-        signer: 'blah'
-      };
-
-      const transferWithAuthorization = _.cloneDeep(transfer);
-      transferWithAuthorization.execution_condition = {
-        message: 'test',
-        signer: 'blah'
-      };
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put('/transfers/' + this.completedTransfer.id)
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
         .end();
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
-        .send(transferWithAuthorization)
+        .put('/transfers/' + this.completedTransfer.id)
+        .send(transfer)
         .expect(200)
-        .expect(_.assign({}, transferWithAuthorization, {state: 'prepared'}))
+        .expect(_.assign({}, transfer, {state: 'prepared'}))
         .end();
     });
 
-    it('should update the state from "prepared" to "completed" when the execution criteria is met',
+    it('should update the state from "prepared" to "completed" ' +
+      'when the execution criteria is met',
        function *() {
-      const transfer = this.formatId(this.exampleTransfer, '/transfers/');
+      const transfer = this.formatId(this.completedTransfer, '/transfers/');
+      delete transfer.state;
 
-      const transferWithoutAuthorization = _.cloneDeep(transfer);
-      transferWithoutAuthorization.execution_condition = {
-        message: 'test',
-        signer: 'blah'
-      };
-
-      const transferWithAuthorization = _.cloneDeep(transfer);
-      transferWithAuthorization.execution_condition = {
-        message: 'test',
-        signer: 'blah'
-      };
-      transferWithAuthorization.execution_condition_fulfillment = {
-        message: 'test',
-        signer: 'blah'
-      };
+      const transferWithoutConditionFulfillment = _.cloneDeep(transfer);
+      delete transferWithoutConditionFulfillment.execution_condition_fulfillment;
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
-        .send(transferWithoutAuthorization)
+        .put('/transfers/' + this.completedTransfer.id)
+        .send(transferWithoutConditionFulfillment)
         .expect(201)
-        .expect(_.assign({}, transferWithoutAuthorization, {state: 'prepared'}))
+        .expect(_.assign({}, transferWithoutConditionFulfillment, {state: 'prepared'}))
         .end();
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
-        .send(transferWithAuthorization)
+        .put('/transfers/' + this.completedTransfer.id)
+        .send(transfer)
         .expect(200)
-        .expect(_.assign({}, transferWithAuthorization, {state: 'completed'}))
+        .expect(_.assign({}, transfer, {state: 'completed'}))
         .end();
     });
 
@@ -383,7 +377,8 @@ describe('Transfers', function () {
         .end();
     });
 
-    it('should handle transfers with multiple debits and multiple credits', function*() {
+    it('should handle transfers with multiple debits and multiple credits',
+      function*() {
       const transfer = this.formatId(this.multiDebitAndCreditTransfer, '/transfers/');
 
       yield this.request()
