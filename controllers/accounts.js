@@ -5,6 +5,7 @@ const db = require('../services/db');
 const log = require('five-bells-shared/services/log')('accounts');
 const request = require('five-bells-shared/utils/request');
 const NotFoundError = require('five-bells-shared/errors/not-found-error');
+const config = require('../services/config');
 
 exports.find = function *find() {
   const accounts = yield db.get(['accounts']);
@@ -37,6 +38,9 @@ exports.fetch = function *fetch(id) {
     throw new NotFoundError('Unknown account ID');
   }
 
+  // Externally we want to use a full URI ID
+  account.id = config.server.base_uri + '/accounts/' + account.id;
+
   this.body = account;
 };
 
@@ -63,18 +67,21 @@ exports.putResource = function *putResource(id) {
 
   account.id = id;
 
-  let created = false;
+  let existing = false;
   yield db.transaction(function *(tr) {
     const existingAccount = yield tr.get(['accounts', id]);
 
     if (existingAccount) {
-      created = true;
+      existing = true;
     }
 
     tr.put(['accounts', id], account);
   });
-  log.debug((created ? 'created' : 'updated') + ' account ID ' + id);
+  log.debug((existing ? 'updated' : 'created') + ' account ID ' + id);
+
+  // Externally we want to use a full URI ID
+  account.id = config.server.base_uri + '/accounts/' + account.id;
 
   this.body = account;
-  this.status = created ? 201 : 200;
+  this.status = existing ? 200 : 201;
 };

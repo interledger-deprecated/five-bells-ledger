@@ -338,19 +338,21 @@ describe('Transfers', function () {
       yield this.request()
         .get('/accounts/' + this.multiCreditTransfer.credits[0].account)
         .expect(200)
-        .expect(_.assign({}, {
-          id: 'bob',
+        .expect({
+          id: 'http://localhost/accounts/bob',
+          name: 'Bob',
           balance: '10'
-        }))
+        })
         .end();
 
       yield this.request()
         .get('/accounts/' + this.multiCreditTransfer.credits[1].account)
         .expect(200)
-        .expect(_.assign({}, {
-          id: 'dave',
+        .expect({
+          id: 'http://localhost/accounts/dave',
+          name: 'Dave',
           balance: '10'
-        }))
+        })
         .end();
     });
 
@@ -368,7 +370,8 @@ describe('Transfers', function () {
         .get('/accounts/' + this.multiDebitTransfer.debits[0].account)
         .expect(200)
         .expect(_.assign({}, {
-          id: 'alice',
+          id: 'http://localhost/accounts/alice',
+          name: 'Alice',
           balance: '90'
         }))
         .end();
@@ -377,7 +380,8 @@ describe('Transfers', function () {
         .get('/accounts/' + this.multiDebitTransfer.debits[1].account)
         .expect(200)
         .expect(_.assign({}, {
-          id: 'candice',
+          id: 'http://localhost/accounts/candice',
+          name: 'Candice',
           balance: '40'
         }))
         .end();
@@ -397,7 +401,8 @@ describe('Transfers', function () {
         .get('/accounts/' + this.multiDebitAndCreditTransfer.debits[0].account)
         .expect(200)
         .expect(_.assign({}, {
-          id: 'alice',
+          id: 'http://localhost/accounts/alice',
+          name: 'Alice',
           balance: '50'
         }))
         .end();
@@ -406,7 +411,8 @@ describe('Transfers', function () {
         .get('/accounts/' + this.multiDebitAndCreditTransfer.debits[1].account)
         .expect(200)
         .expect(_.assign({}, {
-          id: 'candice',
+          id: 'http://localhost/accounts/candice',
+          name: 'Candice',
           balance: '30'
         }))
         .end();
@@ -415,7 +421,8 @@ describe('Transfers', function () {
         .get('/accounts/' + this.multiDebitAndCreditTransfer.credits[0].account)
         .expect(200)
         .expect(_.assign({}, {
-          id: 'bob',
+          id: 'http://localhost/accounts/bob',
+          name: 'Bob',
           balance: '30'
         }))
         .end();
@@ -424,7 +431,8 @@ describe('Transfers', function () {
         .get('/accounts/' + this.multiDebitAndCreditTransfer.credits[1].account)
         .expect(200)
         .expect(_.assign({}, {
-          id: 'dave',
+          id: 'http://localhost/accounts/dave',
+          name: 'Dave',
           balance: '40'
         }))
         .end();
