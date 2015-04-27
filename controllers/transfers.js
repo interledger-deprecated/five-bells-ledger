@@ -13,6 +13,7 @@ const requestUtil = require('five-bells-shared/utils/request');
 const verifyExecutionCondition =
   require('five-bells-shared/utils/verifyExecutionCondition');
 const jsonld = require('five-bells-shared/utils/jsonld');
+const stringifyJson = require('canonical-json');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
 const NotFoundError = require('five-bells-shared/errors/not-found-error');
 const InvalidModificationError =
@@ -21,7 +22,7 @@ const UnprocessableEntityError =
   require('five-bells-shared/errors/unprocessable-entity-error');
 
 function hashJSON (json) {
-  let str = JSON.stringify(json);
+  let str = stringifyJson(json);
   let hash = crypto.createHash('sha512').update(str).digest('base64');
   return hash;
 }

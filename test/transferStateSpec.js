@@ -11,9 +11,10 @@ const appHelper = require('./helpers/app');
 const logHelper = require('five-bells-shared/testHelpers/log');
 const tweetnacl = require('tweetnacl');
 const validate = require('five-bells-shared/services/validate');
+const stringifyJson = require('canonical-json');
 
 function hashJSON (json) {
-  let str = JSON.stringify(json);
+  let str = stringifyJson(json);
   let hash = crypto.createHash('sha512').update(str).digest('base64');
   return hash;
 }
