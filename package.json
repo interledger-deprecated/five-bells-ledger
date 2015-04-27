@@ -14,12 +14,12 @@
   },
   "dependencies": {
     "bluebird": "^2.9.4",
+    "canonical-json": "0.0.4",
     "co": "^4.1.0",
     "co-request": "^0.2.0",
     "co-views": "^0.2.0",
     "deep-diff": "^0.3.0",
-    "five-bells-shared": "https://569d9e97620f8ac44643f69afdea08af8ff72a5b@github.com/ripple/five-bells-shared/tarball/v1.2.3",
-    "rowler": "justmoon/rowler#roach",
+    "five-bells-shared": "https://569d9e97620f8ac44643f69afdea08af8ff72a5b@github.com/ripple/five-bells-shared/tarball/v1.3.0",
     "koa": "^0.18.1",
     "koa-compress": "^1.0.6",
     "koa-cors": "0.0.14",
@@ -31,7 +31,9 @@
     "mag-hub": "^0.1.1",
     "mz": "^1.2.1",
     "nodemon": "^1.3.5",
+    "rowler": "justmoon/rowler#roach",
     "swig": "^1.3.2",
+    "tweetnacl": "^0.13.1",
     "uuid4": "^1.0.0"
   },
   "devDependencies": {

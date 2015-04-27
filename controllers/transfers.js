@@ -3,18 +3,29 @@
 
 const _ = require('lodash');
 const diff = require('deep-diff');
+const crypto = require('crypto');
+const tweetnacl = require('tweetnacl');
 const db = require('../services/db');
 const config = require('../services/config');
 const log = require('five-bells-shared/services/log')('transfers');
 const request = require('co-request');
 const requestUtil = require('five-bells-shared/utils/request');
+const verifyExecutionCondition =
+  require('five-bells-shared/utils/verifyExecutionCondition');
 const jsonld = require('five-bells-shared/utils/jsonld');
+const stringifyJson = require('canonical-json');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
 const NotFoundError = require('five-bells-shared/errors/not-found-error');
 const InvalidModificationError =
   require('five-bells-shared/errors/invalid-modification-error');
 const UnprocessableEntityError =
   require('five-bells-shared/errors/unprocessable-entity-error');
+
+function hashJSON (json) {
+  let str = stringifyJson(json);
+  let hash = crypto.createHash('sha512').update(str).digest('base64');
+  return hash;
+}
 
 /**
  * @api {get} /transfers/:id Get local transfer object
@@ -80,24 +91,27 @@ exports.getState = function *getState(id) {
     throw new NotFoundError('Unknown transfer ID');
   }
 
-  let transferState = {
+  let message = {
     id: config.server.base_uri + '/transfers/' + transfer.id,
-    state: transfer.state,
-    signature: {
-      signer: 'blah.example',
-      signed: true
-    }
+    state: transfer.state
+  };
+  let messageHash = hashJSON(message);
+  let signature = tweetnacl.util.encodeBase64(
+    tweetnacl.sign.detached(
+      tweetnacl.util.decodeBase64(messageHash),
+      tweetnacl.util.decodeBase64(config.keys.ed25519.secret)));
+
+  let transferStateReceipt = {
+    message: message,
+    message_hash: messageHash,
+    algorithm: 'ed25519-sha512',
+    signer: config.server.base_uri,
+    public_key: config.keys.ed25519.public,
+    signature: signature
   };
 
-  this.body = transferState;
+  this.body = transferStateReceipt;
 };
-
-function isConditionMet(transfer) {
-  // TODO Actually check the ledger's signature
-  return !transfer.execution_condition ||
-         _.isEqual(transfer.execution_condition,
-          transfer.execution_condition_fulfillment);
-}
 
 function updateTransferObject(originalTransfer, transfer) {
   // Ignore internally managed properties
@@ -112,8 +126,7 @@ function updateTransferObject(originalTransfer, transfer) {
   });
 
   // Clients may fulfill the execution condition
-  if (transfer.execution_condition_fulfillment &&
-      !isConditionMet(originalTransfer)) {
+  if (transfer.execution_condition_fulfillment) {
     originalTransfer.execution_condition_fulfillment =
       transfer.execution_condition_fulfillment;
   }
@@ -249,7 +262,16 @@ function *processStateTransitions(tr, transfer) {
   }
 
   if (transfer.state === 'prepared') {
-    if (isConditionMet(transfer)) {
+
+    if (transfer.execution_condition &&
+      transfer.execution_condition_fulfillment) {
+        // This will throw an error if the fulfillment is invalid
+        verifyExecutionCondition(transfer.execution_condition,
+          transfer.execution_condition_fulfillment);
+        log.debug('transfer transitioned from prepared to accepted');
+        transfer.state = 'accepted';
+
+    } else if (!transfer.execution_condition) {
       log.debug('transfer transitioned from prepared to accepted');
       transfer.state = 'accepted';
     }
