@@ -45,7 +45,7 @@ config.keys.ed25519 = {
 
 let keyPair;
 if (!config.keys.ed25519.secret) {
-  log.warn('No ED25519_SECRET_KEY provided. Generating a random one.\n' +
+  log.warn('No ED25519_SECRET_KEY provided. Generating a random one. ' +
     'DO NOT DO THIS IN PRODUCTION');
   keyPair = tweetnacl.sign.keyPair();
   config.keys.ed25519.secret = tweetnacl.util.encodeBase64(keyPair.secretKey);
