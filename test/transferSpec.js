@@ -23,7 +23,7 @@ describe('Transfers', function () {
     this.multiCreditTransfer = _.cloneDeep(require('./data/transfer3'));
     this.multiDebitTransfer = _.cloneDeep(require('./data/transfer4'));
     this.multiDebitAndCreditTransfer = _.cloneDeep(require('./data/transfer5'));
-    this.completedTransfer = _.cloneDeep(require('./data/transfer_completed'));
+    this.executedTransfer = _.cloneDeep(require('./data/transfer_executed'));
 
     // Reset database
     yield dbHelper.reset();
@@ -62,7 +62,7 @@ describe('Transfers', function () {
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
         .expect(201)
-        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .expect(_.assign({}, transfer, {state: 'executed'}))
         .end();
 
       // Check balances
@@ -78,7 +78,7 @@ describe('Transfers', function () {
         .send(transferWithoutId)
         .expect(201)
         .expect(_.assign({}, this.formatId(this.exampleTransfer, '/transfers/'),
-                {state: 'completed'}))
+                {state: 'executed'}))
         .end();
 
       // Check balances
@@ -99,7 +99,7 @@ describe('Transfers', function () {
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
         .expect(201)
-        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .expect(_.assign({}, transfer, {state: 'executed'}))
         .end();
 
       notification.done();
@@ -131,14 +131,14 @@ describe('Transfers', function () {
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
         .expect(201)
-        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .expect(_.assign({}, transfer, {state: 'executed'}))
         .end();
 
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transfer)
         .expect(200)
-        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .expect(_.assign({}, transfer, {state: 'executed'}))
         .end();
     });
 
@@ -204,11 +204,11 @@ describe('Transfers', function () {
     });
 
     it('should return 422 if the signature is invalid', function *() {
-      const transfer = this.formatId(this.completedTransfer, '/transfers/');
+      const transfer = this.formatId(this.executedTransfer, '/transfers/');
       transfer.execution_condition_fulfillment.signature = 'aW52YWxpZA==';
 
       yield this.request()
-        .put('/transfers/' + this.completedTransfer.id)
+        .put('/transfers/' + this.executedTransfer.id)
         .send(transfer)
         .expect(422)
         .end();
@@ -229,7 +229,7 @@ describe('Transfers', function () {
         .expect(201)
         .expect(_.assign({}, transfer, {
           id: transfer.id.toLowerCase(),
-          state: 'completed'
+          state: 'executed'
         }))
         .end();
     });
@@ -247,7 +247,7 @@ describe('Transfers', function () {
         .end();
     });
 
-    it('should update the state from "proposed" to "completed" when authorization is added and ' +
+    it('should update the state from "proposed" to "executed" when authorization is added and ' +
        'no execution condition is given', function *() {
       const transfer = this.formatId(this.exampleTransfer, '/transfers/');
 
@@ -267,55 +267,55 @@ describe('Transfers', function () {
         .put('/transfers/' + this.exampleTransfer.id)
         .send(transferWithAuthorization)
         .expect(200)
-        .expect(_.assign({}, transferWithAuthorization, {state: 'completed'}))
+        .expect(_.assign({}, transferWithAuthorization, {state: 'executed'}))
         .end();
     });
 
     it('should update the state from "proposed" to "prepared" when' +
       'authorization is added and an execution condition is present',
       function *() {
-      const transfer = this.formatId(this.completedTransfer, '/transfers/');
+      const transfer = this.formatId(this.executedTransfer, '/transfers/');
       delete transfer.execution_condition_fulfillment;
 
       const transferWithoutAuthorization = _.cloneDeep(transfer);
       delete transferWithoutAuthorization.debits[0].authorization;
 
       yield this.request()
-        .put('/transfers/' + this.completedTransfer.id)
+        .put('/transfers/' + this.executedTransfer.id)
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
         .end();
 
       yield this.request()
-        .put('/transfers/' + this.completedTransfer.id)
+        .put('/transfers/' + this.executedTransfer.id)
         .send(transfer)
         .expect(200)
         .expect(_.assign({}, transfer, {state: 'prepared'}))
         .end();
     });
 
-    it('should update the state from "prepared" to "completed" ' +
+    it('should update the state from "prepared" to "executed" ' +
       'when the execution criteria is met',
        function *() {
-      const transfer = this.formatId(this.completedTransfer, '/transfers/');
+      const transfer = this.formatId(this.executedTransfer, '/transfers/');
       delete transfer.state;
 
       const transferWithoutConditionFulfillment = _.cloneDeep(transfer);
       delete transferWithoutConditionFulfillment.execution_condition_fulfillment;
 
       yield this.request()
-        .put('/transfers/' + this.completedTransfer.id)
+        .put('/transfers/' + this.executedTransfer.id)
         .send(transferWithoutConditionFulfillment)
         .expect(201)
         .expect(_.assign({}, transferWithoutConditionFulfillment, {state: 'prepared'}))
         .end();
 
       yield this.request()
-        .put('/transfers/' + this.completedTransfer.id)
+        .put('/transfers/' + this.executedTransfer.id)
         .send(transfer)
         .expect(200)
-        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .expect(_.assign({}, transfer, {state: 'executed'}))
         .end();
     });
 
@@ -326,7 +326,7 @@ describe('Transfers', function () {
         .put('/transfers/' + this.multiCreditTransfer.id)
         .send(transfer)
         .expect(201)
-        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .expect(_.assign({}, transfer, {state: 'executed'}))
         .end();
 
       yield this.request()
@@ -357,7 +357,7 @@ describe('Transfers', function () {
         .put('/transfers/' + this.multiDebitTransfer.id)
         .send(transfer)
         .expect(201)
-        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .expect(_.assign({}, transfer, {state: 'executed'}))
         .end();
 
       yield this.request()
@@ -389,7 +389,7 @@ describe('Transfers', function () {
         .put('/transfers/' + this.multiDebitAndCreditTransfer.id)
         .send(transfer)
         .expect(201)
-        .expect(_.assign({}, transfer, {state: 'completed'}))
+        .expect(_.assign({}, transfer, {state: 'executed'}))
         .end();
 
       yield this.request()

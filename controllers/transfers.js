@@ -3,7 +3,6 @@
 
 const _ = require('lodash');
 const diff = require('deep-diff');
-const crypto = require('crypto');
 const tweetnacl = require('tweetnacl');
 const db = require('../services/db');
 const config = require('../services/config');
@@ -13,19 +12,13 @@ const requestUtil = require('five-bells-shared/utils/request');
 const verifyExecutionCondition =
   require('five-bells-shared/utils/verifyExecutionCondition');
 const jsonld = require('five-bells-shared/utils/jsonld');
-const stringifyJson = require('canonical-json');
+const hashJSON = require('five-bells-shared/utils/hashJson');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
 const NotFoundError = require('five-bells-shared/errors/not-found-error');
 const InvalidModificationError =
   require('five-bells-shared/errors/invalid-modification-error');
 const UnprocessableEntityError =
   require('five-bells-shared/errors/unprocessable-entity-error');
-
-function hashJSON (json) {
-  let str = stringifyJson(json);
-  let hash = crypto.createHash('sha512').update(str).digest('base64');
-  return hash;
-}
 
 /**
  * @api {get} /transfers/:id Get local transfer object
@@ -103,7 +96,6 @@ exports.getState = function *getState(id) {
 
   let transferStateReceipt = {
     message: message,
-    message_hash: messageHash,
     algorithm: 'ed25519-sha512',
     signer: config.server.base_uri,
     public_key: config.keys.ed25519.public,
@@ -239,26 +231,30 @@ function *processStateTransitions(tr, transfer) {
     });
 
     if (authorized) {
-      log.debug('transfer transitioned from proposed to prepared');
-      transfer.state = 'prepared';
+      log.debug('transfer transitioned from proposed to pre_prepared');
+      transfer.state = 'pre_prepared';
+    }
+  }
 
-      for (let sender of Object.keys(debitAccounts)) {
-        let debitAccount = debitAccounts[sender];
+  if (transfer.state === 'pre_prepared') {
+    for (let sender of Object.keys(debitAccounts)) {
+      let debitAccount = debitAccounts[sender];
 
-        // Check senders' balances
-        if (debitAccount.balance < debitAccount.totalAmount) {
-          throw new InsufficientFundsError('Sender has insufficient funds.',
-                                           sender);
-        }
-
-        // Take money out of senders' accounts
-        log.debug('sender ' + sender + ' balance: ' + debitAccount.balance
-                  + ' -> ' + (debitAccount.balance - debitAccount.totalAmount));
-        tr.put(['accounts', sender, 'balance'],
-               debitAccount.balance - debitAccount.totalAmount);
+      // Check senders' balances
+      if (debitAccount.balance < debitAccount.totalAmount) {
+        throw new InsufficientFundsError('Sender has insufficient funds.',
+                                         sender);
       }
 
+      // Take money out of senders' accounts
+      log.debug('sender ' + sender + ' balance: ' + debitAccount.balance
+                + ' -> ' + (debitAccount.balance - debitAccount.totalAmount));
+      tr.put(['accounts', sender, 'balance'],
+             debitAccount.balance - debitAccount.totalAmount);
     }
+
+    log.debug('transfer transitioned from pre_prepared to prepared');
+    transfer.state = 'prepared';
   }
 
   if (transfer.state === 'prepared') {
@@ -268,19 +264,19 @@ function *processStateTransitions(tr, transfer) {
         // This will throw an error if the fulfillment is invalid
         verifyExecutionCondition(transfer.execution_condition,
           transfer.execution_condition_fulfillment);
-        log.debug('transfer transitioned from prepared to accepted');
-        transfer.state = 'accepted';
+        log.debug('transfer transitioned from prepared to pre_executed');
+        transfer.state = 'pre_executed';
 
     } else if (!transfer.execution_condition) {
-      log.debug('transfer transitioned from prepared to accepted');
-      transfer.state = 'accepted';
+      log.debug('transfer transitioned from prepared to pre_executed');
+      transfer.state = 'pre_executed';
     }
   }
 
-  if (transfer.state === 'accepted') {
+  if (transfer.state === 'pre_executed') {
     // In a real-world / asynchronous implementation, the response from the
-    // external ledger would trigger the state transition from 'accepted' to
-    // 'completed' or 'failed'.
+    // external ledger would trigger the state transition from 'pre_executed' to
+    // 'executed' or 'failed'.
     for (let recipient of Object.keys(creditAccounts)) {
       let creditAccount = creditAccounts[recipient];
 
@@ -291,8 +287,8 @@ function *processStateTransitions(tr, transfer) {
              creditAccount.balance + creditAccount.totalAmount);
     }
 
-    log.debug('transfer transitioned from accepted to completed');
-    transfer.state = 'completed';
+    log.debug('transfer transitioned from pre_executed to executed');
+    transfer.state = 'executed';
   }
 
   yield processSubscriptions(transfer);

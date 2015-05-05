@@ -37,7 +37,7 @@ describe('Transfer State', function () {
         tweetnacl.util.decodeBase64(config.keys.ed25519.secret));
 
     // Define example data
-    this.completedTransfer = _.cloneDeep(require('./data/transfer_completed'));
+    this.executedTransfer = _.cloneDeep(require('./data/transfer_executed'));
 
     // Reset database
     yield dbHelper.reset();
@@ -55,11 +55,11 @@ describe('Transfer State', function () {
     it('should return a 200 and a signed receipt including the message, ' +
       'messageHash, algorithm, public_key, and signature', function *() {
 
-      yield db.create(['transfers'], this.completedTransfer);
+      yield db.create(['transfers'], this.executedTransfer);
 
       const stateReceipt = {
-        id: this.formatId(this.completedTransfer, '/transfers/').id,
-        state: this.completedTransfer.state
+        id: this.formatId(this.executedTransfer, '/transfers/').id,
+        state: this.executedTransfer.state
       };
       const stateReceiptHash = hashJSON(stateReceipt);
       const signature = tweetnacl.util.encodeBase64(
@@ -68,10 +68,9 @@ describe('Transfer State', function () {
           this.keyPair.secretKey));
 
       yield this.request()
-        .get('/transfers/' + this.completedTransfer.id + '/state')
+        .get('/transfers/' + this.executedTransfer.id + '/state')
         .expect(200, {
           message: stateReceipt,
-          message_hash: stateReceiptHash,
           algorithm: 'ed25519-sha512',
           signer: config.server.base_uri,
           public_key: config.keys.ed25519.public,
@@ -83,7 +82,7 @@ describe('Transfer State', function () {
     it('should return the correct state if the transfer is prepared',
       function *() {
 
-      const transfer = _.cloneDeep(this.completedTransfer);
+      const transfer = _.cloneDeep(this.executedTransfer);
       transfer.state = 'prepared';
 
       yield db.create(['transfers'], transfer);
@@ -102,7 +101,6 @@ describe('Transfer State', function () {
         .get('/transfers/' + transfer.id + '/state')
         .expect(200, {
           message: stateReceipt,
-          message_hash: stateReceiptHash,
           algorithm: 'ed25519-sha512',
           signer: config.server.base_uri,
           public_key: config.keys.ed25519.public,
@@ -112,7 +110,7 @@ describe('Transfer State', function () {
     });
 
     it('should return a valid TransferStateReceipt', function *(){
-      const transfer = _.cloneDeep(this.completedTransfer);
+      const transfer = _.cloneDeep(this.executedTransfer);
       transfer.state = 'prepared';
 
       yield db.create(['transfers'], transfer);
