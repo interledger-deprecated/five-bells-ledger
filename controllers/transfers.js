@@ -9,8 +9,8 @@ const config = require('../services/config');
 const log = require('five-bells-shared/services/log')('transfers');
 const request = require('co-request');
 const requestUtil = require('five-bells-shared/utils/request');
-const verifyExecutionCondition =
-  require('five-bells-shared/utils/verifyExecutionCondition');
+const verifyCondition =
+  require('five-bells-shared/utils/verifyCondition');
 const jsonld = require('five-bells-shared/utils/jsonld');
 const hashJSON = require('five-bells-shared/utils/hashJson');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
@@ -262,7 +262,7 @@ function *processStateTransitions(tr, transfer) {
     if (transfer.execution_condition &&
       transfer.execution_condition_fulfillment) {
         // This will throw an error if the fulfillment is invalid
-        verifyExecutionCondition(transfer.execution_condition,
+        verifyCondition(transfer.execution_condition,
           transfer.execution_condition_fulfillment);
         log.debug('transfer transitioned from prepared to pre_executed');
         transfer.state = 'pre_executed';
