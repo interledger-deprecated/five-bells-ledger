@@ -1,8 +1,8 @@
 /*global describe, it*/
 'use strict';
 const _ = require('lodash');
-const crypto = require('crypto');
-// const expect = require('chai').expect;
+const sinon = require('sinon');
+const defer = require('co-defer');
 const app = require('../app');
 const db = require('../services/db');
 const config = require('../services/config');
@@ -13,11 +13,15 @@ const tweetnacl = require('tweetnacl');
 const validate = require('five-bells-shared/services/validate');
 const hashJSON = require('five-bells-shared/utils/hashJson');
 
+const START_DATE = 1434412800000; // June 16, 2015 00:00:00 GMT
+
 describe('Transfer State', function () {
   logHelper();
 
   beforeEach(function *() {
     appHelper.create(this, app);
+
+    this.clock = sinon.useFakeTimers(START_DATE);
 
     // Set up keys
     config.keys.ed25519 = {
@@ -32,9 +36,17 @@ describe('Transfer State', function () {
 
     // Define example data
     this.executedTransfer = _.cloneDeep(require('./data/transfer_executed'));
+    this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'));
 
     // Reset database
     yield dbHelper.reset();
+
+    // Store some example data
+    yield db.put(['accounts'], require('./data/accounts'));
+  });
+
+  afterEach(function *() {
+    this.clock.restore();
   });
 
   describe('GET /transfers/:uuid/state', function() {
@@ -103,21 +115,10 @@ describe('Transfer State', function () {
         .end();
     });
 
-    it('should return a valid TransferStateReceipt', function *(){
+    it('should return a valid TransferStateReceipt', function *() {
       const transfer = _.cloneDeep(this.executedTransfer);
-      transfer.state = 'prepared';
 
       yield db.create(['transfers'], transfer);
-
-      const stateReceipt = {
-        id: this.formatId(transfer, '/transfers/').id,
-        state: transfer.state
-      };
-      const stateReceiptHash = hashJSON(stateReceipt);
-      const signature = tweetnacl.util.encodeBase64(
-        tweetnacl.sign.detached(
-          tweetnacl.util.decodeBase64(stateReceiptHash),
-          this.keyPair.secretKey));
 
       yield this.request()
         .get('/transfers/' + transfer.id + '/state')
@@ -129,6 +130,45 @@ describe('Transfer State', function () {
           }
         })
         .end();
+    });
+
+    it('should return a rejected transfer receipt if the expires_at date ' +
+      'has passed', function *() {
+
+      const transfer = this.formatId(this.transferWithExpiry, '/transfers/');
+      delete transfer.debits[0].authorization;
+
+      yield this.request()
+        .put('/transfers/' + this.transferWithExpiry.id)
+        .send(transfer)
+        .expect(201)
+        .end();
+
+      const stateReceipt = {
+        id: transfer.id,
+        state: 'rejected'
+      };
+      const stateReceiptHash = hashJSON(stateReceipt);
+      const signature = tweetnacl.util.encodeBase64(
+        tweetnacl.sign.detached(
+          tweetnacl.util.decodeBase64(stateReceiptHash),
+          this.keyPair.secretKey));
+
+      this.clock.tick(100);
+
+      // We use setImmediate to make sure the request gets called on the next tick
+      defer.setImmediate(function*() {
+        yield this.request()
+          .get('/transfers/' + this.transferWithExpiry.id + '/state')
+          .expect(200, {
+            message: stateReceipt,
+            algorithm: 'ed25519-sha512',
+            signer: config.server.base_uri,
+            public_key: config.keys.ed25519.public,
+            signature: signature
+          })
+          .end();
+      });
     });
   });
 });

@@ -2,6 +2,7 @@
 'use strict';
 const _ = require('lodash');
 const expect = require('chai').expect;
+const defer = require('co-defer');
 const nock = require('nock');
 nock.enableNetConnect(['localhost', '127.0.0.1']);
 const app = require('../app');
@@ -9,13 +10,17 @@ const db = require('../services/db');
 const dbHelper = require('./helpers/db');
 const appHelper = require('./helpers/app');
 const logHelper = require('five-bells-shared/testHelpers/log');
-const tweetnacl = require('tweetnacl');
+const sinon = require('sinon');
+
+const START_DATE = 1434412800000; // June 16, 2015 00:00:00 GMT
 
 describe('Transfers', function () {
   logHelper();
 
   beforeEach(function *() {
     appHelper.create(this, app);
+
+    this.clock = sinon.useFakeTimers(START_DATE);
 
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transfer1'));
@@ -24,6 +29,7 @@ describe('Transfers', function () {
     this.multiDebitTransfer = _.cloneDeep(require('./data/transfer4'));
     this.multiDebitAndCreditTransfer = _.cloneDeep(require('./data/transfer5'));
     this.executedTransfer = _.cloneDeep(require('./data/transfer_executed'));
+    this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'));
 
     // Reset database
     yield dbHelper.reset();
@@ -35,6 +41,7 @@ describe('Transfers', function () {
 
   afterEach(function *() {
     nock.cleanAll();
+    this.clock.restore();
   });
 
   describe('GET /transfers/:uuid', function () {
@@ -52,6 +59,30 @@ describe('Transfers', function () {
         .get('/transfers/' + this.exampleTransfer.id)
         .expect(404)
         .end();
+    });
+
+    it('should return a rejected transfer if the expiry date has passed', function *() {
+      const transfer = this.formatId(this.transferWithExpiry, '/transfers/');
+      delete transfer.debits[0].authorization;
+
+      yield this.request()
+        .put('/transfers/' + this.transferWithExpiry.id)
+        .send(transfer)
+        .expect(201)
+        .end();
+
+      this.clock.tick(200);
+
+      // We use setImmediate to make sure the request gets called on the next tick
+      defer.setImmediate(function*() {
+        yield this.request()
+          .get('/transfers/' + this.transferWithExpiry.id)
+          .expect(200, _.assign({}, transfer, {
+            state: 'rejected',
+            rejected_at: transfer.expires_at
+          }))
+          .end();
+      });
     });
   });
 
@@ -211,6 +242,62 @@ describe('Transfers', function () {
         .put('/transfers/' + this.executedTransfer.id)
         .send(transfer)
         .expect(422)
+        .end();
+    });
+
+    it('should return a 422 if a transfer is modified after its ' +
+      'expiry date', function *() {
+
+      const transfer = this.formatId(this.transferWithExpiry, '/transfers/');
+
+      const transferWithoutAuthorization = _.cloneDeep(transfer);
+      delete transferWithoutAuthorization.debits[0].authorization;
+
+      yield this.request()
+        .put('/transfers/' + this.transferWithExpiry.id)
+        .send(transferWithoutAuthorization)
+        .expect(201)
+        .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
+        .end();
+
+      this.clock.tick(200);
+
+      yield this.request()
+        .put('/transfers/' + this.transferWithExpiry.id)
+        .send(transfer)
+        .expect(422)
+        .expect(function(res) {
+          expect(res.body.id).to.equal('ExpiredTransferError');
+          expect(res.body.message).to.equal('Cannot modify transfer after expires_at date');
+        })
+        .end();
+    });
+
+    it('should return a 422 if the expires_at field is removed', function *() {
+
+      const transfer = this.formatId(this.transferWithExpiry, '/transfers/');
+      delete transfer.debits[0].authorization;
+
+      const transferWithoutExpiry = _.cloneDeep(transfer);
+      delete transferWithoutExpiry.expires_at;
+
+      yield this.request()
+        .put('/transfers/' + this.transferWithExpiry.id)
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {state: 'proposed'}))
+        .end();
+
+      this.clock.tick(200);
+
+      yield this.request()
+        .put('/transfers/' + this.transferWithExpiry.id)
+        .send(transferWithoutExpiry)
+        .expect(400)
+        .expect(function(res) {
+          expect(res.body.id).to.equal('InvalidModificationError');
+          expect(res.body.message).to.equal('Transfer may not be modified in this way');
+        })
         .end();
     });
 
