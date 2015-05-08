@@ -1,0 +1,25 @@
+{
+  "id": "3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+  "debits": [{
+    "account": "alice",
+    "amount": "50",
+    "authorization": {
+      "algorithm": "ed25519-sha512"
+    }
+  }, {
+    "account": "candice",
+    "amount": "20",
+    "authorization": {
+      "algorithm": "ed25519-sha512"
+    }
+  }],
+  "credits": [{
+    "account": "bob",
+    "amount": "30"
+  }, {
+    "account": "dave",
+    "amount": "40"
+  }],
+  "expires_at": "2015-06-16T00:00:00.100Z",
+  "state": "prepared"
+}

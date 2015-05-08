@@ -6,6 +6,7 @@ const diff = require('deep-diff');
 const tweetnacl = require('tweetnacl');
 const db = require('../services/db');
 const config = require('../services/config');
+const transferExpiryMonitor = require('../services/transferExpiryMonitor');
 const log = require('five-bells-shared/services/log')('transfers');
 const request = require('co-request');
 const requestUtil = require('five-bells-shared/utils/request');
@@ -289,6 +290,9 @@ function *processStateTransitions(tr, transfer) {
 
     log.debug('transfer transitioned from pre_executed to executed');
     transfer.state = 'executed';
+
+    // Remove the expiry countdown
+    transferExpiryMonitor.unwatch(transfer.id);
   }
 
   yield processSubscriptions(transfer);
@@ -329,6 +333,9 @@ exports.create = function *create(id) {
   requestUtil.validateUriParameter('id', id, 'Uuid');
   id = id.toLowerCase();
   let transfer = yield requestUtil.validateBody(this, 'Transfer');
+
+  // Do not allow modifications after the expires_at date
+  transferExpiryMonitor.validateNotExpired(transfer);
 
   if (typeof transfer.id !== 'undefined') {
     transfer.id = transfer.id.toLowerCase();
@@ -395,6 +402,11 @@ exports.create = function *create(id) {
 
     // Store transfer in database
     tr.put(['transfers', transfer.id], transfer);
+
+    // Start the expiry countdown
+    // If the expires_at has passed by this time we'll consider
+    // the transfer to have made it in before the deadline
+    transferExpiryMonitor.watch(transfer);
   });
 
   log.debug('changes written to database');
