@@ -166,13 +166,17 @@ function *processSubscriptions(transfer) {
           id: config.server.base_uri +
             '/subscriptions/' + subscription.id,
           event: 'transfer.update',
-          host: config.server.base_host,
           resource: externalTransfer
         }
       });
     });
 
-    yield notifications;
+    for (let result of yield notifications) {
+      if (result.statusCode >= 400) {
+        log.debug('remote error for notification ' + result.statusCode,
+          result.body);
+      }
+    }
   }
 }
 
