@@ -4,7 +4,7 @@ machine:
   services:
     - docker
   node:
-    version: iojs-1.6.3
+    version: iojs-2.0.1
 dependencies:
   pre:
     - docker pull cockroachdb/cockroach:alpha-2205-g4e71206
