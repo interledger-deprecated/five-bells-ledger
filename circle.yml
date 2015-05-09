@@ -7,7 +7,7 @@ machine:
     version: iojs-1.6.3
 dependencies:
   pre:
-    - docker pull cockroachdb/cockroach:alpha-1687-g7fe09f2
+    - docker pull cockroachdb/cockroach:alpha-2205-g4e71206
   post:
-    - docker run -p 8080:8080 -v /data cockroachdb/cockroach:alpha-1687-g7fe09f2 init /data
-    - docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockroach:alpha-1687-g7fe09f2 start -stores ssd=/data -gossip self://
+    - docker run -p 8080:8080 -v /data cockroachdb/cockroach:alpha-2205-g4e71206 init --stores=ssd=/data
+    - docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockroach:alpha-2205-g4e71206 start --stores=ssd=/data --gossip=self:// --insecure
