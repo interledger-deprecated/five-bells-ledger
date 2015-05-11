@@ -32,7 +32,7 @@
     "moment": "^2.10.2",
     "mz": "^1.2.1",
     "nodemon": "^1.3.5",
-    "rowler": "justmoon/rowler#roach",
+    "rowler": "justmoon/rowler#v1.0.0",
     "swig": "^1.3.2",
     "tweetnacl": "^0.13.1",
     "uuid4": "^1.0.0"
