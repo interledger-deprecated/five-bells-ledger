@@ -25,6 +25,26 @@ describe('Accounts', function () {
     yield db.create(['accounts'], this.existingAccount);
   });
 
+  describe('GET /accounts', function () {
+    it('should return 200', function *() {
+      const account = this.formatId(this.existingAccount, '/accounts/');
+      yield this.request()
+        .get('/accounts')
+        .expect(200)
+        .expect([account])
+        .end();
+    });
+
+    it('should return 200 with an empty array if there are no accounts', function *() {
+      yield db.remove(['accounts']);
+      yield this.request()
+        .get('/accounts')
+        .expect(200)
+        .expect([])
+        .end();
+    });
+  });
+
   describe('GET /accounts/:uuid', function () {
     it('should return 200', function *() {
       const account = this.formatId(this.existingAccount, '/accounts/');

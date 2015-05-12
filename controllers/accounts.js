@@ -1,6 +1,7 @@
 /* @flow */
 'use strict';
 
+const _ = require('lodash');
 const db = require('../services/db');
 const log = require('five-bells-shared/services/log')('accounts');
 const request = require('five-bells-shared/utils/request');
@@ -9,7 +10,10 @@ const config = require('../services/config');
 
 exports.find = function *find() {
   const accounts = yield db.get(['accounts']);
-  this.body = accounts;
+  this.body = _.values(accounts).map(function (account) {
+    account.id = config.server.base_uri + '/accounts/' + account.id;
+    return account;
+  });
 };
 
 /**
