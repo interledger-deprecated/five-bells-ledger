@@ -123,6 +123,7 @@ exports.update = function *update(id) {
   }
 
   log.debug('updating subscription ID ' + subscription.id);
+  log.debug('subscribed ' + subscription.owner + ' at ' + subscription.target);
 
   // Validate and store subscription in database
   yield *storeSubscription(subscription);
