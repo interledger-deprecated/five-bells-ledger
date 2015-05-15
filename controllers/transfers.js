@@ -5,6 +5,7 @@ const _ = require('lodash');
 const diff = require('deep-diff');
 const tweetnacl = require('tweetnacl');
 const db = require('../services/db');
+const accountBalances = require('../lib/accountBalances');
 const config = require('../services/config');
 const transferExpiryMonitor = require('../services/transferExpiryMonitor');
 const log = require('@ripple/five-bells-shared/services/log')('transfers');
@@ -182,43 +183,8 @@ function *processSubscriptions(transfer) {
 
 function *processStateTransitions(tr, transfer) {
   // Calculate per-account totals
-  let debitAccounts = _.groupBy(transfer.debits, function (debit) {
-    return debit.account;
-  });
-
-  let creditAccounts = _.groupBy(transfer.credits, function (credit) {
-    return credit.account;
-  });
-
-  for (let sender of Object.keys(debitAccounts)) {
-    let debitAmounts = _.pluck(debitAccounts[sender], 'amount');
-    let accountObj = yield tr.get(['accounts', sender]);
-
-    if (typeof accountObj === 'undefined') {
-      throw new UnprocessableEntityError(
-        'Sender `' + sender + '` does not exist.');
-    }
-
-    debitAccounts[sender] = {
-      balance: +accountObj.balance,
-      totalAmount: +_.sum(debitAmounts)
-    };
-  }
-
-  for (let recipient of Object.keys(creditAccounts)) {
-    let creditAmounts = _.pluck(creditAccounts[recipient], 'amount');
-    let accountObj = yield tr.get(['accounts', recipient]);
-
-    if (typeof accountObj === 'undefined') {
-      throw new UnprocessableEntityError(
-        'Recipient `' + recipient + '` does not exist.');
-    }
-
-    creditAccounts[recipient] = {
-      balance: +accountObj.balance,
-      totalAmount: +_.sum(creditAmounts)
-    };
-  }
+  let debitAccounts = yield accountBalances.calculate(tr, transfer.debits);
+  let creditAccounts = yield accountBalances.calculate(tr, transfer.credits);
 
   // Check prerequisites
   if (transfer.state === 'proposed') {
@@ -242,21 +208,8 @@ function *processStateTransitions(tr, transfer) {
   }
 
   if (transfer.state === 'pre_prepared') {
-    for (let sender of Object.keys(debitAccounts)) {
-      let debitAccount = debitAccounts[sender];
-
-      // Check senders' balances
-      if (debitAccount.balance < debitAccount.totalAmount) {
-        throw new InsufficientFundsError('Sender has insufficient funds.',
-                                         sender);
-      }
-
-      // Take money out of senders' accounts
-      log.debug('sender ' + sender + ' balance: ' + debitAccount.balance
-                + ' -> ' + (debitAccount.balance - debitAccount.totalAmount));
-      tr.put(['accounts', sender, 'balance'],
-             debitAccount.balance - debitAccount.totalAmount);
-    }
+    // Hold sender funds
+    yield accountBalances.applyDebits(tr, debitAccounts);
 
     log.debug('transfer transitioned from pre_prepared to prepared');
     transfer.state = 'prepared';
@@ -282,15 +235,7 @@ function *processStateTransitions(tr, transfer) {
     // In a real-world / asynchronous implementation, the response from the
     // external ledger would trigger the state transition from 'pre_executed' to
     // 'executed' or 'failed'.
-    for (let recipient of Object.keys(creditAccounts)) {
-      let creditAccount = creditAccounts[recipient];
-
-      log.debug('recipient ' + recipient + ' balance: ' + creditAccount.balance
-                + ' -> ' + (creditAccount.balance + creditAccount.totalAmount));
-
-      tr.put(['accounts', recipient, 'balance'],
-             creditAccount.balance + creditAccount.totalAmount);
-    }
+    yield accountBalances.applyCredits(tr, creditAccounts);
 
     log.debug('transfer transitioned from pre_executed to executed');
     transfer.state = 'executed';
@@ -361,7 +306,8 @@ exports.create = function *create(id) {
 
   // Verify debits
   let totalDebits = 0,
-      totalCredits = 0;
+      totalCredits = 0,
+      totalRejectionCredits = 0;
 
   transfer.debits.forEach(function (debit) {
     if (debit.amount <= 0) {
@@ -379,9 +325,24 @@ exports.create = function *create(id) {
     totalCredits += parseFloat(credit.amount);
   });
 
-  if (totalCredits > totalDebits) {
+  if (transfer.rejection_credits) {
+    transfer.rejection_credits.forEach(function (credit) {
+      if (credit.amount <= 0) {
+        throw new UnprocessableEntityError(
+          'Amount must be a positive number excluding zero.');
+      }
+      totalRejectionCredits += parseFloat(credit.amount);
+    });
+
+    if (totalRejectionCredits !== totalDebits) {
+      throw new UnprocessableEntityError('If rejection_credits ' +
+        'are specified they must equal the sum of the debits');
+    }
+  }
+
+  if (totalCredits !== totalDebits) {
     throw new UnprocessableEntityError(
-      'Transfer may not create money.');
+      'Total credits must equal total debits');
   }
 
   // TODO Validate signatures in authorizations
@@ -410,7 +371,7 @@ exports.create = function *create(id) {
     // Start the expiry countdown
     // If the expires_at has passed by this time we'll consider
     // the transfer to have made it in before the deadline
-    transferExpiryMonitor.watch(transfer);
+    yield transferExpiryMonitor.watch(transfer);
   });
 
   log.debug('changes written to database');

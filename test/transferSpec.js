@@ -2,7 +2,6 @@
 'use strict';
 const _ = require('lodash');
 const expect = require('chai').expect;
-const defer = require('co-defer');
 const nock = require('nock');
 nock.enableNetConnect(['localhost', '127.0.0.1']);
 const app = require('../app');
@@ -11,6 +10,7 @@ const dbHelper = require('./helpers/db');
 const appHelper = require('./helpers/app');
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log');
 const sinon = require('sinon');
+const transferExpiryMonitor = require('../services/transferExpiryMonitor');
 
 const START_DATE = 1434412800000; // June 16, 2015 00:00:00 GMT
 
@@ -20,7 +20,7 @@ describe('Transfers', function () {
   beforeEach(function *() {
     appHelper.create(this, app);
 
-    this.clock = sinon.useFakeTimers(START_DATE);
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date');
 
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transferSimple'));
@@ -31,6 +31,8 @@ describe('Transfers', function () {
       _.cloneDeep(require('./data/transferMultiDebitAndCredit'));
     this.executedTransfer = _.cloneDeep(require('./data/transferExecuted'));
     this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'));
+    this.transferWithRejectionCredits =
+      _.cloneDeep(require('./data/transferWithRejectionCredits'));
 
     // Reset database
     yield dbHelper.reset();
@@ -72,18 +74,17 @@ describe('Transfers', function () {
         .expect(201)
         .end();
 
-      this.clock.tick(200);
+      // In production this function should be triggered by the worker started in app.js
+      this.clock.tick(100);
+      yield transferExpiryMonitor.processExpiredTransfers();
 
-      // We use setImmediate to make sure the request gets called on the next tick
-      defer.setImmediate(function*() {
-        yield this.request()
-          .get('/transfers/' + this.transferWithExpiry.id)
-          .expect(200, _.assign({}, transfer, {
-            state: 'rejected',
-            rejected_at: transfer.expires_at
-          }))
-          .end();
-      });
+      yield this.request()
+        .get('/transfers/' + this.transferWithExpiry.id)
+        .expect(200, _.assign({}, transfer, {
+          state: 'rejected',
+          rejected_at: transfer.expires_at
+        }))
+        .end();
     });
   });
 
@@ -298,6 +299,56 @@ describe('Transfers', function () {
         .expect(function(res) {
           expect(res.body.id).to.equal('InvalidModificationError');
           expect(res.body.message).to.equal('Transfer may not be modified in this way');
+        })
+        .end();
+    });
+
+    it('should return a 422 if the credits are greater than the debits', function *() {
+
+      const transfer = this.formatId(this.multiDebitAndCreditTransfer, '/transfers/');
+      transfer.credits[0].amount = String(parseFloat(transfer.credits[0].amount) + 0.00000001);
+
+      yield this.request()
+        .put('/transfers/' + this.multiDebitAndCreditTransfer.id)
+        .send(transfer)
+        .expect(422)
+        .expect(function(res) {
+          expect(res.body.id).to.equal('UnprocessableEntityError');
+          expect(res.body.message).to.equal('Total credits must equal total debits');
+        })
+        .end();
+    });
+
+    it('should return a 422 if the debits are greater than the credits', function *() {
+
+      const transfer = this.formatId(this.multiDebitAndCreditTransfer, '/transfers/');
+      transfer.debits[0].amount = String(parseFloat(transfer.debits[0].amount) + 0.00000001);
+
+      yield this.request()
+        .put('/transfers/' + this.multiDebitAndCreditTransfer.id)
+        .send(transfer)
+        .expect(422)
+        .expect(function(res) {
+          expect(res.body.id).to.equal('UnprocessableEntityError');
+          expect(res.body.message).to.equal('Total credits must equal total debits');
+        })
+        .end();
+    });
+
+    it('should return a 422 if the rejection_credits field is present but the ' +
+      'total credits do not equal the total debits', function *() {
+
+       const transfer = this.formatId(this.transferWithRejectionCredits, '/transfers/');
+       transfer.rejection_credits.pop();
+
+       yield this.request()
+        .put('/transfers/' + this.transferWithRejectionCredits.id)
+        .send(transfer)
+        .expect(422)
+        .expect(function(res) {
+          expect(res.body.id).to.equal('UnprocessableEntityError');
+          expect(res.body.message).to.equal('If rejection_credits are specified ' +
+            'they must equal the sum of the debits');
         })
         .end();
     });
@@ -519,6 +570,79 @@ describe('Transfers', function () {
           balance: '40'
         }))
         .end();
+    });
+
+    it('should apply rejection credits if specified', function *() {
+      const transfer = this.formatId(this.transferWithRejectionCredits, '/transfers/');
+
+      yield this.request()
+        .put('/transfers/' + this.transferWithRejectionCredits.id)
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {state: 'prepared'}))
+        .end();
+
+      // In production this function should be triggered by the worker started in app.js
+      this.clock.tick(200);
+      yield transferExpiryMonitor.processExpiredTransfers();
+
+      yield this.request()
+        .get('/accounts/alice')
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'http://localhost/accounts/alice',
+          name: 'Alice',
+          balance: '99'
+        }))
+        .end();
+
+      yield this.request()
+        .get('/accounts/bob')
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'http://localhost/accounts/bob',
+          name: 'Bob',
+          balance: '1'
+        }))
+        .end();
+    });
+
+    it('should return the money from expired transfers to the debited accounts if ' +
+      'no rejection credits if specified', function *() {
+      const transfer = this.formatId(this.transferWithRejectionCredits, '/transfers/');
+      delete transfer.rejection_credits;
+
+      yield this.request()
+        .put('/transfers/' + this.transferWithRejectionCredits.id)
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {state: 'prepared'}))
+        .end();
+
+      // In production this function should be triggered by the worker started in app.js
+      this.clock.tick(200);
+      yield transferExpiryMonitor.processExpiredTransfers();
+
+      yield this.request()
+        .get('/accounts/alice')
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'http://localhost/accounts/alice',
+          name: 'Alice',
+          balance: '100'
+        }))
+        .end();
+
+      yield this.request()
+        .get('/accounts/bob')
+        .expect(200)
+        .expect(_.assign({}, {
+          id: 'http://localhost/accounts/bob',
+          name: 'Bob',
+          balance: '0'
+        }))
+        .end();
+
     });
   });
 });
