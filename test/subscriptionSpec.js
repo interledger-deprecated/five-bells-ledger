@@ -18,7 +18,7 @@ describe('Subscriptions', function () {
 
   beforeEach(function *() {
     // Define example data
-    this.exampleTransfer = require('./data/transfer1');
+    this.exampleTransfer = require('./data/transferSimple');
     this.exampleSubscription = require('./data/subscription1');
     this.existingSubscription = require('./data/subscription2');
 

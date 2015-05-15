@@ -23,12 +23,13 @@ describe('Transfers', function () {
     this.clock = sinon.useFakeTimers(START_DATE);
 
     // Define example data
-    this.exampleTransfer = _.cloneDeep(require('./data/transfer1'));
-    this.existingTransfer = _.cloneDeep(require('./data/transfer2'));
-    this.multiCreditTransfer = _.cloneDeep(require('./data/transfer3'));
-    this.multiDebitTransfer = _.cloneDeep(require('./data/transfer4'));
-    this.multiDebitAndCreditTransfer = _.cloneDeep(require('./data/transfer5'));
-    this.executedTransfer = _.cloneDeep(require('./data/transfer_executed'));
+    this.exampleTransfer = _.cloneDeep(require('./data/transferSimple'));
+    this.existingTransfer = _.cloneDeep(require('./data/transferNoAuthorization'));
+    this.multiCreditTransfer = _.cloneDeep(require('./data/transferMultiCredit'));
+    this.multiDebitTransfer = _.cloneDeep(require('./data/transferMultiDebit'));
+    this.multiDebitAndCreditTransfer =
+      _.cloneDeep(require('./data/transferMultiDebitAndCredit'));
+    this.executedTransfer = _.cloneDeep(require('./data/transferExecuted'));
     this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'));
 
     // Reset database
