@@ -1,8 +1,7 @@
 {
-  "name": "five-bells-ledger",
+  "name": "@ripple/five-bells-ledger",
   "version": "1.0.0",
   "description": "Five Bells ledger reference implementation",
-  "private": true,
   "scripts": {
     "start": "nodemon app.js",
     "test": "NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
