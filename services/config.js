@@ -2,7 +2,7 @@
 
 const url = require('url');
 const tweetnacl = require('tweetnacl');
-const log = require('five-bells-shared/services/log')('config');
+const log = require('@ripple/five-bells-shared/services/log')('config');
 
 const config = exports;
 

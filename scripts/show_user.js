@@ -1,7 +1,7 @@
 'use strict';
 
 const db = require('../services/db');
-const log = require('five-bells-shared/services/log')('show_user');
+const log = require('@ripple/five-bells-shared/services/log')('show_user');
 
 const argv = process.argv.slice(2);
 

@@ -6,7 +6,7 @@ const app = require('../app');
 const db = require('../services/db');
 const dbHelper = require('./helpers/db');
 const appHelper = require('./helpers/app');
-const logHelper = require('five-bells-shared/testHelpers/log');
+const logHelper = require('@ripple/five-bells-shared/testHelpers/log');
 
 describe('Accounts', function () {
   logHelper();

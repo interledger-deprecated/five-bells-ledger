@@ -9,7 +9,7 @@ const app = require('../app');
 const db = require('../services/db');
 const dbHelper = require('./helpers/db');
 const appHelper = require('./helpers/app');
-const logHelper = require('five-bells-shared/testHelpers/log');
+const logHelper = require('@ripple/five-bells-shared/testHelpers/log');
 const sinon = require('sinon');
 
 const START_DATE = 1434412800000; // June 16, 2015 00:00:00 GMT

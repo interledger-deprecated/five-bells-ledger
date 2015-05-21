@@ -7,19 +7,19 @@ const tweetnacl = require('tweetnacl');
 const db = require('../services/db');
 const config = require('../services/config');
 const transferExpiryMonitor = require('../services/transferExpiryMonitor');
-const log = require('five-bells-shared/services/log')('transfers');
+const log = require('@ripple/five-bells-shared/services/log')('transfers');
 const request = require('co-request');
-const requestUtil = require('five-bells-shared/utils/request');
+const requestUtil = require('@ripple/five-bells-shared/utils/request');
 const verifyCondition =
-  require('five-bells-shared/utils/verifyCondition');
-const jsonld = require('five-bells-shared/utils/jsonld');
-const hashJSON = require('five-bells-shared/utils/hashJson');
+  require('@ripple/five-bells-shared/utils/verifyCondition');
+const jsonld = require('@ripple/five-bells-shared/utils/jsonld');
+const hashJSON = require('@ripple/five-bells-shared/utils/hashJson');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
-const NotFoundError = require('five-bells-shared/errors/not-found-error');
+const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error');
 const InvalidModificationError =
-  require('five-bells-shared/errors/invalid-modification-error');
+  require('@ripple/five-bells-shared/errors/invalid-modification-error');
 const UnprocessableEntityError =
-  require('five-bells-shared/errors/unprocessable-entity-error');
+  require('@ripple/five-bells-shared/errors/unprocessable-entity-error');
 
 /**
  * @api {get} /transfers/:id Get local transfer object

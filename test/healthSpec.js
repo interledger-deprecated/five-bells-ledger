@@ -4,7 +4,7 @@ const superagent = require('co-supertest');
 const nock = require('nock');
 nock.enableNetConnect(['localhost', '127.0.0.1']);
 const app = require('../app');
-const logHelper = require('five-bells-shared/testHelpers/log');
+const logHelper = require('@ripple/five-bells-shared/testHelpers/log');
 
 function request() {
   return superagent(app.listen());
