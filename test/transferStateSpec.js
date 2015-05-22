@@ -2,10 +2,10 @@
 'use strict';
 const _ = require('lodash');
 const sinon = require('sinon');
-const defer = require('co-defer');
 const app = require('../app');
 const db = require('../services/db');
 const config = require('../services/config');
+const transferExpiryMonitor = require('../services/transferExpiryMonitor');
 const dbHelper = require('./helpers/db');
 const appHelper = require('./helpers/app');
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log');
@@ -21,7 +21,7 @@ describe('Transfer State', function () {
   beforeEach(function *() {
     appHelper.create(this, app);
 
-    this.clock = sinon.useFakeTimers(START_DATE);
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date');
 
     // Set up keys
     config.keys.ed25519 = {
@@ -35,7 +35,7 @@ describe('Transfer State', function () {
         tweetnacl.util.decodeBase64(config.keys.ed25519.secret));
 
     // Define example data
-    this.executedTransfer = _.cloneDeep(require('./data/transfer_executed'));
+    this.executedTransfer = _.cloneDeep(require('./data/transferExecuted'));
     this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'));
 
     // Reset database
@@ -154,21 +154,21 @@ describe('Transfer State', function () {
           tweetnacl.util.decodeBase64(stateReceiptHash),
           this.keyPair.secretKey));
 
+      // In production this function should be triggered by the worker started in app.js
       this.clock.tick(100);
+      yield transferExpiryMonitor.processExpiredTransfers();
 
-      // We use setImmediate to make sure the request gets called on the next tick
-      defer.setImmediate(function*() {
-        yield this.request()
-          .get('/transfers/' + this.transferWithExpiry.id + '/state')
-          .expect(200, {
-            message: stateReceipt,
-            algorithm: 'ed25519-sha512',
-            signer: config.server.base_uri,
-            public_key: config.keys.ed25519.public,
-            signature: signature
-          })
-          .end();
-      });
+      yield this.request()
+        .get('/transfers/' + this.transferWithExpiry.id + '/state')
+        .expect(200, {
+          message: stateReceipt,
+          algorithm: 'ed25519-sha512',
+          signer: config.server.base_uri,
+          public_key: config.keys.ed25519.public,
+          signature: signature
+        })
+        .end();
+
     });
   });
 });

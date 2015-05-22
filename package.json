@@ -12,13 +12,14 @@
     "iojs": ">=1.5"
   },
   "dependencies": {
+    "@ripple/five-bells-shared": "2.6.3",
     "bluebird": "^2.9.4",
     "co": "^4.1.0",
     "co-defer": "^1.0.0",
+    "co-emitter": "^0.2.3",
     "co-request": "^0.2.0",
     "co-views": "^0.2.0",
     "deep-diff": "^0.3.0",
-    "@ripple/five-bells-shared": "2.6.3",
     "koa": "^0.18.1",
     "koa-compress": "^1.0.6",
     "koa-cors": "0.0.14",
@@ -31,7 +32,8 @@
     "moment": "^2.10.2",
     "mz": "^1.2.1",
     "nodemon": "^1.3.5",
-    "rowler": "justmoon/rowler#v1.0.0",
+    "priorityqueuejs": "^1.0.0",
+    "rowler": "justmoon/rowler#v1.0.2",
     "swig": "^1.3.2",
     "tweetnacl": "^0.13.1",
     "uuid4": "^1.0.0"
@@ -45,6 +47,7 @@
     "mocha": "^2.1.0",
     "nock": "^1.2.0",
     "sinon": "^1.14.1",
+    "sinon-chai": "^2.7.0",
     "supertest": "^0.15.0"
   }
 }

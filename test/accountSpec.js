@@ -1,6 +1,5 @@
 /*global describe, it*/
 'use strict';
-const _ = require('lodash');
 const expect = require('chai').expect;
 const app = require('../app');
 const db = require('../services/db');

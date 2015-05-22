@@ -5,6 +5,7 @@ const health = require('./controllers/health');
 const transfers = require('./controllers/transfers');
 const accounts = require('./controllers/accounts');
 const subscriptions = require('./controllers/subscriptions');
+const timerWorker = require('./services/timerWorker');
 const compress = require('koa-compress');
 const serve = require('koa-static');
 const route = require('koa-route');
@@ -45,6 +46,10 @@ app.use(serve(path.join(__dirname, 'public')));
 app.use(compress());
 
 if (!module.parent) {
+  // Start timerWorker to trigger the transferExpiryMonitor
+  // when transfers are going to expire
+  timerWorker.start();
+
   app.listen(config.server.port);
   log('app').info('ledger listening on ' + config.server.bind_ip + ':' +
     config.server.port);
