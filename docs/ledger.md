@@ -87,51 +87,6 @@ Now the ledger will try to apply the transaction. Since the transaction is prepa
 There are only two final states: **executed** and **rejected**. Transfers may have an expiry date. A transfer may expire at any point before it reaches the **pre-executed** state or any final state.
 
 
-**get** Request a Quote
------------------------
-_Requesting a quote from a trader._
-
-|Property            |required  |Type    |Description |
-|--------------------|----------|--------|------------|
-|source_ledger       |required  |String  |Ledger where funds should originate |
-|destination_ledger  |required  |String  |Ledger where funds should arrive |
-|source_asset        |          |String  |Asset used by the source account |
-|destination_asset   |          |String  |Asset used by the destination account |
-|source_amount       |          |String  |Amount at the source |
-|destination_amount  |          |String  |Amount at the destination |
-
-The first step to most payments is to request a quote for the payment.
-
-Either the source amount or the destination amount should have a value specified, but not both. The quote will be created with respect to the unspecified side of the trade.
-
-
-#### Definition
-
-  https://example.com/quote
-
-#### Result Format
-
-  200 OK ·  400 Bad Request
-
-```js
-  {
-    "source": {
-      "owner": "alice@acme.ledger.5bells.net",
-      "value": "120",
-      "currency": "USD",
-      "issuer": "acme.ledger.5bells.net",
-      "ledger": "acme.ledger.5bells.net"
-    },
-    "destination": {
-      "owner": "bob@acme.ledger.5bells.net",
-      "value": "100",
-      "currency": "EUR",
-      "issuer": "zulu.ledger.5bells.net",
-      "ledger": "zulu.ledger.5bells.net"
-    }
-  }
-```
-
 **put**	Make a Local Transfer
 -----------------------------
 _Transfer funds locally on a ledger._
