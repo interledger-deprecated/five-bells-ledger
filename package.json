@@ -2,6 +2,10 @@
   "name": "@ripple/five-bells-ledger",
   "version": "1.0.1",
   "description": "Five Bells ledger reference implementation",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ripple/five-bells-ledger.git"
+  },
   "scripts": {
     "start": "nodemon app.js",
     "test": "NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
@@ -48,6 +52,7 @@
     "nock": "^1.2.0",
     "sinon": "^1.14.1",
     "sinon-chai": "^2.7.0",
+    "spec-xunit-file": "0.0.1-3",
     "supertest": "^0.15.0"
   }
 }
