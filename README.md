@@ -15,5 +15,21 @@ docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockr
 Afterwards just run Five Bells Ledger:
 
 ``` sh
-docker run quay.io/ripple/five-bells-ledger
+docker run -it --rm --net=host -e PORT=1337 quay.io/ripple/five-bells-ledger
 ```
+
+Breaking down that command:
+
+* `-it` Run Five Bells Ledger in an interactive terminal.
+* `--rm` Delete container when it's done running.
+* `--net=host` Don't isolate container into its own virtual network. This allows Five Bells Ledger to see the database that we set up above.
+* `-e PORT=1337` Set the ledger's port to 1337. This is just an example for how to set a config option.
+
+Configuration options:
+
+* `BIND_IP` (default: `0.0.0.0`) IP that Five Bells Ledger will bind to.
+* `PORT` (default: `3000`) Port that Five Bells Ledger will listen on.
+* `HOSTNAME` (default: *[your hostname]*) Publicly visible hostname. This is important for things like generating globally unique IDs. Make sure this is a hostname that all your clients will be able to see. The default should be fine for local testing.
+* `PUBLIC_PORT` (default: `$PORT`) Publicly visible port. You can set this if your public port differs from the listening port, e.g. because the ledger is running behind a proxy.
+* `PUBLIC_HTTPS` (default: `''`) Whether or not the publicly visible instance of Five Bells Ledger is using HTTPS.
+* `ROACH_URI` (default: `http://localhost:8080`) URI for connecting to CockroachDB.
