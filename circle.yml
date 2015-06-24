@@ -7,10 +7,10 @@ machine:
     version: iojs-2.0.1
 dependencies:
   pre:
-    - docker pull cockroachdb/cockroach:alpha-2205-g4e71206
+    - docker pull cockroachdb/cockroach:alpha-3156-ge7385d9
   post:
-    - docker run -p 8080:8080 -v /data cockroachdb/cockroach:alpha-2205-g4e71206 init --stores=ssd=/data
-    - docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockroach:alpha-2205-g4e71206 start --stores=ssd=/data --gossip=self:// --insecure
+    - docker run -p 8080:8080 -v /data cockroachdb/cockroach:alpha-3156-ge7385d9 init --stores=ssd=/data
+    - docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockroach:alpha-3156-ge7385d9 start --stores=ssd=/data --gossip=self:// --insecure
 test:
   override:
     - XUNIT_FILE=${CIRCLE_TEST_REPORTS}/mocha.xml npm test --coverage -- -R spec-xunit-file
