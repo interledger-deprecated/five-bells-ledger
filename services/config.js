@@ -11,7 +11,7 @@ config.db.uri = process.env.ROACH_URI;
 config.db.subspace = 'five-bells-ledger';
 
 config.server = {};
-config.server.secure = false;
+config.server.secure = !!process.env.PUBLIC_HTTPS;
 config.server.bind_ip = process.env.BIND_IP || '0.0.0.0';
 config.server.port = process.env.PORT || 3000;
 config.server.public_host = process.env.HOSTNAME || require('os').hostname();
