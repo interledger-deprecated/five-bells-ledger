@@ -4,7 +4,15 @@
 
 ## Usage (Docker)
 
-Note: You need a local [CockroachDB](https://github.com/cockroachdb/cockroach) instance listening on port 8080.
+Note: You need a local [CockroachDB](https://github.com/cockroachdb/cockroach) instance listening on port 8080. Here is how to set that up:
+
+``` sh
+docker pull cockroachdb/cockroach:alpha-3156-ge7385d9
+docker run -p 8080:8080 -v /data cockroachdb/cockroach:alpha-3156-ge7385d9 init --stores=ssd=/data
+docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockroach:alpha-3156-ge7385d9 start --stores=ssd=/data --gossip=self:// --insecure
+```
+
+Afterwards just run Five Bells Ledger:
 
 ``` sh
 docker run quay.io/ripple/five-bells-ledger
