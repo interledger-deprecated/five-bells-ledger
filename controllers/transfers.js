@@ -8,6 +8,7 @@ const db = require('../services/db');
 const accountBalances = require('../lib/accountBalances');
 const config = require('../services/config');
 const transferExpiryMonitor = require('../services/transferExpiryMonitor');
+const auth = require('../services/auth');
 const log = require('@ripple/five-bells-shared/services/log')('transfers');
 const request = require('co-request');
 const requestUtil = require('@ripple/five-bells-shared/utils/request');
@@ -21,6 +22,9 @@ const InvalidModificationError =
   require('@ripple/five-bells-shared/errors/invalid-modification-error');
 const UnprocessableEntityError =
   require('@ripple/five-bells-shared/errors/unprocessable-entity-error');
+const UnauthorizedError =
+  require('@ripple/five-bells-shared/errors/unauthorized-error');
+
 
 /**
  * @api {get} /transfers/:id Get local transfer object
@@ -37,10 +41,10 @@ const UnprocessableEntityError =
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
  *
- * @param {String} id Transfer UUID
  * @returns {void}
  */
-exports.fetch = function *fetch(id) {
+exports.fetch = function *fetch() {
+  let id = this.params.id;
   requestUtil.validateUriParameter('id', id, 'Uuid');
   id = id.toLowerCase();
   log.debug('fetching transfer ID ' + id);
@@ -73,10 +77,10 @@ exports.fetch = function *fetch(id) {
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
  *
- * @param {String} id Transfer UUID
  * @returns {void}
  */
-exports.getState = function *getState(id) {
+exports.getState = function *getState() {
+  let id = this.params.id;
   requestUtil.validateUriParameter('id', id, 'Uuid');
   id = id.toLowerCase();
   log.debug('fetching state receipt for transfer ID ' + id);
@@ -108,34 +112,44 @@ exports.getState = function *getState(id) {
 };
 
 function updateTransferObject(originalTransfer, transfer) {
-  // Ignore internally managed properties
-  transfer.state = originalTransfer.state;
+  let updatedTransfer = _.cloneDeep(originalTransfer);
 
-  // Clients may add authorizations
-  originalTransfer.debits.forEach(function (funds, i) {
-    if (!funds.authorization &&
-        transfer.debits[i].authorization) {
-      funds.authorization = transfer.debits[i].authorization;
+  // Ignore internally managed properties
+  transfer.state = updatedTransfer.state;
+
+  // Clients can add authorizations
+  // The validity of these authorizations will be checked
+  // in the validateAuthorizations function
+  _.forEach(updatedTransfer.debits, function (funds, i) {
+    if (!funds.authorized &&
+        transfer.debits[i].authorized) {
+      funds.authorized = true;
+    }
+  });
+  _.forEach(updatedTransfer.credits, function (funds, i) {
+    if (!funds.authorized &&
+        transfer.credits[i].authorized) {
+      funds.authorized = true;
     }
   });
 
   // Clients may fulfill the execution condition
   if (transfer.execution_condition_fulfillment) {
-    originalTransfer.execution_condition_fulfillment =
+    updatedTransfer.execution_condition_fulfillment =
       transfer.execution_condition_fulfillment;
   }
 
   // The old and new objects should now be exactly equal
-  if (!_.isEqual(originalTransfer, transfer)) {
+  if (!_.isEqual(updatedTransfer, transfer)) {
     // If they aren't, this means the user tried to update something they're not
     // supposed to be able to modify.
     // TODO InvalidTransformationError
     throw new InvalidModificationError(
       'Transfer may not be modified in this way',
-      diff(originalTransfer, transfer));
+      diff(updatedTransfer, transfer));
   }
 
-  return originalTransfer;
+  return updatedTransfer;
 }
 
 function *processSubscriptions(transfer) {
@@ -181,6 +195,39 @@ function *processSubscriptions(transfer) {
   }
 }
 
+
+function validateAuthorizations(authorizedAccount, transfer, transferFromDb) {
+  // Check that the authorizedAccount is actually relevant to this transfer
+  if (authorizedAccount) {
+    if (!_.includes(_.pluck(transfer.debits, 'account'), authorizedAccount) &&
+      !_.includes(_.pluck(transfer.credits, 'account'), authorizedAccount)) {
+      // TODO: should this error be more specific or would that create
+      // a security vulnerability?
+      throw new UnauthorizedError('Unknown or invalid account / password');
+    }
+  }
+
+  // Go through each of the debits in the transfer
+  // Throw an error if authorized is set to true on any debit
+  // that was not set to true on the transferFromDb and is not
+  // owned by the authorizedAccount
+  _.forEach(transfer.debits, function(debit, debitIndex) {
+
+    // We don't care about debits where no one is attempting
+    // to mark them as authorized
+    if (!debit.authorized) {
+      return;
+    }
+
+    if (debit.account !== authorizedAccount &&
+      (!transferFromDb || !transferFromDb.debits[debitIndex].authorized)) {
+      throw new UnauthorizedError('Invalid attempt to authorize debit');
+    }
+  });
+
+  // TODO: add credit authorization
+}
+
 function *processStateTransitions(tr, transfer) {
   // Calculate per-account totals
   let debitAccounts = yield accountBalances.calculate(tr, transfer.debits);
@@ -193,7 +240,7 @@ function *processStateTransitions(tr, transfer) {
                         : [transfer.debits];
     let authorized = true;
     sourceFunds.forEach(function (funds) {
-      if (!funds.authorization) {
+      if (!funds.authorized) {
         authorized = false;
       } else {
         // TODO Validate authorization public keys
@@ -278,7 +325,10 @@ function *processStateTransitions(tr, transfer) {
  * @param {String} id Transfer UUID
  * @returns {void}
  */
-exports.create = function *create(id) {
+exports.create = function *create() {
+  const _this = this;
+
+  let id = _this.params.id;
   requestUtil.validateUriParameter('id', id, 'Uuid');
   id = id.toLowerCase();
   let transfer = yield requestUtil.validateBody(this, 'Transfer');
@@ -345,7 +395,6 @@ exports.create = function *create(id) {
       'Total credits must equal total debits');
   }
 
-  // TODO Validate signatures in authorizations
   // TODO Validate that the execution_condition_fulfillment is correct
 
   let originalTransfer;
@@ -362,6 +411,11 @@ exports.create = function *create(id) {
 
       transfer.state = 'proposed';
     }
+
+    // This method will check that any authorized:true fields added can
+    // only be added by the owner of the account
+    // _this.req.user is set by the passport middleware
+    validateAuthorizations(_this.req.user, transfer, originalTransfer);
 
     yield processStateTransitions(tr, transfer);
 

@@ -136,7 +136,8 @@ describe('Transfer State', function () {
       'has passed', function *() {
 
       const transfer = this.formatId(this.transferWithExpiry, '/transfers/');
-      delete transfer.debits[0].authorization;
+      delete transfer.debits[0].authorized;
+      delete transfer.debits[1].authorized;
 
       yield this.request()
         .put('/transfers/' + this.transferWithExpiry.id)

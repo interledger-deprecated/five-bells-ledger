@@ -8,8 +8,9 @@ const subscriptions = require('./controllers/subscriptions');
 const timerWorker = require('./services/timerWorker');
 const compress = require('koa-compress');
 const serve = require('koa-static');
-const route = require('koa-route');
+const router = require('koa-router')();
 const cors = require('koa-cors');
+const passport = require('koa-passport');
 const errorHandler = require('@ripple/five-bells-shared/middlewares/error-handler');
 const koa = require('koa');
 const path = require('path');
@@ -18,25 +19,38 @@ const logger = require('koa-mag');
 const config = require('./services/config');
 const app = module.exports = koa();
 
+// Configure passport
+require('./services/auth');
+
 // Logger
 app.use(logger());
+
 app.use(errorHandler);
 app.use(cors({expose: ['link']}));
+app.use(passport.initialize());
 
-app.use(route.get('/health', health.get));
+router.get('/health', health.get);
 
-app.use(route.get('/transfers/:id', transfers.fetch));
-app.use(route.put('/transfers/:uuid', transfers.create));
-app.use(route.get('/transfers/:id/state', transfers.getState));
+router.put('/transfers/:id',
+  passport.authenticate(['basic', 'anonymous'], {
+    session: false
+  }),
+  transfers.create);
 
-app.use(route.get('/accounts', accounts.find));
-app.use(route.get('/accounts/:id', accounts.fetch));
-app.use(route.put('/accounts/:id', accounts.putResource));
+router.get('/transfers/:id', transfers.fetch);
+router.get('/transfers/:id/state', transfers.getState);
 
-app.use(route.post('/subscriptions', subscriptions.create));
-app.use(route.get('/subscriptions/:id', subscriptions.fetch));
-app.use(route.put('/subscriptions/:id', subscriptions.update));
-app.use(route.delete('/subscriptions/:id', subscriptions.remove));
+router.get('/accounts', accounts.find);
+router.get('/accounts/:id', accounts.fetch);
+router.put('/accounts/:id', accounts.putResource);
+
+router.post('/subscriptions', subscriptions.create);
+router.get('/subscriptions/:id', subscriptions.fetch);
+router.put('/subscriptions/:id', subscriptions.update);
+router.delete('/subscriptions/:id', subscriptions.remove);
+
+app.use(router.middleware());
+app.use(router.routes());
 
 // Serve static files
 app.use(serve(path.join(__dirname, 'public')));

@@ -29,10 +29,10 @@ exports.find = function *find() {
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
  *
- * @param {String} id Account identifier (i.e. username)
  * @returns {void}
  */
-exports.fetch = function *fetch(id) {
+exports.fetch = function *fetch() {
+  let id = this.params.id;
   request.validateUriParameter('id', id, 'Identifier');
   id = id.toLowerCase();
   log.debug('fetching account ID ' + id);
@@ -44,6 +44,11 @@ exports.fetch = function *fetch(id) {
 
   // Externally we want to use a full URI ID
   account.id = config.server.base_uri + '/accounts/' + account.id;
+
+  // TODO get rid of this when we start using biginteger math everywhere
+  account.balance = '' + account.balance;
+
+  delete account.password;
 
   this.body = account;
 };
@@ -61,10 +66,10 @@ exports.fetch = function *fetch(id) {
  * @apiUse InvalidUriParameterError
  * @apiUse InvalidBodyError
  *
- * @param {String} id Account identifier (i.e. username)
  * @return {void}
  */
-exports.putResource = function *putResource(id) {
+exports.putResource = function *putResource() {
+  let id = this.params.id;
   request.validateUriParameter('id', id, 'Identifier');
   id = id.toLowerCase();
   const account = yield request.validateBody(this, 'Account');
