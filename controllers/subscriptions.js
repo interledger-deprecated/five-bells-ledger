@@ -60,10 +60,10 @@ function *storeSubscription(subscription) {
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
  *
- * @param {String} id Transfer UUID
  * @returns {void}
  */
-exports.fetch = function *fetch(id) {
+exports.fetch = function *fetch() {
+  let id = this.params.id;
   request.validateUriParameter('id', id, 'Uuid');
   id = id.toLowerCase();
   log.debug('fetching subscription ID ' + id);
@@ -110,7 +110,8 @@ exports.create = function *create() {
   this.status = 201;
 };
 
-exports.update = function *update(id) {
+exports.update = function *update() {
+  let id = this.params.id;
   request.validateUriParameter('id', id, 'Uuid');
   id = id.toLowerCase();
   const subscription = yield request.validateBody(this, 'Subscription');
@@ -147,10 +148,10 @@ exports.update = function *update(id) {
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
  *
- * @param {String} id UUID of the subscription
  * @returns {void}
  */
-exports.remove = function *remove(id) {
+exports.remove = function *remove() {
+  let id = this.params.id;
   request.validateUriParameter('id', id, 'Uuid');
   id = id.toLowerCase();
 

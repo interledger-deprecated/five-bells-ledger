@@ -2,21 +2,25 @@
   "alice": {
     "id": "alice",
     "name": "Alice",
-    "balance": "100"
+    "balance": "100",
+    "password": "alice"
   },
   "bob": {
     "id": "bob",
     "name": "Bob",
-    "balance": "0"
+    "balance": "0",
+    "password": "bob"
   },
   "candice": {
     "id": "candice",
     "name": "Candice",
-    "balance": "50"
+    "balance": "50",
+    "password": "candice"
   },
   "dave": {
     "id": "dave",
     "name": "Dave",
-    "balance": "0"
+    "balance": "0",
+    "password": "dave"
   }
 }

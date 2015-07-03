@@ -1,5 +1,6 @@
 /*global describe, it*/
 'use strict';
+const _ = require('lodash');
 const expect = require('chai').expect;
 const app = require('../app');
 const db = require('../services/db');
@@ -45,19 +46,42 @@ describe('Accounts', function () {
   });
 
   describe('GET /accounts/:uuid', function () {
-    it('should return 200', function *() {
+    it('should return 200 for an account that exists', function *() {
       const account = this.formatId(this.existingAccount, '/accounts/');
       yield this.request()
         .get('/accounts/' + this.existingAccount.id)
         .expect(200)
-        .expect(account)
         .end();
     });
 
-    it('should return 404 when the transfer does not exist', function *() {
+    it('should return 404 when the account does not exist', function *() {
       yield this.request()
         .get('/accounts/' + this.exampleAccounts.bob.id)
         .expect(404)
+        .end();
+    });
+
+    it('should strip out the password field', function *() {
+      const account = this.formatId(this.existingAccount, '/accounts/');
+      const accountWithoutPassword = _.clone(account);
+      delete accountWithoutPassword.password;
+      yield this.request()
+        .get('/accounts/' + this.existingAccount.id)
+        .expect(200)
+        .expect(accountWithoutPassword)
+        .end();
+    });
+
+    it('should return the balance as a string', function *() {
+      const account = this.formatId(this.existingAccount, '/accounts/');
+      yield this.request()
+        .get('/accounts/' + this.existingAccount.id)
+        .expect(200)
+        .expect(function(res) {
+          if (typeof res.body.balance !== 'string') {
+            throw new Error('Balance should be a string');
+          }
+        })
         .end();
     });
   });

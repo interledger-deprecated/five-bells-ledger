@@ -3,15 +3,11 @@
   "debits": [{
     "account": "alice",
     "amount": "50",
-    "authorization": {
-      "algorithm": "ed25519-sha512"
-    }
+    "authorized": true
   }, {
     "account": "candice",
     "amount": "20",
-    "authorization": {
-      "algorithm": "ed25519-sha512"
-    }
+    "authorized": true
   }],
   "credits": [{
     "account": "bob",
