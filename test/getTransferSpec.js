@@ -31,8 +31,6 @@ describe('GET /transfers/:uuid', function () {
       _.cloneDeep(require('./data/transferMultiDebitAndCredit'));
     this.executedTransfer = _.cloneDeep(require('./data/transferExecuted'));
     this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'));
-    this.transferWithRejectionCredits =
-      _.cloneDeep(require('./data/transferWithRejectionCredits'));
 
     // Reset database
     yield dbHelper.reset();
