@@ -356,8 +356,7 @@ exports.create = function *create() {
 
   // Verify debits
   let totalDebits = 0,
-      totalCredits = 0,
-      totalRejectionCredits = 0;
+      totalCredits = 0;
 
   transfer.debits.forEach(function (debit) {
     if (debit.amount <= 0) {
@@ -374,21 +373,6 @@ exports.create = function *create() {
     }
     totalCredits += parseFloat(credit.amount);
   });
-
-  if (transfer.rejection_credits) {
-    transfer.rejection_credits.forEach(function (credit) {
-      if (credit.amount <= 0) {
-        throw new UnprocessableEntityError(
-          'Amount must be a positive number excluding zero.');
-      }
-      totalRejectionCredits += parseFloat(credit.amount);
-    });
-
-    if (totalRejectionCredits !== totalDebits) {
-      throw new UnprocessableEntityError('If rejection_credits ' +
-        'are specified they must equal the sum of the debits');
-    }
-  }
 
   if (totalCredits !== totalDebits) {
     throw new UnprocessableEntityError(
