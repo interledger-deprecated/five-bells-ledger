@@ -10,10 +10,7 @@
     "amount": "10"
   }],
   "execution_condition": {
-    "message": {
-      "id": "http://ledger.example/transfers/75833f8f-7aa8-4ebd-a2a4-1205ff1bc746",
-      "state": "executed"
-    },
+    "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
     "signer": "http://ledger.example",
     "algorithm": "ed25519-sha512",
     "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
