@@ -156,7 +156,12 @@ describe('PUT /transfers/:id', function () {
       .put('/transfers/' + this.transferWithExpiry.id)
       .send(transferNoAuthorization)
       .expect(201)
-      .expect(_.assign({}, transferNoAuthorization, {state: 'proposed'}))
+      .expect(_.assign({}, transferNoAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     this.clock.tick(200);
@@ -187,7 +192,12 @@ describe('PUT /transfers/:id', function () {
       .put('/transfers/' + this.transferWithExpiry.id)
       .send(transfer)
       .expect(201)
-      .expect(_.assign({}, transfer, {state: 'proposed'}))
+      .expect(_.assign({}, transfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     this.clock.tick(200);
@@ -245,7 +255,16 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
-      .expect(_.assign({}, transfer, {state: 'executed'}))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     // Check balances
@@ -260,14 +279,32 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
-      .expect(_.assign({}, transfer, {state: 'executed'}))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
       .put('/transfers/' + this.exampleTransfer.id)
       .send(transfer)
       .expect(200)
-      .expect(_.assign({}, transfer, {state: 'executed'}))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
   });
 
@@ -280,7 +317,16 @@ describe('PUT /transfers/:id', function () {
       .send(transferWithoutId)
       .expect(201)
       .expect(_.assign({}, this.formatId(this.exampleTransfer, '/transfers/'),
-              {state: 'executed'}))
+        {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     // Check balances
@@ -300,7 +346,14 @@ describe('PUT /transfers/:id', function () {
       .expect(201)
       .expect(_.assign({}, transfer, {
         id: transfer.id.toLowerCase(),
-        state: 'executed'
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
       }))
       .end();
   });
@@ -319,7 +372,12 @@ describe('PUT /transfers/:id', function () {
       .put('/transfers/' + this.exampleTransfer.id)
       .send(transferWithoutAuthorization)
       .expect(201)
-      .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
+      .expect(_.assign({}, transferWithoutAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
   });
@@ -407,7 +465,12 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
-      .expect(_.assign({}, transfer, { state: 'proposed' }))
+      .expect(_.assign({}, transfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
   });
 
@@ -424,7 +487,12 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(incompleteTransfer)
       .expect(201)
-      .expect(_.assign({}, incompleteTransfer, { state: 'proposed' }))
+      .expect(_.assign({}, incompleteTransfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
@@ -432,7 +500,14 @@ describe('PUT /transfers/:id', function () {
       .auth('candice', 'candice')
       .send(transfer)
       .expect(200)
-      .expect(_.assign({}, transfer, { state: 'prepared' }))
+      .expect(_.assign({}, transfer, { 
+        state: 'prepared',
+        timeline: {
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
   });
 
@@ -446,7 +521,16 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
-      .expect(_.assign({}, transfer, { state: 'executed' }))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
   });
 
@@ -461,7 +545,12 @@ describe('PUT /transfers/:id', function () {
       .put('/transfers/' + this.exampleTransfer.id)
       .send(incompleteTransfer)
       .expect(201)
-      .expect(_.assign({}, incompleteTransfer, { state: 'proposed' }))
+      .expect(_.assign({}, incompleteTransfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
@@ -488,7 +577,12 @@ describe('PUT /transfers/:id', function () {
       .put('/transfers/' + this.exampleTransfer.id)
       .send(unauthorizedTransfer)
       .expect(201)
-      .expect(_.assign({}, unauthorizedTransfer, { state: 'proposed' }))
+      .expect(_.assign({}, unauthorizedTransfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
@@ -496,7 +590,16 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transfer)
       .expect(200)
-      .expect(_.assign({}, transfer, { state: 'executed' }))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
   });
@@ -514,7 +617,12 @@ describe('PUT /transfers/:id', function () {
       .put('/transfers/' + this.multiDebitTransfer.id)
       .send(unauthorizedTransfer)
       .expect(201)
-      .expect(_.assign({}, unauthorizedTransfer, { state: 'proposed' }))
+      .expect(_.assign({}, unauthorizedTransfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
@@ -525,7 +633,12 @@ describe('PUT /transfers/:id', function () {
           [{ authorized: true }]
         }))
       .expect(200)
-      .expect(_.assign({}, unauthorizedTransfer, { state: 'proposed' }))
+      .expect(_.assign({}, unauthorizedTransfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
@@ -533,7 +646,16 @@ describe('PUT /transfers/:id', function () {
       .auth('candice', 'candice')
       .send(transfer)
       .expect(200)
-      .expect(_.assign({}, transfer, { state: 'executed' }))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
   });
 
@@ -549,7 +671,12 @@ describe('PUT /transfers/:id', function () {
       .put('/transfers/' + this.exampleTransfer.id)
       .send(transferWithoutAuthorization)
       .expect(201)
-      .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
+      .expect(_.assign({}, transferWithoutAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
   });
 
@@ -564,15 +691,31 @@ describe('PUT /transfers/:id', function () {
       .put('/transfers/' + this.exampleTransfer.id)
       .send(transferWithoutAuthorization)
       .expect(201)
-      .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
+      .expect(_.assign({}, transferWithoutAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
+
+    this.clock.tick(1);
 
     yield this.request()
       .put('/transfers/' + this.exampleTransfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(200)
-      .expect(_.assign({}, transfer, {state: 'executed'}))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.001Z',
+          pre_executed_at: '2015-06-16T00:00:00.001Z',
+          pre_prepared_at: '2015-06-16T00:00:00.001Z',
+          prepared_at: '2015-06-16T00:00:00.001Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
   });
 
@@ -591,7 +734,12 @@ describe('PUT /transfers/:id', function () {
       .put('/transfers/' + this.executedTransfer.id)
       .send(transferWithoutAuthorization)
       .expect(201)
-      .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
+      .expect(_.assign({}, transferWithoutAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
@@ -599,7 +747,14 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transfer)
       .expect(200)
-      .expect(_.assign({}, transfer, {state: 'prepared'}))
+      .expect(_.assign({}, transfer, {
+        state: 'prepared',
+        timeline: {
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
   });
 
@@ -617,14 +772,30 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transferWithoutConditionFulfillment)
       .expect(201)
-      .expect(_.assign({}, transferWithoutConditionFulfillment, {state: 'prepared'}))
+      .expect(_.assign({}, transferWithoutConditionFulfillment, {
+        state: 'prepared',
+        timeline: {
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
       .put('/transfers/' + this.executedTransfer.id)
       .send(transfer)
       .expect(200)
-      .expect(_.assign({}, transfer, {state: 'executed'}))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
   });
 
@@ -644,7 +815,16 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
-      .expect(_.assign({}, transfer, {state: 'executed'}))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     notification.done();
@@ -660,7 +840,16 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
-      .expect(_.assign({}, transfer, {state: 'executed'}))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
@@ -695,7 +884,12 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transferWithoutAuthorization)
       .expect(201)
-      .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
+      .expect(_.assign({}, transferWithoutAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
@@ -703,7 +897,16 @@ describe('PUT /transfers/:id', function () {
       .auth('candice', 'candice')
       .send(transfer)
       .expect(200)
-      .expect(_.assign({}, transfer, {state: 'executed'}))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
@@ -739,7 +942,12 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transferWithoutAuthorization)
       .expect(201)
-      .expect(_.assign({}, transferWithoutAuthorization, {state: 'proposed'}))
+      .expect(_.assign({}, transferWithoutAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()
@@ -747,7 +955,16 @@ describe('PUT /transfers/:id', function () {
       .auth('candice', 'candice')
       .send(transfer)
       .expect(200)
-      .expect(_.assign({}, transfer, {state: 'executed'}))
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
       .end();
 
     yield this.request()

@@ -14,6 +14,7 @@ const request = require('co-request');
 const requestUtil = require('@ripple/five-bells-shared/utils/request');
 const verifyCondition =
   require('@ripple/five-bells-shared/utils/verifyCondition');
+const updateState = require('../lib/updateState');
 const jsonld = require('@ripple/five-bells-shared/utils/jsonld');
 const hashJSON = require('@ripple/five-bells-shared/utils/hashJson');
 const InsufficientFundsError = require('../errors/insufficient-funds-error');
@@ -116,6 +117,7 @@ function updateTransferObject(originalTransfer, transfer) {
 
   // Ignore internally managed properties
   transfer.state = updatedTransfer.state;
+  transfer.timeline = updatedTransfer.timeline;
 
   // Clients can add authorizations
   // The validity of these authorizations will be checked
@@ -249,8 +251,7 @@ function *processStateTransitions(tr, transfer) {
     });
 
     if (authorized) {
-      log.debug('transfer transitioned from proposed to pre_prepared');
-      transfer.state = 'pre_prepared';
+      updateState(transfer, 'pre_prepared');
     }
   }
 
@@ -258,8 +259,7 @@ function *processStateTransitions(tr, transfer) {
     // Hold sender funds
     yield accountBalances.applyDebits(tr, debitAccounts);
 
-    log.debug('transfer transitioned from pre_prepared to prepared');
-    transfer.state = 'prepared';
+    updateState(transfer, 'prepared');
   }
 
   if (transfer.state === 'prepared') {
@@ -269,12 +269,10 @@ function *processStateTransitions(tr, transfer) {
         // This will throw an error if the fulfillment is invalid
         verifyCondition(transfer.execution_condition,
           transfer.execution_condition_fulfillment);
-        log.debug('transfer transitioned from prepared to pre_executed');
-        transfer.state = 'pre_executed';
+        updateState(transfer, 'pre_executed');
 
     } else if (!transfer.execution_condition) {
-      log.debug('transfer transitioned from prepared to pre_executed');
-      transfer.state = 'pre_executed';
+      updateState(transfer, 'pre_executed');
     }
   }
 
@@ -283,9 +281,7 @@ function *processStateTransitions(tr, transfer) {
     // external ledger would trigger the state transition from 'pre_executed' to
     // 'executed' or 'failed'.
     yield accountBalances.applyCredits(tr, creditAccounts);
-
-    log.debug('transfer transitioned from pre_executed to executed');
-    transfer.state = 'executed';
+    updateState(transfer, 'executed');
 
     // Remove the expiry countdown
     transferExpiryMonitor.unwatch(transfer.id);
@@ -391,9 +387,7 @@ exports.create = function *create() {
       // version, but only allowing specific fields to change.
       transfer = updateTransferObject(originalTransfer, transfer);
     } else {
-      log.debug('this is a new transfer');
-
-      transfer.state = 'proposed';
+      updateState(transfer, 'proposed');
     }
 
     // This method will check that any authorized:true fields added can

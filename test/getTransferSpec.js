@@ -80,7 +80,10 @@ describe('GET /transfers/:uuid', function () {
       .get('/transfers/' + this.transferWithExpiry.id)
       .expect(200, _.assign({}, transfer, {
         state: 'rejected',
-        rejected_at: transfer.expires_at
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z',
+          rejected_at: transfer.expires_at
+        }
       }))
       .end();
   });
