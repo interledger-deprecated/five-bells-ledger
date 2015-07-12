@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node app.js",
+    "lint": "eslint .",
     "test": "NODE_ENV=unit node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
   },
