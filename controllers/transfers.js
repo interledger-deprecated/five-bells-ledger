@@ -11,18 +11,17 @@ const transferExpiryMonitor = require('../services/transferExpiryMonitor')
 const log = require('@ripple/five-bells-shared/services/log')('transfers')
 const request = require('co-request')
 const requestUtil = require('@ripple/five-bells-shared/utils/request')
-const verifyCondition =
-require('@ripple/five-bells-shared/utils/verifyCondition')
+const verifyCondition = require('@ripple/five-bells-shared/utils/verifyCondition')
 const updateState = require('../lib/updateState')
 const jsonld = require('@ripple/five-bells-shared/utils/jsonld')
 const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
 const InvalidModificationError =
-require('@ripple/five-bells-shared/errors/invalid-modification-error')
+  require('@ripple/five-bells-shared/errors/invalid-modification-error')
 const UnprocessableEntityError =
-require('@ripple/five-bells-shared/errors/unprocessable-entity-error')
+  require('@ripple/five-bells-shared/errors/unprocessable-entity-error')
 const UnauthorizedError =
-require('@ripple/five-bells-shared/errors/unauthorized-error')
+  require('@ripple/five-bells-shared/errors/unauthorized-error')
 
 /**
  * @api {get} /transfers/:id Get local transfer object
