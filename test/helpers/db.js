@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-const db = require('../../services/db');
+const db = require('../../services/db')
 
 exports.reset = function () {
-  return db.remove();
-};
+  return db.remove()
+}

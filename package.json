@@ -50,6 +50,8 @@
     "co-mocha": "^1.1.0",
     "co-supertest": "0.0.8",
     "coveralls": "^2.11.2",
+    "eslint": "^0.24.1",
+    "eslint-config-standard": "^3.4.1",
     "istanbul-harmony": "0.3.16",
     "mocha": "^2.1.0",
     "nock": "^1.2.0",

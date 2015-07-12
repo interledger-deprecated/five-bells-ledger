@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
 const TransferExpiryMonitor =
-  require('../lib/transferExpiryMonitor').TransferExpiryMonitor;
-const timeQueue = require('./timeQueue');
+require('../lib/transferExpiryMonitor').TransferExpiryMonitor
+const timeQueue = require('./timeQueue')
 
-module.exports = new TransferExpiryMonitor(timeQueue);
+module.exports = new TransferExpiryMonitor(timeQueue)

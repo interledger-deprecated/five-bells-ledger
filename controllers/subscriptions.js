@@ -1,12 +1,10 @@
-'use strict';
+'use strict'
 
-const uuid = require('uuid4');
-const db = require('../services/db');
-const log = require('@ripple/five-bells-shared/services/log')('subscriptions');
-const request = require('@ripple/five-bells-shared/utils/request');
-const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error');
-const UnprocessableEntityError =
-  require('@ripple/five-bells-shared/errors/unprocessable-entity-error');
+const uuid = require('uuid4')
+const db = require('../services/db')
+const log = require('@ripple/five-bells-shared/services/log')('subscriptions')
+const request = require('@ripple/five-bells-shared/utils/request')
+const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
 
 /**
  * Validate a subscription semantically.
@@ -18,12 +16,12 @@ const UnprocessableEntityError =
  * @param {Object} tr Database transaction
  * @returns {void}
  */
-function *validateSubscriptionSemantics(subscription, tr) {
-  const owner = yield tr.get(['accounts', subscription.owner]);
+function * validateSubscriptionSemantics (subscription, tr) {
+  const owner = yield tr.get(['accounts', subscription.owner])
 
   if (typeof owner === 'undefined') {
     // TODO Add authentication and reenable this check
-    // throw new UnprocessableEntityError('Owner does not exist.');
+    // throw new UnprocessableEntityError('Owner does not exist.')
   }
 }
 
@@ -33,16 +31,16 @@ function *validateSubscriptionSemantics(subscription, tr) {
  * @param {Object} subscription Subscription
  * @returns {void}
  */
-function *storeSubscription(subscription) {
+function * storeSubscription (subscription) {
   yield db.transaction(function *(tr) {
     // Check prerequisites
-    yield *validateSubscriptionSemantics(subscription, tr);
+    yield *validateSubscriptionSemantics(subscription, tr)
 
     // Store subscription in database
     // TODO: Who to subscribe to should be defined by a separate `subject`
     //       field.
-    tr.put(['subscriptions', subscription.id], subscription);
-  });
+    tr.put(['subscriptions', subscription.id], subscription)
+  })
 }
 
 /**
@@ -62,17 +60,17 @@ function *storeSubscription(subscription) {
  *
  * @returns {void}
  */
-exports.fetch = function *fetch() {
-  let id = this.params.id;
-  request.validateUriParameter('id', id, 'Uuid');
-  id = id.toLowerCase();
-  log.debug('fetching subscription ID ' + id);
+exports.fetch = function * fetch () {
+  let id = this.params.id
+  request.validateUriParameter('id', id, 'Uuid')
+  id = id.toLowerCase()
+  log.debug('fetching subscription ID ' + id)
 
-  this.body = yield db.get(['subscriptions', id]);
+  this.body = yield db.get(['subscriptions', id])
   if (!this.body) {
-    throw new NotFoundError('Unknown subscription ID');
+    throw new NotFoundError('Unknown subscription ID')
   }
-};
+}
 
 /**
  * @api {post} /subscriptions Subscribe to an event
@@ -92,47 +90,47 @@ exports.fetch = function *fetch() {
  *
  * @returns {void}
  */
-exports.create = function *create() {
-  const subscription = yield request.validateBody(this, 'Subscription');
+exports.create = function * create () {
+  const subscription = yield request.validateBody(this, 'Subscription')
 
   // Generate a unique subscription ID outside of the transaction block
   if (!subscription.id) {
-    subscription.id = uuid();
+    subscription.id = uuid()
   }
-  log.debug('preparing subscription ID ' + subscription.id);
+  log.debug('preparing subscription ID ' + subscription.id)
 
   // Validate and store subscription in database
-  yield *storeSubscription(subscription);
+  yield *storeSubscription(subscription)
 
-  log.debug('subscription created');
+  log.debug('subscription created')
 
-  this.body = subscription;
-  this.status = 201;
-};
+  this.body = subscription
+  this.status = 201
+}
 
-exports.update = function *update() {
-  let id = this.params.id;
-  request.validateUriParameter('id', id, 'Uuid');
-  id = id.toLowerCase();
-  const subscription = yield request.validateBody(this, 'Subscription');
+exports.update = function * update () {
+  let id = this.params.id
+  request.validateUriParameter('id', id, 'Uuid')
+  id = id.toLowerCase()
+  const subscription = yield request.validateBody(this, 'Subscription')
 
   if (typeof subscription.id !== 'undefined') {
     request.assert.strictEqual(subscription.id, id,
-      'Subscription ID must match the one in the URL');
+      'Subscription ID must match the one in the URL')
   } else {
-    subscription.id = id;
+    subscription.id = id
   }
 
-  log.debug('updating subscription ID ' + subscription.id);
-  log.debug('subscribed ' + subscription.owner + ' at ' + subscription.target);
+  log.debug('updating subscription ID ' + subscription.id)
+  log.debug('subscribed ' + subscription.owner + ' at ' + subscription.target)
 
   // Validate and store subscription in database
-  yield *storeSubscription(subscription);
+  yield *storeSubscription(subscription)
 
-  log.debug('update completed');
+  log.debug('update completed')
 
-  this.body = subscription;
-};
+  this.body = subscription
+}
 
 /**
  * @api {delete} /subscriptions/:id Cancel a subscription
@@ -150,22 +148,22 @@ exports.update = function *update() {
  *
  * @returns {void}
  */
-exports.remove = function *remove() {
-  let id = this.params.id;
-  request.validateUriParameter('id', id, 'Uuid');
-  id = id.toLowerCase();
+exports.remove = function * remove () {
+  let id = this.params.id
+  request.validateUriParameter('id', id, 'Uuid')
+  id = id.toLowerCase()
 
-  log.debug('deleting subscription ID ' + id);
+  log.debug('deleting subscription ID ' + id)
 
   yield db.transaction(function *(tr) {
-    const subscription = yield tr.get(['subscriptions', id]);
+    const subscription = yield tr.get(['subscriptions', id])
 
     if (!subscription) {
-      throw new NotFoundError('Unknown subscription ID');
+      throw new NotFoundError('Unknown subscription ID')
     }
 
-    tr.remove(['subscriptions', id]);
-  });
+    tr.remove(['subscriptions', id])
+  })
 
-  this.status = 204;
-};
+  this.status = 204
+}
