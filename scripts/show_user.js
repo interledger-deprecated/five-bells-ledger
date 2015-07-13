@@ -1,20 +1,20 @@
-'use strict';
+'use strict'
 
-const db = require('../services/db');
-const log = require('@ripple/five-bells-shared/services/log')('show_user');
+const db = require('../services/db')
+const log = require('@ripple/five-bells-shared/services/log')('show_user')
 
-const argv = process.argv.slice(2);
+const argv = process.argv.slice(2)
 
 if (argv.length < 1) {
-  console.log('Syntax: show_user <username>');
-  process.exit(1);
+  console.log('Syntax: show_user <username>')
+  process.exit(1)
 }
 
 // Get user's balance
 db.get(['accounts', argv[0].toLowerCase()]).then(function (user) {
   if (user) {
-    log.info('User ' + user.id + ' has balance ' + user.balance);
+    log.info('User ' + user.id + ' has balance ' + user.balance)
   } else {
-    log.error('User ' + argv[0].toLowerCase() + ' not found');
+    log.error('User ' + argv[0].toLowerCase() + ' not found')
   }
-});
+})

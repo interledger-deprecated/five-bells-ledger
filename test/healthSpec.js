@@ -1,24 +1,24 @@
-'use strict';
+'use strict'
 
-const superagent = require('co-supertest');
-const nock = require('nock');
-nock.enableNetConnect(['localhost', '127.0.0.1']);
-const app = require('../app');
-const logHelper = require('@ripple/five-bells-shared/testHelpers/log');
+const superagent = require('co-supertest')
+const nock = require('nock')
+nock.enableNetConnect(['localhost', '127.0.0.1'])
+const app = require('../app')
+const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 
-function request() {
-  return superagent(app.listen());
+function request () {
+  return superagent(app.listen())
 }
 
 describe('Health', function () {
-  logHelper();
+  logHelper()
 
   describe('GET /health', function () {
     it('should return 200', function *() {
       yield request()
         .get('/health')
         .expect(200)
-        .end();
-    });
-  });
-});
+        .end()
+    })
+  })
+})

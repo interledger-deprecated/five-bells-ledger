@@ -1,20 +1,20 @@
 /* @flow */
-'use strict';
+'use strict'
 
-const _ = require('lodash');
-const db = require('../services/db');
-const log = require('@ripple/five-bells-shared/services/log')('accounts');
-const request = require('@ripple/five-bells-shared/utils/request');
-const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error');
-const config = require('../services/config');
+const _ = require('lodash')
+const db = require('../services/db')
+const log = require('@ripple/five-bells-shared/services/log')('accounts')
+const request = require('@ripple/five-bells-shared/utils/request')
+const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
+const config = require('../services/config')
 
-exports.find = function *find() {
-  const accounts = yield db.get(['accounts']);
+exports.find = function * find () {
+  const accounts = yield db.get(['accounts'])
   this.body = _.values(accounts).map(function (account) {
-    account.id = config.server.base_uri + '/accounts/' + account.id;
-    return account;
-  });
-};
+    account.id = config.server.base_uri + '/accounts/' + account.id
+    return account
+  })
+}
 
 /**
  * @api {get} /accounts/:id Fetch user info
@@ -31,27 +31,27 @@ exports.find = function *find() {
  *
  * @returns {void}
  */
-exports.fetch = function *fetch() {
-  let id = this.params.id;
-  request.validateUriParameter('id', id, 'Identifier');
-  id = id.toLowerCase();
-  log.debug('fetching account ID ' + id);
+exports.fetch = function * fetch () {
+  let id = this.params.id
+  request.validateUriParameter('id', id, 'Identifier')
+  id = id.toLowerCase()
+  log.debug('fetching account ID ' + id)
 
-  const account = yield db.get(['accounts', id]);
+  const account = yield db.get(['accounts', id])
   if (!account) {
-    throw new NotFoundError('Unknown account ID');
+    throw new NotFoundError('Unknown account ID')
   }
 
   // Externally we want to use a full URI ID
-  account.id = config.server.base_uri + '/accounts/' + account.id;
+  account.id = config.server.base_uri + '/accounts/' + account.id
 
   // TODO get rid of this when we start using biginteger math everywhere
-  account.balance = '' + account.balance;
+  account.balance = '' + account.balance
 
-  delete account.password;
+  delete account.password
 
-  this.body = account;
-};
+  this.body = account
+}
 
 /**
  * @api {put} /accounts/:id Update a user
@@ -68,29 +68,29 @@ exports.fetch = function *fetch() {
  *
  * @return {void}
  */
-exports.putResource = function *putResource() {
-  let id = this.params.id;
-  request.validateUriParameter('id', id, 'Identifier');
-  id = id.toLowerCase();
-  const account = yield request.validateBody(this, 'Account');
+exports.putResource = function * putResource () {
+  let id = this.params.id
+  request.validateUriParameter('id', id, 'Identifier')
+  id = id.toLowerCase()
+  const account = yield request.validateBody(this, 'Account')
 
-  account.id = id;
+  account.id = id
 
-  let existing = false;
+  let existing = false
   yield db.transaction(function *(tr) {
-    const existingAccount = yield tr.get(['accounts', id]);
+    const existingAccount = yield tr.get(['accounts', id])
 
     if (existingAccount) {
-      existing = true;
+      existing = true
     }
 
-    tr.put(['accounts', id], account);
-  });
-  log.debug((existing ? 'updated' : 'created') + ' account ID ' + id);
+    tr.put(['accounts', id], account)
+  })
+  log.debug((existing ? 'updated' : 'created') + ' account ID ' + id)
 
   // Externally we want to use a full URI ID
-  account.id = config.server.base_uri + '/accounts/' + account.id;
+  account.id = config.server.base_uri + '/accounts/' + account.id
 
-  this.body = account;
-  this.status = existing ? 200 : 201;
-};
+  this.body = account
+  this.status = existing ? 200 : 201
+}

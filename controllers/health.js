@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 /**
  * @api {get} /health Get server health status
@@ -13,7 +13,7 @@
  *
  * @returns {void}
  */
-exports.get = function *health() {
+exports.get = function * health () {
   // TODO: Add some checks, e.g. database status
-  this.body = {'status': 'OK'};
-};
+  this.body = {'status': 'OK'}
+}

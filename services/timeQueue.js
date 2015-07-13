@@ -1,5 +1,5 @@
-'use strict';
+'use strict'
 
-const TimeQueue = require('../lib/timeQueue').TimeQueue;
+const TimeQueue = require('../lib/timeQueue').TimeQueue
 
-module.exports = new TimeQueue();
+module.exports = new TimeQueue()
