@@ -7,6 +7,7 @@ const tweetnacl = require('tweetnacl')
 const db = require('../services/db')
 const accountBalances = require('../lib/accountBalances')
 const config = require('../services/config')
+const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
 const log = require('@ripple/five-bells-shared/services/log')('transfers')
 const request = require('co-request')
@@ -54,7 +55,7 @@ exports.fetch = function * fetch () {
   jsonld.setContext(this, 'transfer.jsonld')
 
   // Externally we want to use a full URI ID
-  transfer.id = config.server.base_uri + '/transfers/' + transfer.id
+  transfer.id = uri.make('transfer', transfer.id)
 
   this.body = transfer
 }
@@ -88,7 +89,7 @@ exports.getState = function * getState () {
   }
 
   let message = {
-    id: config.server.base_uri + '/transfers/' + transfer.id,
+    id: uri.make('transfer', transfer.id),
     state: transfer.state
   }
   let messageHash = hashJSON(message)
@@ -161,8 +162,7 @@ function * processSubscriptions (transfer) {
   // }
   // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
   let externalTransfer = _.clone(transfer)
-  externalTransfer.id = config.server.base_uri +
-    '/transfers/' + transfer.id
+  externalTransfer.id = uri.make('transfer', transfer.id)
   let subscriptions = yield db.get(['subscriptions'])
 
   if (subscriptions) {
@@ -176,8 +176,7 @@ function * processSubscriptions (transfer) {
         method: 'post',
         json: true,
         body: {
-          id: config.server.base_uri +
-            '/subscriptions/' + subscription.id,
+          id: uri.make('subscription', subscription.id),
           event: 'transfer.update',
           resource: externalTransfer
         }
@@ -329,7 +328,7 @@ exports.create = function * create () {
     transfer.id = transfer.id.toLowerCase()
     requestUtil.assert.strictEqual(
       transfer.id,
-      config.server.base_uri + '/transfers/' + id,
+      uri.make('transfer', id),
       'Transfer ID must match the URI'
     )
   }
@@ -402,7 +401,7 @@ exports.create = function * create () {
   log.debug('changes written to database')
 
   // Externally we want to use a full URI ID
-  transfer.id = config.server.base_uri + '/transfers/' + id
+  transfer.id = uri.make('transfer', id)
 
   this.body = transfer
   this.status = originalTransfer ? 200 : 201

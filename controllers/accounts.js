@@ -6,12 +6,12 @@ const db = require('../services/db')
 const log = require('@ripple/five-bells-shared/services/log')('accounts')
 const request = require('@ripple/five-bells-shared/utils/request')
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
-const config = require('../services/config')
+const uri = require('../services/uriManager')
 
 exports.find = function * find () {
   const accounts = yield db.get(['accounts'])
   this.body = _.values(accounts).map(function (account) {
-    account.id = config.server.base_uri + '/accounts/' + account.id
+    account.id = uri.make('account', account.id)
     return account
   })
 }
@@ -43,7 +43,7 @@ exports.fetch = function * fetch () {
   }
 
   // Externally we want to use a full URI ID
-  account.id = config.server.base_uri + '/accounts/' + account.id
+  account.id = uri.make('account', account.id)
 
   // TODO get rid of this when we start using biginteger math everywhere
   account.balance = '' + account.balance
@@ -89,7 +89,7 @@ exports.putResource = function * putResource () {
   log.debug((existing ? 'updated' : 'created') + ' account ID ' + id)
 
   // Externally we want to use a full URI ID
-  account.id = config.server.base_uri + '/accounts/' + account.id
+  account.id = uri.make('account', account.id)
 
   this.body = account
   this.status = existing ? 200 : 201

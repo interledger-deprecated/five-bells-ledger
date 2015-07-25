@@ -17,7 +17,7 @@
     "iojs": ">=1.5"
   },
   "dependencies": {
-    "@ripple/five-bells-shared": "4.1.0",
+    "@ripple/five-bells-shared": "4.2.0",
     "bluebird": "^2.9.4",
     "co": "^4.1.0",
     "co-defer": "^1.0.0",
