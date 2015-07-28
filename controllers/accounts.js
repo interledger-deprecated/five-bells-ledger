@@ -3,7 +3,7 @@
 
 const _ = require('lodash')
 const db = require('../services/db')
-const log = require('@ripple/five-bells-shared/services/log')('accounts')
+const log = require('../services/log')('accounts')
 const request = require('@ripple/five-bells-shared/utils/request')
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
 const uri = require('../services/uriManager')

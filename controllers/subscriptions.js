@@ -2,7 +2,7 @@
 
 const uuid = require('uuid4')
 const db = require('../services/db')
-const log = require('@ripple/five-bells-shared/services/log')('subscriptions')
+const log = require('../services/log')('subscriptions')
 const request = require('@ripple/five-bells-shared/utils/request')
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
 
