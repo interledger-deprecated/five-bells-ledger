@@ -327,10 +327,11 @@ describe('PUT /transfers/:id', function () {
     expect(yield db.get(['accounts', 'bob', 'balance'])).to.equal(10)
   })
 
-  it('should accept a transfer with an upper case ID but convert the ID' +
+  it('should accept a transfer with an upper case ID but convert the ID ' +
     'to lower case', function *() {
-      const transfer = this.formatId(this.exampleTransfer, '/transfers/')
-      transfer.id = transfer.id.toUpperCase()
+      const transfer = _.cloneDeep(this.exampleTransfer)
+      // This URI uppercases everything that should be case-insensitive
+      transfer.id = 'HTTP://LOCALHOST/transfers/' + transfer.id.toUpperCase()
 
       yield this.request()
         .put('/transfers/' + this.exampleTransfer.id)

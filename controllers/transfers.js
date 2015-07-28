@@ -16,6 +16,7 @@ const verifyCondition = require('@ripple/five-bells-shared/utils/verifyCondition
 const updateState = require('../lib/updateState')
 const jsonld = require('@ripple/five-bells-shared/utils/jsonld')
 const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
+const Transfer = require('../models/transfer').Transfer
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
 const InvalidModificationError =
   require('@ripple/five-bells-shared/errors/invalid-modification-error')
@@ -110,7 +111,7 @@ exports.getState = function * getState () {
 }
 
 function updateTransferObject (originalTransfer, transfer) {
-  let updatedTransfer = _.cloneDeep(originalTransfer)
+  let updatedTransfer = originalTransfer.clone()
 
   // Ignore internally managed properties
   transfer.state = updatedTransfer.state
@@ -319,7 +320,7 @@ exports.create = function * create () {
   let id = _this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
-  let transfer = yield requestUtil.validateBody(this, 'Transfer')
+  let transfer = this.body
 
   // Do not allow modifications after the expires_at date
   transferExpiryMonitor.validateNotExpired(transfer)
@@ -328,7 +329,7 @@ exports.create = function * create () {
     transfer.id = transfer.id.toLowerCase()
     requestUtil.assert.strictEqual(
       transfer.id,
-      uri.make('transfer', id),
+      id,
       'Transfer ID must match the URI'
     )
   }
@@ -371,7 +372,7 @@ exports.create = function * create () {
 
   let originalTransfer
   yield db.transaction(function *(tr) {
-    originalTransfer = yield tr.get(['transfers', transfer.id])
+    originalTransfer = Transfer.fromDataRaw(yield tr.get(['transfers', transfer.id]))
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
 

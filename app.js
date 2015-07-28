@@ -17,6 +17,7 @@ const path = require('path')
 const log = require('@ripple/five-bells-shared/services/log')
 const logger = require('koa-mag')
 const config = require('./services/config')
+const models = require('./models')
 const app = module.exports = koa()
 
 // Configure passport
@@ -35,6 +36,7 @@ router.put('/transfers/:id',
   passport.authenticate(['basic', 'anonymous'], {
     session: false
   }),
+  models.Transfer.bodyParser(),
   transfers.create)
 
 router.get('/transfers/:id', transfers.fetch)
