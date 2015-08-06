@@ -19,8 +19,16 @@ class Transfer extends Model {
       return data
     })
   }
+
+  save (tr) {
+    tr.put(['transfers', this.id], this.getDataRaw())
+  }
 }
 
 Transfer.setSchema(validate, 'Transfer')
+
+Transfer.get = function * (id, tr) {
+  return Transfer.fromDataRaw(yield tr.get(['transfers', id]))
+}
 
 exports.Transfer = Transfer

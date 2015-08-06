@@ -48,17 +48,14 @@ exports.fetch = function * fetch () {
   id = id.toLowerCase()
   log.debug('fetching transfer ID ' + id)
 
-  let transfer = yield db.get(['transfers', id])
+  let transfer = yield Transfer.get(id, db)
   if (!transfer) {
     throw new NotFoundError('Unknown transfer ID')
   }
 
   jsonld.setContext(this, 'transfer.jsonld')
 
-  // Externally we want to use a full URI ID
-  transfer.id = uri.make('transfer', transfer.id)
-
-  this.body = transfer
+  this.body = transfer.getData()
 }
 
 /**
@@ -84,7 +81,7 @@ exports.getState = function * getState () {
   id = id.toLowerCase()
   log.debug('fetching state receipt for transfer ID ' + id)
 
-  let transfer = yield db.get(['transfers', id])
+  let transfer = yield Transfer.get(id, db)
   if (!transfer) {
     throw new NotFoundError('Unknown transfer ID')
   }
@@ -162,8 +159,6 @@ function * processSubscriptions (transfer) {
   //   return db.get(['accounts', account, 'subscriptions'])
   // }
   // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
-  let externalTransfer = _.clone(transfer)
-  externalTransfer.id = uri.make('transfer', transfer.id)
   let subscriptions = yield db.get(['subscriptions'])
 
   if (subscriptions) {
@@ -179,7 +174,7 @@ function * processSubscriptions (transfer) {
         body: {
           id: uri.make('subscription', subscription.id),
           event: 'transfer.update',
-          resource: externalTransfer
+          resource: transfer.getData()
         }
       })
     })
@@ -372,7 +367,7 @@ exports.create = function * create () {
 
   let originalTransfer
   yield db.transaction(function *(tr) {
-    originalTransfer = Transfer.fromDataRaw(yield tr.get(['transfers', transfer.id]))
+    originalTransfer = yield Transfer.get(transfer.id, tr)
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
 
@@ -380,6 +375,7 @@ exports.create = function * create () {
       // version, but only allowing specific fields to change.
       transfer = updateTransferObject(originalTransfer, transfer)
     } else {
+      // A brand-new transfer will start out as proposed
       updateState(transfer, 'proposed')
     }
 
@@ -391,7 +387,7 @@ exports.create = function * create () {
     yield processStateTransitions(tr, transfer)
 
     // Store transfer in database
-    tr.put(['transfers', transfer.id], transfer)
+    transfer.save(tr)
 
     // Start the expiry countdown
     // If the expires_at has passed by this time we'll consider
@@ -401,9 +397,6 @@ exports.create = function * create () {
 
   log.debug('changes written to database')
 
-  // Externally we want to use a full URI ID
-  transfer.id = uri.make('transfer', id)
-
-  this.body = transfer
+  this.body = transfer.getData()
   this.status = originalTransfer ? 200 : 201
 }
