@@ -26,7 +26,7 @@ require('./services/auth')
 // Logger
 app.use(logger())
 
-app.use(errorHandler)
+app.use(errorHandler({log: log('error-handler')}))
 app.use(cors({expose: ['link']}))
 app.use(passport.initialize())
 

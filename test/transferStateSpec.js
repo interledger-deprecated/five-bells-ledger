@@ -4,6 +4,7 @@ const _ = require('lodash')
 const sinon = require('sinon')
 const app = require('../app')
 const db = require('../services/db')
+const logger = require('../services/log')
 const config = require('../services/config')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
 const dbHelper = require('./helpers/db')
@@ -16,7 +17,7 @@ const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
 describe('Transfer State', function () {
-  logHelper()
+  logHelper(logger)
 
   beforeEach(function *() {
     appHelper.create(this, app)

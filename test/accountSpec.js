@@ -4,12 +4,13 @@ const _ = require('lodash')
 const expect = require('chai').expect
 const app = require('../app')
 const db = require('../services/db')
+const logger = require('../services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 
 describe('Accounts', function () {
-  logHelper()
+  logHelper(logger)
 
   beforeEach(function *() {
     appHelper.create(this, app)

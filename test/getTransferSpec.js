@@ -5,6 +5,7 @@ const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const app = require('../app')
 const db = require('../services/db')
+const logger = require('../services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
@@ -14,7 +15,7 @@ const transferExpiryMonitor = require('../services/transferExpiryMonitor')
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
 describe('GET /transfers/:uuid', function () {
-  logHelper()
+  logHelper(logger)
 
   beforeEach(function *() {
     appHelper.create(this, app)
