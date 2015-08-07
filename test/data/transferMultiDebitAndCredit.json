@@ -1,19 +1,19 @@
 {
-  "id": "3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+  "id": "http://localhost/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
   "debits": [{
-    "account": "alice",
+    "account": "http://localhost/accounts/alice",
     "amount": "50",
     "authorized": true
   }, {
-    "account": "candice",
+    "account": "http://localhost/accounts/candice",
     "amount": "20",
     "authorized": true
   }],
   "credits": [{
-    "account": "bob",
+    "account": "http://localhost/accounts/bob",
     "amount": "30"
   }, {
-    "account": "dave",
+    "account": "http://localhost/accounts/dave",
     "amount": "40"
   }]
 }

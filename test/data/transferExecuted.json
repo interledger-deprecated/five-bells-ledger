@@ -1,12 +1,12 @@
 {
-  "id": "155dff3f-4915-44df-a707-acc4b527bcbd",
+  "id": "http://localhost/transfers/155dff3f-4915-44df-a707-acc4b527bcbd",
   "debits": [{
-    "account": "alice",
+    "account": "http://localhost/accounts/alice",
     "amount": "10",
     "authorized": true
   }],
   "credits": [{
-    "account": "bob",
+    "account": "http://localhost/accounts/bob",
     "amount": "10"
   }],
   "execution_condition": {

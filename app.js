@@ -44,7 +44,7 @@ router.get('/transfers/:id/state', transfers.getState)
 
 router.get('/accounts', accounts.find)
 router.get('/accounts/:id', accounts.fetch)
-router.put('/accounts/:id', accounts.putResource)
+router.put('/accounts/:id', models.Account.bodyParser(), accounts.putResource)
 
 router.post('/subscriptions', subscriptions.create)
 router.get('/subscriptions/:id', subscriptions.fetch)

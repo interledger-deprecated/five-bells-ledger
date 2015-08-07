@@ -1,15 +1,15 @@
 {
-  "id": "3a8ce37e-3bb4-430d-82f5-713bafe4d9fc",
+  "id": "http://localhost/transfers/3a8ce37e-3bb4-430d-82f5-713bafe4d9fc",
   "debits": [{
-    "account": "alice",
+    "account": "http://localhost/accounts/alice",
     "amount": "20",
     "authorized": true
   }],
   "credits": [{
-    "account": "bob",
+    "account": "http://localhost/accounts/bob",
     "amount": "10"
   }, {
-    "account": "dave",
-    "amount": "10"  
+    "account": "http://localhost/accounts/dave",
+    "amount": "10"
   }]
 }

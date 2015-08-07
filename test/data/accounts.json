@@ -1,24 +1,24 @@
 {
   "alice": {
-    "id": "alice",
+    "id": "http://localhost/accounts/alice",
     "name": "Alice",
     "balance": "100",
     "password": "alice"
   },
   "bob": {
-    "id": "bob",
+    "id": "http://localhost/accounts/bob",
     "name": "Bob",
     "balance": "0",
     "password": "bob"
   },
   "candice": {
-    "id": "candice",
+    "id": "http://localhost/accounts/candice",
     "name": "Candice",
     "balance": "50",
     "password": "candice"
   },
   "dave": {
-    "id": "dave",
+    "id": "http://localhost/accounts/dave",
     "name": "Dave",
     "balance": "0",
     "password": "dave"

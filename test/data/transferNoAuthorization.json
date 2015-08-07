@@ -1,11 +1,11 @@
 {
-  "id": "44793135-7022-4fd7-bd00-3a14c1e896c6",
+  "id": "http://localhost/transfers/44793135-7022-4fd7-bd00-3a14c1e896c6",
   "debits": [{
-    "account": "alice",
+    "account": "http://localhost/accounts/alice",
     "amount": "10"
   }],
   "credits": [{
-    "account": "bob",
+    "account": "http://localhost/accounts/bob",
     "amount": "10"
   }]
 }

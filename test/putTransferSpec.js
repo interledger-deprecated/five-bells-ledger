@@ -38,7 +38,7 @@ describe('PUT /transfers/:id', function () {
     yield dbHelper.reset()
 
     // Store some example data
-    yield db.put(['accounts'], require('./data/accounts'))
+    yield dbHelper.addAccounts(_.values(require('./data/accounts')))
   })
 
   afterEach(function *() {
@@ -49,51 +49,52 @@ describe('PUT /transfers/:id', function () {
   /* Invalid transfer objects */
 
   it('should return 400 if the transfer ID is invalid', function *() {
-    const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+    const transfer = _.clone(this.exampleTransfer)
     delete transfer.id
+
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id + 'bogus')
+      .put(this.exampleTransfer.id + 'bogus')
       .send(transfer)
       .expect(400)
       .end()
   })
 
   it('should return 400 if the transfer is invalid', function *() {
-    const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+    const transfer = this.exampleTransfer
     transfer.debits[0].amount = 'bogus'
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id)
+      .put(transfer.id)
       .send(transfer)
       .expect(400)
       .end()
   })
 
   it('should return 422 if the source amount is zero', function *() {
-    const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+    const transfer = this.exampleTransfer
     transfer.debits[0].amount = '0'
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id)
+      .put(transfer.id)
       .send(transfer)
       .expect(422)
       .end()
   })
 
   it('should return 422 if the destination amount is zero', function *() {
-    const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+    const transfer = this.exampleTransfer
     transfer.credits[0].amount = '0'
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id)
+      .put(transfer.id)
       .send(transfer)
       .expect(422)
       .end()
   })
 
   it("should return 422 if the sender doesn't have enough money", function *() {
-    const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+    const transfer = this.exampleTransfer
     transfer.debits[0].amount = '101'
     transfer.credits[0].amount = '101'
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id)
+      .put(transfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
@@ -101,41 +102,41 @@ describe('PUT /transfers/:id', function () {
   })
 
   it("should return 422 if the sender doesn't exist", function *() {
-    const transfer = this.formatId(this.transferNoAuthorization, '/transfers/')
-    transfer.debits[0].account = 'alois'
+    const transfer = this.transferNoAuthorization
+    transfer.debits[0].account = 'http://localhost/accounts/alois'
     yield this.request()
-      .put('/transfers/' + this.transferNoAuthorization.id)
+      .put(this.transferNoAuthorization.id)
       .send(transfer)
       .expect(422)
       .end()
   })
 
   it("should return 422 if the recipient doesn't exist", function *() {
-    const transfer = this.formatId(this.transferNoAuthorization, '/transfers/')
-    transfer.credits[0].account = 'blob'
+    const transfer = this.transferNoAuthorization
+    transfer.credits[0].account = 'http://localhost/accounts/blob'
     yield this.request()
-      .put('/transfers/' + this.transferNoAuthorization.id)
+      .put(this.transferNoAuthorization.id)
       .send(transfer)
       .expect(422)
       .end()
   })
 
   it("should return 422 if source and destination amounts don't match", function *() {
-    const transfer = this.formatId(this.transferNoAuthorization, '/transfers/')
+    const transfer = this.transferNoAuthorization
     transfer.credits[0].amount = '122'
     yield this.request()
-      .put('/transfers/' + this.transferNoAuthorization.id)
+      .put(this.transferNoAuthorization.id)
       .send(transfer)
       .expect(422)
       .end()
   })
 
   it('should return 422 if the signature is invalid', function *() {
-    const transfer = this.formatId(this.executedTransfer, '/transfers/')
+    const transfer = this.executedTransfer
     transfer.execution_condition_fulfillment.signature = 'aW52YWxpZA=='
 
     yield this.request()
-      .put('/transfers/' + this.executedTransfer.id)
+      .put(this.executedTransfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
@@ -144,14 +145,14 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 422 if a transfer is modified after its ' +
     'expiry date', function *() {
-      const transfer = this.formatId(this.transferWithExpiry, '/transfers/')
+      const transfer = this.transferWithExpiry
       delete transfer.debits[0].authorized
 
       const transferNoAuthorization = _.cloneDeep(transfer)
       delete transferNoAuthorization.debits[1].authorized
 
       yield this.request()
-        .put('/transfers/' + this.transferWithExpiry.id)
+        .put(this.transferWithExpiry.id)
         .send(transferNoAuthorization)
         .expect(201)
         .expect(_.assign({}, transferNoAuthorization, {
@@ -165,7 +166,7 @@ describe('PUT /transfers/:id', function () {
       this.clock.tick(200)
 
       yield this.request()
-        .put('/transfers/' + this.transferWithExpiry.id)
+        .put(this.transferWithExpiry.id)
         .auth('candice', 'candice')
         .send(transfer)
         .expect(422)
@@ -178,7 +179,7 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should return 422 if the expires_at field is removed', function *() {
-    let transfer = this.formatId(this.transferWithExpiry, '/transfers/')
+    let transfer = this.transferWithExpiry
     delete transfer.debits[0].authorized
     delete transfer.debits[1].authorized
 
@@ -186,7 +187,7 @@ describe('PUT /transfers/:id', function () {
     delete transferWithoutExpiry.expires_at
 
     yield this.request()
-      .put('/transfers/' + this.transferWithExpiry.id)
+      .put(this.transferWithExpiry.id)
       .send(transfer)
       .expect(201)
       .expect(_.assign({}, transfer, {
@@ -200,7 +201,7 @@ describe('PUT /transfers/:id', function () {
     this.clock.tick(200)
 
     yield this.request()
-      .put('/transfers/' + this.transferWithExpiry.id)
+      .put(this.transferWithExpiry.id)
       .send(transferWithoutExpiry)
       .expect(400)
       .expect(function (res) {
@@ -211,11 +212,11 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should return 422 if the credits are greater than the debits', function *() {
-    const transfer = this.formatId(this.multiDebitAndCreditTransfer, '/transfers/')
+    const transfer = this.multiDebitAndCreditTransfer
     transfer.credits[0].amount = String(parseFloat(transfer.credits[0].amount) + 0.00000001)
 
     yield this.request()
-      .put('/transfers/' + this.multiDebitAndCreditTransfer.id)
+      .put(this.multiDebitAndCreditTransfer.id)
       .send(transfer)
       .expect(422)
       .expect(function (res) {
@@ -226,11 +227,11 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should return 422 if the debits are greater than the credits', function *() {
-    const transfer = this.formatId(this.multiDebitAndCreditTransfer, '/transfers/')
+    const transfer = this.multiDebitAndCreditTransfer
     transfer.debits[0].amount = String(parseFloat(transfer.debits[0].amount) + 0.00000001)
 
     yield this.request()
-      .put('/transfers/' + this.multiDebitAndCreditTransfer.id)
+      .put(this.multiDebitAndCreditTransfer.id)
       .send(transfer)
       .expect(422)
       .expect(function (res) {
@@ -243,9 +244,9 @@ describe('PUT /transfers/:id', function () {
   /* Idempotency */
 
   it('should return 201 for a newly created transfer', function *() {
-    const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+    const transfer = this.exampleTransfer
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id)
+      .put(transfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
@@ -267,9 +268,9 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should return 200 if the transfer already exists', function *() {
-    const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+    const transfer = this.exampleTransfer
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id)
+      .put(transfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
@@ -286,7 +287,7 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id)
+      .put(transfer.id)
       .send(transfer)
       .expect(200)
       .expect(_.assign({}, transfer, {
@@ -306,11 +307,11 @@ describe('PUT /transfers/:id', function () {
     const transferWithoutId = _.cloneDeep(this.exampleTransfer)
     delete transferWithoutId.id
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id)
+      .put(this.exampleTransfer.id)
       .auth('alice', 'alice')
       .send(transferWithoutId)
       .expect(201)
-      .expect(_.assign({}, this.formatId(this.exampleTransfer, '/transfers/'),
+      .expect(_.assign({}, this.exampleTransfer,
         {
           state: 'executed',
           timeline: {
@@ -332,10 +333,11 @@ describe('PUT /transfers/:id', function () {
     'to lower case', function *() {
       const transfer = _.cloneDeep(this.exampleTransfer)
       // This URI uppercases everything that should be case-insensitive
-      transfer.id = 'HTTP://LOCALHOST/transfers/' + transfer.id.toUpperCase()
+      const prefix = 'HTTP://LOCALHOST/transfers/'
+      transfer.id = prefix + transfer.id.slice(prefix.length)
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(this.exampleTransfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
@@ -357,12 +359,12 @@ describe('PUT /transfers/:id', function () {
 
   it('should set the transfer state to "proposed" and authorized to false ' +
     'if no authorization is provided', function *() {
-      const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+      const transfer = this.exampleTransfer
       const transferWithoutAuthorization = _.cloneDeep(transfer)
       delete transferWithoutAuthorization.debits[0].authorized
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(transfer.id)
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {
@@ -376,12 +378,12 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should return 403 if invalid authorization is given', function *() {
-    const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+    const transfer = this.exampleTransfer
     const transferWithoutAuthorization = _.cloneDeep(transfer)
     delete transferWithoutAuthorization.debits[0].authorized
 
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id)
+      .put(transfer.id)
       .auth(transfer.debits[0].account + ':notrealpassword')
       .send(transferWithoutAuthorization)
       .expect(403)
@@ -395,12 +397,12 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 403 if authorization is provided that is irrelevant ' +
     'to the transfer', function *() {
-      const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+      const transfer = this.exampleTransfer
       const transferWithoutAuthorization = _.cloneDeep(transfer)
       delete transferWithoutAuthorization.debits[0].authorized
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(transfer.id)
         .auth('candice', 'candice')
         .send(transferWithoutAuthorization)
         .expect(403)
@@ -414,10 +416,10 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 403 if authorized:true is set without any authorization',
     function *() {
-      const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+      const transfer = this.exampleTransfer
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(transfer.id)
         .send(transfer)
         .expect(403)
         .expect(function (res) {
@@ -429,10 +431,10 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 403 if authorized:true is set for any debits that are ' +
     'not owned by the authorized account', function *() {
-      const transfer = this.formatId(this.multiDebitTransfer, '/transfers/')
+      const transfer = this.multiDebitTransfer
 
       yield this.request()
-        .put('/transfers/' + this.multiDebitTransfer.id)
+        .put(transfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(403)
@@ -445,11 +447,11 @@ describe('PUT /transfers/:id', function () {
 
   it('should keep the state as "proposed" if not all debits are authorized',
     function *() {
-      const transfer = this.formatId(this.multiDebitTransfer, '/transfers/')
+      const transfer = this.multiDebitTransfer
       delete transfer.debits[1].authorized
 
       yield this.request()
-        .put('/transfers/' + this.multiDebitTransfer.id)
+        .put(transfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
@@ -464,13 +466,13 @@ describe('PUT /transfers/:id', function () {
 
   it('should only set the state to "prepared" if all debits are authorized',
     function *() {
-      let transfer = this.formatId(this.multiDebitTransfer, '/transfers/')
+      let transfer = this.multiDebitTransfer
       transfer.execution_condition = this.executedTransfer.execution_condition
       let incompleteTransfer = _.cloneDeep(transfer)
       delete incompleteTransfer.debits[1].authorized
 
       yield this.request()
-        .put('/transfers/' + this.multiDebitTransfer.id)
+        .put(this.multiDebitTransfer.id)
         .auth('alice', 'alice')
         .send(incompleteTransfer)
         .expect(201)
@@ -483,7 +485,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .put('/transfers/' + this.multiDebitTransfer.id)
+        .put(this.multiDebitTransfer.id)
         .auth('candice', 'candice')
         .send(transfer)
         .expect(200)
@@ -500,10 +502,10 @@ describe('PUT /transfers/:id', function () {
 
   it('should execute the transfer if it is authorized and ' +
     'there is no execution condition', function *() {
-      const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+      const transfer = this.exampleTransfer
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(this.exampleTransfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
@@ -522,12 +524,12 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 403 if an unauthorized user attempts to ' +
     'modify the "authorized" field', function *() {
-      const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+      const transfer = this.exampleTransfer
       let incompleteTransfer = _.cloneDeep(transfer)
       delete incompleteTransfer.debits[0].authorized
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(this.exampleTransfer.id)
         .send(incompleteTransfer)
         .expect(201)
         .expect(_.assign({}, incompleteTransfer, {
@@ -539,7 +541,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(this.exampleTransfer.id)
         .send(transfer)
         .expect(403)
         .expect(function (res) {
@@ -552,13 +554,13 @@ describe('PUT /transfers/:id', function () {
 
   it('should allow authorizations to be added after the transfer is proposed',
     function *() {
-      let transfer = this.formatId(this.exampleTransfer, '/transfers/')
+      let transfer = this.exampleTransfer
 
       let unauthorizedTransfer = _.cloneDeep(transfer)
       delete unauthorizedTransfer.debits[0].authorized
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(this.exampleTransfer.id)
         .send(unauthorizedTransfer)
         .expect(201)
         .expect(_.assign({}, unauthorizedTransfer, {
@@ -570,7 +572,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(this.exampleTransfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(200)
@@ -590,14 +592,14 @@ describe('PUT /transfers/:id', function () {
 
   it('should allow additional authorizations to be added after ' +
     'the transfer is proposed', function *() {
-      let transfer = this.formatId(this.multiDebitTransfer, '/transfers/')
+      let transfer = this.multiDebitTransfer
 
       let unauthorizedTransfer = _.cloneDeep(transfer)
       delete unauthorizedTransfer.debits[0].authorized
       delete unauthorizedTransfer.debits[1].authorized
 
       yield this.request()
-        .put('/transfers/' + this.multiDebitTransfer.id)
+        .put(this.multiDebitTransfer.id)
         .send(unauthorizedTransfer)
         .expect(201)
         .expect(_.assign({}, unauthorizedTransfer, {
@@ -609,7 +611,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .put('/transfers/' + this.multiDebitTransfer.id)
+        .put(this.multiDebitTransfer.id)
         .auth('alice', 'alice')
         .send(_.merge(unauthorizedTransfer, {
           debits: [{ authorized: true }]
@@ -624,7 +626,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .put('/transfers/' + this.multiDebitTransfer.id)
+        .put(this.multiDebitTransfer.id)
         .auth('candice', 'candice')
         .send(transfer)
         .expect(200)
@@ -643,12 +645,12 @@ describe('PUT /transfers/:id', function () {
 
   it('should set the transfer state to "proposed" if no authorization is given',
     function *() {
-      const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+      const transfer = this.exampleTransfer
       const transferWithoutAuthorization = _.cloneDeep(transfer)
       delete transferWithoutAuthorization.debits[0].authorized
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(this.exampleTransfer.id)
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {
@@ -662,13 +664,13 @@ describe('PUT /transfers/:id', function () {
 
   it('should update the state from "proposed" to "executed" when ' +
     'authorization is added and no execution condition is given', function *() {
-      const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+      const transfer = this.exampleTransfer
 
       const transferWithoutAuthorization = _.cloneDeep(transfer)
       delete transferWithoutAuthorization.debits[0].authorized
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(this.exampleTransfer.id)
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {
@@ -682,7 +684,7 @@ describe('PUT /transfers/:id', function () {
       this.clock.tick(1)
 
       yield this.request()
-        .put('/transfers/' + this.exampleTransfer.id)
+        .put(this.exampleTransfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(200)
@@ -704,14 +706,14 @@ describe('PUT /transfers/:id', function () {
   it('should update the state from "proposed" to "prepared" when' +
   'authorization is added and an execution condition is present',
     function *() {
-      const transfer = this.formatId(this.executedTransfer, '/transfers/')
+      const transfer = this.executedTransfer
       delete transfer.execution_condition_fulfillment
 
       const transferWithoutAuthorization = _.cloneDeep(transfer)
       delete transferWithoutAuthorization.debits[0].authorized
 
       yield this.request()
-        .put('/transfers/' + this.executedTransfer.id)
+        .put(this.executedTransfer.id)
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {
@@ -723,7 +725,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .put('/transfers/' + this.executedTransfer.id)
+        .put(this.executedTransfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(200)
@@ -741,14 +743,14 @@ describe('PUT /transfers/:id', function () {
   it('should update the state from "prepared" to "executed" ' +
   'when the execution criteria is met',
     function *() {
-      const transfer = this.formatId(this.executedTransfer, '/transfers/')
+      const transfer = this.executedTransfer
       delete transfer.state
 
       const transferWithoutConditionFulfillment = _.cloneDeep(transfer)
       delete transferWithoutConditionFulfillment.execution_condition_fulfillment
 
       yield this.request()
-        .put('/transfers/' + this.executedTransfer.id)
+        .put(this.executedTransfer.id)
         .auth('alice', 'alice')
         .send(transferWithoutConditionFulfillment)
         .expect(201)
@@ -763,7 +765,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .put('/transfers/' + this.executedTransfer.id)
+        .put(this.executedTransfer.id)
         .send(transfer)
         .expect(200)
         .expect(_.assign({}, transfer, {
@@ -789,9 +791,9 @@ describe('PUT /transfers/:id', function () {
       .post('/notifications')
       .reply(204)
 
-    const transfer = this.formatId(this.exampleTransfer, '/transfers/')
+    const transfer = this.exampleTransfer
     yield this.request()
-      .put('/transfers/' + this.exampleTransfer.id)
+      .put(this.exampleTransfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
@@ -813,10 +815,10 @@ describe('PUT /transfers/:id', function () {
   /* Multiple credits and/or debits */
 
   it('should handle transfers with multiple credits', function *() {
-    const transfer = this.formatId(this.multiCreditTransfer, '/transfers/')
+    const transfer = this.multiCreditTransfer
 
     yield this.request()
-      .put('/transfers/' + this.multiCreditTransfer.id)
+      .put(this.multiCreditTransfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
@@ -833,7 +835,7 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     yield this.request()
-      .get('/accounts/' + this.multiCreditTransfer.credits[0].account)
+      .get(this.multiCreditTransfer.credits[0].account)
       .expect(200)
       .expect({
         id: 'http://localhost/accounts/bob',
@@ -843,7 +845,7 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     yield this.request()
-      .get('/accounts/' + this.multiCreditTransfer.credits[1].account)
+      .get(this.multiCreditTransfer.credits[1].account)
       .expect(200)
       .expect({
         id: 'http://localhost/accounts/dave',
@@ -854,13 +856,13 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should handle transfers with multiple debits', function *() {
-    const transfer = this.formatId(this.multiDebitTransfer, '/transfers/')
+    const transfer = this.multiDebitTransfer
 
     let transferWithoutAuthorization = _.cloneDeep(transfer)
     delete transferWithoutAuthorization.debits[1].authorized
 
     yield this.request()
-      .put('/transfers/' + this.multiDebitTransfer.id)
+      .put(this.multiDebitTransfer.id)
       .auth('alice', 'alice')
       .send(transferWithoutAuthorization)
       .expect(201)
@@ -873,7 +875,7 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     yield this.request()
-      .put('/transfers/' + this.multiDebitTransfer.id)
+      .put(this.multiDebitTransfer.id)
       .auth('candice', 'candice')
       .send(transfer)
       .expect(200)
@@ -890,7 +892,7 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     yield this.request()
-      .get('/accounts/' + this.multiDebitTransfer.debits[0].account)
+      .get(this.multiDebitTransfer.debits[0].account)
       .expect(200)
       .expect(_.assign({}, {
         id: 'http://localhost/accounts/alice',
@@ -900,7 +902,7 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     yield this.request()
-      .get('/accounts/' + this.multiDebitTransfer.debits[1].account)
+      .get(this.multiDebitTransfer.debits[1].account)
       .expect(200)
       .expect(_.assign({}, {
         id: 'http://localhost/accounts/candice',
@@ -912,13 +914,13 @@ describe('PUT /transfers/:id', function () {
 
   it('should handle transfers with multiple debits and multiple credits',
     function *() {
-      const transfer = this.formatId(this.multiDebitAndCreditTransfer, '/transfers/')
+      const transfer = this.multiDebitAndCreditTransfer
 
       let transferWithoutAuthorization = _.cloneDeep(transfer)
       delete transferWithoutAuthorization.debits[1].authorized
 
       yield this.request()
-        .put('/transfers/' + this.multiDebitAndCreditTransfer.id)
+        .put(this.multiDebitAndCreditTransfer.id)
         .auth('alice', 'alice')
         .send(transferWithoutAuthorization)
         .expect(201)
@@ -931,7 +933,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .put('/transfers/' + this.multiDebitAndCreditTransfer.id)
+        .put(this.multiDebitAndCreditTransfer.id)
         .auth('candice', 'candice')
         .send(transfer)
         .expect(200)
@@ -948,7 +950,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .get('/accounts/' + this.multiDebitAndCreditTransfer.debits[0].account)
+        .get(this.multiDebitAndCreditTransfer.debits[0].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/alice',
@@ -958,7 +960,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .get('/accounts/' + this.multiDebitAndCreditTransfer.debits[1].account)
+        .get(this.multiDebitAndCreditTransfer.debits[1].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/candice',
@@ -968,7 +970,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .get('/accounts/' + this.multiDebitAndCreditTransfer.credits[0].account)
+        .get(this.multiDebitAndCreditTransfer.credits[0].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/bob',
@@ -978,7 +980,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .get('/accounts/' + this.multiDebitAndCreditTransfer.credits[1].account)
+        .get(this.multiDebitAndCreditTransfer.credits[1].account)
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/dave',

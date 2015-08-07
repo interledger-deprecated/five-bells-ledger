@@ -12,10 +12,23 @@ class Transfer extends Model {
       if (data.id) {
         data.id = uri.parse(data.id, 'transfer').id.toLowerCase()
       }
+      for (let debit of data.debits) {
+        debit.account = uri.parse(debit.account, 'account').id.toLowerCase()
+      }
+      for (let credit of data.credits) {
+        credit.account = uri.parse(credit.account, 'account').id.toLowerCase()
+      }
       return data
     })
     this.addOutputFilter(function (data) {
       data.id = uri.make('transfer', data.id.toLowerCase())
+
+      for (let debit of data.debits) {
+        debit.account = uri.make('account', debit.account)
+      }
+      for (let credit of data.credits) {
+        credit.account = uri.make('account', credit.account)
+      }
       return data
     })
   }

@@ -1,6 +1,7 @@
 'use strict'
 
-const superagent = require('co-supertest')
+const _ = require('lodash')
+const superagent = require('co-megatest')
 const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const expect = require('chai').expect
@@ -27,7 +28,7 @@ describe('Subscriptions', function () {
     yield dbHelper.reset()
 
     // Store some example data
-    yield db.put(['accounts'], require('./data/accounts'))
+    yield dbHelper.addAccounts(_.values(require('./data/accounts')))
     yield db.create(['subscriptions'], this.existingSubscription)
   })
 
