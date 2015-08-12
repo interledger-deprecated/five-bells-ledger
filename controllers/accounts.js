@@ -3,15 +3,16 @@
 
 const _ = require('lodash')
 const db = require('../services/db')
-const log = require('@ripple/five-bells-shared/services/log')('accounts')
+const log = require('../services/log')('accounts')
 const request = require('@ripple/five-bells-shared/utils/request')
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
-const config = require('../services/config')
+const uri = require('../services/uriManager')
+const Account = require('../models/account').Account
 
 exports.find = function * find () {
   const accounts = yield db.get(['accounts'])
   this.body = _.values(accounts).map(function (account) {
-    account.id = config.server.base_uri + '/accounts/' + account.id
+    account.id = uri.make('account', account.id)
     return account
   })
 }
@@ -37,20 +38,17 @@ exports.fetch = function * fetch () {
   id = id.toLowerCase()
   log.debug('fetching account ID ' + id)
 
-  const account = yield db.get(['accounts', id])
+  const account = yield Account.get(id, db)
   if (!account) {
     throw new NotFoundError('Unknown account ID')
   }
-
-  // Externally we want to use a full URI ID
-  account.id = config.server.base_uri + '/accounts/' + account.id
 
   // TODO get rid of this when we start using biginteger math everywhere
   account.balance = '' + account.balance
 
   delete account.password
 
-  this.body = account
+  this.body = account.getData()
 }
 
 /**
@@ -72,7 +70,7 @@ exports.putResource = function * putResource () {
   let id = this.params.id
   request.validateUriParameter('id', id, 'Identifier')
   id = id.toLowerCase()
-  const account = yield request.validateBody(this, 'Account')
+  const account = this.body
 
   account.id = id
 
@@ -88,9 +86,6 @@ exports.putResource = function * putResource () {
   })
   log.debug((existing ? 'updated' : 'created') + ' account ID ' + id)
 
-  // Externally we want to use a full URI ID
-  account.id = config.server.base_uri + '/accounts/' + account.id
-
-  this.body = account
+  this.body = account.getData()
   this.status = existing ? 200 : 201
 }

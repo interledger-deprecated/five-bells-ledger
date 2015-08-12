@@ -1,16 +1,16 @@
 {
-  "id": "0a95bb26-ff60-454e-9ec2-6621b78233ab",
+  "id": "http://localhost/transfers/0a95bb26-ff60-454e-9ec2-6621b78233ab",
   "debits": [{
-    "account": "alice",
+    "account": "http://localhost/accounts/alice",
     "amount": "10",
     "authorized": true
   }, {
-    "account": "candice",
+    "account": "http://localhost/accounts/candice",
     "amount": "10",
     "authorized": true
   }],
   "credits": [{
-    "account": "bob",
+    "account": "http://localhost/accounts/bob",
     "amount": "20"
   }]
 }

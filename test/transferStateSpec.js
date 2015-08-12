@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const sinon = require('sinon')
 const app = require('../app')
-const db = require('../services/db')
+const logger = require('../services/log')
 const config = require('../services/config')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
 const dbHelper = require('./helpers/db')
@@ -16,7 +16,7 @@ const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
 describe('Transfer State', function () {
-  logHelper()
+  logHelper(logger)
 
   beforeEach(function *() {
     appHelper.create(this, app)
@@ -42,7 +42,7 @@ describe('Transfer State', function () {
     yield dbHelper.reset()
 
     // Store some example data
-    yield db.put(['accounts'], require('./data/accounts'))
+    yield dbHelper.addAccounts(_.values(require('./data/accounts')))
   })
 
   afterEach(function *() {
@@ -59,10 +59,10 @@ describe('Transfer State', function () {
 
     it('should return a 200 and a signed receipt including the message, ' +
       'messageHash, algorithm, public_key, and signature', function *() {
-        yield db.create(['transfers'], this.executedTransfer)
+        yield dbHelper.addTransfers([this.executedTransfer])
 
         const stateReceipt = {
-          id: this.formatId(this.executedTransfer, '/transfers/').id,
+          id: this.executedTransfer.id,
           state: this.executedTransfer.state
         }
         const stateReceiptHash = hashJSON(stateReceipt)
@@ -72,7 +72,7 @@ describe('Transfer State', function () {
             this.keyPair.secretKey))
 
         yield this.request()
-          .get('/transfers/' + this.executedTransfer.id + '/state')
+          .get(this.executedTransfer.id + '/state')
           .expect(200, {
             message: stateReceipt,
             algorithm: 'ed25519-sha512',
@@ -88,10 +88,10 @@ describe('Transfer State', function () {
         const transfer = _.cloneDeep(this.executedTransfer)
         transfer.state = 'prepared'
 
-        yield db.create(['transfers'], transfer)
+        yield dbHelper.addTransfers([transfer])
 
         const stateReceipt = {
-          id: this.formatId(transfer, '/transfers/').id,
+          id: transfer.id,
           state: transfer.state
         }
         const stateReceiptHash = hashJSON(stateReceipt)
@@ -101,7 +101,7 @@ describe('Transfer State', function () {
             this.keyPair.secretKey))
 
         yield this.request()
-          .get('/transfers/' + transfer.id + '/state')
+          .get(transfer.id + '/state')
           .expect(200, {
             message: stateReceipt,
             algorithm: 'ed25519-sha512',
@@ -115,10 +115,10 @@ describe('Transfer State', function () {
     it('should return a valid TransferStateReceipt', function *() {
       const transfer = _.cloneDeep(this.executedTransfer)
 
-      yield db.create(['transfers'], transfer)
+      yield dbHelper.addTransfers([transfer])
 
       yield this.request()
-        .get('/transfers/' + transfer.id + '/state')
+        .get(transfer.id + '/state')
         .expect(function (res) {
           let validationResult = validate('TransferStateReceipt', res.body)
           if (!validationResult.valid) {
@@ -131,12 +131,12 @@ describe('Transfer State', function () {
 
     it('should return a rejected transfer receipt if the expires_at date ' +
       'has passed', function *() {
-        const transfer = this.formatId(this.transferWithExpiry, '/transfers/')
+        const transfer = this.transferWithExpiry
         delete transfer.debits[0].authorized
         delete transfer.debits[1].authorized
 
         yield this.request()
-          .put('/transfers/' + this.transferWithExpiry.id)
+          .put(transfer.id)
           .send(transfer)
           .expect(201)
           .end()
@@ -156,7 +156,7 @@ describe('Transfer State', function () {
         yield transferExpiryMonitor.processExpiredTransfers()
 
         yield this.request()
-          .get('/transfers/' + this.transferWithExpiry.id + '/state')
+          .get(transfer.id + '/state')
           .expect(200, {
             message: stateReceipt,
             algorithm: 'ed25519-sha512',

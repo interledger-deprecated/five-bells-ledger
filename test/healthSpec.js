@@ -1,9 +1,10 @@
 'use strict'
 
-const superagent = require('co-supertest')
+const superagent = require('co-megatest')
 const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const app = require('../app')
+const logger = require('../services/log')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 
 function request () {
@@ -11,7 +12,7 @@ function request () {
 }
 
 describe('Health', function () {
-  logHelper()
+  logHelper(logger)
 
   describe('GET /health', function () {
     it('should return 200', function *() {

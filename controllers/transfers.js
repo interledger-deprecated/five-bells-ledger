@@ -7,14 +7,16 @@ const tweetnacl = require('tweetnacl')
 const db = require('../services/db')
 const accountBalances = require('../lib/accountBalances')
 const config = require('../services/config')
+const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
-const log = require('@ripple/five-bells-shared/services/log')('transfers')
+const log = require('../services/log')('transfers')
 const request = require('co-request')
 const requestUtil = require('@ripple/five-bells-shared/utils/request')
 const verifyCondition = require('@ripple/five-bells-shared/utils/verifyCondition')
 const updateState = require('../lib/updateState')
 const jsonld = require('@ripple/five-bells-shared/utils/jsonld')
 const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
+const Transfer = require('../models/transfer').Transfer
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
 const InvalidModificationError =
   require('@ripple/five-bells-shared/errors/invalid-modification-error')
@@ -46,17 +48,14 @@ exports.fetch = function * fetch () {
   id = id.toLowerCase()
   log.debug('fetching transfer ID ' + id)
 
-  let transfer = yield db.get(['transfers', id])
+  let transfer = yield Transfer.get(id, db)
   if (!transfer) {
     throw new NotFoundError('Unknown transfer ID')
   }
 
   jsonld.setContext(this, 'transfer.jsonld')
 
-  // Externally we want to use a full URI ID
-  transfer.id = config.server.base_uri + '/transfers/' + transfer.id
-
-  this.body = transfer
+  this.body = transfer.getData()
 }
 
 /**
@@ -82,13 +81,13 @@ exports.getState = function * getState () {
   id = id.toLowerCase()
   log.debug('fetching state receipt for transfer ID ' + id)
 
-  let transfer = yield db.get(['transfers', id])
+  let transfer = yield Transfer.get(id, db)
   if (!transfer) {
     throw new NotFoundError('Unknown transfer ID')
   }
 
   let message = {
-    id: config.server.base_uri + '/transfers/' + transfer.id,
+    id: uri.make('transfer', transfer.id),
     state: transfer.state
   }
   let messageHash = hashJSON(message)
@@ -109,7 +108,7 @@ exports.getState = function * getState () {
 }
 
 function updateTransferObject (originalTransfer, transfer) {
-  let updatedTransfer = _.cloneDeep(originalTransfer)
+  let updatedTransfer = originalTransfer.clone()
 
   // Ignore internally managed properties
   transfer.state = updatedTransfer.state
@@ -160,9 +159,6 @@ function * processSubscriptions (transfer) {
   //   return db.get(['accounts', account, 'subscriptions'])
   // }
   // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
-  let externalTransfer = _.clone(transfer)
-  externalTransfer.id = config.server.base_uri +
-    '/transfers/' + transfer.id
   let subscriptions = yield db.get(['subscriptions'])
 
   if (subscriptions) {
@@ -176,10 +172,9 @@ function * processSubscriptions (transfer) {
         method: 'post',
         json: true,
         body: {
-          id: config.server.base_uri +
-            '/subscriptions/' + subscription.id,
+          id: uri.make('subscription', subscription.id),
           event: 'transfer.update',
-          resource: externalTransfer
+          resource: transfer.getData()
         }
       })
     })
@@ -320,7 +315,7 @@ exports.create = function * create () {
   let id = _this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
-  let transfer = yield requestUtil.validateBody(this, 'Transfer')
+  let transfer = this.body
 
   // Do not allow modifications after the expires_at date
   transferExpiryMonitor.validateNotExpired(transfer)
@@ -329,7 +324,7 @@ exports.create = function * create () {
     transfer.id = transfer.id.toLowerCase()
     requestUtil.assert.strictEqual(
       transfer.id,
-      config.server.base_uri + '/transfers/' + id,
+      id,
       'Transfer ID must match the URI'
     )
   }
@@ -372,7 +367,7 @@ exports.create = function * create () {
 
   let originalTransfer
   yield db.transaction(function *(tr) {
-    originalTransfer = yield tr.get(['transfers', transfer.id])
+    originalTransfer = yield Transfer.get(transfer.id, tr)
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
 
@@ -380,6 +375,7 @@ exports.create = function * create () {
       // version, but only allowing specific fields to change.
       transfer = updateTransferObject(originalTransfer, transfer)
     } else {
+      // A brand-new transfer will start out as proposed
       updateState(transfer, 'proposed')
     }
 
@@ -391,7 +387,7 @@ exports.create = function * create () {
     yield processStateTransitions(tr, transfer)
 
     // Store transfer in database
-    tr.put(['transfers', transfer.id], transfer)
+    transfer.save(tr)
 
     // Start the expiry countdown
     // If the expires_at has passed by this time we'll consider
@@ -401,9 +397,6 @@ exports.create = function * create () {
 
   log.debug('changes written to database')
 
-  // Externally we want to use a full URI ID
-  transfer.id = config.server.base_uri + '/transfers/' + id
-
-  this.body = transfer
+  this.body = transfer.getData()
   this.status = originalTransfer ? 200 : 201
 }

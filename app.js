@@ -14,9 +14,10 @@ const passport = require('koa-passport')
 const errorHandler = require('@ripple/five-bells-shared/middlewares/error-handler')
 const koa = require('koa')
 const path = require('path')
-const log = require('@ripple/five-bells-shared/services/log')
+const log = require('./services/log')
 const logger = require('koa-mag')
 const config = require('./services/config')
+const models = require('./models')
 const app = module.exports = koa()
 
 // Configure passport
@@ -25,7 +26,7 @@ require('./services/auth')
 // Logger
 app.use(logger())
 
-app.use(errorHandler)
+app.use(errorHandler({log: log('error-handler')}))
 app.use(cors({expose: ['link']}))
 app.use(passport.initialize())
 
@@ -35,6 +36,7 @@ router.put('/transfers/:id',
   passport.authenticate(['basic', 'anonymous'], {
     session: false
   }),
+  models.Transfer.bodyParser(),
   transfers.create)
 
 router.get('/transfers/:id', transfers.fetch)
@@ -42,7 +44,7 @@ router.get('/transfers/:id/state', transfers.getState)
 
 router.get('/accounts', accounts.find)
 router.get('/accounts/:id', accounts.fetch)
-router.put('/accounts/:id', accounts.putResource)
+router.put('/accounts/:id', models.Account.bodyParser(), accounts.putResource)
 
 router.post('/subscriptions', subscriptions.create)
 router.get('/subscriptions/:id', subscriptions.fetch)

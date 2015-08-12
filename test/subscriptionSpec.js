@@ -1,11 +1,13 @@
 'use strict'
 
-const superagent = require('co-supertest')
+const _ = require('lodash')
+const superagent = require('co-megatest')
 const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const expect = require('chai').expect
 const app = require('../app')
 const db = require('../services/db')
+const logger = require('../services/log')
 const dbHelper = require('./helpers/db')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 
@@ -14,7 +16,7 @@ function request () {
 }
 
 describe('Subscriptions', function () {
-  logHelper()
+  logHelper(logger)
 
   beforeEach(function *() {
     // Define example data
@@ -26,7 +28,7 @@ describe('Subscriptions', function () {
     yield dbHelper.reset()
 
     // Store some example data
-    yield db.put(['accounts'], require('./data/accounts'))
+    yield dbHelper.addAccounts(_.values(require('./data/accounts')))
     yield db.create(['subscriptions'], this.existingSubscription)
   })
 
