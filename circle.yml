@@ -4,17 +4,20 @@ machine:
   services:
     - docker
   node:
-    version: iojs-2.0.1
+    version: iojs-3.0.0
 dependencies:
   pre:
     - docker pull cockroachdb/cockroach:alpha-3156-ge7385d9
-  post:
     - docker run -p 8080:8080 -v /data cockroachdb/cockroach:alpha-3156-ge7385d9 init --stores=ssd=/data
-    - docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockroach:alpha-3156-ge7385d9 start --stores=ssd=/data --gossip=self:// --insecure
+    - docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockroach:alpha-3156-ge7385d9 start --stores=ssd=/data --gossip=self= --insecure
+    - docker build -t quay.io/ripple/five-bells-ledger .
 test:
   override:
     - npm run lint
-    - XUNIT_FILE=${CIRCLE_TEST_REPORTS}/mocha.xml npm test --coverage -- -R spec-xunit-file
+    - docker run --name=ledger-test -it --net=host quay.io/ripple/five-bells-ledger npm test --coverage -- -R spec-xunit-file
+  post:
+    - docker cp ledger-test:/usr/src/app/xunit.xml ${CIRCLE_TEST_REPORTS}/mocha.xml
+    - docker cp ledger-test:/usr/src/app/coverage .
 deployment:
   production:
     branch: master
