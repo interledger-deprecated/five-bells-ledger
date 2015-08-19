@@ -21,7 +21,7 @@ describe('Transfer State', function () {
   beforeEach(function *() {
     appHelper.create(this, app)
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
 
     // Set up keys
     config.keys.ed25519 = {

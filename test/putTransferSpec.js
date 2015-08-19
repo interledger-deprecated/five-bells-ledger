@@ -20,7 +20,7 @@ describe('PUT /transfers/:id', function () {
   beforeEach(function *() {
     appHelper.create(this, app)
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
 
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transferSimple'))
