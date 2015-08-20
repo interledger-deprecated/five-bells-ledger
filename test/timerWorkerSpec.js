@@ -18,7 +18,7 @@ describe('TimerWorker', function () {
   logHelper(logger)
 
   beforeEach(function () {
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'clearTimeout')
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'clearTimeout', 'setImmediate')
 
     this.timeQueue = new TimeQueue()
     this.transferExpiryMonitor = new TransferExpiryMonitor(this.timeQueue)
