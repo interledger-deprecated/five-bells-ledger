@@ -16,7 +16,7 @@ test:
     # Run lint
     - npm run lint
     # Run tests with coverage
-    - docker run --name=ledger-test -it --net=host quay.io/ripple/five-bells-ledger npm test --coverage -- -R spec-xunit-file
+    - docker run --name=ledger-test -it --net=host -v /usr/src/app/coverage quay.io/ripple/five-bells-ledger npm test --coverage -- -R spec-xunit-file
     # Extract test artifacts (results and coverage data)
     - docker cp ledger-test:/usr/src/app/xunit.xml ${CIRCLE_TEST_REPORTS}/mocha.xml
     - docker cp ledger-test:/usr/src/app/coverage .
@@ -25,7 +25,7 @@ deployment:
     branch: master
     commands:
       # Upload coverage data
-      - docker exec ledger-test -e COVERALLS_TOKEN=${COVERALLS_TOKEN} npm run coveralls
+      - docker run --volumes-from ledger-test -e COVERALLS_TOKEN=${COVERALLS_TOKEN} quay.io/ripple/five-bells-ledger npm run coveralls
       # Push NPM package if not yet published
       - mv npmrc-env .npmrc
       - if [ -z "$(npm info $(npm ls --depth=-1 2>/dev/null | head -1 | cut -f 1 -d " ") 2>/dev/null)" ] ; then npm publish ; fi
