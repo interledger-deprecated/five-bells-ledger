@@ -29,13 +29,11 @@ deployment:
       # Push NPM package if not yet published
       - mv npmrc-env .npmrc
       - if [ -z "$(npm info $(npm ls --depth=-1 2>/dev/null | head -1 | cut -f 1 -d " ") 2>/dev/null)" ] ; then npm publish ; fi
-      # Push Docker image tagged with commit ID
+      # Push Docker image tagged latest and tagged with commit descriptor
       - sed "s/<AUTH>/${QUAY_TOKEN}/" < "dockercfg-template" > ~/.dockercfg
-      - docker tag quay.io/ripple/five-bells-ledger:latest quay.io/ripple/five-bells-ledger:${CIRCLE_SHA1}
+      - docker tag quay.io/ripple/five-bells-ledger:latest quay.io/ripple/five-bells-ledger:$(git describe)
       - docker push quay.io/ripple/five-bells-ledger:latest
-      - docker push quay.io/ripple/five-bells-ledger:$(git describe --abbrev=0 --tags)-${CIRCLE_SHA1:0:8}
-      # Push Docker image for tag (if latest commit is tagged)
-      - TAG=$(git tag --contains master) ; if [ -n "${TAG}" ] ; then docker tag quay.io/ripple/five-bells-ledger:latest quay.io/ripple/five-bells-ledger:${TAG} ; docker push quay.io/ripple/five-bells-ledger:${TAG} ; fi
+      - docker push quay.io/ripple/five-bells-ledger:$(git describe)
 general:
   artifacts:
     - "coverage/lcov-report"
