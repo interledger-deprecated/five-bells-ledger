@@ -33,7 +33,7 @@ deployment:
       - sed "s/<AUTH>/${QUAY_TOKEN}/" < "dockercfg-template" > ~/.dockercfg
       - docker tag quay.io/ripple/five-bells-ledger:latest quay.io/ripple/five-bells-ledger:${CIRCLE_SHA1}
       - docker push quay.io/ripple/five-bells-ledger:latest
-      - docker push quay.io/ripple/five-bells-ledger:${CIRCLE_SHA1}
+      - docker push quay.io/ripple/five-bells-ledger:$(git describe --abbrev=0 --tags)-${CIRCLE_SHA1:0:8}
       # Push Docker image for tag (if latest commit is tagged)
       - TAG=$(git tag --contains master) ; if [ -n "${TAG}" ] ; then docker tag quay.io/ripple/five-bells-ledger:latest quay.io/ripple/five-bells-ledger:${TAG} ; docker push quay.io/ripple/five-bells-ledger:${TAG} ; fi
 general:
