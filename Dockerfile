@@ -3,7 +3,7 @@ FROM iojs:3.0.0
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-COPY package.json .npmrc /usr/src/app/
+COPY package.json .npmrc npm-shrinkwrap.json /usr/src/app/
 RUN npm install
 COPY . /usr/src/app
 
