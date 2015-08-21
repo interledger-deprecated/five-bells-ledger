@@ -46,9 +46,9 @@ router.get('/accounts', accounts.find)
 router.get('/accounts/:id', accounts.fetch)
 router.put('/accounts/:id', models.Account.bodyParser(), accounts.putResource)
 
-router.post('/subscriptions', subscriptions.create)
+router.post('/subscriptions', models.Subscription.bodyParser(), subscriptions.create)
 router.get('/subscriptions/:id', subscriptions.fetch)
-router.put('/subscriptions/:id', subscriptions.update)
+router.put('/subscriptions/:id', models.Subscription.bodyParser(), subscriptions.update)
 router.delete('/subscriptions/:id', subscriptions.remove)
 
 app.use(router.middleware())

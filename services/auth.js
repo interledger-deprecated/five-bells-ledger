@@ -3,7 +3,7 @@
 const passport = require('koa-passport')
 const BasicStrategy = require('passport-http').BasicStrategy
 const AnonymousStrategy = require('passport-anonymous').Strategy
-const db = require('./db')
+const Account = require('../models/account').Account
 const UnauthorizedError = require('@ripple/five-bells-shared/errors/unauthorized-error')
 
 passport.use(new BasicStrategy(
@@ -14,9 +14,9 @@ passport.use(new BasicStrategy(
       return done(null, false)
     }
 
-    db.get(['accounts', username])
+    Account.findById(username)
       .then(function (userObj) {
-        if (userObj && userObj.password === password) {
+        if (userObj && userObj.get('password') === password) {
           return done(null, userObj.id)
         } else {
           return done(new UnauthorizedError('Unknown or invalid account / password'))

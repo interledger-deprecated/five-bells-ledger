@@ -5,10 +5,11 @@ const expect = require('chai').expect
 const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const app = require('../app')
-const db = require('../services/db')
 const logger = require('../services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
+const Account = require('../models/account').Account
+const Subscription = require('../models/subscription').Subscription
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 
@@ -163,7 +164,7 @@ describe('PUT /transfers/:id', function () {
         }))
         .end()
 
-      this.clock.tick(200)
+      this.clock.tick(2000)
 
       yield this.request()
         .put(this.transferWithExpiry.id)
@@ -198,7 +199,7 @@ describe('PUT /transfers/:id', function () {
       }))
       .end()
 
-    this.clock.tick(200)
+    this.clock.tick(2000)
 
     yield this.request()
       .put(this.transferWithExpiry.id)
@@ -263,8 +264,8 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     // Check balances
-    expect(yield db.get(['accounts', 'alice', 'balance'])).to.equal(90)
-    expect(yield db.get(['accounts', 'bob', 'balance'])).to.equal(10)
+    expect((yield Account.findById('alice')).get('balance')).to.equal(90)
+    expect((yield Account.findById('bob')).get('balance')).to.equal(10)
   })
 
   it('should return 200 if the transfer already exists', function *() {
@@ -325,8 +326,8 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     // Check balances
-    expect(yield db.get(['accounts', 'alice', 'balance'])).to.equal(90)
-    expect(yield db.get(['accounts', 'bob', 'balance'])).to.equal(10)
+    expect((yield Account.findById('alice')).get('balance')).to.equal(90)
+    expect((yield Account.findById('bob')).get('balance')).to.equal(10)
   })
 
   it('should accept a transfer with an upper case ID but convert the ID ' +
@@ -374,7 +375,6 @@ describe('PUT /transfers/:id', function () {
           }
         }))
         .end()
-
     })
 
   it('should return 403 if invalid authorization is given', function *() {
@@ -392,7 +392,6 @@ describe('PUT /transfers/:id', function () {
         expect(res.body.message).to.equal('Unknown or invalid account / password')
       })
       .end()
-
   })
 
   it('should return 403 if authorization is provided that is irrelevant ' +
@@ -441,6 +440,39 @@ describe('PUT /transfers/:id', function () {
         .expect(function (res) {
           expect(res.body.id).to.equal('UnauthorizedError')
           expect(res.body.message).to.equal('Invalid attempt to authorize debit')
+        })
+        .end()
+    })
+
+  it('should return 400 if an unauthorized debit is removed', function *() {
+      const transfer = this.multiDebitTransfer
+
+      delete transfer.debits[0].authorized
+      delete transfer.debits[1].authorized
+
+      yield this.request()
+        .put(transfer.id)
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {
+          state: 'proposed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z'
+          }
+        }))
+        .end()
+
+      // Remove a debit and change credits to match
+      transfer.debits = transfer.debits.slice(0, 1)
+      transfer.credits[0].amount = '10'
+
+      yield this.request()
+        .put(transfer.id)
+        .send(transfer)
+        .expect(400)
+        .expect(function (res) {
+          expect(res.body.id).to.equal('InvalidModificationError')
+          expect(res.body.message).to.equal('Transfer may not be modified in this way')
         })
         .end()
     })
@@ -549,7 +581,6 @@ describe('PUT /transfers/:id', function () {
           expect(res.body.message).to.equal('Invalid attempt to authorize debit')
         })
         .end()
-
     })
 
   it('should allow authorizations to be added after the transfer is proposed',
@@ -587,7 +618,6 @@ describe('PUT /transfers/:id', function () {
           }
         }))
         .end()
-
     })
 
   it('should allow additional authorizations to be added after ' +
@@ -785,7 +815,7 @@ describe('PUT /transfers/:id', function () {
 
   it('should trigger subscriptions', function *() {
     const subscription = require('./data/subscription1.json')
-    yield db.create(['subscriptions'], subscription)
+    yield Subscription.createFromExternal(subscription)
 
     const notification = nock('http://subscriber.example')
       .post('/notifications')
@@ -989,5 +1019,4 @@ describe('PUT /transfers/:id', function () {
         }))
         .end()
     })
-
 })

@@ -1,5 +1,6 @@
 {
   "id": "http://localhost/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+  "ledger": "http://localhost",
   "debits": [{
     "account": "http://localhost/accounts/alice",
     "amount": "50",
@@ -25,6 +26,6 @@
   "execution_condition_fulfillment": {
     "signature": "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
   },
-  "expires_at": "2015-06-16T00:00:00.100Z",
+  "expires_at": "2015-06-16T00:00:01.000Z",
   "state": "prepared"
 }

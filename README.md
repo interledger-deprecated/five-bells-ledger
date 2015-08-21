@@ -4,18 +4,18 @@
 
 ## Usage (Docker)
 
-Note: You need a local [CockroachDB](https://github.com/cockroachdb/cockroach) instance listening on port 8080. Here is how to set that up:
+Note: You need a local database instance listening on port 8080. Here is how to set that up:
 
 ``` sh
-docker pull cockroachdb/cockroach:alpha-3156-ge7385d9
-docker run -p 8080:8080 -v /data cockroachdb/cockroach:alpha-3156-ge7385d9 init --stores=ssd=/data
-docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockroach:alpha-3156-ge7385d9 start --stores=ssd=/data --gossip=self:// --insecure
+docker run --name mysql -e MYSQL_ROOT_PASSWORD=password -p 3306:3306 -d mysql
+export DB_URI=mysql://root:password@localhost/fivebells
+npm run migrate
 ```
 
 Afterwards just run Five Bells Ledger:
 
 ``` sh
-docker run -it --rm --net=host -e PORT=1337 quay.io/ripple/five-bells-ledger
+docker run -it --rm --net=host -e PORT=1337 -e DB_URI=$DB_URI quay.io/ripple/five-bells-ledger
 ```
 
 Breaking down that command:
@@ -32,4 +32,4 @@ Configuration options:
 * `HOSTNAME` (default: *[your hostname]*) Publicly visible hostname. This is important for things like generating globally unique IDs. Make sure this is a hostname that all your clients will be able to see. The default should be fine for local testing.
 * `PUBLIC_PORT` (default: `$PORT`) Publicly visible port. You can set this if your public port differs from the listening port, e.g. because the ledger is running behind a proxy.
 * `PUBLIC_HTTPS` (default: `''`) Whether or not the publicly visible instance of Five Bells Ledger is using HTTPS.
-* `ROACH_URI` (default: `http://localhost:8080`) URI for connecting to CockroachDB.
+* `DB_URI` (required; e.g.: `mysql://root:password@localhost/fivebells`) URI for connecting to a database.

@@ -1,6 +1,6 @@
 {
-  "id": "f49697a6-d52c-4f46-84c8-9070a31feab7",
-  "owner": "alice",
+  "id": "http://localhost/subscriptions/f49697a6-d52c-4f46-84c8-9070a31feab7",
+  "owner": "http://localhost/accounts/alice",
   "event": "transfer.create",
   "target": "http://subscriber.example/notifications"
 }
