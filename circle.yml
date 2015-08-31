@@ -1,15 +1,15 @@
 machine:
-  pre:
-    - curl https://raw.githubusercontent.com/creationix/nvm/v0.23.3/install.sh | bash
   services:
     - docker
   node:
     version: iojs-3.0.0
 dependencies:
   pre:
+    # Setup database
     - docker pull cockroachdb/cockroach:alpha-3156-ge7385d9
     - docker run -p 8080:8080 -v /data cockroachdb/cockroach:alpha-3156-ge7385d9 init --stores=ssd=/data
     - docker run -p 8080:8080 -d --volumes-from=$(docker ps -q -n 1) cockroachdb/cockroach:alpha-3156-ge7385d9 start --stores=ssd=/data --gossip=self= --insecure
+    # Build container
     - docker build -t quay.io/ripple/five-bells-ledger .
 test:
   override:
