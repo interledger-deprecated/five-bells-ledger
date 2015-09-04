@@ -17,6 +17,7 @@ const updateState = require('../lib/updateState')
 const jsonld = require('@ripple/five-bells-shared/utils/jsonld')
 const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
 const Transfer = require('../models/transfer').Transfer
+const Subscription = require('../models/subscription').Subscription
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
 const InvalidModificationError =
   require('@ripple/five-bells-shared/errors/invalid-modification-error')
@@ -48,14 +49,14 @@ exports.fetch = function * fetch () {
   id = id.toLowerCase()
   log.debug('fetching transfer ID ' + id)
 
-  let transfer = yield Transfer.get(id, db)
+  let transfer = yield Transfer.findById(id)
   if (!transfer) {
     throw new NotFoundError('Unknown transfer ID')
   }
 
   jsonld.setContext(this, 'transfer.jsonld')
 
-  this.body = transfer.getData()
+  this.body = transfer.toJSONExternal()
 }
 
 /**
@@ -81,14 +82,14 @@ exports.getState = function * getState () {
   id = id.toLowerCase()
   log.debug('fetching state receipt for transfer ID ' + id)
 
-  let transfer = yield Transfer.get(id, db)
+  let transfer = yield Transfer.findById(id)
   if (!transfer) {
     throw new NotFoundError('Unknown transfer ID')
   }
 
   let message = {
     id: uri.make('transfer', transfer.id),
-    state: transfer.state
+    state: transfer.get('state')
   }
   let messageHash = hashJSON(message)
   let signature = tweetnacl.util.encodeBase64(
@@ -108,23 +109,37 @@ exports.getState = function * getState () {
 }
 
 function updateTransferObject (originalTransfer, transfer) {
-  let updatedTransfer = originalTransfer.clone()
+  let updatedTransfer = _.cloneDeep(originalTransfer)
+
+  // Ignore null properties
+  updatedTransfer = _.omit(updatedTransfer, _.isNull)
 
   // Ignore internally managed properties
   transfer.state = updatedTransfer.state
-  transfer.timeline = updatedTransfer.timeline
+  transfer.created_at = updatedTransfer.created_at
+  transfer.updated_at = updatedTransfer.updated_at
+  transfer.proposed_at = updatedTransfer.proposed_at
+  transfer.pre_prepared_at = updatedTransfer.pre_prepared_at
+  transfer.prepared_at = updatedTransfer.prepared_at
+  transfer.pre_executed_at = updatedTransfer.pre_executed_at
+  transfer.executed_at = updatedTransfer.executed_at
+
+  // Ignore undefined properties
+  transfer = _.omit(transfer, _.isUndefined)
 
   // Clients can add authorizations
   // The validity of these authorizations will be checked
   // in the validateAuthorizations function
   _.forEach(updatedTransfer.debits, function (funds, i) {
     if (!funds.authorized &&
+      transfer.debits[i] &&
       transfer.debits[i].authorized) {
       funds.authorized = true
     }
   })
   _.forEach(updatedTransfer.credits, function (funds, i) {
     if (!funds.authorized &&
+      transfer.credits[i] &&
       transfer.credits[i].authorized) {
       funds.authorized = true
     }
@@ -159,7 +174,7 @@ function * processSubscriptions (transfer) {
   //   return db.get(['accounts', account, 'subscriptions'])
   // }
   // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
-  let subscriptions = yield db.get(['subscriptions'])
+  let subscriptions = yield Subscription.findAll()
 
   if (subscriptions) {
     subscriptions = _.values(subscriptions)
@@ -174,7 +189,7 @@ function * processSubscriptions (transfer) {
         body: {
           id: uri.make('subscription', subscription.id),
           event: 'transfer.update',
-          resource: transfer.getData()
+          resource: Transfer.build(transfer).toJSONExternal()
         }
       })
     })
@@ -258,7 +273,6 @@ function * processStateTransitions (tr, transfer) {
       verifyCondition(transfer.execution_condition,
         transfer.execution_condition_fulfillment)
       updateState(transfer, 'pre_executed')
-
     } else if (!transfer.execution_condition) {
       updateState(transfer, 'pre_executed')
     }
@@ -267,7 +281,7 @@ function * processStateTransitions (tr, transfer) {
   if (transfer.state === 'pre_executed') {
     // In a real-world / asynchronous implementation, the response from the
     // external ledger would trigger the state transition from 'pre_executed' to
-    // 'executed' or 'failed'.
+    // 'executed'
     yield accountBalances.applyCredits(tr, creditAccounts)
     updateState(transfer, 'executed')
 
@@ -329,7 +343,16 @@ exports.create = function * create () {
     )
   }
 
+  if (typeof transfer.ledger !== 'undefined') {
+    requestUtil.assert.strictEqual(
+      transfer.ledger,
+      config.server.base_uri,
+      'Transfer contains incorrect ledger URI'
+    )
+  }
+
   transfer.id = id
+  transfer.ledger = config.server.base_uri
 
   log.debug('putting transfer ID ' + transfer.id)
   log.debug('' + transfer.debits[0].account + ' -> ' +
@@ -366,14 +389,14 @@ exports.create = function * create () {
   // TODO Validate that the execution_condition_fulfillment is correct
 
   let originalTransfer
-  yield db.transaction(function *(tr) {
-    originalTransfer = yield Transfer.get(transfer.id, tr)
+  yield db.transaction(function *(transaction) {
+    originalTransfer = yield Transfer.findById(transfer.id, { transaction })
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
 
       // This method will update the original transfer object using the new
       // version, but only allowing specific fields to change.
-      transfer = updateTransferObject(originalTransfer, transfer)
+      transfer = updateTransferObject(originalTransfer.toJSON(), transfer)
     } else {
       // A brand-new transfer will start out as proposed
       updateState(transfer, 'proposed')
@@ -384,10 +407,14 @@ exports.create = function * create () {
     // _this.req.user is set by the passport middleware
     validateAuthorizations(_this.req.user, transfer, originalTransfer)
 
-    yield processStateTransitions(tr, transfer)
+    yield processStateTransitions(transaction, transfer)
 
     // Store transfer in database
-    transfer.save(tr)
+    if (originalTransfer) {
+      yield originalTransfer.update(transfer, { transaction })
+    } else {
+      yield Transfer.create(transfer, { transaction })
+    }
 
     // Start the expiry countdown
     // If the expires_at has passed by this time we'll consider
@@ -397,6 +424,6 @@ exports.create = function * create () {
 
   log.debug('changes written to database')
 
-  this.body = transfer.getData()
+  this.body = Transfer.build(transfer).toJSONExternal()
   this.status = originalTransfer ? 200 : 201
 }

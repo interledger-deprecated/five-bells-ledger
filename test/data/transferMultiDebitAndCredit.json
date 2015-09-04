@@ -1,5 +1,6 @@
 {
   "id": "http://localhost/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+  "ledger": "http://localhost",
   "debits": [{
     "account": "http://localhost/accounts/alice",
     "amount": "50",

@@ -5,6 +5,8 @@ const db = require('../services/db')
 const log = require('../services/log')('subscriptions')
 const request = require('@ripple/five-bells-shared/utils/request')
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
+const Account = require('../models/account').Account
+const Subscription = require('../models/subscription').Subscription
 
 /**
  * Validate a subscription semantically.
@@ -16,8 +18,8 @@ const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error'
  * @param {Object} tr Database transaction
  * @returns {void}
  */
-function * validateSubscriptionSemantics (subscription, tr) {
-  const owner = yield tr.get(['accounts', subscription.owner])
+function * validateSubscriptionSemantics (subscription, transaction) {
+  const owner = yield Account.findById(subscription.owner, { transaction })
 
   if (typeof owner === 'undefined') {
     // TODO Add authentication and reenable this check
@@ -32,14 +34,14 @@ function * validateSubscriptionSemantics (subscription, tr) {
  * @returns {void}
  */
 function * storeSubscription (subscription) {
-  yield db.transaction(function *(tr) {
+  yield db.transaction(function *(transaction) {
     // Check prerequisites
-    yield *validateSubscriptionSemantics(subscription, tr)
+    yield * validateSubscriptionSemantics(subscription, transaction)
 
     // Store subscription in database
     // TODO: Who to subscribe to should be defined by a separate `subject`
     //       field.
-    tr.put(['subscriptions', subscription.id], subscription)
+    Subscription.upsert(subscription, { transaction })
   })
 }
 
@@ -66,8 +68,10 @@ exports.fetch = function * fetch () {
   id = id.toLowerCase()
   log.debug('fetching subscription ID ' + id)
 
-  this.body = yield db.get(['subscriptions', id])
-  if (!this.body) {
+  const subscription = yield Subscription.findById(id)
+  if (subscription) {
+    this.body = subscription.toJSONExternal()
+  } else {
     throw new NotFoundError('Unknown subscription ID')
   }
 }
@@ -91,7 +95,7 @@ exports.fetch = function * fetch () {
  * @returns {void}
  */
 exports.create = function * create () {
-  const subscription = yield request.validateBody(this, 'Subscription')
+  const subscription = this.body
 
   // Generate a unique subscription ID outside of the transaction block
   if (!subscription.id) {
@@ -100,11 +104,11 @@ exports.create = function * create () {
   log.debug('preparing subscription ID ' + subscription.id)
 
   // Validate and store subscription in database
-  yield *storeSubscription(subscription)
+  yield * storeSubscription(subscription)
 
   log.debug('subscription created')
 
-  this.body = subscription
+  this.body = Subscription.build(subscription).toJSONExternal()
   this.status = 201
 }
 
@@ -112,7 +116,7 @@ exports.update = function * update () {
   let id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
-  const subscription = yield request.validateBody(this, 'Subscription')
+  const subscription = this.body
 
   if (typeof subscription.id !== 'undefined') {
     request.assert.strictEqual(subscription.id, id,
@@ -125,11 +129,11 @@ exports.update = function * update () {
   log.debug('subscribed ' + subscription.owner + ' at ' + subscription.target)
 
   // Validate and store subscription in database
-  yield *storeSubscription(subscription)
+  yield * storeSubscription(subscription)
 
   log.debug('update completed')
 
-  this.body = subscription
+  this.body = Subscription.build(subscription).toJSONExternal()
 }
 
 /**
@@ -155,14 +159,14 @@ exports.remove = function * remove () {
 
   log.debug('deleting subscription ID ' + id)
 
-  yield db.transaction(function *(tr) {
-    const subscription = yield tr.get(['subscriptions', id])
+  yield db.transaction(function *(transaction) {
+    const subscription = yield Subscription.findById(id, { transaction })
 
     if (!subscription) {
       throw new NotFoundError('Unknown subscription ID')
     }
 
-    tr.remove(['subscriptions', id])
+    subscription.destroy({ transaction })
   })
 
   this.status = 204

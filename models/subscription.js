@@ -7,34 +7,32 @@ const uri = require('../services/uriManager')
 const Sequelize = require('sequelize')
 const sequelize = require('../services/db')
 
-const Account = sequelize.define('Account', {
+const Subscription = sequelize.define('Subscription', {
   id: {
-    type: Sequelize.STRING,
+    type: Sequelize.UUID,
     primaryKey: true
   },
-  name: Sequelize.STRING,
-  balance: Sequelize.DECIMAL(10, 2),
-  identity: Sequelize.STRING(1024),
-  password: Sequelize.STRING
+  owner: Sequelize.STRING(1024),
+  event: Sequelize.STRING,
+  subject: Sequelize.STRING(1024),
+  target: Sequelize.STRING(1024)
 }, ModelMixin.getOptions({
   classMethods: {
-    validator: validate.bind(null, 'Account'),
+    validator: validate.bind(null, 'Subscription'),
     filterInput: function (data) {
       // ID is optional on the incoming side
       if (data.id) {
-        data.id = uri.parse(data.id, 'account').id.toLowerCase()
+        data.id = uri.parse(data.id, 'subscription').id.toLowerCase()
       }
 
-      data.balance = Number(data.balance)
       return data
     },
     filterOutput: function (data) {
-      data.id = uri.make('account', data.id.toLowerCase())
-      data.balance = String(data.balance)
-      delete data.password
+      data.id = uri.make('subscription', data.id.toLowerCase())
+
       return data
     }
   }
 }))
 
-exports.Account = Account
+exports.Subscription = Subscription

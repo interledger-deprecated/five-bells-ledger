@@ -120,7 +120,6 @@ describe('TimerWorker', function () {
         yield Promise.resolve()
         expect(this.transferExpiryMonitor.processExpiredTransfers)
           .to.have.callCount(2)
-
       })
   })
 })

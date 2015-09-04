@@ -1,5 +1,6 @@
 {
   "id": "http://localhost/transfers/44793135-7022-4fd7-bd00-3a14c1e896c6",
+  "ledger": "http://localhost",
   "debits": [{
     "account": "http://localhost/accounts/alice",
     "amount": "10"
@@ -7,5 +8,7 @@
   "credits": [{
     "account": "http://localhost/accounts/bob",
     "amount": "10"
-  }]
+  }],
+  "state": "proposed",
+  "expires_at": "2015-06-16T00:00:10.000Z"
 }

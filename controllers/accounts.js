@@ -2,19 +2,14 @@
 'use strict'
 
 const _ = require('lodash')
-const db = require('../services/db')
 const log = require('../services/log')('accounts')
 const request = require('@ripple/five-bells-shared/utils/request')
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
-const uri = require('../services/uriManager')
 const Account = require('../models/account').Account
 
 exports.find = function * find () {
-  const accounts = yield db.get(['accounts'])
-  this.body = _.values(accounts).map(function (account) {
-    account.id = uri.make('account', account.id)
-    return account
-  })
+  const accounts = yield Account.findAll()
+  this.body = _.invoke(accounts, 'toJSONExternal')
 }
 
 /**
@@ -38,7 +33,7 @@ exports.fetch = function * fetch () {
   id = id.toLowerCase()
   log.debug('fetching account ID ' + id)
 
-  const account = yield Account.get(id, db)
+  const account = yield Account.findById(id)
   if (!account) {
     throw new NotFoundError('Unknown account ID')
   }
@@ -48,7 +43,7 @@ exports.fetch = function * fetch () {
 
   delete account.password
 
-  this.body = account.getData()
+  this.body = account.toJSONExternal()
 }
 
 /**
@@ -70,22 +65,12 @@ exports.putResource = function * putResource () {
   let id = this.params.id
   request.validateUriParameter('id', id, 'Identifier')
   id = id.toLowerCase()
-  const account = this.body
+  this.body.id = id
 
-  account.id = id
+  const created = yield Account.upsert(this.body)
 
-  let existing = false
-  yield db.transaction(function *(tr) {
-    const existingAccount = yield tr.get(['accounts', id])
+  log.debug((created ? 'created' : 'updated') + ' account ID ' + id)
 
-    if (existingAccount) {
-      existing = true
-    }
-
-    tr.put(['accounts', id], account)
-  })
-  log.debug((existing ? 'updated' : 'created') + ' account ID ' + id)
-
-  this.body = account.getData()
-  this.status = existing ? 200 : 201
+  this.body = Account.build(this.body).toJSONExternal()
+  this.status = created ? 201 : 200
 }

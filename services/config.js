@@ -7,7 +7,7 @@ const log = require('./log')('config')
 const config = exports
 
 config.db = {}
-config.db.uri = process.env.ROACH_URI
+config.db.uri = process.env.DB_URI
 config.db.subspace = 'five-bells-ledger'
 
 config.server = {}
@@ -28,8 +28,9 @@ if (process.env.NODE_ENV === 'test') {
 }
 
 // Calculate base_uri
-const isCustomPort = config.server.secure ?
-  +config.server.public_port !== 443 : +config.server.public_port !== 80
+const isCustomPort = config.server.secure
+  ? +config.server.public_port !== 443
+  : +config.server.public_port !== 80
 config.server.base_host = config.server.public_host +
   (isCustomPort ? ':' + config.server.public_port : '')
 config.server.base_uri = url.format({

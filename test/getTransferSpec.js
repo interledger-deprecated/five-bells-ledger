@@ -72,7 +72,7 @@ describe('GET /transfers/:uuid', function () {
       .end()
 
     // In production this function should be triggered by the worker started in app.js
-    this.clock.tick(100)
+    this.clock.tick(1000)
     yield transferExpiryMonitor.processExpiredTransfers()
 
     yield this.request()
@@ -86,5 +86,4 @@ describe('GET /transfers/:uuid', function () {
       }))
       .end()
   })
-
 })
