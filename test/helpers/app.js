@@ -1,7 +1,7 @@
 'use strict'
 
 const http = require('http')
-const superagent = require('co-megatest')
+const superagent = require('co-supertest')
 const methods = require('methods')
 const url = require('url')
 
