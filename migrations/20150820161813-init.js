@@ -56,5 +56,6 @@ module.exports = {
   down: function (queryInterface, Sequelize) {
     queryInterface.dropTable('Accounts')
     queryInterface.dropTable('Transfers')
+    queryInterface.dropTable('Subscriptions')
   }
 }
