@@ -1,14 +1,22 @@
 'use strict'
 
+const url = require('url')
 const co = require('co')
 const Sequelize = require('sequelize')
 const config = require('./config')
 const log = require('./log')('db')
 
-const db = new Sequelize(config.db.uri, {
+const dbURI = config.db.uri
+const dbParts = url.parse(dbURI)
+const options = {
   logging: log.debug,
   omitNull: true
-})
+}
+
+if (dbParts.protocol === 'sqlite:') {
+  options.storage = dbParts.pathname
+}
+const db = new Sequelize(config.db.uri, options)
 
 // Add co support for transactions
 db._transaction = db.transaction

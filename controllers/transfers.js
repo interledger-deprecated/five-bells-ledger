@@ -11,14 +11,15 @@ const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
 const log = require('../services/log')('transfers')
 const request = require('co-request')
+const Condition = require('@ripple/five-bells-condition').Condition
 const requestUtil = require('@ripple/five-bells-shared/utils/request')
-const verifyCondition = require('@ripple/five-bells-shared/utils/verifyCondition')
 const updateState = require('../lib/updateState')
 const jsonld = require('@ripple/five-bells-shared/utils/jsonld')
 const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
 const Transfer = require('../models/transfer').Transfer
 const Subscription = require('../models/subscription').Subscription
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
+const UnmetConditionError = require('@ripple/five-bells-shared/errors/unmet-condition-error')
 const InvalidModificationError =
   require('@ripple/five-bells-shared/errors/invalid-modification-error')
 const UnprocessableEntityError =
@@ -99,7 +100,7 @@ exports.getState = function * getState () {
 
   let transferStateReceipt = {
     message: message,
-    algorithm: 'ed25519-sha512',
+    type: 'ed25519-sha512',
     signer: config.server.base_uri,
     public_key: config.keys.ed25519.public,
     signature: signature
@@ -149,6 +150,10 @@ function updateTransferObject (originalTransfer, transfer) {
   if (transfer.execution_condition_fulfillment) {
     updatedTransfer.execution_condition_fulfillment =
       transfer.execution_condition_fulfillment
+  }
+
+  if (typeof transfer.expires_at === 'string') {
+    transfer.expires_at = new Date(transfer.expires_at)
   }
 
   // The old and new objects should now be exactly equal
@@ -269,9 +274,11 @@ function * processStateTransitions (tr, transfer) {
   if (transfer.state === 'prepared') {
     if (transfer.execution_condition &&
       transfer.execution_condition_fulfillment) {
-      // This will throw an error if the fulfillment is invalid
-      verifyCondition(transfer.execution_condition,
+      let isValidFulfillment = Condition.testFulfillment(transfer.execution_condition,
         transfer.execution_condition_fulfillment)
+      if (!isValidFulfillment) {
+        throw new UnmetConditionError('ConditionFulfillment failed')
+      }
       updateState(transfer, 'pre_executed')
     } else if (!transfer.execution_condition) {
       updateState(transfer, 'pre_executed')
@@ -288,8 +295,6 @@ function * processStateTransitions (tr, transfer) {
     // Remove the expiry countdown
     transferExpiryMonitor.unwatch(transfer.id)
   }
-
-  yield processSubscriptions(transfer)
 }
 
 /**
@@ -415,6 +420,12 @@ exports.create = function * create () {
     } else {
       yield Transfer.create(transfer, { transaction })
     }
+
+    // `processSubscriptions` must be after the transfer is stored in the
+    // database because otherwise the recipient may try to execute it before
+    // the "authorized" flag is saved -- which makes it appear as if the
+    // recipient is faking the authorization.
+    yield processSubscriptions(transfer)
 
     // Start the expiry countdown
     // If the expires_at has passed by this time we'll consider
