@@ -32,9 +32,9 @@
       }
     },
     "@ripple/five-bells-shared": {
-      "version": "6.0.0",
-      "from": "@ripple/five-bells-shared@6.0.0",
-      "resolved": "https://registry.npmjs.org/@ripple/five-bells-shared/-/five-bells-shared-6.0.0.tgz",
+      "version": "6.1.0",
+      "from": "@ripple/five-bells-shared@6.1.0",
+      "resolved": "https://registry.npmjs.org/@ripple/five-bells-shared/-/five-bells-shared-6.1.0.tgz",
       "dependencies": {
         "canonical-json": {
           "version": "0.0.4",
@@ -123,7 +123,7 @@
             },
             "readable-stream": {
               "version": "1.1.13",
-              "from": "readable-stream@>=1.1.13 <2.0.0",
+              "from": "readable-stream@>=1.1.12 <2.0.0",
               "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.13.tgz",
               "dependencies": {
                 "core-util-is": {
