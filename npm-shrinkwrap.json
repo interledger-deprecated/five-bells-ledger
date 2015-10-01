@@ -2,6 +2,35 @@
   "name": "@ripple/five-bells-ledger",
   "version": "3.0.0",
   "dependencies": {
+    "@ripple/five-bells-condition": {
+      "version": "1.1.0",
+      "from": "@ripple/five-bells-condition@*",
+      "resolved": "https://registry.npmjs.org/@ripple/five-bells-condition/-/five-bells-condition-1.1.0.tgz",
+      "dependencies": {
+        "tv4": {
+          "version": "1.2.7",
+          "from": "tv4@>=1.2.7 <2.0.0",
+          "resolved": "https://registry.npmjs.org/tv4/-/tv4-1.2.7.tgz"
+        },
+        "tv4-formats": {
+          "version": "1.0.1",
+          "from": "tv4-formats@>=1.0.1 <2.0.0",
+          "resolved": "https://registry.npmjs.org/tv4-formats/-/tv4-formats-1.0.1.tgz",
+          "dependencies": {
+            "moment": {
+              "version": "2.5.1",
+              "from": "moment@>=2.5.1 <2.6.0",
+              "resolved": "https://registry.npmjs.org/moment/-/moment-2.5.1.tgz"
+            },
+            "validator": {
+              "version": "3.27.0",
+              "from": "validator@>=3.27.0 <3.28.0",
+              "resolved": "https://registry.npmjs.org/validator/-/validator-3.27.0.tgz"
+            }
+          }
+        }
+      }
+    },
     "@ripple/five-bells-shared": {
       "version": "6.0.0",
       "from": "@ripple/five-bells-shared@6.0.0",
