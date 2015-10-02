@@ -58,7 +58,7 @@ describe('Transfer State', function () {
     })
 
     it('should return a 200 and a signed receipt including the message, ' +
-      'messageHash, algorithm, public_key, and signature', function *() {
+      'messageHash, type, public_key, and signature', function *() {
         yield dbHelper.addTransfers([this.executedTransfer])
 
         const stateReceipt = {
@@ -75,7 +75,7 @@ describe('Transfer State', function () {
           .get(this.executedTransfer.id + '/state')
           .expect(200, {
             message: stateReceipt,
-            algorithm: 'ed25519-sha512',
+            type: 'ed25519-sha512',
             signer: config.server.base_uri,
             public_key: config.keys.ed25519.public,
             signature: signature
@@ -104,7 +104,7 @@ describe('Transfer State', function () {
           .get(transfer.id + '/state')
           .expect(200, {
             message: stateReceipt,
-            algorithm: 'ed25519-sha512',
+            type: 'ed25519-sha512',
             signer: config.server.base_uri,
             public_key: config.keys.ed25519.public,
             signature: signature
@@ -159,7 +159,7 @@ describe('Transfer State', function () {
           .get(transfer.id + '/state')
           .expect(200, {
             message: stateReceipt,
-            algorithm: 'ed25519-sha512',
+            type: 'ed25519-sha512',
             signer: config.server.base_uri,
             public_key: config.keys.ed25519.public,
             signature: signature
