@@ -95,11 +95,11 @@ In type A payments, both ledgers will place holds with no timeout or a very gene
 
 Therefore, the availability of the trader is crucial. Generally, type A payments are recommended only when the "trader" is a highly fault-tolerant [exchange network](doc:trading-architectures).
 
-The benefit of this atomicity is the elimination of payment risk. Even complex multi-ledger payments can be handled safely and efficiently by a trader-coordinator.
+The benefit of this atomicity is the elimination of settlement risk. Even complex multi-ledger payments can be handled safely and efficiently by a trader-coordinator.
 
-> #### Payment risk
+> #### Settlement risk
 >
->  Payment risk is also known as Herstatt risk, named after a German bank >that failed in 1974. Because of this, a large number of cross-currency >transactions only partially executed. Banks had transferred Deutsche Mark >funds to Herstatt, but the corresponding US dollars were never delivered.
+>  Settlement risk is also known as Herstatt risk, named after a German bank >that failed in 1974. Because of this, a large number of cross-currency >transactions only partially executed. Banks had transferred Deutsche Mark >funds to Herstatt, but the corresponding US dollars were never delivered.
 
 ### Sequence
 
@@ -112,7 +112,7 @@ Payment Type M
 -----------------
 _When no mutually trusted trader is available, ledgers can fall back to a type M payment._
 
-In a type M payment, the trader is untrusted. The payment is **not** atomic and the trader takes on the payment risk. However, sender and recipient are still protected against a malicious trader. The worst a malicious trader can do is delay causing the payment to fail after a timeout.
+In a type M payment, the trader is untrusted. The payment is **not** atomic and the trader takes on the settlement risk. However, sender and recipient are still protected against a malicious trader. The worst a malicious trader can do is delay causing the payment to fail after a timeout.
 
 ![Type M Payment.svg](https://www.filepicker.io/api/file/KJUh2o5iS3q3o2oiHKww)
 
