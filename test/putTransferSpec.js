@@ -445,37 +445,37 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should return 400 if an unauthorized debit is removed', function *() {
-      const transfer = this.multiDebitTransfer
+    const transfer = this.multiDebitTransfer
 
-      delete transfer.debits[0].authorized
-      delete transfer.debits[1].authorized
+    delete transfer.debits[0].authorized
+    delete transfer.debits[1].authorized
 
-      yield this.request()
-        .put(transfer.id)
-        .send(transfer)
-        .expect(201)
-        .expect(_.assign({}, transfer, {
-          state: 'proposed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
+    yield this.request()
+      .put(transfer.id)
+      .send(transfer)
+      .expect(201)
+      .expect(_.assign({}, transfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
 
-      // Remove a debit and change credits to match
-      transfer.debits = transfer.debits.slice(0, 1)
-      transfer.credits[0].amount = '10'
+    // Remove a debit and change credits to match
+    transfer.debits = transfer.debits.slice(0, 1)
+    transfer.credits[0].amount = '10'
 
-      yield this.request()
-        .put(transfer.id)
-        .send(transfer)
-        .expect(400)
-        .expect(function (res) {
-          expect(res.body.id).to.equal('InvalidModificationError')
-          expect(res.body.message).to.equal('Transfer may not be modified in this way')
-        })
-        .end()
-    })
+    yield this.request()
+      .put(transfer.id)
+      .send(transfer)
+      .expect(400)
+      .expect(function (res) {
+        expect(res.body.id).to.equal('InvalidModificationError')
+        expect(res.body.message).to.equal('Transfer may not be modified in this way')
+      })
+      .end()
+  })
 
   it('should keep the state as "proposed" if not all debits are authorized',
     function *() {

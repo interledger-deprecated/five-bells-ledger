@@ -8,7 +8,7 @@ _A high level overview of the Five Bells protocol._
 
 ![logo.svg](https://www.filepicker.io/api/file/YvAirRET9OZGOd4mvj3n)
 
-There are many different ledgers out there and many different methods for transferring money between them. Five Bells aims to create a standard interface, so that different settlement methods can compete and users can automatically find the best option for them.
+There are many different ledgers out there and many different methods for transferring money between them. Five Bells aims to create a standard interface, so that different payment methods can compete and users can automatically find the best option for them.
 
 ### A Framework for the Value Web
 
@@ -22,7 +22,7 @@ Five Bells was a tavern in the City of London which was the site of the first da
 
 Before Five Bells, banks would have clerks running around visiting other banks all day and [legend has it](http://www.theguardian.com/money/2008/feb/03/personalfinancenews.consumeraffairs1) that two exhausted messengers were taking a break and recognized each other at a crowded inn. And thus the idea of meeting in a central place every day was born.
 
-With the Five Bells protocol, we're aiming to create a venue for another orders-of-magnitude improvement in settlement efficiency. And we're looking to do it in the spirit of simple and pragmatic solutions.
+With the Five Bells protocol, we're aiming to create a venue for another orders-of-magnitude improvement in payment efficiency. And we're looking to do it in the spirit of simple and pragmatic solutions.
 
 
 The Five Roles
@@ -62,17 +62,17 @@ The sending ledger is trusted by the sender and by the trader to hold funds on t
 
 The receiving ledger is trusted by the recipient and by the trader to hold funds for them. 
 
-### Settlement System
+### Payment System
 
 ![RoleReceivingLedger.svg](https://www.filepicker.io/api/file/xZyC9FaT3CrYhPyKmWYA)
 
-The settlement system is the entity which acts as counterparty to the payment. It has accounts at both the sending and receiving ledger. Since it is unlikely that a single trader will have accounts at a huge number of ledgers, settlement systems will usually in fact be a network of traders working together to facilitate the payment. See [Trading Architectures](doc:trading-architectures). 
+The payment system is the entity which acts as counterparty to the payment. It has accounts at both the sending and receiving ledger. Since it is unlikely that a single trader will have accounts at a huge number of ledgers, payment systems will usually in fact be a network of traders working together to facilitate the payment. See [Trading Architectures](doc:trading-architectures). 
 
 In a cross-ledger payment, the trader generally acts as the primary message broker.
 
 > #### The four party scheme
 >
->  Card providers such as VISA and MasterCard often use the [four-party scheme](http://en.wikipedia.org/wiki/Card_scheme#Four-party_scheme) to model payment transactions. This maps very closely to Five Bells, with the card scheme itself (and its associated settlement mechanism) as the implicit fifth actor.
+>  Card providers such as VISA and MasterCard often use the [four-party scheme](http://en.wikipedia.org/wiki/Card_scheme#Four-party_scheme) to model payment transactions. This maps very closely to Five Bells, with the card scheme itself (and its associated payment mechanism) as the implicit fifth actor.
 
 >  * Cardholder → Sender
 >  * Merchant → Recipient
@@ -81,7 +81,7 @@ In a cross-ledger payment, the trader generally acts as the primary message brok
 >  * (Network → Trader)"
 
 
-Settlement Type A
+Payment Type A
 -----------------
 _Type A is the normal method for payments when the trader is trusted by both ledgers._
 
@@ -95,11 +95,11 @@ In type A payments, both ledgers will place holds with no timeout or a very gene
 
 Therefore, the availability of the trader is crucial. Generally, type A payments are recommended only when the "trader" is a highly fault-tolerant [exchange network](doc:trading-architectures).
 
-The benefit of this atomicity is the elimination of settlement risk. Even complex multi-ledger payments can be handled safely and efficiently by a trader-coordinator.
+The benefit of this atomicity is the elimination of payment risk. Even complex multi-ledger payments can be handled safely and efficiently by a trader-coordinator.
 
-> #### Settlement risk
+> #### Payment risk
 >
->  Settlement risk is also known as Herstatt risk, named after a German bank >that failed in 1974. Because of this, a large number of cross-currency >transactions only partially executed. Banks had transferred Deutsche Mark >funds to Herstatt, but the corresponding US dollars were never delivered.
+>  Payment risk is also known as Herstatt risk, named after a German bank >that failed in 1974. Because of this, a large number of cross-currency >transactions only partially executed. Banks had transferred Deutsche Mark >funds to Herstatt, but the corresponding US dollars were never delivered.
 
 ### Sequence
 
@@ -108,11 +108,11 @@ Here is an example sequence for a type A payment initiated by the sender (push).
 ![Type A Payment Sequence.svg](https://www.filepicker.io/api/file/qqRVv3ktREeBtF618NNn)
 
 
-Settlement Type M
+Payment Type M
 -----------------
-_When no mutually trusted trader is available, ledgers can fall back to a type M settlement._
+_When no mutually trusted trader is available, ledgers can fall back to a type M payment._
 
-In a type M payment, the trader is untrusted. The payment is **not** atomic and the trader takes on the settlement risk. However, sender and recipient are still protected against a malicious trader. The worst a malicious trader can do is delay causing the payment to fail after a timeout.
+In a type M payment, the trader is untrusted. The payment is **not** atomic and the trader takes on the payment risk. However, sender and recipient are still protected against a malicious trader. The worst a malicious trader can do is delay causing the payment to fail after a timeout.
 
 ![Type M Payment.svg](https://www.filepicker.io/api/file/KJUh2o5iS3q3o2oiHKww)
 
