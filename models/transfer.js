@@ -18,7 +18,7 @@ const Transfer = sequelize.define('Transfer', {
   ledger: Sequelize.STRING(1024),
   debits: JsonField(sequelize, 'Transfer', 'debits'),
   credits: JsonField(sequelize, 'Transfer', 'credits'),
-  part_of_settlement: Sequelize.STRING(1024),
+  part_of_payment: Sequelize.STRING(1024),
   state: Sequelize.ENUM('proposed', 'pre_prepared', 'prepared', 'pre_executed', 'executed', 'rejected'),
   execution_condition: JsonField(sequelize, 'Transfer', 'execution_condition'),
   execution_condition_fulfillment: JsonField(sequelize, 'Transfer', 'execution_condition_fulfillment'),

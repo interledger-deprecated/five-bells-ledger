@@ -23,7 +23,7 @@ module.exports = {
       ledger: Sequelize.STRING(1024),
       debits: Sequelize.TEXT,
       credits: Sequelize.TEXT,
-      part_of_settlement: Sequelize.STRING(1024),
+      part_of_payment: Sequelize.STRING(1024),
       state: Sequelize.ENUM('proposed', 'pre_prepared', 'prepared', 'pre_executed', 'executed', 'rejected'),
       execution_condition: Sequelize.TEXT,
       execution_condition_fulfillment: Sequelize.TEXT,

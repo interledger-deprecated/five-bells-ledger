@@ -1,12 +1,12 @@
 
-Settlement API
+Payment API
 ==============
 
-Settlement Definition
+Payment Definition
 ---------------------
-_In Five Bells the term settlement is used with a broad, but clearly defined meaning._
+_In Five Bells the term payment is used with a broad, but clearly defined meaning._
 
-When we talk about settlement in the context of Five Bells, we mean the function that bridges the gap between sending ledger and receiving ledger. In essence, settlement refers to the activity of effecting a payment on one ledger in exchange for a payment on another ledger.
+When we talk about payment in the context of Five Bells, we mean the function that bridges the gap between sending ledger and receiving ledger. In essence, payment refers to the activity of effecting a payment on one ledger in exchange for a payment on another ledger.
 
 ![ifthen2.svg](https://www.filepicker.io/api/file/1uOe14RBqIIyZHKKr7SQ)
 
@@ -18,16 +18,16 @@ Note that both of the payments may have the same:
 
 Typically though, at least one of these dimensions would be different, otherwise one would simply [make a local transfer](doc:make-a-local-transfer).
 
-### Role of the settlement system
+### Role of the payment system
 
-The settlement system is an abstract concept in the context of Five Bells. A settlement system could be an individual trader, or it could be a decentralized network of many traders working together. Either way the settlement system is the counterparty that takes the other side of a cross-ledger settlement.
+The payment system is an abstract concept in the context of Five Bells. A payment system could be an individual trader, or it could be a decentralized network of many traders working together. Either way the payment system is the counterparty that takes the other side of a cross-ledger payment.
 
 ![TraderConnecting.svg](https://www.filepicker.io/api/file/PHd5FfdvQUWoSTkWyu0c)
 
 
-Settlement Architectures
+Payment Architectures
 ------------------------
-_Settlement systems can take on different forms in Five Bells._
+_Payment systems can take on different forms in Five Bells._
 
 The trader in Five Bells must have an account with both the sending and receiving ledgers. Since it is unlikely for an individual liquidity provider to have a very large number of connections to different ledgers, we believe that traders will usually pool their liquidity work together to facilitate payments.
 
@@ -35,7 +35,7 @@ Many different architectures are possible, from simple to complex. This page is 
 
 ### Fixed-rate solo trader
 
-The simplest possible settlement system is a fixed-rate solo trader has pools of funds at various ledgers and offers to provide settlement between any of them at fixed rates, assuming that enough liquidity is available.
+The simplest possible payment system is a fixed-rate solo trader has pools of funds at various ledgers and offers to provide payment between any of them at fixed rates, assuming that enough liquidity is available.
 
 ### Central exchange
 
@@ -46,7 +46,7 @@ A central exchange is a service run by a single operator, where traders may depo
 An exchange network is a network of traders working together, but without a central exchange operator or clearinghouse. An example of an exchange network is the Ripple network.
 
 > ### Ripple Network",
-> It's important to understand that Five Bells is not a replacement for the Ripple >network or similar technologies, it is simply a framework to formalize the interaction >between ledgers, users and settlement systems such as Ripple.
+> It's important to understand that Five Bells is not a replacement for the Ripple >network or similar technologies, it is simply a framework to formalize the interaction >between ledgers, users and payment systems such as Ripple.
 > 
 > In order to make Ripple compatible with Five Bells, an adapter would be required. To add a > ledger, the adapter would create an account on that ledger and issue balances on Ripple. It > would offer deposit and withdrawal functionality to market makers who could then place orders > on Ripple. The adapter would be able to act as a Five Bells trader between any two of the > ledgers it supports by converting the corresponding balances on Ripple.
 > 
@@ -105,7 +105,7 @@ Either the source amount or the destination amount should have a value specified
   }
 ```
 
-**post**	Order a Settlement
+**post**	Order a Payment
 ----------------------------
 _This will initiate a new cross-ledger transfer._
 
@@ -114,10 +114,10 @@ _This will initiate a new cross-ledger transfer._
 |source              | required | Object | Full amount (including currency, issuer and ledger)|
 |destination         | required | Object | Full amount (including currency, issuer and ledger)|
 
-Once the settlement user is happy with a trader's quote, they will initiate the payment.
+Once the payment user is happy with a trader's quote, they will initiate the payment.
 
 
 #### Definition
 
-  https://example.com/settlement
+  https://example.com/payment
 
