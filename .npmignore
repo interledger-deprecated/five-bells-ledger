@@ -1,0 +1,7 @@
+node_modules/
+apidoc-out/
+coverage/
+*.cluster
+/npm-debug.log
+
+.npmrc
