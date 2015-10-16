@@ -15,7 +15,7 @@ npm run migrate
 Afterwards just run Five Bells Ledger:
 
 ``` sh
-docker run -it --rm --net=host -e PORT=1337 -e LEDGER_DB_URI=$DB_URI quay.io/ripple/five-bells-ledger
+docker run -it --rm --net=host -e PORT=1337 -e LEDGER_DB_URI=$LEDGER_DB_URI quay.io/ripple/five-bells-ledger
 ```
 
 Breaking down that command:
