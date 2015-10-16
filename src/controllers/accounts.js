@@ -2,6 +2,7 @@
 'use strict'
 
 const _ = require('lodash')
+const db = require('../services/db')
 const log = require('../services/log')('accounts')
 const request = require('@ripple/five-bells-shared/utils/request')
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
@@ -62,15 +63,23 @@ exports.fetch = function * fetch () {
  * @return {void}
  */
 exports.putResource = function * putResource () {
+  const self = this
   let id = this.params.id
   request.validateUriParameter('id', id, 'Identifier')
   id = id.toLowerCase()
   this.body.id = id
 
-  const created = yield Account.upsert(this.body)
+  // SQLite's implementation of upsert does not tell you whether it created the
+  // row or whether it already existed. Since we need to know to return the
+  // correct HTTP status code we unfortunately have to do this in two steps.
+  let existed
+  yield db.transaction(function * (transaction) {
+    existed = yield Account.findById(self.body.id, { transaction })
+    yield Account.upsert(self.body, { transaction })
+  })
 
-  log.debug((created ? 'created' : 'updated') + ' account ID ' + id)
+  log.debug((existed ? 'updated' : 'created') + ' account ID ' + id)
 
   this.body = Account.build(this.body).toJSONExternal()
-  this.status = created ? 201 : 200
+  this.status = existed ? 200 : 201
 }
