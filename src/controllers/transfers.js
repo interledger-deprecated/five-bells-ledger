@@ -152,8 +152,8 @@ function updateTransferObject (originalTransfer, transfer) {
       transfer.execution_condition_fulfillment
   }
 
-  if (typeof transfer.expires_at === 'string') {
-    transfer.expires_at = new Date(transfer.expires_at)
+  if (typeof transferData.expires_at === 'string') {
+    transferData.expires_at = new Date(transferData.expires_at)
   }
 
   // The old and new objects should now be exactly equal
