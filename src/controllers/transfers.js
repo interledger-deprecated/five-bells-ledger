@@ -152,10 +152,6 @@ function updateTransferObject (originalTransfer, transfer) {
       transfer.execution_condition_fulfillment
   }
 
-  if (typeof transferData.expires_at === 'string') {
-    transferData.expires_at = new Date(transferData.expires_at)
-  }
-
   // The old and new objects should now be exactly equal
   if (!_.isEqual(updatedTransferData, transferData)) {
     // If they aren't, this means the user tried to update something they're not

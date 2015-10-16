@@ -144,6 +144,28 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
+  it('should return 200 if a transfer is posted with the same expiry date',
+    function *() {
+      const transfer = _.cloneDeep(this.transferWithExpiry)
+      delete transfer.debits[0].authorized
+      delete transfer.debits[1].authorized
+      transfer.expires_at = (new Date(Date.now() + 10000)).toISOString()
+
+      yield this.request()
+        .put(transfer.id)
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      this.clock.tick(2000)
+
+      yield this.request()
+        .put(transfer.id)
+        .send(transfer)
+        .expect(200)
+        .end()
+    })
+
   it('should return 422 if a transfer is modified after its ' +
     'expiry date', function *() {
       const transfer = this.transferWithExpiry
