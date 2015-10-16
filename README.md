@@ -8,14 +8,14 @@ Note: You need a local database instance listening on port 8080. Here is how to 
 
 ``` sh
 docker run --name mysql -e MYSQL_ROOT_PASSWORD=password -p 3306:3306 -d mysql
-export DB_URI=mysql://root:password@localhost/fivebells
+export LEDGER_DB_URI=mysql://root:password@localhost/fivebells
 npm run migrate
 ```
 
 Afterwards just run Five Bells Ledger:
 
 ``` sh
-docker run -it --rm --net=host -e PORT=1337 -e DB_URI=$DB_URI quay.io/ripple/five-bells-ledger
+docker run -it --rm --net=host -e PORT=1337 -e LEDGER_DB_URI=$DB_URI quay.io/ripple/five-bells-ledger
 ```
 
 Breaking down that command:
