@@ -10,7 +10,7 @@ const Account = require('../models/account').Account
 
 exports.getCollection = function * find () {
   const accounts = yield Account.findAll()
-  this.body = _.invoke(accounts, 'toJSONExternal')
+  this.body = _.invoke(accounts, 'getDataExternal')
 }
 
 /**
@@ -44,7 +44,7 @@ exports.getResource = function * fetch () {
 
   delete account.password
 
-  this.body = account.toJSONExternal()
+  this.body = account.getDataExternal()
 }
 
 /**
@@ -80,6 +80,6 @@ exports.putResource = function * putResource () {
 
   log.debug((existed ? 'updated' : 'created') + ' account ID ' + id)
 
-  this.body = Account.build(this.body).toJSONExternal()
+  this.body = this.body.getDataExternal()
   this.status = existed ? 200 : 201
 }

@@ -264,8 +264,8 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     // Check balances
-    expect((yield Account.findById('alice')).get('balance')).to.equal(90)
-    expect((yield Account.findById('bob')).get('balance')).to.equal(10)
+    expect((yield Account.findById('alice')).balance).to.equal(90)
+    expect((yield Account.findById('bob')).balance).to.equal(10)
   })
 
   it('should return 200 if the transfer already exists', function *() {
@@ -326,8 +326,8 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     // Check balances
-    expect((yield Account.findById('alice')).get('balance')).to.equal(90)
-    expect((yield Account.findById('bob')).get('balance')).to.equal(10)
+    expect((yield Account.findById('alice')).balance).to.equal(90)
+    expect((yield Account.findById('bob')).balance).to.equal(10)
   })
 
   it('should accept a transfer with an upper case ID but convert the ID ' +
@@ -815,7 +815,7 @@ describe('PUT /transfers/:id', function () {
 
   it('should trigger subscriptions', function *() {
     const subscription = require('./data/subscription1.json')
-    yield Subscription.createFromExternal(subscription)
+    yield Subscription.fromDataExternal(subscription).create()
 
     const notification = nock('http://subscriber.example')
       .post('/notifications')

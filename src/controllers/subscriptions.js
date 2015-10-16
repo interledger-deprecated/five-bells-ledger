@@ -41,7 +41,7 @@ function * storeSubscription (subscription) {
     // Store subscription in database
     // TODO: Who to subscribe to should be defined by a separate `subject`
     //       field.
-    Subscription.upsert(subscription, { transaction })
+    yield Subscription.upsert(subscription, { transaction })
   })
 }
 
@@ -70,7 +70,7 @@ exports.getResource = function * fetch () {
 
   const subscription = yield Subscription.findById(id)
   if (subscription) {
-    this.body = subscription.toJSONExternal()
+    this.body = subscription.getDataExternal()
   } else {
     throw new NotFoundError('Unknown subscription ID')
   }
@@ -108,7 +108,7 @@ exports.postResource = function * create () {
 
   log.debug('subscription created')
 
-  this.body = Subscription.build(subscription).toJSONExternal()
+  this.body = subscription.getDataExternal()
   this.status = 201
 }
 
@@ -133,7 +133,7 @@ exports.putResource = function * update () {
 
   log.debug('update completed')
 
-  this.body = Subscription.build(subscription).toJSONExternal()
+  this.body = subscription.getDataExternal()
 }
 
 /**

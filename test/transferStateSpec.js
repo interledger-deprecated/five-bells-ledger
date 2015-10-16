@@ -122,7 +122,6 @@ describe('Transfer State', function () {
         .expect(function (res) {
           let validationResult = validate('TransferStateReceipt', res.body)
           if (!validationResult.valid) {
-            console.log(validationResult)
             throw new Error('Not a valid TransferStateReceipt')
           }
         })

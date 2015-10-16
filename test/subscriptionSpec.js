@@ -59,7 +59,7 @@ describe('Subscriptions', function () {
 
       // Check that the subscription landed in the database
       const id = uri.parse(this.exampleSubscription.id, 'subscription').id
-      expect((yield Subscription.findById(id)).toJSONExternal())
+      expect((yield Subscription.findById(id)).getDataExternal())
         .to.deep.equal(this.exampleSubscription)
     })
 
@@ -74,7 +74,7 @@ describe('Subscriptions', function () {
 
       // Check that the subscription url is changed in the database
       const id = uri.parse(this.existingSubscription.id, 'subscription').id
-      expect((yield Subscription.findById(id)).toJSONExternal())
+      expect((yield Subscription.findById(id)).getDataExternal())
         .to.deep.equal(this.existingSubscription)
     })
   //

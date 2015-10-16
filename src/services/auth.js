@@ -16,7 +16,7 @@ passport.use(new BasicStrategy(
 
     Account.findById(username)
       .then(function (userObj) {
-        if (userObj && userObj.get('password') === password) {
+        if (userObj && userObj.password === password) {
           return done(null, userObj.id)
         } else {
           return done(new UnauthorizedError('Unknown or invalid account / password'))

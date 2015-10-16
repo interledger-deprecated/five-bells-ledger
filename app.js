@@ -36,7 +36,7 @@ router.put('/transfers/:id',
   passport.authenticate(['basic', 'anonymous'], {
     session: false
   }),
-  models.Transfer.bodyParser(),
+  models.Transfer.createBodyParser(),
   transfers.putResource)
 
 router.get('/transfers/:id', transfers.getResource)
@@ -44,11 +44,11 @@ router.get('/transfers/:id/state', transfers.getStateResource)
 
 router.get('/accounts', accounts.getCollection)
 router.get('/accounts/:id', accounts.getResource)
-router.put('/accounts/:id', models.Account.bodyParser(), accounts.putResource)
+router.put('/accounts/:id', models.Account.createBodyParser(), accounts.putResource)
 
-router.post('/subscriptions', models.Subscription.bodyParser(), subscriptions.postResource)
+router.post('/subscriptions', models.Subscription.createBodyParser(), subscriptions.postResource)
 router.get('/subscriptions/:id', subscriptions.getResource)
-router.put('/subscriptions/:id', models.Subscription.bodyParser(), subscriptions.putResource)
+router.put('/subscriptions/:id', models.Subscription.createBodyParser(), subscriptions.putResource)
 router.delete('/subscriptions/:id', subscriptions.deleteResource)
 
 app.use(router.middleware())

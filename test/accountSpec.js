@@ -100,7 +100,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findById('bob')).toJSONExternal()).to.deep.equal(account)
+      expect((yield Account.findById('bob')).getDataExternal()).to.deep.equal(account)
     })
 
     it('should return 200 if the account already exists', function *() {
@@ -121,7 +121,7 @@ describe('Accounts', function () {
 
       // Check balances
       const row = yield Account.findById('alice')
-      expect(row.get('balance')).to.equal(90)
+      expect(row.balance).to.equal(90)
     })
   })
 })
