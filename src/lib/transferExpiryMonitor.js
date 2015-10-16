@@ -14,7 +14,7 @@ function TransferExpiryMonitor (timeQueue) {
 
 TransferExpiryMonitor.prototype.validateNotExpired = function (transfer) {
   if (transfer.expires_at &&
-    moment().isAfter(transfer.expires_at, moment.ISO_8601)) {
+    moment().isAfter(transfer.expires_at)) {
     throw new ExpiredTransferError('Cannot modify transfer ' +
       'after expires_at date')
   }
@@ -51,7 +51,7 @@ TransferExpiryMonitor.prototype.watch = function * (transfer) {
   // Star the expiry countdown if we're not already watching it
   if (!this.queue.includes(transfer.id)) {
     const now = moment()
-    const expiry = moment(transfer.expires_at, moment.ISO_8601)
+    const expiry = moment(transfer.expires_at)
     if (transfer.expires_at && now.isBefore(expiry)) {
       yield this.queue.insert(expiry, transfer.id)
 

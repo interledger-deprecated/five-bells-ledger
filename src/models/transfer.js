@@ -34,6 +34,10 @@ class Transfer extends Model {
       delete data.timeline
     }
 
+    if (typeof data.expires_at === 'string') {
+      data.expires_at = new Date(data.expires_at)
+    }
+
     return data
   }
 
@@ -59,6 +63,10 @@ class Transfer extends Model {
     data.timeline = _.pick(data, timelineProperties)
     data = _.omit(data, timelineProperties)
     if (_.isEmpty(data.timeline)) delete data.timeline
+
+    if (data.expires_at instanceof Date) {
+      data.expires_at = data.expires_at.toISOString()
+    }
 
     return data
   }
