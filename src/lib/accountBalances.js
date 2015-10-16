@@ -42,9 +42,9 @@ exports.applyDebits = function * applyDebits (transaction, accounts) {
 
     // Take money out of senders' accounts
     const account = yield Account.findById(sender, { transaction })
-    log.debug('sender ' + sender + ' balance: ' + account.get('balance') +
-      ' -> ' + (account.get('balance') - debitAccount.totalAmount))
-    account.set('balance', account.get('balance') - debitAccount.totalAmount)
+    log.debug('sender ' + sender + ' balance: ' + account.balance +
+      ' -> ' + (account.balance - debitAccount.totalAmount))
+    account.balance = account.balance - debitAccount.totalAmount
     yield account.save({ transaction })
   }
 }
@@ -55,9 +55,9 @@ exports.applyCredits = function * applyCredits (transaction, accounts) {
     const creditAccount = accounts[recipient]
 
     const account = yield Account.findById(recipient, { transaction })
-    log.debug('recipient ' + recipient + ' balance: ' + account.get('balance') +
-      ' -> ' + (account.get('balance') + creditAccount.totalAmount))
-    account.set('balance', account.get('balance') + creditAccount.totalAmount)
+    log.debug('recipient ' + recipient + ' balance: ' + account.balance +
+      ' -> ' + (account.balance + creditAccount.totalAmount))
+    account.balance = account.balance + creditAccount.totalAmount
     yield account.save({ transaction })
   }
 }

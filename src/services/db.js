@@ -13,7 +13,9 @@ const options = {
   omitNull: true
 }
 
-if (dbParts.protocol === 'sqlite:') {
+if (dbURI === 'sqlite://:memory:') {
+  options.storage = ':memory:'
+} else if (dbParts.protocol === 'sqlite:') {
   options.storage = dbParts.pathname
 }
 const db = new Sequelize(config.db.uri, options)

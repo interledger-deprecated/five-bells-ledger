@@ -27,9 +27,9 @@ Breaking down that command:
 
 Configuration options:
 
-* `BIND_IP` (default: `0.0.0.0`) IP that Five Bells Ledger will bind to.
-* `PORT` (default: `3000`) Port that Five Bells Ledger will listen on.
-* `HOSTNAME` (default: *[your hostname]*) Publicly visible hostname. This is important for things like generating globally unique IDs. Make sure this is a hostname that all your clients will be able to see. The default should be fine for local testing.
-* `PUBLIC_PORT` (default: `$PORT`) Publicly visible port. You can set this if your public port differs from the listening port, e.g. because the ledger is running behind a proxy.
-* `PUBLIC_HTTPS` (default: `''`) Whether or not the publicly visible instance of Five Bells Ledger is using HTTPS.
-* `DB_URI` (required; e.g.: `mysql://root:password@localhost/fivebells`) URI for connecting to a database.
+* `LEDGER_BIND_IP` (default: `0.0.0.0`) IP that Five Bells Ledger will bind to.
+* `LEDGER_PORT` (default: `3000`) Port that Five Bells Ledger will listen on.
+* `LEDGER_HOSTNAME` (default: *[your hostname]*) Publicly visible hostname. This is important for things like generating globally unique IDs. Make sure this is a hostname that all your clients will be able to see. The default should be fine for local testing.
+* `LEDGER_PUBLIC_PORT` (default: `$PORT`) Publicly visible port. You can set this if your public port differs from the listening port, e.g. because the ledger is running behind a proxy.
+* `LEDGER_PUBLIC_HTTPS` (default: `''`) Whether or not the publicly visible instance of Five Bells Ledger is using HTTPS.
+* `LEDGER_DB_URI` (required; e.g.: `mysql://root:password@localhost/fivebells`) URI for connecting to a database.

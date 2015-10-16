@@ -3,9 +3,9 @@
 const _ = require('lodash')
 const sinon = require('sinon')
 const app = require('../app')
-const logger = require('../services/log')
-const config = require('../services/config')
-const transferExpiryMonitor = require('../services/transferExpiryMonitor')
+const logger = require('../src/services/log')
+const config = require('../src/services/config')
+const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
@@ -122,7 +122,6 @@ describe('Transfer State', function () {
         .expect(function (res) {
           let validationResult = validate('TransferStateReceipt', res.body)
           if (!validationResult.valid) {
-            console.log(validationResult)
             throw new Error('Not a valid TransferStateReceipt')
           }
         })

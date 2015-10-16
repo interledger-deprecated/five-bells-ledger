@@ -5,9 +5,9 @@ const expect = chai.expect
 const sinon = require('sinon')
 const sinonChai = require('sinon-chai')
 chai.use(sinonChai)
-const logger = require('../services/log')
+const logger = require('../src/services/log')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
-const TimeQueue = require('../lib/timeQueue').TimeQueue
+const TimeQueue = require('../src/lib/timeQueue').TimeQueue
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 

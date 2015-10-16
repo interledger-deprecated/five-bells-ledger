@@ -5,11 +5,11 @@ const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const expect = require('chai').expect
 const app = require('../app')
-const logger = require('../services/log')
+const logger = require('../src/services/log')
 const appHelper = require('./helpers/app')
 const dbHelper = require('./helpers/db')
-const Subscription = require('../models/subscription').Subscription
-const uri = require('../services/uriManager')
+const Subscription = require('../src/models/subscription').Subscription
+const uri = require('../src/services/uriManager')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 
 describe('Subscriptions', function () {
@@ -59,7 +59,7 @@ describe('Subscriptions', function () {
 
       // Check that the subscription landed in the database
       const id = uri.parse(this.exampleSubscription.id, 'subscription').id
-      expect((yield Subscription.findById(id)).toJSONExternal())
+      expect((yield Subscription.findById(id)).getDataExternal())
         .to.deep.equal(this.exampleSubscription)
     })
 
@@ -74,7 +74,7 @@ describe('Subscriptions', function () {
 
       // Check that the subscription url is changed in the database
       const id = uri.parse(this.existingSubscription.id, 'subscription').id
-      expect((yield Subscription.findById(id)).toJSONExternal())
+      expect((yield Subscription.findById(id)).getDataExternal())
         .to.deep.equal(this.existingSubscription)
     })
   //

@@ -44,7 +44,7 @@ const UnauthorizedError =
  *
  * @returns {void}
  */
-exports.fetch = function * fetch () {
+exports.getResource = function * fetch () {
   let id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
@@ -57,7 +57,7 @@ exports.fetch = function * fetch () {
 
   jsonld.setContext(this, 'transfer.jsonld')
 
-  this.body = transfer.toJSONExternal()
+  this.body = transfer.getDataExternal()
 }
 
 /**
@@ -77,7 +77,7 @@ exports.fetch = function * fetch () {
  *
  * @returns {void}
  */
-exports.getState = function * getState () {
+exports.getStateResource = function * getState () {
   let id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
@@ -90,7 +90,7 @@ exports.getState = function * getState () {
 
   let message = {
     id: uri.make('transfer', transfer.id),
-    state: transfer.get('state')
+    state: transfer.state
   }
   let messageHash = hashJSON(message)
   let signature = tweetnacl.util.encodeBase64(
@@ -110,35 +110,35 @@ exports.getState = function * getState () {
 }
 
 function updateTransferObject (originalTransfer, transfer) {
-  let updatedTransfer = _.cloneDeep(originalTransfer)
+  let updatedTransferData = originalTransfer.getData()
 
   // Ignore null properties
-  updatedTransfer = _.omit(updatedTransfer, _.isNull)
+  updatedTransferData = _.omit(updatedTransferData, _.isNull)
 
   // Ignore internally managed properties
-  transfer.state = updatedTransfer.state
-  transfer.created_at = updatedTransfer.created_at
-  transfer.updated_at = updatedTransfer.updated_at
-  transfer.proposed_at = updatedTransfer.proposed_at
-  transfer.pre_prepared_at = updatedTransfer.pre_prepared_at
-  transfer.prepared_at = updatedTransfer.prepared_at
-  transfer.pre_executed_at = updatedTransfer.pre_executed_at
-  transfer.executed_at = updatedTransfer.executed_at
+  transfer.state = updatedTransferData.state
+  transfer.created_at = updatedTransferData.created_at
+  transfer.updated_at = updatedTransferData.updated_at
+  transfer.proposed_at = updatedTransferData.proposed_at
+  transfer.pre_prepared_at = updatedTransferData.pre_prepared_at
+  transfer.prepared_at = updatedTransferData.prepared_at
+  transfer.pre_executed_at = updatedTransferData.pre_executed_at
+  transfer.executed_at = updatedTransferData.executed_at
 
   // Ignore undefined properties
-  transfer = _.omit(transfer, _.isUndefined)
+  const transferData = _.omit(transfer.getData(), _.isUndefined)
 
   // Clients can add authorizations
   // The validity of these authorizations will be checked
   // in the validateAuthorizations function
-  _.forEach(updatedTransfer.debits, function (funds, i) {
+  _.forEach(updatedTransferData.debits, function (funds, i) {
     if (!funds.authorized &&
       transfer.debits[i] &&
       transfer.debits[i].authorized) {
       funds.authorized = true
     }
   })
-  _.forEach(updatedTransfer.credits, function (funds, i) {
+  _.forEach(updatedTransferData.credits, function (funds, i) {
     if (!funds.authorized &&
       transfer.credits[i] &&
       transfer.credits[i].authorized) {
@@ -148,7 +148,7 @@ function updateTransferObject (originalTransfer, transfer) {
 
   // Clients may fulfill the execution condition
   if (transfer.execution_condition_fulfillment) {
-    updatedTransfer.execution_condition_fulfillment =
+    updatedTransferData.execution_condition_fulfillment =
       transfer.execution_condition_fulfillment
   }
 
@@ -157,16 +157,17 @@ function updateTransferObject (originalTransfer, transfer) {
   }
 
   // The old and new objects should now be exactly equal
-  if (!_.isEqual(updatedTransfer, transfer)) {
+  if (!_.isEqual(updatedTransferData, transferData)) {
     // If they aren't, this means the user tried to update something they're not
     // supposed to be able to modify.
     // TODO InvalidTransformationError
     throw new InvalidModificationError(
       'Transfer may not be modified in this way',
-      diff(updatedTransfer, transfer))
+      diff(updatedTransferData, transferData))
   }
 
-  return updatedTransfer
+  originalTransfer.setData(updatedTransferData)
+  return originalTransfer
 }
 
 function * processSubscriptions (transfer) {
@@ -194,7 +195,7 @@ function * processSubscriptions (transfer) {
         body: {
           id: uri.make('subscription', subscription.id),
           event: 'transfer.update',
-          resource: Transfer.build(transfer).toJSONExternal()
+          resource: transfer.getDataExternal()
         }
       })
     })
@@ -208,7 +209,7 @@ function * processSubscriptions (transfer) {
   }
 }
 
-function validateAuthorizations (authorizedAccount, transfer, transferFromDb) {
+function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
   // Check that the authorizedAccount is actually relevant to this transfer
   if (authorizedAccount) {
     if (!_.includes(_.pluck(transfer.debits, 'account'), authorizedAccount) &&
@@ -231,7 +232,7 @@ function validateAuthorizations (authorizedAccount, transfer, transferFromDb) {
     }
 
     if (debit.account !== authorizedAccount &&
-      (!transferFromDb || !transferFromDb.debits[debitIndex].authorized)) {
+      (!previousDebits || !previousDebits[debitIndex].authorized)) {
       throw new UnauthorizedError('Invalid attempt to authorize debit')
     }
   })
@@ -328,7 +329,7 @@ function * processStateTransitions (tr, transfer) {
  * @param {String} id Transfer UUID
  * @returns {void}
  */
-exports.create = function * create () {
+exports.putResource = function * create () {
   const _this = this
 
   let id = _this.params.id
@@ -393,15 +394,16 @@ exports.create = function * create () {
 
   // TODO Validate that the execution_condition_fulfillment is correct
 
-  let originalTransfer
+  let originalTransfer, previousDebits
   yield db.transaction(function *(transaction) {
     originalTransfer = yield Transfer.findById(transfer.id, { transaction })
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
+      previousDebits = originalTransfer.getData().debits
 
       // This method will update the original transfer object using the new
       // version, but only allowing specific fields to change.
-      transfer = updateTransferObject(originalTransfer.toJSON(), transfer)
+      transfer = updateTransferObject(originalTransfer, transfer)
     } else {
       // A brand-new transfer will start out as proposed
       updateState(transfer, 'proposed')
@@ -410,13 +412,13 @@ exports.create = function * create () {
     // This method will check that any authorized:true fields added can
     // only be added by the owner of the account
     // _this.req.user is set by the passport middleware
-    validateAuthorizations(_this.req.user, transfer, originalTransfer)
+    validateAuthorizations(_this.req.user, transfer, previousDebits)
 
     yield processStateTransitions(transaction, transfer)
 
     // Store transfer in database
     if (originalTransfer) {
-      yield originalTransfer.update(transfer, { transaction })
+      yield transfer.save({ transaction })
     } else {
       yield Transfer.create(transfer, { transaction })
     }
@@ -435,6 +437,6 @@ exports.create = function * create () {
 
   log.debug('changes written to database')
 
-  this.body = Transfer.build(transfer).toJSONExternal()
+  this.body = transfer.getDataExternal()
   this.status = originalTransfer ? 200 : 201
 }
