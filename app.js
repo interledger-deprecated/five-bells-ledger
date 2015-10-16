@@ -1,11 +1,11 @@
 /* @flow */
 'use strict'
 
-const health = require('./controllers/health')
-const transfers = require('./controllers/transfers')
-const accounts = require('./controllers/accounts')
-const subscriptions = require('./controllers/subscriptions')
-const timerWorker = require('./services/timerWorker')
+const health = require('./src/controllers/health')
+const transfers = require('./src/controllers/transfers')
+const accounts = require('./src/controllers/accounts')
+const subscriptions = require('./src/controllers/subscriptions')
+const timerWorker = require('./src/services/timerWorker')
 const compress = require('koa-compress')
 const serve = require('koa-static')
 const router = require('koa-router')()
@@ -14,14 +14,14 @@ const passport = require('koa-passport')
 const errorHandler = require('@ripple/five-bells-shared/middlewares/error-handler')
 const koa = require('koa')
 const path = require('path')
-const log = require('./services/log')
+const log = require('./src/services/log')
 const logger = require('koa-mag')
-const config = require('./services/config')
-const models = require('./models')
+const config = require('./src/services/config')
+const models = require('./src/models')
 const app = module.exports = koa()
 
 // Configure passport
-require('./services/auth')
+require('./src/services/auth')
 
 // Logger
 app.use(logger())

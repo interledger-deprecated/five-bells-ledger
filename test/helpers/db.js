@@ -1,8 +1,8 @@
 'use strict'
 
-const Account = require('../../models/account').Account
-const Transfer = require('../../models/transfer').Transfer
-const Subscription = require('../../models/subscription').Subscription
+const Account = require('../../src/models/account').Account
+const Transfer = require('../../src/models/transfer').Transfer
+const Subscription = require('../../src/models/subscription').Subscription
 
 exports.reset = function () {
   return [

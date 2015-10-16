@@ -5,11 +5,11 @@ const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const expect = require('chai').expect
 const app = require('../app')
-const logger = require('../services/log')
+const logger = require('../src/services/log')
 const appHelper = require('./helpers/app')
 const dbHelper = require('./helpers/db')
-const Subscription = require('../models/subscription').Subscription
-const uri = require('../services/uriManager')
+const Subscription = require('../src/models/subscription').Subscription
+const uri = require('../src/services/uriManager')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 
 describe('Subscriptions', function () {

@@ -4,12 +4,12 @@ const _ = require('lodash')
 const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const app = require('../app')
-const logger = require('../services/log')
+const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
-const transferExpiryMonitor = require('../services/transferExpiryMonitor')
+const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
