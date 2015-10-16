@@ -30,26 +30,26 @@ app.use(errorHandler({log: log('error-handler')}))
 app.use(cors({expose: ['link']}))
 app.use(passport.initialize())
 
-router.get('/health', health.get)
+router.get('/health', health.getResource)
 
 router.put('/transfers/:id',
   passport.authenticate(['basic', 'anonymous'], {
     session: false
   }),
   models.Transfer.bodyParser(),
-  transfers.create)
+  transfers.putResource)
 
-router.get('/transfers/:id', transfers.fetch)
-router.get('/transfers/:id/state', transfers.getState)
+router.get('/transfers/:id', transfers.getResource)
+router.get('/transfers/:id/state', transfers.getStateResource)
 
-router.get('/accounts', accounts.find)
-router.get('/accounts/:id', accounts.fetch)
+router.get('/accounts', accounts.getCollection)
+router.get('/accounts/:id', accounts.getResource)
 router.put('/accounts/:id', models.Account.bodyParser(), accounts.putResource)
 
-router.post('/subscriptions', models.Subscription.bodyParser(), subscriptions.create)
-router.get('/subscriptions/:id', subscriptions.fetch)
-router.put('/subscriptions/:id', models.Subscription.bodyParser(), subscriptions.update)
-router.delete('/subscriptions/:id', subscriptions.remove)
+router.post('/subscriptions', models.Subscription.bodyParser(), subscriptions.postResource)
+router.get('/subscriptions/:id', subscriptions.getResource)
+router.put('/subscriptions/:id', models.Subscription.bodyParser(), subscriptions.putResource)
+router.delete('/subscriptions/:id', subscriptions.deleteResource)
 
 app.use(router.middleware())
 app.use(router.routes())

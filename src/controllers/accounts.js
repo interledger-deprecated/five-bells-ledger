@@ -8,7 +8,7 @@ const request = require('@ripple/five-bells-shared/utils/request')
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
 const Account = require('../models/account').Account
 
-exports.find = function * find () {
+exports.getCollection = function * find () {
   const accounts = yield Account.findAll()
   this.body = _.invoke(accounts, 'toJSONExternal')
 }
@@ -28,7 +28,7 @@ exports.find = function * find () {
  *
  * @returns {void}
  */
-exports.fetch = function * fetch () {
+exports.getResource = function * fetch () {
   let id = this.params.id
   request.validateUriParameter('id', id, 'Identifier')
   id = id.toLowerCase()

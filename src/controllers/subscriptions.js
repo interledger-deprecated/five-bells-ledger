@@ -62,7 +62,7 @@ function * storeSubscription (subscription) {
  *
  * @returns {void}
  */
-exports.fetch = function * fetch () {
+exports.getResource = function * fetch () {
   let id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
@@ -94,7 +94,7 @@ exports.fetch = function * fetch () {
  *
  * @returns {void}
  */
-exports.create = function * create () {
+exports.postResource = function * create () {
   const subscription = this.body
 
   // Generate a unique subscription ID outside of the transaction block
@@ -112,7 +112,7 @@ exports.create = function * create () {
   this.status = 201
 }
 
-exports.update = function * update () {
+exports.putResource = function * update () {
   let id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
@@ -152,7 +152,7 @@ exports.update = function * update () {
  *
  * @returns {void}
  */
-exports.remove = function * remove () {
+exports.deleteResource = function * remove () {
   let id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()

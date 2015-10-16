@@ -13,7 +13,7 @@
  *
  * @returns {void}
  */
-exports.get = function * health () {
+exports.getResource = function * health () {
   // TODO: Add some checks, e.g. database status
   this.body = {'status': 'OK'}
 }

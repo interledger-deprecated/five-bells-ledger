@@ -44,7 +44,7 @@ const UnauthorizedError =
  *
  * @returns {void}
  */
-exports.fetch = function * fetch () {
+exports.getResource = function * fetch () {
   let id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
@@ -77,7 +77,7 @@ exports.fetch = function * fetch () {
  *
  * @returns {void}
  */
-exports.getState = function * getState () {
+exports.getStateResource = function * getState () {
   let id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
@@ -328,7 +328,7 @@ function * processStateTransitions (tr, transfer) {
  * @param {String} id Transfer UUID
  * @returns {void}
  */
-exports.create = function * create () {
+exports.putResource = function * create () {
   const _this = this
 
   let id = _this.params.id
