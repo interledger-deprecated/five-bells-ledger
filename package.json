@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "migrate": "sequelize db:migrate",
     "test": "NODE_ENV=unit BLUEBIRD_DEBUG=1 node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
+    "apidoc": "./node_modules/.bin/apidoc -o apidoc-out -i src/controllers/"
   },
   "engines": {
     "node": ">=0.12",
@@ -59,6 +60,7 @@
     "tedious": "^1.12.3"
   },
   "devDependencies": {
+    "apidoc": "^0.13.1",
     "chai": "^3.2.0",
     "co-mocha": "^1.1.0",
     "co-supertest": "0.0.10",

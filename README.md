@@ -2,9 +2,54 @@
 
 > A reference implementation of the Five Bells Ledger API
 
-## Usage (Docker)
+## Usage
 
-Note: You need a local database instance listening on port 8080. Here is how to set that up:
+You can see the ledger in action as part of the [`five-bells-demo`](https://github.com/ripple/five-bells-demo)!
+
+To run the ledger as a standalone server:
+
+### Step 1: Clone repo
+
+``` sh
+git clone https://github.com/interledger/five-bells-ledger.git
+cd five-bells-ledger
+```
+
+### Step 2: Install dependencies
+
+``` sh
+npm install
+```
+
+### Step 3: Run it!
+
+To run it using an in-memory database (the simplest option), run:
+
+``` sh
+LEDGER_DB_URI=sqlite://:memory: npm start
+```
+
+Or run:
+
+```sh
+npm start
+```
+
+With the following configuration options set as environment variables:
+
+* `LEDGER_DB_URI` (required; e.g.: `mysql://root:password@localhost/fivebells`) URI for connecting to a database. Defaults to `sqlite` if no database is set.
+* `LEDGER_PORT` (default: `3000`) Port that Five Bells Ledger will listen on.
+* `LEDGER_BIND_IP` (default: `0.0.0.0`) IP that Five Bells Ledger will bind to.
+* `LEDGER_HOSTNAME` (default: *[your hostname]*) Publicly visible hostname. This is important for things like generating globally unique IDs. Make sure this is a hostname that all your clients will be able to see. The default should be fine for local testing.
+* `LEDGER_PUBLIC_PORT` (default: `$PORT`) Publicly visible port. You can set this if your public port differs from the listening port, e.g. because the ledger is running behind a proxy.
+* `LEDGER_PUBLIC_HTTPS` (default: `''`) Whether or not the publicly visible instance of Five Bells Ledger is using HTTPS.
+
+
+## Running with Docker (Alternative Method)
+
+This project can be run in a [Docker](https://www.docker.com/) container.
+
+You need a local database instance listening on port 8080. Here is how to set that up:
 
 ``` sh
 docker run --name mysql -e MYSQL_ROOT_PASSWORD=password -p 3306:3306 -d mysql
@@ -12,10 +57,10 @@ export LEDGER_DB_URI=mysql://root:password@localhost/fivebells
 npm run migrate
 ```
 
-Afterwards just run Five Bells Ledger:
+Then run the following (with the same environment variables) as described above:
 
 ``` sh
-docker run -it --rm --net=host -e PORT=1337 -e LEDGER_DB_URI=$LEDGER_DB_URI quay.io/ripple/five-bells-ledger
+docker run -it --rm --net=host -e LEDGER_PORT=1337 -e LEDGER_DB_URI=$LEDGER_DB_URI quay.io/ripple/five-bells-ledger
 ```
 
 Breaking down that command:
@@ -23,13 +68,4 @@ Breaking down that command:
 * `-it` Run Five Bells Ledger in an interactive terminal.
 * `--rm` Delete container when it's done running.
 * `--net=host` Don't isolate container into its own virtual network. This allows Five Bells Ledger to see the database that we set up above.
-* `-e PORT=1337` Set the ledger's port to 1337. This is just an example for how to set a config option.
-
-Configuration options:
-
-* `LEDGER_BIND_IP` (default: `0.0.0.0`) IP that Five Bells Ledger will bind to.
-* `LEDGER_PORT` (default: `3000`) Port that Five Bells Ledger will listen on.
-* `LEDGER_HOSTNAME` (default: *[your hostname]*) Publicly visible hostname. This is important for things like generating globally unique IDs. Make sure this is a hostname that all your clients will be able to see. The default should be fine for local testing.
-* `LEDGER_PUBLIC_PORT` (default: `$PORT`) Publicly visible port. You can set this if your public port differs from the listening port, e.g. because the ledger is running behind a proxy.
-* `LEDGER_PUBLIC_HTTPS` (default: `''`) Whether or not the publicly visible instance of Five Bells Ledger is using HTTPS.
-* `LEDGER_DB_URI` (required; e.g.: `mysql://root:password@localhost/fivebells`) URI for connecting to a database.
+* `-e LEDGER_PORT=1337` Set the ledger's port to 1337. This is just an example for how to set a config option.
