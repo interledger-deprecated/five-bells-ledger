@@ -32,9 +32,9 @@
       }
     },
     "@ripple/five-bells-shared": {
-      "version": "7.0.0",
-      "from": "@ripple/five-bells-shared@7.0.0",
-      "resolved": "https://registry.npmjs.org/@ripple/five-bells-shared/-/five-bells-shared-7.0.0.tgz",
+      "version": "7.1.0",
+      "from": "@ripple/five-bells-shared@7.1.0",
+      "resolved": "https://registry.npmjs.org/@ripple/five-bells-shared/-/five-bells-shared-7.1.0.tgz",
       "dependencies": {
         "canonical-json": {
           "version": "0.0.4",
