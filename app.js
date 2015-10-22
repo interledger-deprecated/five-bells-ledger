@@ -1,6 +1,6 @@
 /* @flow */
 'use strict'
-
+const co = require('co')
 const health = require('./src/controllers/health')
 const transfers = require('./src/controllers/transfers')
 const accounts = require('./src/controllers/accounts')
@@ -17,6 +17,7 @@ const path = require('path')
 const log = require('./src/services/log')
 const logger = require('koa-mag')
 const config = require('./src/services/config')
+const db = require('./src/services/db')
 const models = require('./src/models')
 const app = module.exports = koa()
 
@@ -56,18 +57,21 @@ app.use(router.routes())
 
 // Serve static files
 app.use(serve(path.join(__dirname, 'public')))
-app.use(serve(path.join(__dirname, 'public')))
 
 // Compress
 app.use(compress())
 
 if (!module.parent) {
-  // Start timerWorker to trigger the transferExpiryMonitor
-  // when transfers are going to expire
-  timerWorker.start()
+  co(function * () {
+    // Start timerWorker to trigger the transferExpiryMonitor
+    // when transfers are going to expire
+    timerWorker.start()
 
-  app.listen(config.server.port)
-  log('app').info('ledger listening on ' + config.server.bind_ip + ':' +
-    config.server.port)
-  log('app').info('public at ' + config.server.base_uri)
+    if (config.db.sync) yield db.sync()
+
+    app.listen(config.server.port)
+    log('app').info('ledger listening on ' + config.server.bind_ip + ':' +
+      config.server.port)
+    log('app').info('public at ' + config.server.base_uri)
+  }).catch((err) => log('app').critical(err && err.stack ? err.stack : err))
 }
