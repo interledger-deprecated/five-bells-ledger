@@ -68,6 +68,15 @@ if (!module.parent) {
     timerWorker.start()
 
     if (config.db.sync) yield db.sync()
+    if (db.options.dialect === 'sqlite') {
+      yield db.query('PRAGMA busy_timeout = 10000;')
+      db.getQueryInterface().QueryGenerator.startTransactionQuery = function (transaction, options) {
+        if (options.parent) {
+          return 'SAVEPOINT ' + this.quoteIdentifier(transaction.name) + ';'
+        }
+        return 'BEGIN IMMEDIATE;'
+      }
+    }
 
     app.listen(config.server.port)
     log('app').info('ledger listening on ' + config.server.bind_ip + ':' +
