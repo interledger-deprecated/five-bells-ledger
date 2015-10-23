@@ -4,6 +4,7 @@ const _ = require('lodash')
 const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const expect = require('chai').expect
+const sinon = require('sinon')
 const app = require('../app')
 const logger = require('../src/services/log')
 const appHelper = require('./helpers/app')
@@ -11,6 +12,9 @@ const dbHelper = require('./helpers/db')
 const Subscription = require('../src/models/subscription').Subscription
 const uri = require('../src/services/uriManager')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
+const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
+
+const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
 describe('Subscriptions', function () {
   logHelper(logger)
@@ -19,12 +23,16 @@ describe('Subscriptions', function () {
     appHelper.create(this, app)
 
     // Define example data
-    this.exampleTransfer = require('./data/transferSimple')
-    this.exampleSubscription = require('./data/subscription1')
-    this.existingSubscription = require('./data/subscription2')
+    this.exampleTransfer = _.cloneDeep(require('./data/transferSimple'))
+    this.exampleSubscription = _.cloneDeep(require('./data/subscription1'))
+    this.existingSubscription = _.cloneDeep(require('./data/subscription2'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'))
 
     // Reset database
     yield dbHelper.reset()
+
+    // Use fake time
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
 
     // Store some example data
     yield dbHelper.addAccounts(_.values(require('./data/accounts')))
@@ -151,6 +159,34 @@ describe('Subscriptions', function () {
         .delete(this.existingSubscription.id)
         .expect(204)
         .end()
+    })
+  })
+
+  // TODO put all tests related to expiring transfers in one file
+  describe('Expired Transfer Notification', function () {
+    it('should notify subscribers for expired transfers', function * () {
+      const subscriberNock = nock('http://subscriber.example')
+        .post('/notifications')
+        .times(2) // once for original submission, once on expiry
+        .reply(204)
+
+      const transfer = this.transferWithExpiry
+      delete transfer.debits[0].authorized
+      delete transfer.debits[1].authorized
+
+      yield this.request()
+        .put(transfer.id)
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      this.clock.tick(1000)
+
+      // In production this function should be triggered by the worker started in app.js
+      yield transferExpiryMonitor.processExpiredTransfers()
+
+      // Make sure we were notified
+      subscriberNock.done()
     })
   })
 })
