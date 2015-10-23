@@ -68,6 +68,14 @@ if (!module.parent) {
     timerWorker.start()
 
     if (config.db.sync) yield db.sync()
+    if (db.options.dialect === 'sqlite') {
+      db.getQueryInterface().QueryGenerator.startTransactionQuery = function (transaction, options) {
+        if (options.parent) {
+          return 'SAVEPOINT ' + this.quoteIdentifier(transaction.name) + ';'
+        }
+        return 'BEGIN IMMEDIATE;'
+      }
+    }
 
     app.listen(config.server.port)
     log('app').info('ledger listening on ' + config.server.bind_ip + ':' +
