@@ -10,14 +10,13 @@ const config = require('../services/config')
 const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
 const log = require('../services/log')('transfers')
-const request = require('co-request')
 const Condition = require('@ripple/five-bells-condition').Condition
 const requestUtil = require('@ripple/five-bells-shared/utils/request')
 const updateState = require('../lib/updateState')
+const processSubscriptions = require('../lib/processSubscriptions')
 const jsonld = require('@ripple/five-bells-shared/utils/jsonld')
 const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
 const Transfer = require('../models/transfer').Transfer
-const Subscription = require('../models/subscription').Subscription
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
 const UnmetConditionError = require('@ripple/five-bells-shared/errors/unmet-condition-error')
 const InvalidModificationError =
@@ -164,45 +163,6 @@ function updateTransferObject (originalTransfer, transfer) {
 
   originalTransfer.setData(updatedTransferData)
   return originalTransfer
-}
-
-function * processSubscriptions (transfer) {
-  // TODO Get subscriptions for affected accounts only
-  // TODO Get subscriptions for specific events only
-  // const affectedAccounts = _([debitAccounts, creditAccounts])
-  //   .map(_.keys).flatten().value()
-  //
-  // function getSubscriptions(account) {
-  //   return db.get(['accounts', account, 'subscriptions'])
-  // }
-  // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
-  let subscriptions = yield Subscription.findAll()
-
-  if (subscriptions) {
-    subscriptions = _.values(subscriptions)
-
-    const notifications = subscriptions.map(function (subscription) {
-      log.debug('notifying ' + subscription.owner + ' at ' +
-        subscription.target)
-
-      return request(subscription.target, {
-        method: 'post',
-        json: true,
-        body: {
-          id: uri.make('subscription', subscription.id),
-          event: 'transfer.update',
-          resource: transfer.getDataExternal()
-        }
-      })
-    })
-
-    for (let result of yield notifications) {
-      if (result.statusCode >= 400) {
-        log.debug('remote error for notification ' + result.statusCode,
-          result.body)
-      }
-    }
-  }
 }
 
 function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
