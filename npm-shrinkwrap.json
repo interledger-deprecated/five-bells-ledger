@@ -1,6 +1,6 @@
 {
   "name": "@ripple/five-bells-ledger",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "dependencies": {
     "@ripple/five-bells-condition": {
       "version": "1.1.0",
