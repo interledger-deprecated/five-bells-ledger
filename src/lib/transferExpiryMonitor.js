@@ -5,6 +5,7 @@ const db = require('../services/db')
 const log = require('../services/log')('expiry monitor')
 const accountBalances = require('./accountBalances')
 const updateState = require('./updateState')
+const processSubscriptions = require('./processSubscriptions')
 const ExpiredTransferError = require('../errors/expired-transfer-error')
 const Transfer = require('../models/transfer').Transfer
 
@@ -41,6 +42,8 @@ function * expireTransfer (transferId) {
       let accountsToCredit =
       yield accountBalances.calculate(transaction, transfer.debits)
       yield accountBalances.applyCredits(transaction, accountsToCredit)
+
+      yield processSubscriptions(transfer)
     }
 
     log.debug('expired transfer: ' + transferId)
