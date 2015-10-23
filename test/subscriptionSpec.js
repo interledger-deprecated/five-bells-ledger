@@ -181,6 +181,7 @@ describe('Subscriptions', function () {
         .end()
 
       this.clock.tick(1000)
+
       // In production this function should be triggered by the worker started in app.js
       yield transferExpiryMonitor.processExpiredTransfers()
 

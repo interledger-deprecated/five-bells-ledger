@@ -65,7 +65,7 @@ if (!module.parent) {
   co(function * () {
     // Start timerWorker to trigger the transferExpiryMonitor
     // when transfers are going to expire
-    timerWorker.start()
+    yield timerWorker.start()
 
     if (config.db.sync) yield db.sync()
 

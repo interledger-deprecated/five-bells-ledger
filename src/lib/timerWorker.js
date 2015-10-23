@@ -13,16 +13,20 @@ function TimerWorker (timeQueue, transferExpiryMonitor) {
 }
 
 TimerWorker.prototype.start = function *() {
-  const self = this
+  const _this = this
 
   // Make sure we only have one listener waiting for new
   // items to be added to the timeQueue
-  if (!self.listener) {
-    self.listener = function *() {
-      yield self.start()
-    }
-    self.timeQueue.on('insert', self.listener)
+  _this.listener = function *() {
+    yield _this.processTimeQueue()
   }
+  _this.timeQueue.on('insert', _this.listener)
+
+  yield this.processTimeQueue()
+}
+
+TimerWorker.prototype.processTimeQueue = function *() {
+  const _this = this
 
   // Process expired transfers
   yield this.transferExpiryMonitor.processExpiredTransfers()
@@ -33,23 +37,27 @@ TimerWorker.prototype.start = function *() {
   }
   const earliestDate = this.timeQueue.getEarliestDate()
 
+  // Don't reschedule the timer if nothing is waiting
+  if (!earliestDate) {
+    return
+  }
+
   // If we set the timeout to greater than the MAX_32INT it
   // will be triggered right away so we'll just set it to
   // the longest possible timeout and that will cause us to check again
-  const timeoutDuration = Math.min(moment(earliestDate).diff(moment()),
-    MAX_32INT)
+  const timeoutDuration = Math.min(moment(earliestDate).diff(moment()), MAX_32INT)
   this.timeout = defer.setTimeout(function *() {
-    yield self.start()
+    yield _this.processTimeQueue()
   }, timeoutDuration)
 }
 
 TimerWorker.prototype.stop = function () {
-  const self = this
+  const _this = this
 
-  clearTimeout(self.timeout)
-  if (self.listener) {
-    self.timeQueue.off('insert', self.listener)
-    self.listener = null
+  clearTimeout(_this.timeout)
+  if (_this.listener) {
+    _this.timeQueue.off('insert', _this.listener)
+    _this.listener = null
   }
 }
 
