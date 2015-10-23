@@ -69,6 +69,7 @@ if (!module.parent) {
 
     if (config.db.sync) yield db.sync()
     if (db.options.dialect === 'sqlite') {
+      yield db.query('PRAGMA busy_timeout = 10000;')
       db.getQueryInterface().QueryGenerator.startTransactionQuery = function (transaction, options) {
         if (options.parent) {
           return 'SAVEPOINT ' + this.quoteIdentifier(transaction.name) + ';'
