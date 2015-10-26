@@ -20,11 +20,11 @@ const Transfer = require('../models/transfer').Transfer
 const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
 const UnmetConditionError = require('@ripple/five-bells-shared/errors/unmet-condition-error')
 const InvalidModificationError =
-  require('@ripple/five-bells-shared/errors/invalid-modification-error')
+require('@ripple/five-bells-shared/errors/invalid-modification-error')
 const UnprocessableEntityError =
-  require('@ripple/five-bells-shared/errors/unprocessable-entity-error')
+require('@ripple/five-bells-shared/errors/unprocessable-entity-error')
 const UnauthorizedError =
-  require('@ripple/five-bells-shared/errors/unauthorized-error')
+require('@ripple/five-bells-shared/errors/unauthorized-error')
 
 /**
  * @api {get} /transfers/:id Get local transfer object
@@ -263,17 +263,60 @@ function * processStateTransitions (tr, transfer) {
  * @apiParam {String} id Transfer
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
- * @apiParamExample {json} Request Body Example
- *    {
- *      "id": "155dff3f-4915-44df-a707-acc4b527bcbd",
- *      "debits": {
- *        "account": "alice",
- *        "amount": "10"
+ * @apiExample {shell} Basic Transfer:
+ *    curl -x PUT -H "Content-Type: application/json" -d
+ *    '{
+ *      "id": "http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+ *      "ledger": "http://usd-ledger.example/USD",
+ *      "debits": [{
+ *        "account": "http://usd-ledger.example/USD/accounts/alice",
+ *        "amount": "50",
+ *        "authorized": true
+ *      }],
+ *      "credits": [{
+ *        "account": "http://usd-ledger.example/USD/accounts/bob",
+ *        "amount": "50"
+ *      }],
+ *      "execution_condition": {
+ *        "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
+ *        "signer": "http://ledger.example",
+ *        "type": "ed25519-sha512",
+ *        "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
  *      },
- *      "credits": {
- *        "account": "bob",
- *        "amount": "10"
- *      }
+ *      "execution_condition_fulfillment": {
+ *        "type": "ed25519-sha512",
+ *        "signature": "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
+ *      },
+ *      "expires_at": "2015-06-16T00:00:01.000Z"
+ *    }'
+ *    https://trader.example/payments/c9377529-d7df-4aa1-ae37-ad5148612003
+ *
+ * @apiSuccessExample {json} 201 New Transfer Response:
+ *    HTTP/1.1 201 CREATED
+ *    {
+ *      "id": "http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+ *      "ledger": "http://usd-ledger.example/USD",
+ *      "debits": [{
+ *        "account": "http://usd-ledger.example/USD/accounts/alice",
+ *        "amount": "50",
+ *        "authorized": true
+ *      }],
+ *      "credits": [{
+ *        "account": "http://usd-ledger.example/USD/accounts/bob",
+ *        "amount": "50"
+ *      }],
+ *      "execution_condition": {
+ *        "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
+ *        "signer": "http://ledger.example",
+ *        "type": "ed25519-sha512",
+ *        "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
+ *      },
+ *      "execution_condition_fulfillment": {
+ *        "type": "ed25519-sha512",
+ *        "signature": "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
+ *      },
+ *      "expires_at": "2015-06-16T00:00:01.000Z",
+ *      "state": "executed"
  *    }
  *
  * @apiUse InsufficientFundsError
@@ -352,7 +395,7 @@ exports.putResource = function * create () {
 
   let originalTransfer, previousDebits
   yield db.transaction(function *(transaction) {
-    originalTransfer = yield Transfer.findById(transfer.id, { transaction })
+    originalTransfer = yield Transfer.findById(transfer.id, {transaction})
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
       previousDebits = originalTransfer.getData().debits
@@ -374,9 +417,9 @@ exports.putResource = function * create () {
 
     // Store transfer in database
     if (originalTransfer) {
-      yield transfer.save({ transaction })
+      yield transfer.save({transaction})
     } else {
-      yield Transfer.create(transfer, { transaction })
+      yield Transfer.create(transfer, {transaction})
     }
 
     // `processSubscriptions` must be after the transfer is stored in the
