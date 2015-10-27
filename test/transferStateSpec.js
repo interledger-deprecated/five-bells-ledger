@@ -59,29 +59,29 @@ describe('Transfer State', function () {
 
     it('should return a 200 and a signed receipt including the message, ' +
       'messageHash, type, public_key, and signature', function *() {
-        yield dbHelper.addTransfers([this.executedTransfer])
+      yield dbHelper.addTransfers([this.executedTransfer])
 
-        const stateReceipt = {
-          id: this.executedTransfer.id,
-          state: this.executedTransfer.state
-        }
-        const stateReceiptHash = hashJSON(stateReceipt)
-        const signature = tweetnacl.util.encodeBase64(
-          tweetnacl.sign.detached(
-            tweetnacl.util.decodeBase64(stateReceiptHash),
-            this.keyPair.secretKey))
+      const stateReceipt = {
+        id: this.executedTransfer.id,
+        state: this.executedTransfer.state
+      }
+      const stateReceiptHash = hashJSON(stateReceipt)
+      const signature = tweetnacl.util.encodeBase64(
+        tweetnacl.sign.detached(
+          tweetnacl.util.decodeBase64(stateReceiptHash),
+          this.keyPair.secretKey))
 
-        yield this.request()
-          .get(this.executedTransfer.id + '/state')
-          .expect(200, {
-            message: stateReceipt,
-            type: 'ed25519-sha512',
-            signer: config.server.base_uri,
-            public_key: config.keys.ed25519.public,
-            signature: signature
-          })
-          .end()
-      })
+      yield this.request()
+        .get(this.executedTransfer.id + '/state')
+        .expect(200, {
+          message: stateReceipt,
+          type: 'ed25519-sha512',
+          signer: config.server.base_uri,
+          public_key: config.keys.ed25519.public,
+          signature: signature
+        })
+        .end()
+    })
 
     it('should return the correct state if the transfer is prepared',
       function *() {
@@ -130,40 +130,40 @@ describe('Transfer State', function () {
 
     it('should return a rejected transfer receipt if the expires_at date ' +
       'has passed', function *() {
-        const transfer = this.transferWithExpiry
-        delete transfer.debits[0].authorized
-        delete transfer.debits[1].authorized
+      const transfer = this.transferWithExpiry
+      delete transfer.debits[0].authorized
+      delete transfer.debits[1].authorized
 
-        yield this.request()
-          .put(transfer.id)
-          .send(transfer)
-          .expect(201)
-          .end()
+      yield this.request()
+        .put(transfer.id)
+        .send(transfer)
+        .expect(201)
+        .end()
 
-        const stateReceipt = {
-          id: transfer.id,
-          state: 'rejected'
-        }
-        const stateReceiptHash = hashJSON(stateReceipt)
-        const signature = tweetnacl.util.encodeBase64(
-          tweetnacl.sign.detached(
-            tweetnacl.util.decodeBase64(stateReceiptHash),
-            this.keyPair.secretKey))
+      const stateReceipt = {
+        id: transfer.id,
+        state: 'rejected'
+      }
+      const stateReceiptHash = hashJSON(stateReceipt)
+      const signature = tweetnacl.util.encodeBase64(
+        tweetnacl.sign.detached(
+          tweetnacl.util.decodeBase64(stateReceiptHash),
+          this.keyPair.secretKey))
 
-        // In production this function should be triggered by the worker started in app.js
-        this.clock.tick(1000)
-        yield transferExpiryMonitor.processExpiredTransfers()
+      // In production this function should be triggered by the worker started in app.js
+      this.clock.tick(1000)
+      yield transferExpiryMonitor.processExpiredTransfers()
 
-        yield this.request()
-          .get(transfer.id + '/state')
-          .expect(200, {
-            message: stateReceipt,
-            type: 'ed25519-sha512',
-            signer: config.server.base_uri,
-            public_key: config.keys.ed25519.public,
-            signature: signature
-          })
-          .end()
-      })
+      yield this.request()
+        .get(transfer.id + '/state')
+        .expect(200, {
+          message: stateReceipt,
+          type: 'ed25519-sha512',
+          signer: config.server.base_uri,
+          public_key: config.keys.ed25519.public,
+          signature: signature
+        })
+        .end()
+    })
   })
 })
