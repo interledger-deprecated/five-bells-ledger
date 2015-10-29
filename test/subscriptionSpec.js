@@ -13,6 +13,7 @@ const Subscription = require('../src/models/subscription').Subscription
 const uri = require('../src/services/uriManager')
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
+const notificationWorker = require('../src/services/notificationWorker')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -179,11 +180,13 @@ describe('Subscriptions', function () {
         .send(transfer)
         .expect(201)
         .end()
+      yield notificationWorker.processNotificationQueue()
 
       this.clock.tick(1000)
 
-      // In production this function should be triggered by the worker started in app.js
+      // In production this function should be triggered by the workers started in app.js
       yield transferExpiryMonitor.processExpiredTransfers()
+      yield notificationWorker.processNotificationQueue()
 
       // Make sure we were notified
       subscriberNock.done()

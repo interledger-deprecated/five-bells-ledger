@@ -1,17 +1,19 @@
 'use strict'
 
 const db = require('../../src/services/db')
+const Notification = require('../../src/models/notification').Notification
 const Account = require('../../src/models/account').Account
 const Transfer = require('../../src/models/transfer').Transfer
 const Subscription = require('../../src/models/subscription').Subscription
 
 exports.reset = function * () {
   yield db.sync()
-  yield [
-    Account.truncate(),
-    Transfer.truncate(),
-    Subscription.truncate()
-  ]
+  yield db.transaction(function * (transaction) {
+    yield Notification.truncate({ transaction })
+    yield Account.truncate({ transaction })
+    yield Transfer.truncate({ transaction })
+    yield Subscription.truncate({ transaction })
+  })
 }
 
 exports.addAccounts = function * (accounts) {

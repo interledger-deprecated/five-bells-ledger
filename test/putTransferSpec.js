@@ -12,6 +12,7 @@ const Account = require('../src/models/account').Account
 const Subscription = require('../src/models/subscription').Subscription
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
+const notificationWorker = require('../src/services/notificationWorker')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -168,38 +169,38 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 422 if a transfer is modified after its ' +
     'expiry date', function *() {
-      const transfer = this.transferWithExpiry
-      delete transfer.debits[0].authorized
+    const transfer = this.transferWithExpiry
+    delete transfer.debits[0].authorized
 
-      const transferNoAuthorization = _.cloneDeep(transfer)
-      delete transferNoAuthorization.debits[1].authorized
+    const transferNoAuthorization = _.cloneDeep(transfer)
+    delete transferNoAuthorization.debits[1].authorized
 
-      yield this.request()
-        .put(this.transferWithExpiry.id)
-        .send(transferNoAuthorization)
-        .expect(201)
-        .expect(_.assign({}, transferNoAuthorization, {
-          state: 'proposed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
+    yield this.request()
+      .put(this.transferWithExpiry.id)
+      .send(transferNoAuthorization)
+      .expect(201)
+      .expect(_.assign({}, transferNoAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
 
-      this.clock.tick(2000)
+    this.clock.tick(2000)
 
-      yield this.request()
-        .put(this.transferWithExpiry.id)
-        .auth('candice', 'candice')
-        .send(transfer)
-        .expect(422)
-        .expect(function (res) {
-          expect(res.body.id).to.equal('ExpiredTransferError')
-          expect(res.body.message).to.equal('Cannot modify transfer after ' +
-            'expires_at date')
-        })
-        .end()
-    })
+    yield this.request()
+      .put(this.transferWithExpiry.id)
+      .auth('candice', 'candice')
+      .send(transfer)
+      .expect(422)
+      .expect(function (res) {
+        expect(res.body.id).to.equal('ExpiredTransferError')
+        expect(res.body.message).to.equal('Cannot modify transfer after ' +
+          'expires_at date')
+      })
+      .end()
+  })
 
   it('should return 422 if the expires_at field is removed', function *() {
     let transfer = this.transferWithExpiry
@@ -354,50 +355,50 @@ describe('PUT /transfers/:id', function () {
 
   it('should accept a transfer with an upper case ID but convert the ID ' +
     'to lower case', function *() {
-      const transfer = _.cloneDeep(this.exampleTransfer)
-      // This URI uppercases everything that should be case-insensitive
-      const prefix = 'HTTP://LOCALHOST/transfers/'
-      transfer.id = prefix + transfer.id.slice(prefix.length)
+    const transfer = _.cloneDeep(this.exampleTransfer)
+    // This URI uppercases everything that should be case-insensitive
+    const prefix = 'HTTP://LOCALHOST/transfers/'
+    transfer.id = prefix + transfer.id.slice(prefix.length)
 
-      yield this.request()
-        .put(this.exampleTransfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(_.assign({}, transfer, {
-          id: transfer.id.toLowerCase(),
-          state: 'executed',
-          timeline: {
-            executed_at: '2015-06-16T00:00:00.000Z',
-            pre_executed_at: '2015-06-16T00:00:00.000Z',
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
-    })
+    yield this.request()
+      .put(this.exampleTransfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(_.assign({}, transfer, {
+        id: transfer.id.toLowerCase(),
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+  })
 
   /* Authorization */
 
   it('should set the transfer state to "proposed" and authorized to false ' +
     'if no authorization is provided', function *() {
-      const transfer = this.exampleTransfer
-      const transferWithoutAuthorization = _.cloneDeep(transfer)
-      delete transferWithoutAuthorization.debits[0].authorized
+    const transfer = this.exampleTransfer
+    const transferWithoutAuthorization = _.cloneDeep(transfer)
+    delete transferWithoutAuthorization.debits[0].authorized
 
-      yield this.request()
-        .put(transfer.id)
-        .send(transferWithoutAuthorization)
-        .expect(201)
-        .expect(_.assign({}, transferWithoutAuthorization, {
-          state: 'proposed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
-    })
+    yield this.request()
+      .put(transfer.id)
+      .send(transferWithoutAuthorization)
+      .expect(201)
+      .expect(_.assign({}, transferWithoutAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+  })
 
   it('should return 403 if invalid authorization is given', function *() {
     const transfer = this.exampleTransfer
@@ -418,22 +419,22 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 403 if authorization is provided that is irrelevant ' +
     'to the transfer', function *() {
-      const transfer = this.exampleTransfer
-      const transferWithoutAuthorization = _.cloneDeep(transfer)
-      delete transferWithoutAuthorization.debits[0].authorized
+    const transfer = this.exampleTransfer
+    const transferWithoutAuthorization = _.cloneDeep(transfer)
+    delete transferWithoutAuthorization.debits[0].authorized
 
-      yield this.request()
-        .put(transfer.id)
-        .auth('candice', 'candice')
-        .send(transferWithoutAuthorization)
-        .expect(403)
-        .expect(function (res) {
-          expect(res.body.id).to.equal('UnauthorizedError')
-          expect(res.body.message).to.equal('Unknown or invalid account ' +
-            '/ password')
-        })
-        .end()
-    })
+    yield this.request()
+      .put(transfer.id)
+      .auth('candice', 'candice')
+      .send(transferWithoutAuthorization)
+      .expect(403)
+      .expect(function (res) {
+        expect(res.body.id).to.equal('UnauthorizedError')
+        expect(res.body.message).to.equal('Unknown or invalid account ' +
+          '/ password')
+      })
+      .end()
+  })
 
   it('should return 403 if authorized:true is set without any authorization',
     function *() {
@@ -452,19 +453,19 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 403 if authorized:true is set for any debits that are ' +
     'not owned by the authorized account', function *() {
-      const transfer = this.multiDebitTransfer
+    const transfer = this.multiDebitTransfer
 
-      yield this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(403)
-        .expect(function (res) {
-          expect(res.body.id).to.equal('UnauthorizedError')
-          expect(res.body.message).to.equal('Invalid attempt to authorize debit')
-        })
-        .end()
-    })
+    yield this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(403)
+      .expect(function (res) {
+        expect(res.body.id).to.equal('UnauthorizedError')
+        expect(res.body.message).to.equal('Invalid attempt to authorize debit')
+      })
+      .end()
+  })
 
   it('should return 400 if an unauthorized debit is removed', function *() {
     const transfer = this.multiDebitTransfer
@@ -556,54 +557,54 @@ describe('PUT /transfers/:id', function () {
 
   it('should execute the transfer if it is authorized and ' +
     'there is no execution condition', function *() {
-      const transfer = this.exampleTransfer
+    const transfer = this.exampleTransfer
 
-      yield this.request()
-        .put(this.exampleTransfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(_.assign({}, transfer, {
-          state: 'executed',
-          timeline: {
-            executed_at: '2015-06-16T00:00:00.000Z',
-            pre_executed_at: '2015-06-16T00:00:00.000Z',
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
-    })
+    yield this.request()
+      .put(this.exampleTransfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+  })
 
   it('should return 403 if an unauthorized user attempts to ' +
     'modify the "authorized" field', function *() {
-      const transfer = this.exampleTransfer
-      let incompleteTransfer = _.cloneDeep(transfer)
-      delete incompleteTransfer.debits[0].authorized
+    const transfer = this.exampleTransfer
+    let incompleteTransfer = _.cloneDeep(transfer)
+    delete incompleteTransfer.debits[0].authorized
 
-      yield this.request()
-        .put(this.exampleTransfer.id)
-        .send(incompleteTransfer)
-        .expect(201)
-        .expect(_.assign({}, incompleteTransfer, {
-          state: 'proposed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
+    yield this.request()
+      .put(this.exampleTransfer.id)
+      .send(incompleteTransfer)
+      .expect(201)
+      .expect(_.assign({}, incompleteTransfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
 
-      yield this.request()
-        .put(this.exampleTransfer.id)
-        .send(transfer)
-        .expect(403)
-        .expect(function (res) {
-          expect(res.body.id).to.equal('UnauthorizedError')
-          expect(res.body.message).to.equal('Invalid attempt to authorize debit')
-        })
-        .end()
-    })
+    yield this.request()
+      .put(this.exampleTransfer.id)
+      .send(transfer)
+      .expect(403)
+      .expect(function (res) {
+        expect(res.body.id).to.equal('UnauthorizedError')
+        expect(res.body.message).to.equal('Invalid attempt to authorize debit')
+      })
+      .end()
+  })
 
   it('should allow authorizations to be added after the transfer is proposed',
     function *() {
@@ -644,56 +645,56 @@ describe('PUT /transfers/:id', function () {
 
   it('should allow additional authorizations to be added after ' +
     'the transfer is proposed', function *() {
-      let transfer = this.multiDebitTransfer
+    let transfer = this.multiDebitTransfer
 
-      let unauthorizedTransfer = _.cloneDeep(transfer)
-      delete unauthorizedTransfer.debits[0].authorized
-      delete unauthorizedTransfer.debits[1].authorized
+    let unauthorizedTransfer = _.cloneDeep(transfer)
+    delete unauthorizedTransfer.debits[0].authorized
+    delete unauthorizedTransfer.debits[1].authorized
 
-      yield this.request()
-        .put(this.multiDebitTransfer.id)
-        .send(unauthorizedTransfer)
-        .expect(201)
-        .expect(_.assign({}, unauthorizedTransfer, {
-          state: 'proposed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
+    yield this.request()
+      .put(this.multiDebitTransfer.id)
+      .send(unauthorizedTransfer)
+      .expect(201)
+      .expect(_.assign({}, unauthorizedTransfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
 
-      yield this.request()
-        .put(this.multiDebitTransfer.id)
-        .auth('alice', 'alice')
-        .send(_.merge(unauthorizedTransfer, {
-          debits: [{ authorized: true }]
-        }))
-        .expect(200)
-        .expect(_.assign({}, unauthorizedTransfer, {
-          state: 'proposed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
+    yield this.request()
+      .put(this.multiDebitTransfer.id)
+      .auth('alice', 'alice')
+      .send(_.merge(unauthorizedTransfer, {
+        debits: [{ authorized: true }]
+      }))
+      .expect(200)
+      .expect(_.assign({}, unauthorizedTransfer, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
 
-      yield this.request()
-        .put(this.multiDebitTransfer.id)
-        .auth('candice', 'candice')
-        .send(transfer)
-        .expect(200)
-        .expect(_.assign({}, transfer, {
-          state: 'executed',
-          timeline: {
-            executed_at: '2015-06-16T00:00:00.000Z',
-            pre_executed_at: '2015-06-16T00:00:00.000Z',
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
-    })
+    yield this.request()
+      .put(this.multiDebitTransfer.id)
+      .auth('candice', 'candice')
+      .send(transfer)
+      .expect(200)
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          pre_executed_at: '2015-06-16T00:00:00.000Z',
+          pre_prepared_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+  })
 
   it('should set the transfer state to "proposed" if no authorization is given',
     function *() {
@@ -716,42 +717,42 @@ describe('PUT /transfers/:id', function () {
 
   it('should update the state from "proposed" to "executed" when ' +
     'authorization is added and no execution condition is given', function *() {
-      const transfer = this.exampleTransfer
+    const transfer = this.exampleTransfer
 
-      const transferWithoutAuthorization = _.cloneDeep(transfer)
-      delete transferWithoutAuthorization.debits[0].authorized
+    const transferWithoutAuthorization = _.cloneDeep(transfer)
+    delete transferWithoutAuthorization.debits[0].authorized
 
-      yield this.request()
-        .put(this.exampleTransfer.id)
-        .send(transferWithoutAuthorization)
-        .expect(201)
-        .expect(_.assign({}, transferWithoutAuthorization, {
-          state: 'proposed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
+    yield this.request()
+      .put(this.exampleTransfer.id)
+      .send(transferWithoutAuthorization)
+      .expect(201)
+      .expect(_.assign({}, transferWithoutAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
 
-      this.clock.tick(1)
+    this.clock.tick(1)
 
-      yield this.request()
-        .put(this.exampleTransfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(200)
-        .expect(_.assign({}, transfer, {
-          state: 'executed',
-          timeline: {
-            executed_at: '2015-06-16T00:00:00.001Z',
-            pre_executed_at: '2015-06-16T00:00:00.001Z',
-            pre_prepared_at: '2015-06-16T00:00:00.001Z',
-            prepared_at: '2015-06-16T00:00:00.001Z',
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
-    })
+    yield this.request()
+      .put(this.exampleTransfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(200)
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.001Z',
+          pre_executed_at: '2015-06-16T00:00:00.001Z',
+          pre_prepared_at: '2015-06-16T00:00:00.001Z',
+          prepared_at: '2015-06-16T00:00:00.001Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+  })
 
   /* Execution conditions */
 
@@ -839,27 +840,37 @@ describe('PUT /transfers/:id', function () {
     const subscription = require('./data/subscription1.json')
     yield Subscription.fromDataExternal(subscription).create()
 
-    const notification = nock('http://subscriber.example')
-      .post('/notifications')
-      .reply(204)
-
     const transfer = this.exampleTransfer
+    const transferResult = _.assign({}, transfer, {
+      state: 'executed',
+      timeline: {
+        executed_at: '2015-06-16T00:00:00.000Z',
+        pre_executed_at: '2015-06-16T00:00:00.000Z',
+        pre_prepared_at: '2015-06-16T00:00:00.000Z',
+        prepared_at: '2015-06-16T00:00:00.000Z',
+        proposed_at: '2015-06-16T00:00:00.000Z'
+      }
+    })
     yield this.request()
       .put(this.exampleTransfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
-      .expect(_.assign({}, transfer, {
-        state: 'executed',
-        timeline: {
-          executed_at: '2015-06-16T00:00:00.000Z',
-          pre_executed_at: '2015-06-16T00:00:00.000Z',
-          pre_prepared_at: '2015-06-16T00:00:00.000Z',
-          prepared_at: '2015-06-16T00:00:00.000Z',
-          proposed_at: '2015-06-16T00:00:00.000Z'
-        }
-      }))
+      .expect(transferResult)
       .end()
+
+    const notification = nock('http://subscriber.example')
+      .post('/notifications', (body) => {
+        expect(body).to.deep.equal({
+          event: 'transfer.update',
+          id: subscription.id,
+          resource: transferResult
+        })
+        return true
+      })
+      .reply(204)
+
+    yield notificationWorker.processNotificationQueue()
 
     notification.done()
   })
