@@ -71,36 +71,38 @@ class NotificationWorker {
 
   * processNotificationQueue () {
     const notifications = yield this.Notification.findAll()
-    for (let notification of notifications) {
-      const transfer = this.Transfer.fromDatabaseModel(yield notification.getDatabaseModel().getTransfer())
-      const subscription = this.Subscription.fromDatabaseModel(yield notification.getDatabaseModel().getSubscription())
-      this.log.debug('sending notification to ' + subscription.target)
-      const notificationBody = {
-        id: this.uri.make('subscription', subscription.id),
-        event: 'transfer.update',
-        resource: transfer.getDataExternal()
-      }
-      try {
-        const result = yield request(subscription.target, {
-          method: 'post',
-          json: true,
-          body: notificationBody
-        })
-        if (result.statusCode >= 400) {
-          this.log.debug('remote error for notification ' + result.statusCode,
-            result.body)
-          this.log.debug(notificationBody)
-        }
-      } catch (err) {
-        this.log.debug('notification send failed ' + err)
-      }
-      yield notification.destroy()
-    }
+    yield notifications.map(this.processNotification.bind(this))
 
     if (this._timeout && notifications.length) {
       clearTimeout(this._timeout)
       this._timeout = defer.setTimeout(this.processNotificationQueue.bind(this), this.processingInterval)
     }
+  }
+
+  * processNotification (notification) {
+    const transfer = this.Transfer.fromDatabaseModel(yield notification.getDatabaseModel().getTransfer())
+    const subscription = this.Subscription.fromDatabaseModel(yield notification.getDatabaseModel().getSubscription())
+    this.log.debug('sending notification to ' + subscription.target)
+    const notificationBody = {
+      id: this.uri.make('subscription', subscription.id),
+      event: 'transfer.update',
+      resource: transfer.getDataExternal()
+    }
+    try {
+      const result = yield request(subscription.target, {
+        method: 'post',
+        json: true,
+        body: notificationBody
+      })
+      if (result.statusCode >= 400) {
+        this.log.debug('remote error for notification ' + result.statusCode,
+          result.body)
+        this.log.debug(notificationBody)
+      }
+    } catch (err) {
+      this.log.debug('notification send failed ' + err)
+    }
+    yield notification.destroy()
   }
 
   stop () {
