@@ -24,16 +24,28 @@ class NotificationWorker {
   }
 
   * queueNotifications (transfer, transaction) {
-    // TODO Get subscriptions for affected accounts only
-    // TODO Get subscriptions for specific events only
-    // const affectedAccounts = _([debitAccounts, creditAccounts])
-    //   .map(_.keys).flatten().value()
-    //
-    // function getSubscriptions(account) {
-    //   return db.get(['accounts', account, 'subscriptions'])
-    // }
-    // let subscriptions = (yield affectedAccounts.map(getSubscriptions))
-    let subscriptions = yield this.Subscription.findAll({ transaction })
+    const affectedAccounts = _([transfer.debits, transfer.credits])
+      .flatten().pluck('account').map((account) => this.uri.make('account', account)).value()
+    affectedAccounts.push('*')
+
+    let subscriptions = yield this.Subscription.findAll({
+      where: {
+        $and: [{
+          $or: [{
+            event: 'transfer.update'
+          }, {
+            event: 'transfer.*'
+          }, {
+            event: '*'
+          }]
+        }, {
+          subject: {
+            $in: affectedAccounts
+          }
+        }]
+      },
+      transaction
+    })
 
     if (subscriptions) {
       subscriptions = _.values(subscriptions)
