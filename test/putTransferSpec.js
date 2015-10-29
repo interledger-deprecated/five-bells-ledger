@@ -12,6 +12,7 @@ const Account = require('../src/models/account').Account
 const Subscription = require('../src/models/subscription').Subscription
 const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
+const notificationWorker = require('../src/services/notificationWorker')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -839,27 +840,37 @@ describe('PUT /transfers/:id', function () {
     const subscription = require('./data/subscription1.json')
     yield Subscription.fromDataExternal(subscription).create()
 
-    const notification = nock('http://subscriber.example')
-      .post('/notifications')
-      .reply(204)
-
     const transfer = this.exampleTransfer
+    const transferResult = _.assign({}, transfer, {
+      state: 'executed',
+      timeline: {
+        executed_at: '2015-06-16T00:00:00.000Z',
+        pre_executed_at: '2015-06-16T00:00:00.000Z',
+        pre_prepared_at: '2015-06-16T00:00:00.000Z',
+        prepared_at: '2015-06-16T00:00:00.000Z',
+        proposed_at: '2015-06-16T00:00:00.000Z'
+      }
+    })
     yield this.request()
       .put(this.exampleTransfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
-      .expect(_.assign({}, transfer, {
-        state: 'executed',
-        timeline: {
-          executed_at: '2015-06-16T00:00:00.000Z',
-          pre_executed_at: '2015-06-16T00:00:00.000Z',
-          pre_prepared_at: '2015-06-16T00:00:00.000Z',
-          prepared_at: '2015-06-16T00:00:00.000Z',
-          proposed_at: '2015-06-16T00:00:00.000Z'
-        }
-      }))
+      .expect(transferResult)
       .end()
+
+    const notification = nock('http://subscriber.example')
+      .post('/notifications', (body) => {
+        expect(body).to.deep.equal({
+          event: 'transfer.update',
+          id: subscription.id,
+          resource: transferResult
+        })
+        return true
+      })
+      .reply(204)
+
+    yield notificationWorker.processNotificationQueue()
 
     notification.done()
   })

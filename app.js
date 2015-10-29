@@ -6,6 +6,7 @@ const transfers = require('./src/controllers/transfers')
 const accounts = require('./src/controllers/accounts')
 const subscriptions = require('./src/controllers/subscriptions')
 const timerWorker = require('./src/services/timerWorker')
+const notificationWorker = require('./src/services/notificationWorker')
 const compress = require('koa-compress')
 const serve = require('koa-static')
 const router = require('koa-router')()
@@ -66,6 +67,7 @@ if (!module.parent) {
     // Start timerWorker to trigger the transferExpiryMonitor
     // when transfers are going to expire
     yield timerWorker.start()
+    yield notificationWorker.start()
 
     if (config.db.sync) yield db.sync()
     if (db.options.dialect === 'sqlite') {

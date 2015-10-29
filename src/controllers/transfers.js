@@ -9,11 +9,11 @@ const accountBalances = require('../lib/accountBalances')
 const config = require('../services/config')
 const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
+const notificationWorker = require('../services/notificationWorker')
 const log = require('../services/log')('transfers')
 const Condition = require('@ripple/five-bells-condition').Condition
 const requestUtil = require('@ripple/five-bells-shared/utils/request')
 const updateState = require('../lib/updateState')
-const processSubscriptions = require('../lib/processSubscriptions')
 const jsonld = require('@ripple/five-bells-shared/utils/jsonld')
 const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
 const Transfer = require('../models/transfer').Transfer
@@ -422,11 +422,11 @@ exports.putResource = function * create () {
       yield Transfer.create(transfer, {transaction})
     }
 
-    // `processSubscriptions` must be after the transfer is stored in the
-    // database because otherwise the recipient may try to execute it before
-    // the "authorized" flag is saved -- which makes it appear as if the
-    // recipient is faking the authorization.
-    yield processSubscriptions(transfer)
+    // Create persistent notification events. We're doing this within the same
+    // database transaction in order to maximize the reliability of the
+    // notification system. If the server crashes while trying to post a
+    // notification it should retry it when it comes back.
+    yield notificationWorker.queueNotifications(transfer, transaction)
 
     // Start the expiry countdown
     // If the expires_at has passed by this time we'll consider
@@ -438,4 +438,7 @@ exports.putResource = function * create () {
 
   this.body = transfer.getDataExternal()
   this.status = originalTransfer ? 200 : 201
+
+  // Process notifications soon
+  notificationWorker.scheduleProcessing()
 }

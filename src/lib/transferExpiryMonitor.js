@@ -5,12 +5,12 @@ const db = require('../services/db')
 const log = require('../services/log')('expiry monitor')
 const accountBalances = require('./accountBalances')
 const updateState = require('./updateState')
-const processSubscriptions = require('./processSubscriptions')
 const ExpiredTransferError = require('../errors/expired-transfer-error')
 const Transfer = require('../models/transfer').Transfer
 
-function TransferExpiryMonitor (timeQueue) {
+function TransferExpiryMonitor (timeQueue, notificationWorker) {
   this.queue = timeQueue
+  this.notificationWorker = notificationWorker
 }
 
 TransferExpiryMonitor.prototype.validateNotExpired = function (transfer) {
@@ -21,7 +21,9 @@ TransferExpiryMonitor.prototype.validateNotExpired = function (transfer) {
   }
 }
 
-function * expireTransfer (transferId) {
+TransferExpiryMonitor.prototype.expireTransfer = function * (transferId) {
+  const _this = this
+
   log.debug('about to expire transfer')
   yield db.transaction(function *(transaction) {
     let transfer = yield Transfer.findById(transferId, { transaction })
@@ -43,11 +45,15 @@ function * expireTransfer (transferId) {
       yield accountBalances.calculate(transaction, transfer.debits)
       yield accountBalances.applyCredits(transaction, accountsToCredit)
 
-      yield processSubscriptions(transfer)
-    }
+      log.debug('expired transfer: ' + transferId)
 
-    log.debug('expired transfer: ' + transferId)
+      yield _this.notificationWorker.queueNotifications(transfer, transaction)
+    }
   })
+
+  // Should process transfer state notifications soon, because some transfers
+  // may have changed state
+  this.notificationWorker.scheduleProcessing()
 }
 
 TransferExpiryMonitor.prototype.watch = function * (transfer) {
@@ -72,7 +78,7 @@ TransferExpiryMonitor.prototype.processExpiredTransfers = function *() {
   log.debug('checking for transfers to expire')
   const transfersToExpire = this.queue.popBeforeDate(moment())
   for (let id of transfersToExpire) {
-    yield expireTransfer(id)
+    yield this.expireTransfer(id)
   }
 }
 
