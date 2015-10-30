@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@ripple/five-bells-condition": "1.1.0",
-    "@ripple/five-bells-shared": "7.1.0",
+    "@ripple/five-bells-shared": "7.2.0",
     "co": "^4.1.0",
     "co-defer": "^1.0.0",
     "co-emitter": "^0.2.3",
