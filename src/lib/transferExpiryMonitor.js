@@ -24,7 +24,6 @@ TransferExpiryMonitor.prototype.validateNotExpired = function (transfer) {
 TransferExpiryMonitor.prototype.expireTransfer = function * (transferId) {
   const _this = this
 
-  log.debug('about to expire transfer')
   yield db.transaction(function *(transaction) {
     let transfer = yield Transfer.findById(transferId, { transaction })
 
