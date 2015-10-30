@@ -1,6 +1,6 @@
 {
   "name": "@ripple/five-bells-ledger",
-  "version": "3.2.1",
+  "version": "4.0.0",
   "description": "Five Bells ledger reference implementation",
   "repository": {
     "type": "git",
