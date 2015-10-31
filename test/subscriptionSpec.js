@@ -11,7 +11,7 @@ const appHelper = require('./helpers/app')
 const dbHelper = require('./helpers/db')
 const Subscription = require('../src/models/subscription').Subscription
 const uri = require('../src/services/uriManager')
-const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
+const logHelper = require('five-bells-shared/testHelpers/log')
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 const notificationWorker = require('../src/services/notificationWorker')
 

@@ -1,10 +1,17 @@
-# Five Bells Ledger [![Circle CI](https://circleci.com/gh/ripple/five-bells-ledger/tree/master.svg?style=svg&circle-token=e31b3ba89c015bf7f1c6de9f5156e7daa32fd793)](https://circleci.com/gh/ripple/five-bells-ledger/tree/master) [![Docker Repository on Quay.io](https://quay.io/repository/ripple/five-bells-ledger/status?token=5d3a0893-14d4-4392-8a86-9fcc484c43c3 "Docker Repository on Quay.io")](https://quay.io/repository/ripple/five-bells-ledger) [![Coverage Status](https://coveralls.io/repos/ripple/five-bells-ledger/badge.svg?branch=master&t=oMxPKt)](https://coveralls.io/r/ripple/five-bells-ledger?branch=master)
+# Five Bells Ledger [![npm][npm-image]][npm-url] [![circle][circle-image]][circle-url] [![coveralls][coveralls-image]][coveralls-url]
+
+[npm-image]: https://img.shields.io/npm/v/constitute.svg?style=flat
+[npm-url]: https://npmjs.org/package/five-bells-ledger
+[circle-image]: https://circleci.com/gh/interledger/five-bells-ledger.svg?style=shield&circle-token=e31b3ba89c015bf7f1c6de9f5156e7daa32fd793
+[circle-url]: https://circleci.com/gh/interledger/five-bells-ledger
+[coveralls-image]: https://coveralls.io/repos/interledger/five-bells-ledger/badge.svg?branch=master&t=oMxPKt
+[coveralls-url]: https://coveralls.io/r/interledger/five-bells-ledger?branch=master
 
 > A reference implementation of the Five Bells Ledger API
 
 ## Usage
 
-You can see the ledger in action as part of the [`five-bells-demo`](https://github.com/ripple/five-bells-demo)!
+You can see the ledger in action as part of the [`five-bells-demo`](https://github.com/interledger/five-bells-demo)!
 
 To run the ledger as a standalone server:
 
@@ -60,7 +67,7 @@ npm run migrate
 Then run the following (with the same environment variables) as described above:
 
 ``` sh
-docker run -it --rm --net=host -e LEDGER_PORT=1337 -e LEDGER_DB_URI=$LEDGER_DB_URI quay.io/ripple/five-bells-ledger
+docker run -it --rm --net=host -e LEDGER_PORT=1337 -e LEDGER_DB_URI=$LEDGER_DB_URI interleder/five-bells-ledger
 ```
 
 Breaking down that command:

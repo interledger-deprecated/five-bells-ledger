@@ -2,7 +2,7 @@
 
 const tweetnacl = require('tweetnacl')
 const log = require('./log')('config')
-const Config = require('@ripple/five-bells-shared').Config
+const Config = require('five-bells-shared').Config
 
 const config = module.exports = new Config('ledger')
 

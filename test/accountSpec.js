@@ -7,7 +7,7 @@ const Account = require('../src/models/account').Account
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
-const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
+const logHelper = require('five-bells-shared/testHelpers/log')
 
 describe('Accounts', function () {
   logHelper(logger)

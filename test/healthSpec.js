@@ -5,7 +5,7 @@ const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const app = require('../app')
 const logger = require('../src/services/log')
-const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
+const logHelper = require('five-bells-shared/testHelpers/log')
 
 function request () {
   return superagent(app.listen())

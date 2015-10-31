@@ -7,7 +7,7 @@ const app = require('../app')
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
-const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
+const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 

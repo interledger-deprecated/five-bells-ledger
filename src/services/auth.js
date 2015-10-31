@@ -4,7 +4,7 @@ const passport = require('koa-passport')
 const BasicStrategy = require('passport-http').BasicStrategy
 const AnonymousStrategy = require('passport-anonymous').Strategy
 const Account = require('../models/account').Account
-const UnauthorizedError = require('@ripple/five-bells-shared/errors/unauthorized-error')
+const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 
 passport.use(new BasicStrategy(
   function (username, password, done) {

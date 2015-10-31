@@ -10,7 +10,7 @@ const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const Account = require('../src/models/account').Account
 const Subscription = require('../src/models/subscription').Subscription
-const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
+const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const notificationWorker = require('../src/services/notificationWorker')
 

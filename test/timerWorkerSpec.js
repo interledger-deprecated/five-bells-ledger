@@ -6,7 +6,7 @@ const sinon = require('sinon')
 const sinonChai = require('sinon-chai')
 chai.use(sinonChai)
 const logger = require('../src/services/log')
-const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
+const logHelper = require('five-bells-shared/testHelpers/log')
 const TimerWorker = require('../src/lib/timerWorker').TimerWorker
 const TransferExpiryMonitor =
 require('../src/lib/transferExpiryMonitor').TransferExpiryMonitor

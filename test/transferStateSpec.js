@@ -8,10 +8,10 @@ const config = require('../src/services/config')
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
-const logHelper = require('@ripple/five-bells-shared/testHelpers/log')
+const logHelper = require('five-bells-shared/testHelpers/log')
 const tweetnacl = require('tweetnacl')
-const validate = require('@ripple/five-bells-shared/services/validate')
-const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
+const validate = require('five-bells-shared/services/validate')
+const hashJSON = require('five-bells-shared/utils/hashJson')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 

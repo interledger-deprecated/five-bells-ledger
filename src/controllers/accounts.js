@@ -4,8 +4,8 @@
 const _ = require('lodash')
 const db = require('../services/db')
 const log = require('../services/log')('accounts')
-const request = require('@ripple/five-bells-shared/utils/request')
-const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
+const request = require('five-bells-shared/utils/request')
+const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const Account = require('../models/account').Account
 
 exports.getCollection = function * find () {

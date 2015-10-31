@@ -1,10 +1,10 @@
 {
-  "name": "@ripple/five-bells-ledger",
+  "name": "five-bells-ledger",
   "version": "4.0.0",
   "description": "Five Bells ledger reference implementation",
   "repository": {
     "type": "git",
-    "url": "git@github.com:ripple/five-bells-ledger.git"
+    "url": "git@github.com:interledger/five-bells-ledger.git"
   },
   "scripts": {
     "start": "node app.js",
@@ -19,8 +19,8 @@
     "iojs": ">=1.5"
   },
   "dependencies": {
-    "@ripple/five-bells-condition": "1.1.0",
-    "@ripple/five-bells-shared": "7.2.0",
+    "five-bells-condition": "~2.0.0",
+    "five-bells-shared": "~8.0.1",
     "co": "^4.1.0",
     "co-defer": "^1.0.0",
     "co-emitter": "^0.2.3",
@@ -64,7 +64,7 @@
     "eslint": "^1.2.1",
     "eslint-config-standard": "^4.1.0",
     "eslint-plugin-standard": "^1.2.0",
-    "istanbul-harmony": "0.3.16",
+    "istanbul": "0.4.0",
     "mocha": "^2.1.0",
     "nock": "^2.10.0",
     "sinon": "^1.14.1",

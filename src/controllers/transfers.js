@@ -11,20 +11,20 @@ const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
 const notificationWorker = require('../services/notificationWorker')
 const log = require('../services/log')('transfers')
-const Condition = require('@ripple/five-bells-condition').Condition
-const requestUtil = require('@ripple/five-bells-shared/utils/request')
+const Condition = require('five-bells-condition').Condition
+const requestUtil = require('five-bells-shared/utils/request')
 const updateState = require('../lib/updateState')
-const jsonld = require('@ripple/five-bells-shared/utils/jsonld')
-const hashJSON = require('@ripple/five-bells-shared/utils/hashJson')
+const jsonld = require('five-bells-shared/utils/jsonld')
+const hashJSON = require('five-bells-shared/utils/hashJson')
 const Transfer = require('../models/transfer').Transfer
-const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
-const UnmetConditionError = require('@ripple/five-bells-shared/errors/unmet-condition-error')
+const NotFoundError = require('five-bells-shared/errors/not-found-error')
+const UnmetConditionError = require('five-bells-shared/errors/unmet-condition-error')
 const InvalidModificationError =
-require('@ripple/five-bells-shared/errors/invalid-modification-error')
+require('five-bells-shared/errors/invalid-modification-error')
 const UnprocessableEntityError =
-require('@ripple/five-bells-shared/errors/unprocessable-entity-error')
+require('five-bells-shared/errors/unprocessable-entity-error')
 const UnauthorizedError =
-require('@ripple/five-bells-shared/errors/unauthorized-error')
+require('five-bells-shared/errors/unauthorized-error')
 
 /**
  * @api {get} /transfers/:id Get local transfer object

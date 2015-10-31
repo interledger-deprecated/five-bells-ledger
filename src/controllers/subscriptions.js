@@ -3,8 +3,8 @@
 const uuid = require('uuid4')
 const db = require('../services/db')
 const log = require('../services/log')('subscriptions')
-const request = require('@ripple/five-bells-shared/utils/request')
-const NotFoundError = require('@ripple/five-bells-shared/errors/not-found-error')
+const request = require('five-bells-shared/utils/request')
+const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const Account = require('../models/account').Account
 const Subscription = require('../models/subscription').Subscription
 

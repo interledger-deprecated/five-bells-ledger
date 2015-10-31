@@ -1,7 +1,7 @@
 'use strict'
 
-const Model = require('@ripple/five-bells-shared').Model
-const PersistentModelMixin = require('@ripple/five-bells-shared').PersistentModelMixin
+const Model = require('five-bells-shared').Model
+const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
 
 const Sequelize = require('sequelize')
 const sequelize = require('../services/db')

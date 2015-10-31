@@ -2,8 +2,8 @@
 
 const _ = require('lodash')
 
-const Model = require('@ripple/five-bells-shared').Model
-const PersistentModelMixin = require('@ripple/five-bells-shared').PersistentModelMixin
+const Model = require('five-bells-shared').Model
+const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
 const validator = require('../services/validator')
 const uri = require('../services/uriManager')
 
