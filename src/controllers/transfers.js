@@ -428,10 +428,12 @@ exports.putResource = function * create () {
     // notification it should retry it when it comes back.
     yield notificationWorker.queueNotifications(transfer, transaction)
 
-    // Start the expiry countdown
+    // Start the expiry countdown if the transfer is not yet finalized
     // If the expires_at has passed by this time we'll consider
     // the transfer to have made it in before the deadline
-    yield transferExpiryMonitor.watch(transfer)
+    if (!transfer.isFinalized()) {
+      yield transferExpiryMonitor.watch(transfer)
+    }
   })
 
   log.debug('changes written to database')

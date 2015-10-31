@@ -11,6 +11,8 @@ const Sequelize = require('sequelize')
 const JsonField = require('sequelize-json')
 const sequelize = require('../services/db')
 
+const FINAL_STATES = ['executed', 'failed', 'rejected']
+
 class Transfer extends Model {
   static convertFromExternal (data) {
     // ID is optional on the incoming side
@@ -80,6 +82,10 @@ class Transfer extends Model {
 
   static convertToPersistent (data) {
     return data
+  }
+
+  isFinalized () {
+    return _.includes(FINAL_STATES, this.state)
   }
 }
 
