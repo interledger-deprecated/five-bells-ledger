@@ -1,6 +1,7 @@
 'use strict'
 
 const _ = require('lodash')
+const co = require('co')
 const defer = require('co-defer')
 const request = require('co-request')
 
@@ -53,10 +54,18 @@ class NotificationWorker {
         //   subscription.target)
         //
       yield subscriptions.map((subscription) => {
-        return this.Notification.upsert({
+        const notification = this.Notification.upsert({
           subscription_id: subscription.id,
           transfer_id: transfer.id
         }, { transaction })
+
+        // We will schedule an immediate attempt to send the notification for
+        // performance in the good case.
+        co(this.processNotificationWithInstances(notification, transfer, subscription)).catch((err) => {
+          this.log.debug('immediate notification send failed ' + err)
+        })
+
+        return notification
       })
     }
   }
@@ -71,6 +80,7 @@ class NotificationWorker {
 
   * processNotificationQueue () {
     const notifications = yield this.Notification.findAll()
+    this.log.debug('processing ' + notifications.length + ' notifications')
     yield notifications.map(this.processNotification.bind(this))
 
     if (this._timeout && notifications.length) {
@@ -82,6 +92,10 @@ class NotificationWorker {
   * processNotification (notification) {
     const transfer = this.Transfer.fromDatabaseModel(yield notification.getDatabaseModel().getTransfer())
     const subscription = this.Subscription.fromDatabaseModel(yield notification.getDatabaseModel().getSubscription())
+    yield this.processNotificationWithInstances(notification, transfer, subscription)
+  }
+
+  * processNotificationWithInstances (notification, transfer, subscription) {
     this.log.debug('sending notification to ' + subscription.target)
     const notificationBody = {
       id: this.uri.make('subscription', subscription.id),
