@@ -1,6 +1,6 @@
 # Five Bells Ledger [![npm][npm-image]][npm-url] [![circle][circle-image]][circle-url] [![coveralls][coveralls-image]][coveralls-url]
 
-[npm-image]: https://img.shields.io/npm/v/constitute.svg?style=flat
+[npm-image]: https://img.shields.io/npm/v/five-bells-ledger.svg?style=flat
 [npm-url]: https://npmjs.org/package/five-bells-ledger
 [circle-image]: https://circleci.com/gh/interledger/five-bells-ledger.svg?style=shield&circle-token=e31b3ba89c015bf7f1c6de9f5156e7daa32fd793
 [circle-url]: https://circleci.com/gh/interledger/five-bells-ledger
