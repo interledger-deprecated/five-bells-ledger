@@ -71,7 +71,13 @@ if (!module.parent) {
 
     if (config.db.sync) yield db.sync()
     if (db.options.dialect === 'sqlite') {
-      yield db.query('PRAGMA busy_timeout = 10000;')
+      // Sequelize does not properly handle SQLITE_BUSY errors, so it's better
+      // to avoid them by waiting longer
+      yield db.query('PRAGMA busy_timeout = 0;')
+      // Write-ahead log is faster
+      yield db.query('PRAGMA journal_mode = WAL;')
+      // SQLite is only intended for testing, so we don't care about durability
+      yield db.query('PRAGMA synchronous = off;')
       db.getQueryInterface().QueryGenerator.startTransactionQuery = function (transaction, options) {
         if (options.parent) {
           return 'SAVEPOINT ' + this.quoteIdentifier(transaction.name) + ';'
