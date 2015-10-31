@@ -2,6 +2,11 @@
   "name": "five-bells-ledger",
   "version": "5.0.0",
   "description": "Five Bells ledger reference implementation",
+  "keywords": [
+    "interledger",
+    "five-bells",
+    "ilp"
+  ],
   "repository": {
     "type": "git",
     "url": "git@github.com:interledger/five-bells-ledger.git"
