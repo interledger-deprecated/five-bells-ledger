@@ -21,6 +21,7 @@ const config = require('./src/services/config')
 const db = require('./src/services/db')
 const models = require('./src/models')
 const app = module.exports = koa()
+const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 
 // Configure passport
 require('./src/services/auth')
@@ -35,7 +36,7 @@ app.use(passport.initialize())
 router.get('/health', health.getResource)
 
 router.put('/transfers/:id',
-  passport.authenticate(['basic', 'anonymous'], {
+  passport.authenticate(['basic', 'http-signature', 'anonymous'], {
     session: false
   }),
   models.Transfer.createBodyParser(),
@@ -46,7 +47,11 @@ router.get('/transfers/:id/state', transfers.getStateResource)
 
 router.get('/accounts', accounts.getCollection)
 router.get('/accounts/:id', accounts.getResource)
-router.put('/accounts/:id', models.Account.createBodyParser(), accounts.putResource)
+router.put('/accounts/:id',
+  passport.authenticate(['basic', 'http-signature'], { session: false }),
+  filterAdmin,
+  models.Account.createBodyParser(),
+  accounts.putResource)
 
 router.post('/subscriptions', models.Subscription.createBodyParser(), subscriptions.postResource)
 router.get('/subscriptions/:id', subscriptions.getResource)
@@ -86,9 +91,28 @@ if (!module.parent) {
       }
     }
 
+    if (config.default_admin) {
+      let admin = config.default_admin
+      yield models.Account.create({
+        id: admin.user,
+        name: admin.user,
+        balance: '0',
+        password: admin.pass,
+        is_admin: true
+      })
+    }
+
     app.listen(config.server.port)
     log('app').info('ledger listening on ' + config.server.bind_ip + ':' +
       config.server.port)
     log('app').info('public at ' + config.server.base_uri)
   }).catch((err) => log('app').critical(err && err.stack ? err.stack : err))
+}
+
+function * filterAdmin (next) {
+  if (this.req.user && this.req.user.is_admin) {
+    yield next
+  } else {
+    throw new UnauthorizedError('You aren\'t an admin')
+  }
 }

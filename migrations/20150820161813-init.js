@@ -11,6 +11,8 @@ module.exports = {
       balance: Sequelize.DECIMAL(10, 2),
       identity: Sequelize.STRING(1024),
       password: Sequelize.STRING,
+      public_key: Sequelize.TEXT,
+      is_admin: Sequelize.BOOLEAN,
       created_at: Sequelize.DATE,
       updated_at: Sequelize.DATE
     })

@@ -1,5 +1,6 @@
 /*global describe, it*/
 'use strict'
+const fs = require('fs')
 const _ = require('lodash')
 const expect = require('chai').expect
 const app = require('../app')
@@ -9,6 +10,8 @@ const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
 
+const publicKey = fs.readFileSync(__dirname + '/data/public.pem', 'utf8')
+
 describe('Accounts', function () {
   logHelper(logger)
 
@@ -17,24 +20,27 @@ describe('Accounts', function () {
 
     // Define example data
     this.exampleAccounts = _.cloneDeep(require('./data/accounts'))
+    this.adminAccount = this.exampleAccounts.admin
     this.existingAccount = this.exampleAccounts.alice
 
     // Reset database
     yield dbHelper.reset()
 
     // Store some example data
-    yield dbHelper.addAccounts([this.existingAccount])
+    yield dbHelper.addAccounts([this.adminAccount, this.existingAccount])
   })
 
   describe('GET /accounts', function () {
     it('should return 200', function *() {
-      const account = this.existingAccount
+      const account1 = this.adminAccount
+      const account2 = this.existingAccount
       // Passwords are not returned
-      delete account.password
+      delete account1.password
+      delete account2.password
       yield this.request()
         .get('/accounts')
         .expect(200)
-        .expect([account])
+        .expect([account1, account2])
         .end()
     })
 
@@ -94,6 +100,7 @@ describe('Accounts', function () {
       delete account.password
       yield this.request()
         .put(account.id)
+        .auth('admin', 'admin')
         .send(account)
         .expect(201)
         .expect(account)
@@ -114,6 +121,7 @@ describe('Accounts', function () {
 
       yield this.request()
         .put(this.existingAccount.id)
+        .auth('admin', 'admin')
         .send(account)
         .expect(200)
         .expect(account)
@@ -122,6 +130,29 @@ describe('Accounts', function () {
       // Check balances
       const row = yield Account.findById('alice')
       expect(row.balance).to.equal(90)
+    })
+  })
+
+  describe('PUT /accounts/:uuid with public_key', function () {
+    it('should return 201', function *() {
+      const account = this.exampleAccounts.eve
+      account.public_key = publicKey
+      delete account.password
+      yield this.request()
+        .put(account.id)
+        .auth('admin', 'admin')
+        .send(account)
+        .expect(function (res) {
+          expect(res.body.name).to.equal('Eve')
+          // public_key is not returned
+          expect(res.body.public_key).to.equal(undefined)
+        })
+        .expect(201)
+        .end()
+
+      // Check balances
+      const user = (yield Account.findById('eve'))
+      expect(user.public_key).to.equal(publicKey)
     })
   })
 })

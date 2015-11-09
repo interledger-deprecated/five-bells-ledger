@@ -1,4 +1,11 @@
 {
+  "admin": {
+    "id": "http://localhost/accounts/admin",
+    "name": "Admin",
+    "balance": "0",
+    "password": "admin",
+    "is_admin": true
+  },
   "alice": {
     "id": "http://localhost/accounts/alice",
     "name": "Alice",
@@ -22,5 +29,10 @@
     "name": "Dave",
     "balance": "0",
     "password": "dave"
+  },
+  "eve": {
+    "id": "http://localhost/accounts/eve",
+    "name": "Eve",
+    "balance": "50"
   }
 }

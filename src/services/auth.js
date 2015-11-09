@@ -2,6 +2,7 @@
 
 const passport = require('koa-passport')
 const BasicStrategy = require('passport-http').BasicStrategy
+const HTTPSignatureStrategy = require('passport-http-signature')
 const AnonymousStrategy = require('passport-anonymous').Strategy
 const Account = require('../models/account').Account
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
@@ -16,11 +17,25 @@ passport.use(new BasicStrategy(
 
     Account.findById(username)
       .then(function (userObj) {
-        if (userObj && userObj.password === password) {
-          return done(null, userObj.id)
+        if (userObj && password && userObj.password === password) {
+          return done(null, userObj)
         } else {
           return done(new UnauthorizedError('Unknown or invalid account / password'))
         }
+      })
+  }))
+
+passport.use(new HTTPSignatureStrategy(
+  function (username, done) {
+    Account.findById(username)
+      .then(function (userObj) {
+        if (!userObj) {
+          return done(new UnauthorizedError('Unknown or invalid account'))
+        }
+        if (!userObj.public_key) {
+          return done(new UnauthorizedError('User doesn\'t have a public key'))
+        }
+        done(null, userObj, userObj.public_key)
       })
   }))
 

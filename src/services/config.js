@@ -40,3 +40,10 @@ if (!config.keys.ed25519.public) {
   config.keys.ed25519.public =
     tweetnacl.util.encodeBase64(keyPair.publicKey)
 }
+
+if (config.getEnv('ADMIN_USER')) {
+  config.default_admin = {
+    user: config.getEnv('ADMIN_USER'),
+    pass: config.getEnv('ADMIN_PASS')
+  }
+}

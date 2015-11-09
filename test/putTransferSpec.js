@@ -1,5 +1,8 @@
 /*global describe, it*/
 'use strict'
+const fs = require('fs')
+const crypto = require('crypto')
+const parseURL = require('url').parse
 const _ = require('lodash')
 const expect = require('chai').expect
 const nock = require('nock')
@@ -15,6 +18,9 @@ const sinon = require('sinon')
 const notificationWorker = require('../src/services/notificationWorker')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
+
+const publicKey = fs.readFileSync(__dirname + '/data/public.pem', 'utf8')
+const privateKey = fs.readFileSync(__dirname + '/data/private.pem', 'utf8')
 
 describe('PUT /transfers/:id', function () {
   logHelper(logger)
@@ -35,12 +41,15 @@ describe('PUT /transfers/:id', function () {
       _.cloneDeep(require('./data/transferMultiDebitAndCredit'))
     this.executedTransfer = _.cloneDeep(require('./data/transferExecuted'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'))
+    this.transferFromEve = _.cloneDeep(require('./data/transferFromEve'))
 
     // Reset database
     yield dbHelper.reset()
 
     // Store some example data
-    yield dbHelper.addAccounts(_.values(require('./data/accounts')))
+    let accounts = require('./data/accounts')
+    accounts.eve.public_key = publicKey
+    yield dbHelper.addAccounts(_.values(accounts))
   })
 
   afterEach(function *() {
@@ -1052,4 +1061,50 @@ describe('PUT /transfers/:id', function () {
         }))
         .end()
     })
+
+  it('should return 200 is the http-signature is valid', function *() {
+    const transfer = this.transferFromEve
+    const date = (new Date()).toUTCString()
+    const signature = crypto.createSign('RSA-SHA256')
+      .update([
+        '(request-target): put ' + parseURL(transfer.id).path,
+        'date: ' + date
+      ].join('\n'))
+      .sign({key: privateKey, passphrase: '123456'}, 'base64')
+
+    yield this.request()
+      .put(transfer.id)
+      .set('Date', date)
+      .set('Authorization', 'Signature ' +
+        'keyId="eve",' +
+        'algorithm="rsa-sha256",' +
+        'headers="(request-target) date",' +
+        'signature="' + signature + '"')
+      .send(transfer)
+      .expect(201)
+      .end()
+  })
+
+  it('should return 403 is the http-signature is invalid', function *() {
+    const transfer = this.transferFromEve
+    const date = (new Date()).toUTCString()
+    const signature = crypto.createSign('RSA-SHA256')
+      .update([
+        '(request-target): put ' + parseURL(transfer.id).path + '/wrong',
+        'date: ' + date
+      ].join('\n'))
+      .sign({key: privateKey, passphrase: '123456'}, 'base64')
+
+    yield this.request()
+      .put(transfer.id)
+      .set('Date', date)
+      .set('Authorization', 'Signature ' +
+        'keyId="eve",' +
+        'algorithm="rsa-sha256",' +
+        'headers="(request-target) date",' +
+        'signature="' + signature + '"')
+      .send(transfer)
+      .expect(403)
+      .end()
+  })
 })
