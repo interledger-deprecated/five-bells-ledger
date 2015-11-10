@@ -53,11 +53,30 @@ module.exports = {
       created_at: Sequelize.DATE,
       updated_at: Sequelize.DATE
     })
+
+    queryInterface.createTable('EntryGroups', {
+      id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+      created_at: Sequelize.DATE,
+      updated_at: Sequelize.DATE
+    })
+
+    queryInterface.createTable('Entries', {
+      id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+      entry_group: Sequelize.UUID,
+      transfer_id: Sequelize.UUID,
+      account: Sequelize.STRING(1024),
+      balance: Sequelize.DECIMAL(10, 2),
+      created_at: Sequelize.DATE,
+      updated_at: Sequelize.DATE
+    })
+    queryInterface.addIndex('Entries', ['account', 'entry_group'])
   },
 
   down: function (queryInterface, Sequelize) {
     queryInterface.dropTable('Accounts')
     queryInterface.dropTable('Transfers')
     queryInterface.dropTable('Subscriptions')
+    queryInterface.dropTable('Entries')
+    queryInterface.removeIndex('Entries', ['account', 'entry_group'])
   }
 }

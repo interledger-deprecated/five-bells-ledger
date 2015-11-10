@@ -3,7 +3,7 @@
 const moment = require('moment')
 const db = require('../services/db')
 const log = require('../services/log')('expiry monitor')
-const accountBalances = require('./accountBalances')
+const makeAccountBalances = require('./accountBalances')
 const updateState = require('./updateState')
 const ExpiredTransferError = require('../errors/expired-transfer-error')
 const Transfer = require('../models/transfer').Transfer
@@ -40,9 +40,8 @@ TransferExpiryMonitor.prototype.expireTransfer = function * (transferId) {
       yield transfer.save({ transaction })
 
       // Return the money to the original senders
-      let accountsToCredit =
-      yield accountBalances.calculate(transaction, transfer.debits)
-      yield accountBalances.applyCredits(transaction, accountsToCredit)
+      let accountBalances = yield makeAccountBalances(transaction, transfer)
+      yield accountBalances.revertDebits()
 
       log.debug('expired transfer: ' + transferId)
 

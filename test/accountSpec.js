@@ -155,4 +155,38 @@ describe('Accounts', function () {
       expect(user.public_key).to.equal(publicKey)
     })
   })
+
+  describe('Account#findEntry', function () {
+    it('returns an Entry', function *() {
+      yield dbHelper.addAccounts([this.exampleAccounts.bob])
+      const transfer = _.cloneDeep(require('./data/transferSimple'))
+      const transfer1ID = '155dff3f-4915-44df-a707-acc4b527bcbd'
+      const transfer2ID = '155dff3f-4915-44df-a707-acc4b527bcbe'
+      transfer.id = 'http://localhost/transfers/' + transfer1ID
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      let now = new Date()
+      transfer.id = 'http://localhost/transfers/' + transfer2ID
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      const entry1 = yield (yield Account.findById('alice')).findEntry(now)
+      expect(entry1.transfer_id).to.equal(transfer1ID)
+      expect(entry1.account).to.equal('alice')
+      expect(entry1.balance).to.equal(90)
+      const entry2 = yield (yield Account.findById('alice')).findEntry(new Date())
+      expect(entry2.transfer_id).to.equal(transfer2ID)
+      expect(entry2.account).to.equal('alice')
+      expect(entry2.balance).to.equal(80)
+    })
+  })
 })
