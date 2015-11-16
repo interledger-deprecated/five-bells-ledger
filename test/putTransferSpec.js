@@ -426,6 +426,23 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
+  it('should return 403 if password is missing', function *() {
+    const transfer = this.exampleTransfer
+    const transferWithoutAuthorization = _.cloneDeep(transfer)
+    delete transferWithoutAuthorization.debits[0].authorized
+
+    yield this.request()
+      .put(transfer.id)
+      .auth(transfer.debits[0].account + ':')
+      .send(transferWithoutAuthorization)
+      .expect(403)
+      .expect(function (res) {
+        expect(res.body.id).to.equal('UnauthorizedError')
+        expect(res.body.message).to.equal('Unknown or invalid account / password')
+      })
+      .end()
+  })
+
   it('should return 403 if authorization is provided that is irrelevant ' +
     'to the transfer', function *() {
     const transfer = this.exampleTransfer
