@@ -33,9 +33,7 @@ TransferExpiryMonitor.prototype.expireTransfer = function * (transferId) {
       return
     }
 
-    if (transfer.state !== 'executed' &&
-      transfer.state !== 'rejected' &&
-      transfer.state !== 'failed') {
+    if (!transfer.isFinalized()) {
       updateState(transfer, 'rejected')
       yield transfer.save({ transaction })
 

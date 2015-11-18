@@ -114,8 +114,13 @@ function updateTransferObject (originalTransfer, transfer) {
   // Ignore null properties
   updatedTransferData = _.omit(updatedTransferData, _.isNull)
 
+  // Clients can change the state to "rejected".
+  if (transfer.state === 'rejected' && !originalTransfer.isFinalized()) {
+    transfer.state = updatedTransferData.state = 'pre_rejected'
+  } else {
+    transfer.state = updatedTransferData.state
+  }
   // Ignore internally managed properties
-  transfer.state = updatedTransferData.state
   transfer.created_at = updatedTransferData.created_at
   transfer.updated_at = updatedTransferData.updated_at
   transfer.proposed_at = updatedTransferData.proposed_at
@@ -123,6 +128,7 @@ function updateTransferObject (originalTransfer, transfer) {
   transfer.prepared_at = updatedTransferData.prepared_at
   transfer.pre_executed_at = updatedTransferData.pre_executed_at
   transfer.executed_at = updatedTransferData.executed_at
+  transfer.rejected_at = updatedTransferData.rejected_at
 
   // Ignore undefined properties
   const transferData = _.omit(transfer.getData(), _.isUndefined)
@@ -226,16 +232,18 @@ function * processStateTransitions (tr, transfer) {
     updateState(transfer, 'prepared')
   }
 
+  let needsCondition = transfer.execution_condition
+  let hasFulfillment = needsCondition && transfer.execution_condition_fulfillment
+  let isInvalidFulfillment = hasFulfillment &&
+    !Condition.testFulfillment(
+      transfer.execution_condition,
+      transfer.execution_condition_fulfillment)
+
   if (transfer.state === 'prepared') {
-    if (transfer.execution_condition &&
-      transfer.execution_condition_fulfillment) {
-      let isValidFulfillment = Condition.testFulfillment(transfer.execution_condition,
-        transfer.execution_condition_fulfillment)
-      if (!isValidFulfillment) {
-        throw new UnmetConditionError('ConditionFulfillment failed')
-      }
-      updateState(transfer, 'pre_executed')
-    } else if (!transfer.execution_condition) {
+    if (isInvalidFulfillment) {
+      throw new UnmetConditionError('ConditionFulfillment failed')
+    }
+    if (hasFulfillment || !needsCondition) {
       updateState(transfer, 'pre_executed')
     }
   }
@@ -248,6 +256,18 @@ function * processStateTransitions (tr, transfer) {
     updateState(transfer, 'executed')
 
     // Remove the expiry countdown
+    transferExpiryMonitor.unwatch(transfer.id)
+  }
+
+  if (transfer.state === 'pre_rejected') {
+    if (isInvalidFulfillment) {
+      throw new UnmetConditionError('ConditionFulfillment failed')
+    }
+    if (needsCondition && !hasFulfillment) {
+      throw new UnmetConditionError('Missing execution_condition_fulfillment')
+    }
+    yield accountBalances.revertDebits()
+    updateState(transfer, 'rejected')
     transferExpiryMonitor.unwatch(transfer.id)
   }
 }
