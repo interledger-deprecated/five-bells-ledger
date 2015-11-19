@@ -29,6 +29,8 @@ module.exports = {
       state: Sequelize.ENUM('proposed', 'pre_prepared', 'prepared', 'pre_executed', 'executed', 'rejected'),
       execution_condition: Sequelize.TEXT,
       execution_condition_fulfillment: Sequelize.TEXT,
+      cancellation_condition: Sequelize.TEXT,
+      cancellation_condition_fulfillment: Sequelize.TEXT,
       expires_at: Sequelize.DATE,
       timeline: Sequelize.TEXT,
       proposed_at: Sequelize.DATE,

@@ -582,10 +582,11 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should set the state to "rejected" if and only if the ' +
-    'execution_condition_fulfillment is present',
+    'cancellation_condition_fulfillment is present',
     function *() {
       let transfer = this.exampleTransfer
-      transfer.execution_condition = this.executedTransfer.execution_condition
+      delete transfer.debits[0].authorized
+      transfer.cancellation_condition = this.executedTransfer.execution_condition
 
       yield this.request()
         .put(transfer.id)
@@ -603,12 +604,12 @@ describe('PUT /transfers/:id', function () {
         .expect(422)
         .expect({
           id: 'UnmetConditionError',
-          message: 'Missing execution_condition_fulfillment'
+          message: 'ConditionFulfillment failed'
         })
         .end()
 
       // Invalid fulfillment
-      transfer.execution_condition_fulfillment = {
+      transfer.cancellation_condition_fulfillment = {
         'type': 'ed25519-sha512',
         'signature': crypto.createHash('sha512').update('nope').digest('base64')
       }
@@ -623,7 +624,7 @@ describe('PUT /transfers/:id', function () {
         })
         .end()
 
-      transfer.execution_condition_fulfillment = this.executedTransfer.execution_condition_fulfillment
+      transfer.cancellation_condition_fulfillment = this.executedTransfer.execution_condition_fulfillment
       yield this.request()
         .put(transfer.id)
         .auth('alice', 'alice')
@@ -632,8 +633,6 @@ describe('PUT /transfers/:id', function () {
         .expect(_.assign({}, transfer, {
           state: 'rejected',
           timeline: {
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z',
             rejected_at: '2015-06-16T00:00:00.000Z'
           }

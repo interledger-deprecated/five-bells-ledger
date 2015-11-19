@@ -11,7 +11,6 @@ const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
 const notificationWorker = require('../services/notificationWorker')
 const log = require('../services/log')('transfers')
-const Condition = require('five-bells-condition').Condition
 const requestUtil = require('five-bells-shared/utils/request')
 const updateState = require('../lib/updateState')
 const jsonld = require('five-bells-shared/utils/jsonld')
@@ -151,10 +150,14 @@ function updateTransferObject (originalTransfer, transfer) {
     }
   })
 
-  // Clients may fulfill the execution condition
+  // Clients may fulfill the execution/cancellation conditions
   if (transfer.execution_condition_fulfillment) {
     updatedTransferData.execution_condition_fulfillment =
       transfer.execution_condition_fulfillment
+  }
+  if (transfer.cancellation_condition_fulfillment) {
+    updatedTransferData.cancellation_condition_fulfillment =
+      transfer.cancellation_condition_fulfillment
   }
 
   // The old and new objects should now be exactly equal
@@ -232,20 +235,11 @@ function * processStateTransitions (tr, transfer) {
     updateState(transfer, 'prepared')
   }
 
-  let needsCondition = transfer.execution_condition
-  let hasFulfillment = needsCondition && transfer.execution_condition_fulfillment
-  let isInvalidFulfillment = hasFulfillment &&
-    !Condition.testFulfillment(
-      transfer.execution_condition,
-      transfer.execution_condition_fulfillment)
-
-  if (transfer.state === 'prepared') {
-    if (isInvalidFulfillment) {
+  if (transfer.state === 'prepared' && transfer.hasFulfillment('execution')) {
+    if (!transfer.hasValidFulfillment('execution')) {
       throw new UnmetConditionError('ConditionFulfillment failed')
     }
-    if (hasFulfillment || !needsCondition) {
-      updateState(transfer, 'pre_executed')
-    }
+    updateState(transfer, 'pre_executed')
   }
 
   if (transfer.state === 'pre_executed') {
@@ -260,11 +254,8 @@ function * processStateTransitions (tr, transfer) {
   }
 
   if (transfer.state === 'pre_rejected') {
-    if (isInvalidFulfillment) {
+    if (!transfer.hasValidFulfillment('cancellation')) {
       throw new UnmetConditionError('ConditionFulfillment failed')
-    }
-    if (needsCondition && !hasFulfillment) {
-      throw new UnmetConditionError('Missing execution_condition_fulfillment')
     }
     yield accountBalances.revertDebits()
     updateState(transfer, 'rejected')
