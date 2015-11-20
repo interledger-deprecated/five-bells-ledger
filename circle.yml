@@ -5,7 +5,7 @@ machine:
   node:
     version: 4.0.0
 dependencies:
-  pre:
+  post:
     # Build container
     - docker build -t interledger/five-bells-ledger .
 test:
