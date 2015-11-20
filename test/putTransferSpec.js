@@ -1079,7 +1079,7 @@ describe('PUT /transfers/:id', function () {
         .end()
     })
 
-  it('should return 200 is the http-signature is valid', function *() {
+  it('should return 200 if the http-signature is valid', function *() {
     const transfer = this.transferFromEve
     const date = (new Date()).toUTCString()
     const signature = crypto.createSign('RSA-SHA256')
@@ -1102,7 +1102,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 403 is the http-signature is invalid', function *() {
+  it('should return 403 if the http-signature is invalid', function *() {
     const transfer = this.transferFromEve
     const date = (new Date()).toUTCString()
     const signature = crypto.createSign('RSA-SHA256')
