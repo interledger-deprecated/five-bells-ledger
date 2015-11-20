@@ -356,6 +356,11 @@ exports.putResource = function * create () {
     )
   }
 
+  requestUtil.assert.strictEqual(
+    transfer.type,
+    undefined,
+    'Transfer contains incorrect type')
+
   transfer.id = id
   transfer.ledger = config.server.base_uri
 
