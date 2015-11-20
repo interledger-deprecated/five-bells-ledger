@@ -15,7 +15,7 @@
     "start": "node app.js",
     "lint": "eslint .",
     "migrate": "sequelize db:migrate",
-    "test": "NODE_ENV=unit BLUEBIRD_DEBUG=1 node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
+    "test": "NODE_ENV=unit BLUEBIRD_DEBUG=1 BLUEBIRD_WARNINGS=0 node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
     "apidoc": "./node_modules/.bin/apidoc -o apidoc-out -i src/controllers/"
   },
