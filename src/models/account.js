@@ -23,7 +23,9 @@ class Account extends Model {
     data.id = uri.make('account', data.id.toLowerCase())
     data.balance = String(data.balance)
     delete data.password
+    delete data.public_key
     if (!data.identity) delete data.identity
+    if (!data.is_admin) delete data.is_admin
     return data
   }
 
@@ -49,7 +51,9 @@ PersistentModelMixin(Account, sequelize, {
   name: Sequelize.STRING,
   balance: Sequelize.DECIMAL(10, 2),
   identity: Sequelize.STRING(1024),
-  password: Sequelize.STRING
+  password: Sequelize.STRING,
+  public_key: Sequelize.TEXT,
+  is_admin: Sequelize.BOOLEAN
 })
 
 exports.Account = Account
