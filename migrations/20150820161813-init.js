@@ -76,6 +76,7 @@ module.exports = {
     queryInterface.dropTable('Accounts')
     queryInterface.dropTable('Transfers')
     queryInterface.dropTable('Subscriptions')
+    queryInterface.dropTable('EntryGroups')
     queryInterface.dropTable('Entries')
     queryInterface.removeIndex('Entries', ['account', 'entry_group'])
   }
