@@ -4,6 +4,8 @@ const Model = require('five-bells-shared').Model
 const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
 const uri = require('../services/uriManager')
 const validator = require('../services/validator')
+const Entry = require('./entry').Entry
+const EntryGroup = require('./entry-group').EntryGroup
 
 const Sequelize = require('sequelize')
 const sequelize = require('../services/db')
@@ -38,6 +40,29 @@ class Account extends Model {
   static convertToPersistent (data) {
     data.balance = Number(data.balance)
     return data
+  }
+
+  createEntry (values, options) {
+    values.account = this.id
+    values.balance = this.balance
+    return Entry.create(values, options)
+  }
+
+  * findEntry (date) {
+    const group = yield EntryGroup.findOne({
+      where: { created_at: { $lte: date } },
+      order: 'created_at DESC',
+      limit: 1
+    })
+    if (!group) return
+    return Entry.findOne({
+      where: {
+        account: this.id,
+        entry_group: { $lte: group.id }
+      },
+      order: 'entry_group DESC',
+      limit: 1
+    })
   }
 }
 

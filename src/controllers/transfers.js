@@ -5,7 +5,7 @@ const _ = require('lodash')
 const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
 const db = require('../services/db')
-const accountBalances = require('../lib/accountBalances')
+const makeAccountBalances = require('../lib/accountBalances')
 const config = require('../services/config')
 const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
@@ -198,8 +198,7 @@ function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
 
 function * processStateTransitions (tr, transfer) {
   // Calculate per-account totals
-  let debitAccounts = yield accountBalances.calculate(tr, transfer.debits)
-  let creditAccounts = yield accountBalances.calculate(tr, transfer.credits)
+  let accountBalances = yield makeAccountBalances(tr, transfer)
 
   // Check prerequisites
   if (transfer.state === 'proposed') {
@@ -223,8 +222,7 @@ function * processStateTransitions (tr, transfer) {
 
   if (transfer.state === 'pre_prepared') {
     // Hold sender funds
-    yield accountBalances.applyDebits(tr, debitAccounts)
-
+    yield accountBalances.applyDebits()
     updateState(transfer, 'prepared')
   }
 
@@ -246,7 +244,7 @@ function * processStateTransitions (tr, transfer) {
     // In a real-world / asynchronous implementation, the response from the
     // external ledger would trigger the state transition from 'pre_executed' to
     // 'executed'
-    yield accountBalances.applyCredits(tr, creditAccounts)
+    yield accountBalances.applyCredits()
     updateState(transfer, 'executed')
 
     // Remove the expiry countdown
