@@ -595,19 +595,6 @@ describe('PUT /transfers/:id', function () {
         .expect(201)
         .end()
 
-      // Missing fulfillment
-      transfer.state = 'rejected'
-      yield this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(422)
-        .expect({
-          id: 'UnmetConditionError',
-          message: 'ConditionFulfillment failed'
-        })
-        .end()
-
       // Invalid fulfillment
       transfer.cancellation_condition_fulfillment = {
         'type': 'ed25519-sha512',

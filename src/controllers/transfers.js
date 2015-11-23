@@ -113,13 +113,8 @@ function updateTransferObject (originalTransfer, transfer) {
   // Ignore null properties
   updatedTransferData = _.omit(updatedTransferData, _.isNull)
 
-  // Clients can change the state to "rejected".
-  if (transfer.state === 'rejected' && !originalTransfer.isFinalized()) {
-    transfer.state = updatedTransferData.state = 'pre_rejected'
-  } else {
-    transfer.state = updatedTransferData.state
-  }
   // Ignore internally managed properties
+  transfer.state = updatedTransferData.state
   transfer.created_at = updatedTransferData.created_at
   transfer.updated_at = updatedTransferData.updated_at
   transfer.proposed_at = updatedTransferData.proposed_at
@@ -253,7 +248,7 @@ function * processStateTransitions (tr, transfer) {
     transferExpiryMonitor.unwatch(transfer.id)
   }
 
-  if (transfer.state === 'pre_rejected') {
+  if (transfer.cancellation_condition_fulfillment) {
     if (!transfer.hasValidFulfillment('cancellation')) {
       throw new UnmetConditionError('ConditionFulfillment failed')
     }
