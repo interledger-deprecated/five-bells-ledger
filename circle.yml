@@ -17,6 +17,8 @@ test:
     # Extract test artifacts (results and coverage data)
     - docker cp ledger-test:/usr/src/app/xunit.xml ${CIRCLE_TEST_REPORTS}/
     - docker cp ledger-test:/usr/src/app/coverage .
+    # Generate API documentation
+    - npm run apidoc
 deployment:
   production:
     branch: master
@@ -34,3 +36,4 @@ deployment:
 general:
   artifacts:
     - "coverage/lcov-report"
+    - "apidoc-out"
