@@ -19,7 +19,7 @@ const Subscription = require('../models/subscription').Subscription
  * @returns {void}
  */
 function * validateSubscriptionSemantics (subscription, transaction) {
-  const owner = yield Account.findById(subscription.owner, { transaction })
+  const owner = yield Account.findByName(subscription.owner, { transaction })
 
   if (typeof owner === 'undefined') {
     // TODO Add authentication and reenable this check

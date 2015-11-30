@@ -12,9 +12,14 @@ const sequelize = require('../services/db')
 
 class Account extends Model {
   static convertFromExternal (data) {
+    if (data.primary) {
+      delete data.primary
+    }
+
     // ID is optional on the incoming side
     if (data.id) {
-      data.id = uri.parse(data.id, 'account').id.toLowerCase()
+      data.name = uri.parse(data.id, 'account').id.toLowerCase()
+      delete data.id
     }
 
     data.balance = Number(data.balance)
@@ -22,8 +27,9 @@ class Account extends Model {
   }
 
   static convertToExternal (data) {
-    data.id = uri.make('account', data.id.toLowerCase())
+    data.id = uri.make('account', data.name.toLowerCase())
     data.balance = String(data.balance)
+    delete data.primary
     delete data.password
     delete data.public_key
     if (!data.identity) delete data.identity
@@ -42,8 +48,16 @@ class Account extends Model {
     return data
   }
 
+  static findById (id, options) {
+    return Account.findOne({where: {primary: id}}, options)
+  }
+
+  static findByName (name, options) {
+    return Account.findOne({where: {name: name}}, options)
+  }
+
   createEntry (values, options) {
-    values.account = this.id
+    values.account = this.primary
     values.balance = this.balance
     return Entry.create(values, options)
   }
@@ -57,7 +71,7 @@ class Account extends Model {
     if (!group) return
     return Entry.findOne({
       where: {
-        account: this.id,
+        account: this.primary,
         entry_group: { $lte: group.id }
       },
       order: 'entry_group DESC',
@@ -69,11 +83,8 @@ class Account extends Model {
 Account.validateExternal = validator.create('Account')
 
 PersistentModelMixin(Account, sequelize, {
-  id: {
-    type: Sequelize.STRING,
-    primaryKey: true
-  },
-  name: Sequelize.STRING,
+  primary: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+  name: { type: Sequelize.STRING, unique: true },
   balance: Sequelize.DECIMAL(10, 2),
   identity: Sequelize.STRING(1024),
   password: Sequelize.STRING,

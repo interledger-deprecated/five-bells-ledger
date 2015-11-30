@@ -415,7 +415,7 @@ exports.putResource = function * create () {
     // only be added by the owner of the account
     // _this.req.user is set by the passport middleware
     let user = _this.req.user
-    validateAuthorizations(user && user.id, transfer, previousDebits)
+    validateAuthorizations(user && user.name, transfer, previousDebits)
 
     yield processStateTransitions(transaction, transfer)
 

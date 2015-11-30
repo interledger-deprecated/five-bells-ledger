@@ -33,7 +33,7 @@ PersistentModelMixin(Entry, sequelize, {
   id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
   entry_group: Sequelize.UUID,
   transfer_id: Sequelize.UUID,
-  account: Sequelize.STRING(1024),
+  account: Sequelize.INTEGER,
   balance: Sequelize.DECIMAL(10, 2),
   created_at: Sequelize.DATE,
   updated_at: Sequelize.DATE

@@ -3,11 +3,8 @@
 module.exports = {
   up: function (queryInterface, Sequelize) {
     queryInterface.createTable('Accounts', {
-      id: {
-        type: Sequelize.STRING,
-        primaryKey: true
-      },
-      name: Sequelize.STRING,
+      primary: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+      name: { type: Sequelize.STRING, unique: true },
       balance: Sequelize.DECIMAL(10, 2),
       identity: Sequelize.STRING(1024),
       password: Sequelize.STRING,
@@ -64,7 +61,7 @@ module.exports = {
       id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
       entry_group: Sequelize.UUID,
       transfer_id: Sequelize.UUID,
-      account: Sequelize.STRING(1024),
+      account: Sequelize.INTEGER,
       balance: Sequelize.DECIMAL(10, 2),
       created_at: Sequelize.DATE,
       updated_at: Sequelize.DATE
@@ -77,7 +74,7 @@ module.exports = {
     queryInterface.dropTable('Transfers')
     queryInterface.dropTable('Subscriptions')
     queryInterface.dropTable('EntryGroups')
-    queryInterface.dropTable('Entries')
     queryInterface.removeIndex('Entries', ['account', 'entry_group'])
+    queryInterface.dropTable('Entries')
   }
 }

@@ -296,8 +296,8 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     // Check balances
-    expect((yield Account.findById('alice')).balance).to.equal(90)
-    expect((yield Account.findById('bob')).balance).to.equal(10)
+    expect((yield Account.findByName('alice')).balance).to.equal(90)
+    expect((yield Account.findByName('bob')).balance).to.equal(10)
   })
 
   it('should return 200 if the transfer already exists', function *() {
@@ -358,8 +358,8 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     // Check balances
-    expect((yield Account.findById('alice')).balance).to.equal(90)
-    expect((yield Account.findById('bob')).balance).to.equal(10)
+    expect((yield Account.findByName('alice')).balance).to.equal(90)
+    expect((yield Account.findByName('bob')).balance).to.equal(10)
   })
 
   it('should accept a transfer with an upper case ID but convert the ID ' +
@@ -928,7 +928,7 @@ describe('PUT /transfers/:id', function () {
       .expect(200)
       .expect({
         id: 'http://localhost/accounts/bob',
-        name: 'Bob',
+        name: 'bob',
         balance: '10'
       })
       .end()
@@ -938,7 +938,7 @@ describe('PUT /transfers/:id', function () {
       .expect(200)
       .expect({
         id: 'http://localhost/accounts/dave',
-        name: 'Dave',
+        name: 'dave',
         balance: '10'
       })
       .end()
@@ -985,7 +985,7 @@ describe('PUT /transfers/:id', function () {
       .expect(200)
       .expect(_.assign({}, {
         id: 'http://localhost/accounts/alice',
-        name: 'Alice',
+        name: 'alice',
         balance: '90'
       }))
       .end()
@@ -995,7 +995,7 @@ describe('PUT /transfers/:id', function () {
       .expect(200)
       .expect(_.assign({}, {
         id: 'http://localhost/accounts/candice',
-        name: 'Candice',
+        name: 'candice',
         balance: '40'
       }))
       .end()
@@ -1043,7 +1043,7 @@ describe('PUT /transfers/:id', function () {
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/alice',
-          name: 'Alice',
+          name: 'alice',
           balance: '50'
         }))
         .end()
@@ -1053,7 +1053,7 @@ describe('PUT /transfers/:id', function () {
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/candice',
-          name: 'Candice',
+          name: 'candice',
           balance: '30'
         }))
         .end()
@@ -1063,7 +1063,7 @@ describe('PUT /transfers/:id', function () {
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/bob',
-          name: 'Bob',
+          name: 'bob',
           balance: '30'
         }))
         .end()
@@ -1073,7 +1073,7 @@ describe('PUT /transfers/:id', function () {
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/dave',
-          name: 'Dave',
+          name: 'dave',
           balance: '40'
         }))
         .end()
