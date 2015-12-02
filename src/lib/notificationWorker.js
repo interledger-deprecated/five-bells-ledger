@@ -47,27 +47,28 @@ class NotificationWorker {
       },
       transaction
     })
+    if (!subscriptions) {
+      return
+    }
 
-    if (subscriptions) {
-      subscriptions = _.values(subscriptions)
-        // log.debug('notifying ' + subscription.owner + ' at ' +
-        //   subscription.target)
-        //
-      yield subscriptions.map((subscription) => {
-        const notification = this.Notification.upsert({
+    subscriptions = _.values(subscriptions)
+    // log.debug('notifying ' + subscription.owner + ' at ' +
+    //   subscription.target)
+    ;(yield subscriptions.map((subscription) => {
+      return this.Notification.findOrCreate({
+        where: {
           subscription_id: subscription.id,
           transfer_id: transfer.id
-        }, { transaction })
-
-        // We will schedule an immediate attempt to send the notification for
-        // performance in the good case.
-        co(this.processNotificationWithInstances(notification, transfer, subscription)).catch((err) => {
-          this.log.debug('immediate notification send failed ' + err)
-        })
-
-        return notification
+        },
+        transaction
       })
-    }
+    })).forEach(function (notification, i) {
+      // We will schedule an immediate attempt to send the notification for
+      // performance in the good case.
+      co(this.processNotificationWithInstances(notification, transfer, subscriptions[i])).catch((err) => {
+        this.log.debug('immediate notification send failed ' + err)
+      })
+    }, this)
   }
 
   scheduleProcessing () {
@@ -79,7 +80,14 @@ class NotificationWorker {
   }
 
   * processNotificationQueue () {
-    const notifications = yield this.Notification.findAll()
+    const notifications = yield this.Notification.findAll({
+      where: {
+        $or: [
+          { retry_at: null },
+          { retry_at: {lt: new Date()} }
+        ]
+      }
+    })
     this.log.debug('processing ' + notifications.length + ' notifications')
     yield notifications.map(this.processNotification.bind(this))
 
@@ -108,6 +116,11 @@ class NotificationWorker {
         json: true,
         body: notificationBody
       })
+      // Success!
+      if (result.statusCode < 400) {
+        yield notification.destroy()
+        return
+      }
       if (result.statusCode >= 400) {
         this.log.debug('remote error for notification ' + result.statusCode,
           result.body)
@@ -116,7 +129,12 @@ class NotificationWorker {
     } catch (err) {
       this.log.debug('notification send failed ' + err)
     }
-    yield notification.destroy()
+
+    // Failed: retry soon (exponential backoff).
+    let retries = notification.retry_count = (notification.retry_count || 0) + 1
+    let delay = Math.min(120, Math.pow(2, retries))
+    notification.retry_at = new Date(Date.now() + 1000 * delay)
+    yield notification.save()
   }
 
   stop () {

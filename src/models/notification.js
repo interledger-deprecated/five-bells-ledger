@@ -18,12 +18,17 @@ class Notification extends Model {
 
 PersistentModelMixin(Notification, sequelize, {
   subscription_id: Sequelize.UUID,
-  transfer_id: Sequelize.UUID
+  transfer_id: Sequelize.UUID,
+  retry_count: Sequelize.INTEGER,
+  retry_at: Sequelize.DATE
 }, {
-  indexes: [{
-    unique: true,
-    fields: ['subscription_id', 'transfer_id']
-  }]
+  indexes: [
+    {
+      unique: true,
+      fields: ['subscription_id', 'transfer_id']
+    },
+    { fields: ['retry_at'] }
+  ]
 })
 
 Notification.DbModel.belongsTo(Transfer.DbModel)

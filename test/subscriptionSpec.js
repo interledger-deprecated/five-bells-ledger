@@ -180,8 +180,6 @@ describe('Subscriptions', function () {
         .send(transfer)
         .expect(201)
         .end()
-      yield notificationWorker.processNotificationQueue()
-
       this.clock.tick(1000)
 
       // In production this function should be triggered by the workers started in app.js
@@ -190,6 +188,37 @@ describe('Subscriptions', function () {
 
       // Make sure we were notified
       subscriberNock.done()
+    })
+  })
+
+  describe('Retry failed notifications', function () {
+    it('re-posts the notification until success', function *() {
+      const subscriberNock1 = nock('http://subscriber.example')
+        .post('/notifications')
+        .reply(400) // fail the first time
+      const subscriberNock2 = nock('http://subscriber.example')
+        .post('/notifications')
+        .reply(204)
+
+      const transfer = this.exampleTransfer
+      delete transfer.debits[0].authorized
+      yield this.request()
+        .put(transfer.id)
+        .send(transfer)
+        .expect(201)
+        .end()
+      subscriberNock1.done()
+
+      this.clock.tick(500)
+      // This doesn't notify because we are still waiting another 1.5 seconds for the retry.
+      yield notificationWorker.processNotificationQueue()
+      expect(subscriberNock2.isDone()).to.equal(false)
+
+      this.clock.tick(1501)
+      yield notificationWorker.processNotificationQueue()
+
+      // Make sure we were notified
+      subscriberNock2.done()
     })
   })
 })
