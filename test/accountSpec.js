@@ -107,7 +107,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findById('bob')).getDataExternal()).to.deep.equal(account)
+      expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(account)
     })
 
     it('should return 200 if the account already exists', function *() {
@@ -128,7 +128,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      const row = yield Account.findById('alice')
+      const row = yield Account.findByName('alice')
       expect(row.balance).to.equal(90)
     })
   })
@@ -143,7 +143,7 @@ describe('Accounts', function () {
         .auth('admin', 'admin')
         .send(account)
         .expect(function (res) {
-          expect(res.body.name).to.equal('Eve')
+          expect(res.body.name).to.equal('eve')
           // public_key is not returned
           expect(res.body.public_key).to.equal(undefined)
         })
@@ -151,7 +151,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      const user = (yield Account.findById('eve'))
+      const user = (yield Account.findByName('eve'))
       expect(user.public_key).to.equal(publicKey)
     })
   })
@@ -179,13 +179,14 @@ describe('Accounts', function () {
         .expect(201)
         .end()
 
-      const entry1 = yield (yield Account.findById('alice')).findEntry(now)
+      const account = yield Account.findByName('alice')
+      const entry1 = yield account.findEntry(now)
       expect(entry1.transfer_id).to.equal(transfer1ID)
-      expect(entry1.account).to.equal('alice')
+      expect(entry1.account).to.equal(account.primary)
       expect(entry1.balance).to.equal(90)
-      const entry2 = yield (yield Account.findById('alice')).findEntry(new Date())
+      const entry2 = yield account.findEntry(new Date())
       expect(entry2.transfer_id).to.equal(transfer2ID)
-      expect(entry2.account).to.equal('alice')
+      expect(entry2.account).to.equal(account.primary)
       expect(entry2.balance).to.equal(80)
     })
   })

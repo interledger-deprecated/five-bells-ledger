@@ -30,7 +30,7 @@ AccountBalances.prototype._getAccountBalances = function * (creditsOrDebits) {
 
   for (let account of Object.keys(accounts)) {
     const amounts = _.pluck(accounts[account], 'amount')
-    const accountObj = yield Account.findById(account, { transaction: this.transaction })
+    const accountObj = yield Account.findByName(account, { transaction: this.transaction })
 
     if (accountObj === null) {
       throw new UnprocessableEntityError(
@@ -60,7 +60,7 @@ AccountBalances.prototype._applyDebits = function * (accounts) {
     }
 
     // Take money out of senders' accounts
-    const account = yield Account.findById(sender, { transaction })
+    const account = yield Account.findByName(sender, { transaction })
     log.debug('sender ' + sender + ' balance: ' + account.balance +
       ' -> ' + (account.balance - debitAccount.totalAmount))
     account.balance -= debitAccount.totalAmount
@@ -78,7 +78,7 @@ AccountBalances.prototype._applyCredits = function * (accounts) {
   for (let recipient of Object.keys(accounts)) {
     const creditAccount = accounts[recipient]
 
-    const account = yield Account.findById(recipient, { transaction })
+    const account = yield Account.findByName(recipient, { transaction })
     log.debug('recipient ' + recipient + ' balance: ' + account.balance +
       ' -> ' + (account.balance + creditAccount.totalAmount))
     account.balance += creditAccount.totalAmount
@@ -97,7 +97,7 @@ AccountBalances.prototype._saveAccount = function * (account, group) {
 }
 
 AccountBalances.prototype._holdAccount = function * () {
-  const holdAccount = yield Account.findById('hold', {transaction: this.transaction})
+  const holdAccount = yield Account.findByName('hold', {transaction: this.transaction})
   return holdAccount ||
     (yield Account.create({
       id: 'hold',

@@ -1,38 +1,38 @@
 {
   "admin": {
     "id": "http://localhost/accounts/admin",
-    "name": "Admin",
+    "name": "admin",
     "balance": "0",
     "password": "admin",
     "is_admin": true
   },
   "alice": {
     "id": "http://localhost/accounts/alice",
-    "name": "Alice",
+    "name": "alice",
     "balance": "100",
     "password": "alice"
   },
   "bob": {
     "id": "http://localhost/accounts/bob",
-    "name": "Bob",
+    "name": "bob",
     "balance": "0",
     "password": "bob"
   },
   "candice": {
     "id": "http://localhost/accounts/candice",
-    "name": "Candice",
+    "name": "candice",
     "balance": "50",
     "password": "candice"
   },
   "dave": {
     "id": "http://localhost/accounts/dave",
-    "name": "Dave",
+    "name": "dave",
     "balance": "0",
     "password": "dave"
   },
   "eve": {
     "id": "http://localhost/accounts/eve",
-    "name": "Eve",
+    "name": "eve",
     "balance": "50"
   }
 }

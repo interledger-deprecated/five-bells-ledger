@@ -15,7 +15,7 @@ passport.use(new BasicStrategy(
       return done(null, false)
     }
 
-    Account.findById(username)
+    Account.findByName(username)
       .then(function (userObj) {
         if (userObj && password && userObj.password === password) {
           return done(null, userObj)
@@ -27,7 +27,7 @@ passport.use(new BasicStrategy(
 
 passport.use(new HTTPSignatureStrategy(
   function (username, done) {
-    Account.findById(username)
+    Account.findByName(username)
       .then(function (userObj) {
         if (!userObj) {
           return done(new UnauthorizedError('Unknown or invalid account'))
