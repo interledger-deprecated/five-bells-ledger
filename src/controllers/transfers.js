@@ -11,7 +11,6 @@ const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
 const notificationWorker = require('../services/notificationWorker')
 const log = require('../services/log')('transfers')
-const Condition = require('five-bells-condition').Condition
 const requestUtil = require('five-bells-shared/utils/request')
 const updateState = require('../lib/updateState')
 const jsonld = require('five-bells-shared/utils/jsonld')
@@ -123,6 +122,7 @@ function updateTransferObject (originalTransfer, transfer) {
   transfer.prepared_at = updatedTransferData.prepared_at
   transfer.pre_executed_at = updatedTransferData.pre_executed_at
   transfer.executed_at = updatedTransferData.executed_at
+  transfer.rejected_at = updatedTransferData.rejected_at
 
   // Ignore undefined properties
   const transferData = _.omit(transfer.getData(), _.isUndefined)
@@ -145,10 +145,14 @@ function updateTransferObject (originalTransfer, transfer) {
     }
   })
 
-  // Clients may fulfill the execution condition
+  // Clients may fulfill the execution/cancellation conditions
   if (transfer.execution_condition_fulfillment) {
     updatedTransferData.execution_condition_fulfillment =
       transfer.execution_condition_fulfillment
+  }
+  if (transfer.cancellation_condition_fulfillment) {
+    updatedTransferData.cancellation_condition_fulfillment =
+      transfer.cancellation_condition_fulfillment
   }
 
   // The old and new objects should now be exactly equal
@@ -226,18 +230,11 @@ function * processStateTransitions (tr, transfer) {
     updateState(transfer, 'prepared')
   }
 
-  if (transfer.state === 'prepared') {
-    if (transfer.execution_condition &&
-      transfer.execution_condition_fulfillment) {
-      let isValidFulfillment = Condition.testFulfillment(transfer.execution_condition,
-        transfer.execution_condition_fulfillment)
-      if (!isValidFulfillment) {
-        throw new UnmetConditionError('ConditionFulfillment failed')
-      }
-      updateState(transfer, 'pre_executed')
-    } else if (!transfer.execution_condition) {
-      updateState(transfer, 'pre_executed')
+  if (transfer.state === 'prepared' && transfer.hasFulfillment('execution')) {
+    if (!transfer.hasValidFulfillment('execution')) {
+      throw new UnmetConditionError('ConditionFulfillment failed')
     }
+    updateState(transfer, 'pre_executed')
   }
 
   if (transfer.state === 'pre_executed') {
@@ -248,6 +245,18 @@ function * processStateTransitions (tr, transfer) {
     updateState(transfer, 'executed')
 
     // Remove the expiry countdown
+    transferExpiryMonitor.unwatch(transfer.id)
+  }
+
+  let canRejectState = transfer.state === 'proposed' || transfer.state === 'prepared'
+  if (canRejectState && transfer.cancellation_condition_fulfillment) {
+    if (!transfer.hasValidFulfillment('cancellation')) {
+      throw new UnmetConditionError('ConditionFulfillment failed')
+    }
+    if (transfer.state === 'prepared') {
+      yield accountBalances.revertDebits()
+    }
+    updateState(transfer, 'rejected')
     transferExpiryMonitor.unwatch(transfer.id)
   }
 }

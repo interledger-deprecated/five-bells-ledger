@@ -581,6 +581,52 @@ describe('PUT /transfers/:id', function () {
         .end()
     })
 
+  it('should set the state to "rejected" if and only if the ' +
+    'cancellation_condition_fulfillment is present',
+    function *() {
+      let transfer = this.exampleTransfer
+      delete transfer.debits[0].authorized
+      transfer.cancellation_condition = this.executedTransfer.execution_condition
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      // Invalid fulfillment
+      transfer.cancellation_condition_fulfillment = {
+        'type': 'ed25519-sha512',
+        'signature': crypto.createHash('sha512').update('nope').digest('base64')
+      }
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(422)
+        .expect({
+          id: 'UnmetConditionError',
+          message: 'ConditionFulfillment failed'
+        })
+        .end()
+
+      transfer.cancellation_condition_fulfillment = this.executedTransfer.execution_condition_fulfillment
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(200)
+        .expect(_.assign({}, transfer, {
+          state: 'rejected',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            rejected_at: '2015-06-16T00:00:00.000Z'
+          }
+        }))
+        .end()
+    })
+
   it('should execute the transfer if it is authorized and ' +
     'there is no execution condition', function *() {
     const transfer = this.exampleTransfer
