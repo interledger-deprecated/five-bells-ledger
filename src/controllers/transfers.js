@@ -248,11 +248,14 @@ function * processStateTransitions (tr, transfer) {
     transferExpiryMonitor.unwatch(transfer.id)
   }
 
-  if (transfer.cancellation_condition_fulfillment) {
+  let canRejectState = transfer.state === 'proposed' || transfer.state === 'prepared'
+  if (canRejectState && transfer.cancellation_condition_fulfillment) {
     if (!transfer.hasValidFulfillment('cancellation')) {
       throw new UnmetConditionError('ConditionFulfillment failed')
     }
-    yield accountBalances.revertDebits()
+    if (transfer.state === 'prepared') {
+      yield accountBalances.revertDebits()
+    }
     updateState(transfer, 'rejected')
     transferExpiryMonitor.unwatch(transfer.id)
   }
