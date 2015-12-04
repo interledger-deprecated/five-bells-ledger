@@ -923,13 +923,6 @@ describe('PUT /transfers/:id', function () {
         proposed_at: '2015-06-16T00:00:00.000Z'
       }
     })
-    yield this.request()
-      .put(this.exampleTransfer.id)
-      .auth('alice', 'alice')
-      .send(transfer)
-      .expect(201)
-      .expect(transferResult)
-      .end()
 
     const notification = nock('http://subscriber.example')
       .post('/notifications', (body) => {
@@ -941,6 +934,14 @@ describe('PUT /transfers/:id', function () {
         return true
       })
       .reply(204)
+
+    yield this.request()
+      .put(this.exampleTransfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(transferResult)
+      .end()
 
     yield notificationWorker.processNotificationQueue()
 
