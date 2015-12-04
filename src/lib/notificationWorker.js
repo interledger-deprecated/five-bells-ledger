@@ -62,7 +62,8 @@ class NotificationWorker {
         },
         transaction
       })
-    })).forEach(function (notification, i) {
+    })).forEach(function (notification_and_created, i) {
+      let notification = notification_and_created[0]
       // We will schedule an immediate attempt to send the notification for
       // performance in the good case.
       co(this.processNotificationWithInstances(notification, transfer, subscriptions[i])).catch((err) => {
