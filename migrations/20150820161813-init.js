@@ -61,7 +61,7 @@ module.exports = {
 
     queryInterface.createTable('Entries', {
       id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-      entry_group: Sequelize.UUID,
+      entry_group: Sequelize.INTEGER,
       transfer_id: Sequelize.UUID,
       account: Sequelize.INTEGER,
       balance: Sequelize.DECIMAL(10, 2),
