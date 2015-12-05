@@ -67,8 +67,9 @@ module.exports = {
       balance: Sequelize.DECIMAL(10, 2),
       created_at: Sequelize.DATE,
       updated_at: Sequelize.DATE
+    }).then(function () {
+      queryInterface.addIndex('Entries', ['account', 'entry_group'])
     })
-    queryInterface.addIndex('Entries', ['account', 'entry_group'])
   },
 
   down: function (queryInterface, Sequelize) {
