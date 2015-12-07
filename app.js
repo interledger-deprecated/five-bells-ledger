@@ -91,15 +91,26 @@ if (!module.parent) {
       }
     }
 
+    const holdAccount = yield models.Account.findByName('hold')
+    if (!holdAccount) {
+      yield models.Account.create({name: 'hold', balance: '0'})
+    }
+
     if (config.default_admin) {
       let admin = config.default_admin
-      yield models.Account.create({
-        id: admin.user,
-        name: admin.user,
-        balance: '0',
-        password: admin.pass,
-        is_admin: true
-      })
+      let admin_account = yield models.Account.findByName(admin.user)
+      // Update the password if the account already exists.
+      if (admin_account) {
+        admin_account.password = admin.pass
+        yield admin_account.save()
+      } else {
+        yield models.Account.create({
+          name: admin.user,
+          balance: '0',
+          password: admin.pass,
+          is_admin: true
+        })
+      }
     }
 
     app.listen(config.server.port)

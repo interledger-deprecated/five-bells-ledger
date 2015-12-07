@@ -98,12 +98,10 @@ AccountBalances.prototype._saveAccount = function * (account, group) {
 
 AccountBalances.prototype._holdAccount = function * () {
   const holdAccount = yield Account.findByName('hold', {transaction: this.transaction})
-  return holdAccount ||
-    (yield Account.create({
-      id: 'hold',
-      name: 'hold',
-      balance: '0'
-    }, {transaction: this.transaction}))
+  if (!holdAccount) {
+    throw new Error('Missing "hold" account')
+  }
+  return holdAccount
 }
 
 module.exports = function * (transaction, transfer) {

@@ -49,11 +49,17 @@ class Account extends Model {
   }
 
   static findById (id, options) {
-    return Account.findOne({where: {primary: id}}, options)
+    return Account.findOne({
+      where: {primary: id},
+      transaction: options && options.transaction
+    })
   }
 
   static findByName (name, options) {
-    return Account.findOne({where: {name: name}}, options)
+    return Account.findOne({
+      where: {name: name},
+      transaction: options && options.transaction
+    })
   }
 
   createEntry (values, options) {
