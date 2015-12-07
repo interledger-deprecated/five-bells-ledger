@@ -17,6 +17,8 @@ test:
     # Extract test artifacts (results and coverage data)
     - docker cp ledger-test:/usr/src/app/xunit.xml ${CIRCLE_TEST_REPORTS}/
     - docker cp ledger-test:/usr/src/app/coverage .
+    # Generate API documentation
+    - npm run apidoc
 deployment:
   production:
     branch: master
@@ -31,6 +33,10 @@ deployment:
       - docker tag interledger/five-bells-ledger:latest interledger/five-bells-ledger:$(git describe)
       - docker push interledger/five-bells-ledger:latest
       - docker push interledger/five-bells-ledger:$(git describe)
+      # Upload API docs to S3
+      - npm install -g s3-cli
+      - s3-cli sync --delete-removed apidoc-out s3://interledger-docs/five-bells-ledger/latest/apidoc
 general:
   artifacts:
     - "coverage/lcov-report"
+    - "apidoc-out"
