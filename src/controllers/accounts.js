@@ -37,7 +37,7 @@ exports.getResource = function * fetch () {
 
   let can_modify = this.req.user.name === id || this.req.user.is_admin
   if (!can_modify) {
-    throw new UnauthorizedError('You don\'t have permission to modify this user')
+    throw new UnauthorizedError('You don\'t have permission to examine this user')
   }
 
   const account = yield Account.findByName(id)
