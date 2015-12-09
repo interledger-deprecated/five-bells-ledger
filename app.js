@@ -45,8 +45,13 @@ router.put('/transfers/:id',
 router.get('/transfers/:id', transfers.getResource)
 router.get('/transfers/:id/state', transfers.getStateResource)
 
-router.get('/accounts', accounts.getCollection)
-router.get('/accounts/:id', accounts.getResource)
+router.get('/accounts',
+  passport.authenticate(['basic', 'http-signature'], { session: false }),
+  filterAdmin,
+  accounts.getCollection)
+router.get('/accounts/:id',
+  passport.authenticate(['basic', 'http-signature'], { session: false }),
+  accounts.getResource)
 router.put('/accounts/:id',
   passport.authenticate(['basic', 'http-signature'], { session: false }),
   filterAdmin,

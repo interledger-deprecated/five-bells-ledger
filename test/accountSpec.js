@@ -39,17 +39,21 @@ describe('Accounts', function () {
       delete account2.password
       yield this.request()
         .get('/accounts')
+        .auth('admin', 'admin')
         .expect(200)
         .expect([account1, account2])
         .end()
     })
 
-    it('should return 200 with an empty array if there are no accounts', function *() {
-      yield Account.truncate()
+    it('should return 401/403 if the user isn\'t an admin', function *() {
       yield this.request()
         .get('/accounts')
-        .expect(200)
-        .expect([])
+        .expect(401)
+        .end()
+      yield this.request()
+        .get('/accounts')
+        .auth('alice', 'alice')
+        .expect(403)
         .end()
     })
   })
@@ -58,6 +62,7 @@ describe('Accounts', function () {
     it('should return 200 for an account that exists', function *() {
       yield this.request()
         .get(this.existingAccount.id)
+        .auth('admin', 'admin')
         .expect(200)
         .end()
     })
@@ -65,7 +70,32 @@ describe('Accounts', function () {
     it('should return 404 when the account does not exist', function *() {
       yield this.request()
         .get(this.exampleAccounts.bob.id)
+        .auth('admin', 'admin')
         .expect(404)
+        .end()
+    })
+
+    it('should return 401 when not authenticated', function *() {
+      yield this.request()
+        .get(this.existingAccount.id)
+        .expect(401)
+        .end()
+      yield this.request()
+        .get(this.exampleAccounts.bob.id)
+        .expect(401)
+        .end()
+    })
+
+    it('should return 403 when not authorized', function *() {
+      yield this.request()
+        .get(this.existingAccount.id)
+        .auth('bob', 'bob')
+        .expect(403)
+        .end()
+      yield this.request()
+        .get(this.exampleAccounts.bob.id)
+        .auth('alice', 'alice')
+        .expect(403)
         .end()
     })
 
@@ -75,6 +105,7 @@ describe('Accounts', function () {
       delete accountWithoutPassword.password
       yield this.request()
         .get(this.existingAccount.id)
+        .auth('admin', 'admin')
         .expect(200)
         .expect(accountWithoutPassword)
         .end()
@@ -83,6 +114,7 @@ describe('Accounts', function () {
     it('should return the balance as a string', function *() {
       yield this.request()
         .get(this.existingAccount.id)
+        .auth('admin', 'admin')
         .expect(200)
         .expect(function (res) {
           if (typeof res.body.balance !== 'string') {

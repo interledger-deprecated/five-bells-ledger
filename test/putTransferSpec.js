@@ -972,6 +972,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .get(this.multiCreditTransfer.credits[0].account)
+      .auth('admin', 'admin')
       .expect(200)
       .expect({
         id: 'http://localhost/accounts/bob',
@@ -982,6 +983,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .get(this.multiCreditTransfer.credits[1].account)
+      .auth('admin', 'admin')
       .expect(200)
       .expect({
         id: 'http://localhost/accounts/dave',
@@ -1029,6 +1031,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .get(this.multiDebitTransfer.debits[0].account)
+      .auth('admin', 'admin')
       .expect(200)
       .expect(_.assign({}, {
         id: 'http://localhost/accounts/alice',
@@ -1039,6 +1042,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .get(this.multiDebitTransfer.debits[1].account)
+      .auth('admin', 'admin')
       .expect(200)
       .expect(_.assign({}, {
         id: 'http://localhost/accounts/candice',
@@ -1087,6 +1091,7 @@ describe('PUT /transfers/:id', function () {
 
       yield this.request()
         .get(this.multiDebitAndCreditTransfer.debits[0].account)
+        .auth('admin', 'admin')
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/alice',
@@ -1097,6 +1102,7 @@ describe('PUT /transfers/:id', function () {
 
       yield this.request()
         .get(this.multiDebitAndCreditTransfer.debits[1].account)
+        .auth('admin', 'admin')
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/candice',
@@ -1107,6 +1113,7 @@ describe('PUT /transfers/:id', function () {
 
       yield this.request()
         .get(this.multiDebitAndCreditTransfer.credits[0].account)
+        .auth('admin', 'admin')
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/bob',
@@ -1117,6 +1124,7 @@ describe('PUT /transfers/:id', function () {
 
       yield this.request()
         .get(this.multiDebitAndCreditTransfer.credits[1].account)
+        .auth('admin', 'admin')
         .expect(200)
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/dave',

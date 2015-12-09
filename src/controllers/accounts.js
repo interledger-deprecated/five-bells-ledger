@@ -6,6 +6,7 @@ const db = require('../services/db')
 const log = require('../services/log')('accounts')
 const request = require('five-bells-shared/utils/request')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
+const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const Account = require('../models/account').Account
 
 exports.getCollection = function * find () {
@@ -33,6 +34,11 @@ exports.getResource = function * fetch () {
   request.validateUriParameter('id', id, 'Identifier')
   id = id.toLowerCase()
   log.debug('fetching account ID ' + id)
+
+  let can_modify = this.req.user.name === id || this.req.user.is_admin
+  if (!can_modify) {
+    throw new UnauthorizedError('You don\'t have permission to modify this user')
+  }
 
   const account = yield Account.findByName(id)
   if (!account) {
