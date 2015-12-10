@@ -1,18 +1,20 @@
 'use strict'
 
 const db = require('../../src/services/db')
-const Notification = require('../../src/models/notification').Notification
 const Account = require('../../src/models/account').Account
 const Transfer = require('../../src/models/transfer').Transfer
 const Subscription = require('../../src/models/subscription').Subscription
 
 exports.reset = function * () {
   yield db.sync()
-  yield db.transaction(function * (transaction) {
-    yield Notification.truncate({ transaction })
-    yield Account.truncate({ transaction })
-    yield Transfer.truncate({ transaction })
-    yield Subscription.truncate({ transaction })
+  return db.transaction(function * (transaction) {
+    if (db.getDialect() === 'mysql') {
+      yield db.query('SET FOREIGN_KEY_CHECKS = 0', { transaction })
+    }
+    yield db.truncate({ transaction })
+    if (db.getDialect() === 'mysql') {
+      yield db.query('SET FOREIGN_KEY_CHECKS = 1', { transaction })
+    }
   })
 }
 
