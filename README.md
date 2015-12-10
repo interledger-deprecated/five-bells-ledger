@@ -52,6 +52,7 @@ With the following configuration options set as environment variables:
 * `LEDGER_PUBLIC_HTTPS` (default: `''`) Whether or not the publicly visible instance of Five Bells Ledger is using HTTPS.
 * `LEDGER_ADMIN_USER` (default: `'admin'`) The admin account's username (an admin user can create/modify accounts).
 * `LEDGER_ADMIN_PASS` (default: none) The admin account's password.
+* `LEDGER_UNIT_DB_URI` (default `'sqlite://'`) Database to use for running unit tests. Configured separately for safety.
 
 
 ## Running with Docker (Alternative Method)

@@ -17,7 +17,7 @@ test:
     # Run lint
     - npm run lint
     # Run tests with coverage
-    - docker run --name=ledger-test -it --net=host -e LEDGER_DB_URI=mysql://ubuntu@localhost/circle_test -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm run migrate ; npm test --coverage -- -R spec-xunit-file'
+    - docker run --name=ledger-test -it --net=host -e LEDGER_UNIT_DB_URI=mysql://ubuntu@localhost/circle_test -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm run migrate ; npm test --coverage -- -R spec-xunit-file'
     # Extract test artifacts (results and coverage data)
     - docker cp ledger-test:/usr/src/app/xunit.xml ${CIRCLE_TEST_REPORTS}/
     - docker cp ledger-test:/usr/src/app/coverage .
