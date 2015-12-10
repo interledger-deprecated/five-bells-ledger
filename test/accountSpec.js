@@ -21,26 +21,33 @@ describe('Accounts', function () {
     // Define example data
     this.exampleAccounts = _.cloneDeep(require('./data/accounts'))
     this.adminAccount = this.exampleAccounts.admin
+    this.holdAccount = this.exampleAccounts.hold
     this.existingAccount = this.exampleAccounts.alice
 
     // Reset database
     yield dbHelper.reset()
 
     // Store some example data
-    yield dbHelper.addAccounts([this.adminAccount, this.existingAccount])
+    yield dbHelper.addAccounts([
+      this.adminAccount,
+      this.holdAccount,
+      this.existingAccount
+    ])
   })
 
   describe('GET /accounts', function () {
     it('should return 200', function *() {
       const account1 = this.adminAccount
-      const account2 = this.existingAccount
+      const account2 = this.holdAccount
+      const account3 = this.existingAccount
       // Passwords are not returned
       delete account1.password
       delete account2.password
+      delete account3.password
       yield this.request()
         .get('/accounts')
         .expect(200)
-        .expect([account1, account2])
+        .expect([account1, account2, account3])
         .end()
     })
 

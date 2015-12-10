@@ -34,5 +34,10 @@
     "id": "http://localhost/accounts/eve",
     "name": "eve",
     "balance": "50"
+  },
+  "hold": {
+    "id": "http://localhost/accounts/hold",
+    "name": "hold",
+    "balance": "0"
   }
 }

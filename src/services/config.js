@@ -16,9 +16,11 @@ if (process.env.NODE_ENV === 'unit') {
   config.updateDerivativeServerConfig()
 }
 
-if (config.getEnv('ADMIN_USER')) {
+let admin_user = config.getEnv('ADMIN_USER') || 'admin'
+let admin_pass = config.getEnv('ADMIN_PASS')
+if (admin_pass) {
   config.default_admin = {
-    user: config.getEnv('ADMIN_USER'),
-    pass: config.getEnv('ADMIN_PASS')
+    user: admin_user,
+    pass: admin_pass
   }
 }
