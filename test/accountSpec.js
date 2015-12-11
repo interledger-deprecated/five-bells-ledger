@@ -3,6 +3,7 @@
 const fs = require('fs')
 const _ = require('lodash')
 const expect = require('chai').expect
+const sinon = require('sinon')
 const app = require('../app')
 const Account = require('../src/models/account').Account
 const logger = require('../src/services/log')
@@ -12,11 +13,15 @@ const logHelper = require('five-bells-shared/testHelpers/log')
 
 const publicKey = fs.readFileSync(__dirname + '/data/public.pem', 'utf8')
 
+const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
+
 describe('Accounts', function () {
   logHelper(logger)
 
   beforeEach(function *() {
     appHelper.create(this, app)
+
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     // Define example data
     this.exampleAccounts = _.cloneDeep(require('./data/accounts'))
@@ -210,6 +215,11 @@ describe('Accounts', function () {
         .end()
 
       let now = new Date()
+
+      // MySQL uses second-resolution, so we need to tick 1000ms to
+      // ensure success.
+      this.clock.tick(1000)
+
       transfer.id = 'http://localhost/transfers/' + transfer2ID
       yield this.request()
         .put(transfer.id)
@@ -220,10 +230,11 @@ describe('Accounts', function () {
 
       const account = yield Account.findByName('alice')
       const entry1 = yield account.findEntry(now)
+      const entry2 = yield account.findEntry(new Date())
+
       expect(entry1.transfer_id).to.equal(transfer1ID)
       expect(entry1.account).to.equal(account.primary)
       expect(entry1.balance).to.equal(90)
-      const entry2 = yield account.findEntry(new Date())
       expect(entry2.transfer_id).to.equal(transfer2ID)
       expect(entry2.account).to.equal(account.primary)
       expect(entry2.balance).to.equal(80)
