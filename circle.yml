@@ -18,16 +18,16 @@ test:
     # Run lint
     - npm run lint
     # Run migrations forwards and backwards
-    - docker run --name=ledger-test -it --net=host -e LEDGER_DB_URI=mysql://ubuntu@localhost/circle_test -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm run migrate ; npm run migrate-undo'
+    - docker run --name=ledger-test-migration -it --net=host -e LEDGER_DB_URI=mysql://ubuntu@localhost/circle_test -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm run migrate ; npm run migrate-undo'
     # Run tests with coverage (MySQL)
-    - docker run --name=ledger-test -it --net=host -e LEDGER_UNIT_DB_URI=mysql://ubuntu@localhost/circle_test -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test --coverage -- -R spec-xunit-file'
+    - docker run --name=ledger-test-mysql -it --net=host -e LEDGER_UNIT_DB_URI=mysql://ubuntu@localhost/circle_test -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test'
     # Run tests with coverage (Postgres)
-    - docker run --name=ledger-test -it --net=host -e LEDGER_UNIT_DB_URI=postgres://ubuntu@localhost/circle_test -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test --coverage -- -R spec-xunit-file'
+    - docker run --name=ledger-test-postgres -it --net=host -e LEDGER_UNIT_DB_URI=postgres://ubuntu@localhost/circle_test -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test'
     # Run tests with coverage (SQLite)
-    - docker run --name=ledger-test -it --net=host -e LEDGER_UNIT_DB_URI=sqlite:// -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test --coverage -- -R spec-xunit-file'
+    - docker run --name=ledger-test-sqlite -it --net=host -e LEDGER_UNIT_DB_URI=sqlite:// -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test --coverage -- -R spec-xunit-file'
     # Extract test artifacts (results and coverage data)
-    - docker cp ledger-test:/usr/src/app/xunit.xml ${CIRCLE_TEST_REPORTS}/
-    - docker cp ledger-test:/usr/src/app/coverage .
+    - docker cp ledger-test-sqlite:/usr/src/app/xunit.xml ${CIRCLE_TEST_REPORTS}/
+    - docker cp ledger-test-sqlite:/usr/src/app/coverage .
     # Generate API documentation
     - npm run apidoc
 deployment:
@@ -35,7 +35,7 @@ deployment:
     branch: master
     commands:
       # Upload coverage data
-      - docker run --volumes-from ledger-test -e COVERALLS_REPO_TOKEN=${COVERALLS_TOKEN} interledger/five-bells-ledger npm run coveralls
+      - docker run --volumes-from=ledger-test-sqlite -e COVERALLS_REPO_TOKEN=${COVERALLS_TOKEN} interledger/five-bells-ledger npm run coveralls
       # Push NPM package if not yet published
       - mv npmrc-env .npmrc
       - if [ -z "$(npm info $(npm ls --depth=-1 2>/dev/null | head -1 | cut -f 1 -d " ") 2>/dev/null)" ] ; then npm publish ; fi
