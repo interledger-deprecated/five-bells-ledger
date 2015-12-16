@@ -11,7 +11,7 @@ exports.reset = function * () {
     if (db.getDialect() === 'mysql') {
       yield db.query('SET FOREIGN_KEY_CHECKS = 0', { transaction })
     }
-    yield db.truncate({ transaction })
+    yield db.truncate({ transaction, cascade: true })
     if (db.getDialect() === 'mysql') {
       yield db.query('SET FOREIGN_KEY_CHECKS = 1', { transaction })
     }
