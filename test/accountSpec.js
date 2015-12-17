@@ -195,6 +195,61 @@ describe('Accounts', function () {
     })
   })
 
+  describe('DELETE /accounts/:uuid', function () {
+    it('should delete the accounts if it exists', function *() {
+      const account = this.existingAccount
+      delete account.password
+      yield this.request()
+        .delete(account.id)
+        .auth('admin', 'admin')
+        .expect(200)
+        .expect(account)
+        .end()
+
+      // Check balances
+      expect(yield Account.findByName('bob')).to.be.null
+    })
+
+    it('should return 404 if the account does not exist', function *() {
+      const account = this.exampleAccounts.bob
+      delete account.password
+      yield this.request()
+        .delete(account.id)
+        .auth('admin', 'admin')
+        .expect(404)
+        .end()
+
+      // Check balances
+      expect(yield Account.findByName('bob')).to.be.null
+    })
+
+    it('should return 403 if the user is not an admin', function *() {
+      const account = this.existingAccount
+      delete account.password
+      yield this.request()
+        .delete(account.id)
+        .auth('alice', 'alice')
+        .expect(403)
+        .end()
+
+      // Check balances
+      expect(yield Account.findByName('bob')).to.be.null
+    })
+
+    it('should return 403 if the user is not an admin and the account does not exist', function *() {
+      const account = this.exampleAccounts.bob
+      delete account.password
+      yield this.request()
+        .delete(account.id)
+        .auth('alice', 'alice')
+        .expect(403)
+        .end()
+
+      // Check balances
+      expect(yield Account.findByName('bob')).to.be.null
+    })
+  })
+
   describe('Account#findEntry', function () {
     it('returns an Entry', function *() {
       yield dbHelper.addAccounts([this.exampleAccounts.bob])
