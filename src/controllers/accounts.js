@@ -93,3 +93,37 @@ exports.putResource = function * putResource () {
   this.body = this.body.getDataExternal()
   this.status = existed ? 200 : 201
 }
+
+/**
+ * @api {delete} /accounts/:id Delete a user
+ * @apiName DeleteAccount
+ * @apiGroup Account
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Delete a user.
+ *
+ * @apiParam {String} id Account's unique identifier
+ *
+ * @apiUse InvalidUriParameterError
+ * @apiUse InvalidBodyError
+ *
+ * @return {void}
+ */
+exports.deleteResource = function * deleteResource () {
+  const self = this
+  let id = this.params.id
+  request.validateUriParameter('id', id, 'Identifier')
+  id = id.toLowerCase()
+
+  yield db.transaction(function * (transaction) {
+    const account = yield Account.findByName(id, { transaction })
+    if (account) {
+      self.body = account.getDataExternal()
+      yield account.destroy({ transaction })
+      log.debug('deleted account ID ' + id)
+      self.status = 200
+    } else {
+      self.status = 404
+    }
+  })
+}

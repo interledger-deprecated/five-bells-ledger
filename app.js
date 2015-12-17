@@ -57,6 +57,10 @@ router.put('/accounts/:id',
   filterAdmin,
   models.Account.createBodyParser(),
   accounts.putResource)
+router.delete('/accounts/:id',
+  passport.authenticate(['basic', 'http-signature'], { session: false }),
+  filterAdmin,
+  accounts.deleteResource)
 
 router.post('/subscriptions', models.Subscription.createBodyParser(), subscriptions.postResource)
 router.get('/subscriptions/:id', subscriptions.getResource)
