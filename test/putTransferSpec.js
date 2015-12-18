@@ -154,6 +154,18 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
+  it('should return 422 if any of the credit accounts match any of the debit accounts', function *() {
+    const transfer = _.cloneDeep(this.multiDebitAndCreditTransfer)
+    transfer.credits[0].account = transfer.debits[0].account
+
+    yield this.request()
+      .put(this.multiDebitAndCreditTransfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(422)
+      .end()
+  })
+
   it('should return 200 if a transfer is posted with the same expiry date',
     function *() {
       const transfer = _.cloneDeep(this.transferWithExpiry)
