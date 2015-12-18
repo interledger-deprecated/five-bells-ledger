@@ -37,6 +37,14 @@ class Account extends Model {
     return data
   }
 
+  getDataConnector () {
+    return {
+      id: uri.make('account', this.name.toLowerCase()),
+      name: this.name,
+      identity: this.identity
+    }
+  }
+
   static convertFromPersistent (data) {
     delete data.created_at
     delete data.updated_at

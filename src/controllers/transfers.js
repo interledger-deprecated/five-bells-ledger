@@ -17,6 +17,7 @@ const jsonld = require('five-bells-shared/utils/jsonld')
 const hashJSON = require('five-bells-shared/utils/hashJson')
 const Transfer = require('../models/transfer').Transfer
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
+const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-parameter-error')
 const UnmetConditionError = require('five-bells-shared/errors/unmet-condition-error')
 const InvalidModificationError =
 require('five-bells-shared/errors/invalid-modification-error')
@@ -65,12 +66,13 @@ exports.getResource = function * fetch () {
  * @apiVersion 1.0.0
  *
  * @apiDescription Use this to get a signed receipt containing only the id of
- *   transfer and its state.
+ *   transfer and its state. It functions even if the transfer doesn't exist yet.
  *
  * @apiParam {String} id Transfer
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ * @apiParam {String} type The signature type
+ * @apiParam {String} state The state to sign (for preimage signature types only)
  *
- * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
  *
  * @returns {void}
@@ -81,27 +83,30 @@ exports.getStateResource = function * getState () {
   id = id.toLowerCase()
   log.debug('fetching state receipt for transfer ID ' + id)
 
+  let signatureType = this.query.type || 'ed25519-sha512'
   let transfer = yield Transfer.findById(id)
-  if (!transfer) {
-    throw new NotFoundError('Unknown transfer ID')
-  }
+  let transferState = transfer ? transfer.state : null
 
   let message = {
-    id: uri.make('transfer', transfer.id),
-    state: transfer.state
+    id: uri.make('transfer', id),
+    state: transferState
   }
   let messageHash = hashJSON(message)
-  let signature = tweetnacl.util.encodeBase64(
-    tweetnacl.sign.detached(
-      tweetnacl.util.decodeBase64(messageHash),
-      tweetnacl.util.decodeBase64(config.keys.ed25519.secret)))
 
   let transferStateReceipt = {
+    type: signatureType,
     message: message,
-    type: 'ed25519-sha512',
-    signer: config.server.base_uri,
-    public_key: config.keys.ed25519.public,
-    signature: signature
+    signer: config.server.base_uri
+  }
+  if (signatureType === 'ed25519-sha512') {
+    transferStateReceipt.public_key = config.keys.ed25519.public
+    transferStateReceipt.signature = tweetnacl.util.encodeBase64(
+      tweetnacl.sign.detached(
+        tweetnacl.util.decodeBase64(messageHash),
+        tweetnacl.util.decodeBase64(config.keys.ed25519.secret)))
+  // TODO add support for 'sha256'
+  } else {
+    throw new InvalidUriParameterError('type is not valid')
   }
 
   this.body = transferStateReceipt

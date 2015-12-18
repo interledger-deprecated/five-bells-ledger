@@ -14,6 +14,13 @@ exports.getCollection = function * find () {
   this.body = _.invoke(accounts, 'getDataExternal')
 }
 
+exports.getConnectors = function * () {
+  const accounts = yield Account.findAll({
+    where: { identity: { $ne: null } }
+  })
+  this.body = _.invoke(accounts, 'getDataConnector')
+}
+
 /**
  * @api {get} /accounts/:id Fetch user info
  * @apiName GetAccount

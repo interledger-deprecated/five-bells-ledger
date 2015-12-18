@@ -50,10 +50,36 @@ describe('Transfer State', function () {
   })
 
   describe('GET /transfers/:uuid/state', function () {
-    it('should return a 404 if the transfer does not exist', function *() {
+    it('should return a 200 if the transfer does not exist', function *() {
+      const stateReceipt = {
+        id: 'http://localhost/transfers/03b7c787-e104-4390-934e-693072c6eda2',
+        state: null
+      }
+      const stateReceiptHash = hashJSON(stateReceipt)
+      const signature = tweetnacl.util.encodeBase64(
+        tweetnacl.sign.detached(
+          tweetnacl.util.decodeBase64(stateReceiptHash),
+          this.keyPair.secretKey))
+
       yield this.request()
         .get('/transfers/03b7c787-e104-4390-934e-693072c6eda2/state')
-        .expect(404)
+        .expect(200, {
+          message: stateReceipt,
+          type: 'ed25519-sha512',
+          signer: config.server.base_uri,
+          public_key: config.keys.ed25519.public,
+          signature: signature
+        })
+        .end()
+    })
+
+    it('returns 400 if the ?type parameter is invalid', function *() {
+      yield this.request()
+        .get(this.executedTransfer.id + '/state?type=bogus')
+        .expect(400, {
+          id: 'InvalidUriParameterError',
+          message: 'type is not valid'
+        })
         .end()
     })
 
