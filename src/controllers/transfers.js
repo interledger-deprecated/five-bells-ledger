@@ -377,6 +377,16 @@ exports.putResource = function * create () {
     transfer.credits[0].amount)
 
   // Do all static verification (signatures, validity, etc.) here
+  const creditAccounts = _.map(transfer.credits, function (credit) {
+    return credit.account
+  })
+  const debitAccounts = _.map(transfer.debits, function (debit) {
+    return debit.account
+  })
+  if (_.intersection(creditAccounts, debitAccounts).length) {
+    throw new UnprocessableEntityError(
+      'You cannot credit and debit the same account')
+  }
 
   // Verify debits
   let totalDebits = 0
