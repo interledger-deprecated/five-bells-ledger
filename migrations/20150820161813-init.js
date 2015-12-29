@@ -53,6 +53,16 @@ module.exports = {
       updated_at: Sequelize.DATE
     })
 
+    queryInterface.createTable('Notifications', {
+      id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+      subscription_id: Sequelize.UUID,
+      transfer_id: Sequelize.UUID,
+      retry_count: Sequelize.INTEGER,
+      retry_at: Sequelize.DATE,
+      created_at: Sequelize.DATE,
+      updated_at: Sequelize.DATE
+    })
+
     queryInterface.createTable('EntryGroups', {
       id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
       created_at: Sequelize.DATE,
