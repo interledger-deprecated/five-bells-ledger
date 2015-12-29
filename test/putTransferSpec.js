@@ -287,8 +287,6 @@ describe('PUT /transfers/:id', function () {
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
-          pre_executed_at: '2015-06-16T00:00:00.000Z',
-          pre_prepared_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -311,8 +309,6 @@ describe('PUT /transfers/:id', function () {
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
-          pre_executed_at: '2015-06-16T00:00:00.000Z',
-          pre_prepared_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -327,8 +323,6 @@ describe('PUT /transfers/:id', function () {
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
-          pre_executed_at: '2015-06-16T00:00:00.000Z',
-          pre_prepared_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -349,8 +343,6 @@ describe('PUT /transfers/:id', function () {
           state: 'executed',
           timeline: {
             executed_at: '2015-06-16T00:00:00.000Z',
-            pre_executed_at: '2015-06-16T00:00:00.000Z',
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -379,8 +371,6 @@ describe('PUT /transfers/:id', function () {
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
-          pre_executed_at: '2015-06-16T00:00:00.000Z',
-          pre_prepared_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -573,7 +563,6 @@ describe('PUT /transfers/:id', function () {
         .expect(_.assign({}, transfer, {
           state: 'prepared',
           timeline: {
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -640,8 +629,6 @@ describe('PUT /transfers/:id', function () {
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
-          pre_executed_at: '2015-06-16T00:00:00.000Z',
-          pre_prepared_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -706,8 +693,6 @@ describe('PUT /transfers/:id', function () {
           state: 'executed',
           timeline: {
             executed_at: '2015-06-16T00:00:00.000Z',
-            pre_executed_at: '2015-06-16T00:00:00.000Z',
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -759,8 +744,6 @@ describe('PUT /transfers/:id', function () {
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
-          pre_executed_at: '2015-06-16T00:00:00.000Z',
-          pre_prepared_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -817,8 +800,6 @@ describe('PUT /transfers/:id', function () {
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.001Z',
-          pre_executed_at: '2015-06-16T00:00:00.001Z',
-          pre_prepared_at: '2015-06-16T00:00:00.001Z',
           prepared_at: '2015-06-16T00:00:00.001Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -857,7 +838,6 @@ describe('PUT /transfers/:id', function () {
         .expect(_.assign({}, transfer, {
           state: 'prepared',
           timeline: {
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -882,7 +862,6 @@ describe('PUT /transfers/:id', function () {
         .expect(_.assign({}, transferWithoutConditionFulfillment, {
           state: 'prepared',
           timeline: {
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -897,8 +876,6 @@ describe('PUT /transfers/:id', function () {
           state: 'executed',
           timeline: {
             executed_at: '2015-06-16T00:00:00.000Z',
-            pre_executed_at: '2015-06-16T00:00:00.000Z',
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -917,8 +894,6 @@ describe('PUT /transfers/:id', function () {
       state: 'executed',
       timeline: {
         executed_at: '2015-06-16T00:00:00.000Z',
-        pre_executed_at: '2015-06-16T00:00:00.000Z',
-        pre_prepared_at: '2015-06-16T00:00:00.000Z',
         prepared_at: '2015-06-16T00:00:00.000Z',
         proposed_at: '2015-06-16T00:00:00.000Z'
       }
@@ -962,8 +937,6 @@ describe('PUT /transfers/:id', function () {
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
-          pre_executed_at: '2015-06-16T00:00:00.000Z',
-          pre_prepared_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -1021,8 +994,6 @@ describe('PUT /transfers/:id', function () {
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
-          pre_executed_at: '2015-06-16T00:00:00.000Z',
-          pre_prepared_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -1081,8 +1052,6 @@ describe('PUT /transfers/:id', function () {
           state: 'executed',
           timeline: {
             executed_at: '2015-06-16T00:00:00.000Z',
-            pre_executed_at: '2015-06-16T00:00:00.000Z',
-            pre_prepared_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z'
           }

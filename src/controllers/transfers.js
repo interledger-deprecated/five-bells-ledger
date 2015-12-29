@@ -118,9 +118,7 @@ function updateTransferObject (originalTransfer, transfer) {
   transfer.created_at = updatedTransferData.created_at
   transfer.updated_at = updatedTransferData.updated_at
   transfer.proposed_at = updatedTransferData.proposed_at
-  transfer.pre_prepared_at = updatedTransferData.pre_prepared_at
   transfer.prepared_at = updatedTransferData.prepared_at
-  transfer.pre_executed_at = updatedTransferData.pre_executed_at
   transfer.executed_at = updatedTransferData.executed_at
   transfer.rejected_at = updatedTransferData.rejected_at
 
@@ -220,32 +218,22 @@ function * processStateTransitions (tr, transfer) {
     })
 
     if (authorized) {
-      updateState(transfer, 'pre_prepared')
+      // Hold sender funds
+      yield accountBalances.applyDebits()
+      updateState(transfer, 'prepared')
     }
-  }
-
-  if (transfer.state === 'pre_prepared') {
-    // Hold sender funds
-    yield accountBalances.applyDebits()
-    updateState(transfer, 'prepared')
   }
 
   if (transfer.state === 'prepared' && transfer.hasFulfillment('execution')) {
     if (!transfer.hasValidFulfillment('execution')) {
       throw new UnmetConditionError('ConditionFulfillment failed')
     }
-    updateState(transfer, 'pre_executed')
-  }
-
-  if (transfer.state === 'pre_executed') {
-    // In a real-world / asynchronous implementation, the response from the
-    // external ledger would trigger the state transition from 'pre_executed' to
-    // 'executed'
     yield accountBalances.applyCredits()
-    updateState(transfer, 'executed')
 
     // Remove the expiry countdown
     transferExpiryMonitor.unwatch(transfer.id)
+
+    updateState(transfer, 'executed')
   }
 
   let canRejectState = transfer.state === 'proposed' || transfer.state === 'prepared'
