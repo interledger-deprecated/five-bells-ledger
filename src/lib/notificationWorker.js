@@ -16,6 +16,7 @@ class NotificationWorker {
     this.Subscription = Subscription
 
     this.processingInterval = 1000
+    this.initialRetryDelay = 2000
   }
 
   * start () {
@@ -59,6 +60,10 @@ class NotificationWorker {
         where: {
           subscription_id: subscription.id,
           transfer_id: transfer.id
+        },
+        defaults: {
+          // Don't retry right away
+          retry_at: new Date(Date.now() + this.initialRetryDelay)
         },
         transaction
       })

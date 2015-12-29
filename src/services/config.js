@@ -12,7 +12,10 @@ if (process.env.NODE_ENV === 'unit') {
   config.server.public_host = 'localhost'
   config.server.port = 61337
   config.server.public_port = 80
-  config.db.uri = 'sqlite://:memory:'
+  // We use a different config parameter for unit tests, because typically one
+  // wouldn't want to use their production or even dev databases for unit tests
+  // and it'd be far to easy to do that accidentally by running npm test.
+  config.db.uri = process.env.LEDGER_UNIT_DB_URI || 'sqlite://'
   config.updateDerivativeServerConfig()
 }
 

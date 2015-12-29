@@ -214,7 +214,9 @@ describe('Subscriptions', function () {
       yield notificationWorker.processNotificationQueue()
       expect(subscriberNock2.isDone()).to.equal(false)
 
-      this.clock.tick(1501)
+      // MySQL uses second precision so we add 1000ms to account for
+      // rounding.
+      this.clock.tick(2500)
       yield notificationWorker.processNotificationQueue()
 
       // Make sure we were notified
