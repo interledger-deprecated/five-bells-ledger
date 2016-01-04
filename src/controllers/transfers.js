@@ -85,7 +85,7 @@ exports.getStateResource = function * getState () {
 
   let signatureType = this.query.type || 'ed25519-sha512'
   let transfer = yield Transfer.findById(id)
-  let transferState = transfer ? transfer.state : null
+  let transferState = transfer ? transfer.state : 'nonexistent'
 
   let message = {
     id: uri.make('transfer', id),

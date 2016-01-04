@@ -53,7 +53,7 @@ describe('Transfer State', function () {
     it('should return a 200 if the transfer does not exist', function *() {
       const stateReceipt = {
         id: 'http://localhost/transfers/03b7c787-e104-4390-934e-693072c6eda2',
-        state: null
+        state: 'nonexistent'
       }
       const stateReceiptHash = hashJSON(stateReceipt)
       const signature = tweetnacl.util.encodeBase64(
