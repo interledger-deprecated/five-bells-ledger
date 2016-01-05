@@ -86,6 +86,14 @@ describe('Subscriptions', function () {
       expect((yield Subscription.findById(id)).getDataExternal())
         .to.deep.equal(this.existingSubscription)
     })
+
+    it('should return a 422 when the event/target/subject matches an existing subscription', function *() {
+      yield this.request()
+        .put(this.existingSubscription.id)
+        .send(this.existingSubscription)
+        .expect(422)
+        .end()
+    })
   //
   //   it('should return 409 if the transfer already exists', function *() {
   //     yield this.request()

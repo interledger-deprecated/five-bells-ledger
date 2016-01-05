@@ -49,6 +49,8 @@ module.exports = {
       target: Sequelize.STRING(1024),
       created_at: Sequelize.DATE,
       updated_at: Sequelize.DATE
+    }).then(function () {
+      queryInterface.addIndex('Subscriptions', ['event', 'subject', 'target'])
     })
 
     queryInterface.createTable('Notifications', {

@@ -7,6 +7,7 @@ const request = require('five-bells-shared/utils/request')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const Account = require('../models/account').Account
 const Subscription = require('../models/subscription').Subscription
+const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
 
 /**
  * Validate a subscription semantically.
@@ -38,6 +39,17 @@ function * storeSubscription (subscription) {
     // Check prerequisites
     yield * validateSubscriptionSemantics(subscription, transaction)
 
+    const duplicateSubscription = yield Subscription.findOne({
+      where: {
+        event: subscription.event,
+        subject: subscription.subject,
+        target: subscription.target
+      }
+    }, { transaction })
+
+    if (duplicateSubscription) {
+      throw new UnprocessableEntityError('Subscription with same event, subject, and target already exists')
+    }
     // Store subscription in database
     // TODO: Who to subscribe to should be defined by a separate `subject`
     //       field.
