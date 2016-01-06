@@ -16,7 +16,7 @@ exports.getCollection = function * find () {
 
 exports.getConnectors = function * () {
   const accounts = yield Account.findAll({
-    where: { identity: { $ne: null } }
+    where: { connector: { $ne: null } }
   })
   this.body = _.invoke(accounts, 'getDataConnector')
 }

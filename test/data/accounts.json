@@ -44,6 +44,6 @@
     "id": "http://localhost/accounts/trader",
     "name": "trader",
     "balance": "10",
-    "identity": "http://localhost:4321"
+    "connector": "http://localhost:4321"
   }
 }

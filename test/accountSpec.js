@@ -82,7 +82,7 @@ describe('Accounts', function () {
           {
             id: 'http://localhost/accounts/trader',
             name: 'trader',
-            identity: 'http://localhost:4321'
+            connector: 'http://localhost:4321'
           }
         ])
         .end()

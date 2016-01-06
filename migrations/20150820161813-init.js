@@ -6,7 +6,7 @@ module.exports = {
       primary: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
       name: { type: Sequelize.STRING, unique: true },
       balance: Sequelize.DECIMAL(10, 2),
-      identity: Sequelize.STRING(1024),
+      connector: Sequelize.STRING(1024),
       password: Sequelize.STRING,
       public_key: Sequelize.TEXT,
       is_admin: Sequelize.BOOLEAN,
