@@ -39,5 +39,11 @@
     "id": "http://localhost/accounts/hold",
     "name": "hold",
     "balance": "0"
+  },
+  "trader": {
+    "id": "http://localhost/accounts/trader",
+    "name": "trader",
+    "balance": "10",
+    "connector": "http://localhost:4321"
   }
 }

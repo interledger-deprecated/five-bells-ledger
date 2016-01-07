@@ -32,9 +32,17 @@ class Account extends Model {
     delete data.primary
     delete data.password
     delete data.public_key
-    if (!data.identity) delete data.identity
+    if (!data.connector) delete data.connector
     if (!data.is_admin) delete data.is_admin
     return data
+  }
+
+  getDataConnector () {
+    return {
+      id: uri.make('account', this.name.toLowerCase()),
+      name: this.name,
+      connector: this.connector
+    }
   }
 
   static convertFromPersistent (data) {
@@ -92,7 +100,7 @@ PersistentModelMixin(Account, sequelize, {
   primary: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
   name: { type: Sequelize.STRING, unique: true },
   balance: Sequelize.DECIMAL(10, 2),
-  identity: Sequelize.STRING(1024),
+  connector: Sequelize.STRING(1024),
   password: Sequelize.STRING,
   public_key: Sequelize.TEXT,
   is_admin: Sequelize.BOOLEAN

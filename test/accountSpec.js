@@ -28,6 +28,7 @@ describe('Accounts', function () {
     this.adminAccount = this.exampleAccounts.admin
     this.holdAccount = this.exampleAccounts.hold
     this.existingAccount = this.exampleAccounts.alice
+    this.traderAccount = this.exampleAccounts.trader
 
     // Reset database
     yield dbHelper.reset()
@@ -36,7 +37,8 @@ describe('Accounts', function () {
     yield dbHelper.addAccounts([
       this.adminAccount,
       this.holdAccount,
-      this.existingAccount
+      this.existingAccount,
+      this.traderAccount
     ])
   })
 
@@ -45,15 +47,17 @@ describe('Accounts', function () {
       const account1 = this.adminAccount
       const account2 = this.holdAccount
       const account3 = this.existingAccount
+      const account4 = this.traderAccount
       // Passwords are not returned
       delete account1.password
       delete account2.password
       delete account3.password
+      delete account4.password
       yield this.request()
         .get('/accounts')
         .auth('admin', 'admin')
         .expect(200)
-        .expect([account1, account2, account3])
+        .expect([account1, account2, account3, account4])
         .end()
     })
 
@@ -66,6 +70,21 @@ describe('Accounts', function () {
         .get('/accounts')
         .auth('alice', 'alice')
         .expect(403)
+        .end()
+    })
+  })
+
+  describe('GET /connectors', function () {
+    it('should return 200', function *() {
+      yield this.request()
+        .get('/connectors')
+        .expect(200, [
+          {
+            id: 'http://localhost/accounts/trader',
+            name: 'trader',
+            connector: 'http://localhost:4321'
+          }
+        ])
         .end()
     })
   })
