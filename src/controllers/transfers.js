@@ -67,11 +67,11 @@ exports.getResource = function * fetch () {
  *
  * @apiDescription Use this to get a signed receipt containing only the id of
  *   transfer and its state. It functions even if the transfer doesn't exist yet.
+ *   If the transfer doesn't exist it will have the state "nonexistent".
  *
  * @apiParam {String} id Transfer
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  * @apiParam {String} type The signature type
- * @apiParam {String} state The state to sign (for preimage signature types only)
  *
  * @apiUse InvalidUriParameterError
  *
