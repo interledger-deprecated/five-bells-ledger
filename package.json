@@ -1,6 +1,6 @@
 {
   "name": "five-bells-ledger",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Five Bells ledger reference implementation",
   "keywords": [
     "interledger",
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "five-bells-condition": "~2.0.0",
-    "five-bells-shared": "~8.5.0",
+    "five-bells-shared": "~8.6.0",
     "co": "^4.1.0",
     "co-defer": "^1.0.0",
     "co-emitter": "^0.2.3",
