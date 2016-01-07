@@ -952,6 +952,7 @@ describe('PUT /transfers/:id', function () {
         name: 'bob',
         ledger: 'http://localhost',
         balance: '10'
+        disabled: false
       })
       .end()
 
@@ -964,6 +965,7 @@ describe('PUT /transfers/:id', function () {
         name: 'dave',
         ledger: 'http://localhost',
         balance: '10'
+        disabled: false
       })
       .end()
   })
@@ -1011,6 +1013,7 @@ describe('PUT /transfers/:id', function () {
         name: 'alice',
         ledger: 'http://localhost',
         balance: '90'
+        disabled: false
       }))
       .end()
 
@@ -1023,6 +1026,7 @@ describe('PUT /transfers/:id', function () {
         name: 'candice',
         ledger: 'http://localhost',
         balance: '40'
+        disabled: false
       }))
       .end()
   })
@@ -1071,6 +1075,7 @@ describe('PUT /transfers/:id', function () {
           name: 'alice',
           ledger: 'http://localhost',
           balance: '50'
+          disabled: false
         }))
         .end()
 
@@ -1083,6 +1088,7 @@ describe('PUT /transfers/:id', function () {
           name: 'candice',
           ledger: 'http://localhost',
           balance: '30'
+          disabled: false
         }))
         .end()
 
@@ -1095,6 +1101,7 @@ describe('PUT /transfers/:id', function () {
           name: 'bob',
           ledger: 'http://localhost',
           balance: '30'
+          disabled: false
         }))
         .end()
 
@@ -1107,6 +1114,7 @@ describe('PUT /transfers/:id', function () {
           name: 'dave',
           ledger: 'http://localhost',
           balance: '40'
+          disabled: false
         }))
         .end()
     })

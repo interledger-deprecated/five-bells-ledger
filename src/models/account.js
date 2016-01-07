@@ -108,7 +108,8 @@ PersistentModelMixin(Account, sequelize, {
   connector: Sequelize.STRING(1024),
   password: Sequelize.STRING,
   public_key: Sequelize.TEXT,
-  is_admin: Sequelize.BOOLEAN
+  is_admin: Sequelize.BOOLEAN,
+  disabled: Sequelize.BOOLEAN
 })
 
 exports.Account = Account

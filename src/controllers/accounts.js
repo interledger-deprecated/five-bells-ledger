@@ -54,6 +54,9 @@ exports.getResource = function * fetch () {
 
   this.body = can_examine ? account.getDataExternal() : account.getDataPublic()
   this.body.ledger = config.server.base_uri
+  if (!this.req.user.is_admin) {
+    delete this.body.disabled
+  }
 }
 
 /**
@@ -98,5 +101,8 @@ exports.putResource = function * putResource () {
   log.debug((existed ? 'updated' : 'created') + ' account name ' + name)
 
   this.body = this.body.getDataExternal()
+  if (!this.req.user.is_admin) {
+    delete this.body.disabled
+  }
   this.status = existed ? 200 : 201
 }
