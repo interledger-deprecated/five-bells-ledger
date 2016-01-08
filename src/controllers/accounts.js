@@ -7,6 +7,8 @@ const log = require('../services/log')('accounts')
 const config = require('../services/config')
 const request = require('five-bells-shared/utils/request')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
+const UnauthorizedError =
+require('five-bells-shared/errors/unauthorized-error')
 const Account = require('../models/account').Account
 
 exports.getCollection = function * find () {
@@ -46,6 +48,8 @@ exports.getResource = function * fetch () {
   const account = yield Account.findByName(name)
   if (!account) {
     throw new NotFoundError('Unknown account')
+  } else if (account.is_disabled && (this.req.user && !this.req.user.is_admin)) {
+    throw new UnauthorizedError('This account is disabled')
   }
 
   // TODO get rid of this when we start using biginteger math everywhere
@@ -54,8 +58,8 @@ exports.getResource = function * fetch () {
 
   this.body = can_examine ? account.getDataExternal() : account.getDataPublic()
   this.body.ledger = config.server.base_uri
-  if (!this.req.user.is_admin) {
-    delete this.body.disabled
+  if (!this.req.user || (this.req.user && !this.req.user.is_admin)) {
+    delete this.body.is_disabled
   }
 }
 
@@ -91,10 +95,10 @@ exports.putResource = function * putResource () {
   yield db.transaction(function * (transaction) {
     existed = yield Account.findByName(name, { transaction })
     if (existed) {
-      existed.setDataExternal(self.body)
+      existed.setDataExternal(account)
       yield existed.save({ transaction })
     } else {
-      yield Account.createExternal(self.body, { transaction })
+      yield Account.createExternal(account, { transaction })
     }
   })
 
@@ -102,7 +106,7 @@ exports.putResource = function * putResource () {
 
   this.body = this.body.getDataExternal()
   if (!this.req.user.is_admin) {
-    delete this.body.disabled
+    delete this.body.is_disabled
   }
   this.status = existed ? 200 : 201
 }

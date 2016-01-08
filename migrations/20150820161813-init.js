@@ -10,7 +10,7 @@ module.exports = {
       password: Sequelize.STRING,
       public_key: Sequelize.TEXT,
       is_admin: Sequelize.BOOLEAN,
-      disabled: {
+      is_disabled: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
         allowNull: false

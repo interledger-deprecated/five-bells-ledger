@@ -184,7 +184,7 @@ describe('Accounts', function () {
         .auth('admin', 'admin')
         .expect(200)
         .expect(function (res) {
-          if (typeof res.body.disabled !== 'boolean') {
+          if (typeof res.body.is_disabled !== 'boolean') {
             throw new Error('disabled should be returned as a boolean')
           }
         })
@@ -197,7 +197,7 @@ describe('Accounts', function () {
         .auth('alice', 'alice')
         .expect(200)
         .expect(function (res) {
-          if (typeof res.body.disabled !== 'undefined') {
+          if (typeof res.body.is_disabled !== 'undefined') {
             throw new Error('disabled should not be returned for non-admin users')
           }
         })

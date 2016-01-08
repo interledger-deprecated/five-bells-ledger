@@ -6,6 +6,7 @@ const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
 const db = require('../services/db')
 const makeAccountBalances = require('../lib/accountBalances')
+const hasDisabledAccounts = require('../lib/disabledAccounts')
 const config = require('../services/config')
 const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
@@ -409,6 +410,8 @@ exports.putResource = function * create () {
       // version, but only allowing specific fields to change.
       transfer = updateTransferObject(originalTransfer, transfer)
     } else {
+      // If any accounts involved in a new transfer are disabled, throw error
+      yield hasDisabledAccounts(transaction, transfer)
       // A brand-new transfer will start out as proposed
       updateState(transfer, 'proposed')
     }
