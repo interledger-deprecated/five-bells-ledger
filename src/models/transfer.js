@@ -116,7 +116,7 @@ PersistentModelMixin(Transfer, sequelize, {
   ledger: Sequelize.STRING(1024),
   debits: JsonField(sequelize, 'Transfer', 'debits'),
   credits: JsonField(sequelize, 'Transfer', 'credits'),
-  part_of_payment: Sequelize.STRING(1024),
+  additional_info: JsonField(sequelize, 'Transfer', 'additional_info'),
   state: Sequelize.ENUM('proposed', 'prepared', 'executed', 'rejected'),
   execution_condition: JsonField(sequelize, 'Transfer', 'execution_condition'),
   execution_condition_fulfillment: JsonField(sequelize, 'Transfer', 'execution_condition_fulfillment'),
