@@ -81,6 +81,10 @@ exports.putResource = function * putResource () {
   request.validateUriParameter('id', id, 'Identifier')
   id = id.toLowerCase()
 
+  const account = self.body
+  request.assert.strictEqual(account.name, id,
+    'Account name must match the one in the URL')
+
   // SQLite's implementation of upsert does not tell you whether it created the
   // row or whether it already existed. Since we need to know to return the
   // correct HTTP status code we unfortunately have to do this in two steps.
