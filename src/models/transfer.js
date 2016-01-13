@@ -21,10 +21,10 @@ class Transfer extends Model {
       data.id = uri.parse(data.id, 'transfer').id.toLowerCase()
     }
     for (let debit of data.debits) {
-      debit.account = uri.parse(debit.account, 'account').id.toLowerCase()
+      debit.account = uri.parse(debit.account, 'account').name.toLowerCase()
     }
     for (let credit of data.credits) {
-      credit.account = uri.parse(credit.account, 'account').id.toLowerCase()
+      credit.account = uri.parse(credit.account, 'account').name.toLowerCase()
     }
 
     if (typeof data.timeline === 'object') {

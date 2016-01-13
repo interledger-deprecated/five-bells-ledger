@@ -18,7 +18,7 @@ class Account extends Model {
 
     // ID is optional on the incoming side
     if (data.id) {
-      data.name = uri.parse(data.id, 'account').id.toLowerCase()
+      data.name = uri.parse(data.id, 'account').name.toLowerCase()
       delete data.id
     }
 

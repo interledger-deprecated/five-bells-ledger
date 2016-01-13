@@ -22,14 +22,14 @@ exports.getConnectors = function * () {
 }
 
 /**
- * @api {get} /accounts/:id Fetch user info
+ * @api {get} /accounts/:name Fetch user info
  * @apiName GetAccount
  * @apiGroup Account
  * @apiVersion 1.0.0
  *
  * @apiDescription Get information about a user.
  *
- * @apiParam {String} id Account's unique identifier
+ * @apiParam {String} name Account's unique identifier
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
@@ -37,19 +37,19 @@ exports.getConnectors = function * () {
  * @returns {void}
  */
 exports.getResource = function * fetch () {
-  let id = this.params.id
-  request.validateUriParameter('id', id, 'Identifier')
-  id = id.toLowerCase()
-  log.debug('fetching account ID ' + id)
+  let name = this.params.name
+  request.validateUriParameter('name', name, 'Identifier')
+  name = name.toLowerCase()
+  log.debug('fetching account name ' + name)
 
-  let can_modify = this.req.user.name === id || this.req.user.is_admin
+  let can_modify = this.req.user.name === name || this.req.user.is_admin
   if (!can_modify) {
     throw new UnauthorizedError('You don\'t have permission to examine this user')
   }
 
-  const account = yield Account.findByName(id)
+  const account = yield Account.findByName(name)
   if (!account) {
-    throw new NotFoundError('Unknown account ID')
+    throw new NotFoundError('Unknown account')
   }
 
   // TODO get rid of this when we start using biginteger math everywhere
@@ -61,14 +61,14 @@ exports.getResource = function * fetch () {
 }
 
 /**
- * @api {put} /accounts/:id Update a user
+ * @api {put} /accounts/:name Update a user
  * @apiName PutAccount
  * @apiGroup Account
  * @apiVersion 1.0.0
  *
  * @apiDescription Create or update a user.
  *
- * @apiParam {String} id Account's unique identifier
+ * @apiParam {String} name Account's unique identifier
  *
  * @apiUse InvalidUriParameterError
  * @apiUse InvalidBodyError
@@ -77,12 +77,12 @@ exports.getResource = function * fetch () {
  */
 exports.putResource = function * putResource () {
   const self = this
-  let id = this.params.id
-  request.validateUriParameter('id', id, 'Identifier')
-  id = id.toLowerCase()
+  let name = this.params.name
+  request.validateUriParameter('name', name, 'Identifier')
+  name = name.toLowerCase()
 
   const account = self.body
-  request.assert.strictEqual(account.name, id,
+  request.assert.strictEqual(account.name, name,
     'Account name must match the one in the URL')
 
   // SQLite's implementation of upsert does not tell you whether it created the
@@ -90,7 +90,7 @@ exports.putResource = function * putResource () {
   // correct HTTP status code we unfortunately have to do this in two steps.
   let existed
   yield db.transaction(function * (transaction) {
-    existed = yield Account.findByName(id, { transaction })
+    existed = yield Account.findByName(name, { transaction })
     if (existed) {
       existed.setDataExternal(self.body)
       yield existed.save({ transaction })
@@ -99,7 +99,7 @@ exports.putResource = function * putResource () {
     }
   })
 
-  log.debug((existed ? 'updated' : 'created') + ' account ID ' + id)
+  log.debug((existed ? 'updated' : 'created') + ' account name ' + name)
 
   this.body = this.body.getDataExternal()
   this.status = existed ? 200 : 201
