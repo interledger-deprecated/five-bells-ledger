@@ -1,6 +1,5 @@
 'use strict'
 
-const uuid = require('uuid4')
 const db = require('../services/db')
 const log = require('../services/log')('subscriptions')
 const uri = require('../services/uriManager')
@@ -23,6 +22,7 @@ const Subscription = require('../models/subscription').Subscription
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
+ * @apiUse UnauthorizedError
  *
  * @returns {void}
  */
@@ -44,8 +44,8 @@ exports.getResource = function * fetch () {
 }
 
 /**
- * @api {post} /subscriptions Subscribe to an event
- * @apiName PostSubscription
+ * @api {put} /subscriptions Subscribe to an event
+ * @apiName PutSubscription
  * @apiGroup Subscription
  * @apiVersion 1.0.0
  *
@@ -58,26 +58,10 @@ exports.getResource = function * fetch () {
  *     }
  *
  * @apiUse InvalidBodyError
+ * @apiUse UnauthorizedError
  *
  * @returns {void}
  */
-exports.postResource = function * create () {
-  const subscription = this.body
-
-  // Generate a unique subscription ID outside of the transaction block
-  if (!subscription.id) {
-    subscription.id = uuid()
-  }
-  log.debug('preparing subscription ID ' + subscription.id)
-
-  // Validate and store subscription in database
-  yield * storeSubscription(subscription)
-
-  log.debug('subscription created')
-
-  this.body = subscription.getDataExternal()
-  this.status = 201
-}
 
 exports.putResource = function * update () {
   let id = this.params.id
@@ -128,6 +112,7 @@ exports.putResource = function * update () {
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
+ * @apiUse UnauthorizedError
  *
  * @returns {void}
  */

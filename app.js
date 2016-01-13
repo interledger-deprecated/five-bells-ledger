@@ -60,7 +60,6 @@ router.put('/accounts/:id',
   models.Account.createBodyParser(),
   accounts.putResource)
 
-router.post('/subscriptions', models.Subscription.createBodyParser(), subscriptions.postResource)
 router.get('/subscriptions/:id',
   passport.authenticate(['basic', 'http-signature'], { session: false }),
   subscriptions.getResource)
