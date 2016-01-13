@@ -33,7 +33,7 @@ npm install
 To run it using an in-memory database (the simplest option), run:
 
 ``` sh
-LEDGER_DB_URI=sqlite://:memory: npm start
+LEDGER_DB_SYNC=1 LEDGER_DB_URI=sqlite://:memory: npm start
 ```
 
 Or run:
