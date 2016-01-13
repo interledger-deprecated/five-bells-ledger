@@ -3,30 +3,12 @@
 const uuid = require('uuid4')
 const db = require('../services/db')
 const log = require('../services/log')('subscriptions')
+const uri = require('../services/uriManager')
 const request = require('five-bells-shared/utils/request')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
-const Account = require('../models/db/account').Account
+const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const Subscription = require('../models/subscription').Subscription
 const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
-
-/**
- * Validate a subscription semantically.
- *
- * We use schemas to validate data syntactically, this method takes care of all
- * remaining validations.
- *
- * @param {Object} subscription Subscription
- * @param {Object} tr Database transaction
- * @returns {void}
- */
-function * validateSubscriptionSemantics (subscription, transaction) {
-  const owner = yield Account.findByName(subscription.owner, { transaction })
-
-  if (typeof owner === 'undefined') {
-    // TODO Add authentication and reenable this check
-    // throw new UnprocessableEntityError('Owner does not exist.')
-  }
-}
 
 /**
  * Store a subscription in the database.
@@ -37,7 +19,6 @@ function * validateSubscriptionSemantics (subscription, transaction) {
 function * storeSubscription (subscription) {
   yield db.transaction(function *(transaction) {
     // Check prerequisites
-    yield * validateSubscriptionSemantics(subscription, transaction)
 
     const duplicateSubscription = yield Subscription.findOne({
       where: {
@@ -80,11 +61,14 @@ exports.getResource = function * fetch () {
   id = id.toLowerCase()
   log.debug('fetching subscription ID ' + id)
 
+  const requestOwner = uri.make('account', this.req.user.name)
   const subscription = yield Subscription.findById(id)
-  if (subscription) {
-    this.body = subscription.getDataExternal()
-  } else {
+  if (!subscription) {
     throw new NotFoundError('Unknown subscription ID')
+  } else if (!(requestOwner === subscription.owner || this.req.user.is_admin)) {
+    throw new UnauthorizedError('You may only view subscriptions you own')
+  } else {
+    this.body = subscription.getDataExternal()
   }
 }
 
@@ -130,6 +114,11 @@ exports.putResource = function * update () {
   id = id.toLowerCase()
   const subscription = this.body
 
+  const requestOwner = uri.make('account', this.req.user.name)
+  if (requestOwner !== subscription.owner) {
+    throw new UnauthorizedError('You do not own this account')
+  }
+
   if (typeof subscription.id !== 'undefined') {
     request.assert.strictEqual(subscription.id, id,
       'Subscription ID must match the one in the URL')
@@ -140,12 +129,16 @@ exports.putResource = function * update () {
   log.debug('updating subscription ID ' + subscription.id)
   log.debug('subscribed ' + subscription.owner + ' at ' + subscription.target)
 
-  // Validate and store subscription in database
+  // SQLite's implementation of upsert does not tell you whether it created the
+  // row or whether it already existed. Since we need to know to return the
+  // correct HTTP status code we unfortunately have to do this in two steps.
+  let existed = yield Subscription.findById(id)
   yield * storeSubscription(subscription)
 
   log.debug('update completed')
 
   this.body = subscription.getDataExternal()
+  this.status = existed ? 200 : 201
 }
 
 /**
@@ -165,6 +158,7 @@ exports.putResource = function * update () {
  * @returns {void}
  */
 exports.deleteResource = function * remove () {
+  const self = this
   let id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
@@ -176,6 +170,10 @@ exports.deleteResource = function * remove () {
 
     if (!subscription) {
       throw new NotFoundError('Unknown subscription ID')
+    }
+    const requestOwner = uri.make('account', self.req.user.name)
+    if (!(requestOwner === subscription.owner || self.req.user.is_admin)) {
+      throw new UnauthorizedError('You don\'t have permission to delete this subscription')
     }
 
     subscription.destroy({ transaction })

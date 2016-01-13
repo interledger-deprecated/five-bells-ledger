@@ -44,6 +44,7 @@ describe('Subscriptions', function () {
     it('should return 200', function *() {
       yield this.request()
         .get(this.existingSubscription.id)
+        .auth('bob', 'bob')
         .expect(200)
         .expect(this.existingSubscription)
         .end()
@@ -52,22 +53,41 @@ describe('Subscriptions', function () {
     it('should return 404 for a non-existent subscription', function *() {
       yield this.request()
         .get(this.exampleSubscription.id)
+        .auth('bob', 'bob')
         .expect(404)
+        .end()
+    })
+
+    it('should return 403 for a subscription the user doesn\'t own', function *() {
+      yield this.request()
+        .get(this.existingSubscription.id)
+        .auth('alice', 'alice')
+        .expect(403)
+        .end()
+    })
+
+    it('should allow an admin to view any subscription', function *() {
+      yield this.request()
+        .get(this.existingSubscription.id)
+        .auth('admin', 'admin')
+        .expect(200)
+        .expect(this.existingSubscription)
         .end()
     })
   })
 
-  describe('POST /subscriptions', function () {
+  describe('PUT /subscriptions', function () {
     it('should return 201', function *() {
+      const id = uri.parse(this.exampleSubscription.id, 'subscription').id
       yield this.request()
-        .post('/subscriptions')
+        .put(this.exampleSubscription.id)
         .send(this.exampleSubscription)
+        .auth('alice', 'alice')
         .expect(201)
         .expect(this.exampleSubscription)
         .end()
 
       // Check that the subscription landed in the database
-      const id = uri.parse(this.exampleSubscription.id, 'subscription').id
       expect((yield Subscription.findById(id)).getDataExternal())
         .to.deep.equal(this.exampleSubscription)
     })
@@ -77,6 +97,7 @@ describe('Subscriptions', function () {
       yield this.request()
         .put(this.existingSubscription.id)
         .send(this.existingSubscription)
+        .auth('bob', 'bob')
         .expect(200)
         .expect(this.existingSubscription)
         .end()
@@ -91,7 +112,17 @@ describe('Subscriptions', function () {
       yield this.request()
         .put(this.existingSubscription.id)
         .send(this.existingSubscription)
+        .auth('bob', 'bob')
         .expect(422)
+        .end()
+    })
+
+    it('should return 403 for an account the user does not own', function *() {
+      yield this.request()
+        .put(this.exampleSubscription.id)
+        .send(this.exampleSubscription)
+        .auth('bob', 'bob')
+        .expect(403)
         .end()
     })
   //
@@ -166,6 +197,23 @@ describe('Subscriptions', function () {
     it('should return 204', function *() {
       yield this.request()
         .delete(this.existingSubscription.id)
+        .auth('bob', 'bob')
+        .expect(204)
+        .end()
+    })
+
+    it('should return 403 if the user tries to delete a subscription they don\'t own', function *() {
+      yield this.request()
+        .delete(this.existingSubscription.id)
+        .auth('alice', 'alice')
+        .expect(403)
+        .end()
+    })
+
+    it('should return 204 when an admin deletes any subscription', function *() {
+      yield this.request()
+        .delete(this.existingSubscription.id)
+        .auth('admin', 'admin')
         .expect(204)
         .end()
     })
