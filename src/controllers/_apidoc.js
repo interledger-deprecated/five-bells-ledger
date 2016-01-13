@@ -83,3 +83,16 @@
  *       "message": "Error description here."
  *     }
  */
+
+/**
+ * @apiDefine UnauthorizedError
+ *
+ * @apiError UnauthorizedError You do not have permissions to access this resource.
+ *
+ * @apiErrorExample UnauthorizedError
+ *     HTTP/1.1 403 Forbidden
+ *     {
+ *       "id": "UnauthorizedError",
+ *       "message": "Error description here."
+ *     }
+ */
