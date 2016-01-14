@@ -950,6 +950,7 @@ describe('PUT /transfers/:id', function () {
       .expect({
         id: 'http://localhost/accounts/bob',
         name: 'bob',
+        ledger: 'http://localhost',
         balance: '10'
       })
       .end()
@@ -961,6 +962,7 @@ describe('PUT /transfers/:id', function () {
       .expect({
         id: 'http://localhost/accounts/dave',
         name: 'dave',
+        ledger: 'http://localhost',
         balance: '10'
       })
       .end()
@@ -1007,6 +1009,7 @@ describe('PUT /transfers/:id', function () {
       .expect(_.assign({}, {
         id: 'http://localhost/accounts/alice',
         name: 'alice',
+        ledger: 'http://localhost',
         balance: '90'
       }))
       .end()
@@ -1018,6 +1021,7 @@ describe('PUT /transfers/:id', function () {
       .expect(_.assign({}, {
         id: 'http://localhost/accounts/candice',
         name: 'candice',
+        ledger: 'http://localhost',
         balance: '40'
       }))
       .end()
@@ -1065,6 +1069,7 @@ describe('PUT /transfers/:id', function () {
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/alice',
           name: 'alice',
+          ledger: 'http://localhost',
           balance: '50'
         }))
         .end()
@@ -1076,6 +1081,7 @@ describe('PUT /transfers/:id', function () {
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/candice',
           name: 'candice',
+          ledger: 'http://localhost',
           balance: '30'
         }))
         .end()
@@ -1087,6 +1093,7 @@ describe('PUT /transfers/:id', function () {
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/bob',
           name: 'bob',
+          ledger: 'http://localhost',
           balance: '30'
         }))
         .end()
@@ -1098,6 +1105,7 @@ describe('PUT /transfers/:id', function () {
         .expect(_.assign({}, {
           id: 'http://localhost/accounts/dave',
           name: 'dave',
+          ledger: 'http://localhost',
           balance: '40'
         }))
         .end()

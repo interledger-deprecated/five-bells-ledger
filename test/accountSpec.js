@@ -28,6 +28,7 @@ describe('Accounts', function () {
     this.adminAccount = this.exampleAccounts.admin
     this.holdAccount = this.exampleAccounts.hold
     this.existingAccount = this.exampleAccounts.alice
+    this.existingAccount2 = this.exampleAccounts.candice
     this.traderAccount = this.exampleAccounts.trader
 
     // Reset database
@@ -38,6 +39,7 @@ describe('Accounts', function () {
       this.adminAccount,
       this.holdAccount,
       this.existingAccount,
+      this.existingAccount2,
       this.traderAccount
     ])
   })
@@ -47,17 +49,19 @@ describe('Accounts', function () {
       const account1 = this.adminAccount
       const account2 = this.holdAccount
       const account3 = this.existingAccount
-      const account4 = this.traderAccount
+      const account4 = this.existingAccount2
+      const account5 = this.traderAccount
       // Passwords are not returned
       delete account1.password
       delete account2.password
       delete account3.password
       delete account4.password
+      delete account5.password
       yield this.request()
         .get('/accounts')
         .auth('admin', 'admin')
         .expect(200)
-        .expect([account1, account2, account3, account4])
+        .expect([account1, account2, account3, account4, account5])
         .end()
     })
 
@@ -106,27 +110,41 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should return 401 when not authenticated', function *() {
+    it('should return 200 + partial data, when not authenticated', function *() {
       yield this.request()
         .get(this.existingAccount.id)
-        .expect(401)
-        .end()
-      yield this.request()
-        .get(this.exampleAccounts.bob.id)
-        .expect(401)
+        .expect(200, {
+          id: this.existingAccount.id,
+          name: this.existingAccount.name,
+          ledger: 'http://localhost'
+        })
         .end()
     })
 
-    it('should return 403 when not authorized', function *() {
+    it('should return 404 when not authenticated + nonexistent target', function *() {
+      yield this.request()
+        .get(this.exampleAccounts.bob.id)
+        .expect(404)
+        .end()
+    })
+
+    it('should return 403 with invalid credentials', function *() {
       yield this.request()
         .get(this.existingAccount.id)
         .auth('bob', 'bob')
         .expect(403)
         .end()
+    })
+
+    it('should return partial data for valid but unauthorized credentials', function *() {
       yield this.request()
-        .get(this.exampleAccounts.bob.id)
+        .get(this.existingAccount2.id)
         .auth('alice', 'alice')
-        .expect(403)
+        .expect(200, {
+          id: this.existingAccount2.id,
+          name: this.existingAccount2.name,
+          ledger: 'http://localhost'
+        })
         .end()
     })
 
@@ -134,6 +152,7 @@ describe('Accounts', function () {
       const account = this.existingAccount
       const accountWithoutPassword = _.clone(account)
       delete accountWithoutPassword.password
+      accountWithoutPassword.ledger = 'http://localhost'
       yield this.request()
         .get(this.existingAccount.id)
         .auth('admin', 'admin')

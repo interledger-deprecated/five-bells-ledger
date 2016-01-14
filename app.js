@@ -52,7 +52,7 @@ router.get('/accounts',
   filterAdmin,
   accounts.getCollection)
 router.get('/accounts/:name',
-  passport.authenticate(['basic', 'http-signature'], { session: false }),
+  passport.authenticate(['basic', 'http-signature', 'anonymous'], { session: false }),
   accounts.getResource)
 router.put('/accounts/:name',
   passport.authenticate(['basic', 'http-signature'], { session: false }),

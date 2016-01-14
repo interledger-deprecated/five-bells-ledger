@@ -76,6 +76,11 @@ class Account extends Model {
     return Entry.create(values, options)
   }
 
+  getDataPublic () {
+    const data = this.getDataExternal()
+    return { id: data.id, name: data.name }
+  }
+
   * findEntry (date) {
     const group = yield EntryGroup.findOne({
       where: { created_at: { $lte: date } },
