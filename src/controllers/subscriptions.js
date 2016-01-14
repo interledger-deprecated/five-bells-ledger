@@ -9,6 +9,21 @@ const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const Subscription = require('../models/subscription').Subscription
 const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
 
+function isOwner (requestingUser, subscription) {
+  const requestOwner = uri.make('account', requestingUser.name)
+  return requestOwner === subscription.owner
+}
+
+function isOwnerOrAdmin (requestingUser, subscription) {
+  const requestOwner = uri.make('account', requestingUser.name)
+  return requestOwner === subscription.owner || requestingUser.is_admin
+}
+
+function isSubjectOrAdmin (requestingUser, subscription) {
+  const requestOwner = uri.make('account', requestingUser.name)
+  return requestOwner === subscription.subject || requestingUser.is_admin
+}
+
 /**
  * Store a subscription in the database.
  *
@@ -61,11 +76,10 @@ exports.getResource = function * fetch () {
   id = id.toLowerCase()
   log.debug('fetching subscription ID ' + id)
 
-  const requestOwner = uri.make('account', this.req.user.name)
   const subscription = yield Subscription.findById(id)
   if (!subscription) {
     throw new NotFoundError('Unknown subscription ID')
-  } else if (!(requestOwner === subscription.owner || this.req.user.is_admin)) {
+  } else if (!isOwnerOrAdmin(this.req.user, subscription)) {
     throw new UnauthorizedError('You may only view subscriptions you own')
   } else {
     this.body = subscription.getDataExternal()
@@ -98,9 +112,10 @@ exports.putResource = function * update () {
   id = id.toLowerCase()
   const subscription = this.body
 
-  const requestOwner = uri.make('account', this.req.user.name)
-  if (requestOwner !== subscription.owner) {
+  if (!isOwner(this.req.user, subscription)) {
     throw new UnauthorizedError('You do not own this account')
+  } else if (!isSubjectOrAdmin(this.req.user, subscription)) {
+    throw new UnauthorizedError('You are not authorized to listen to this account')
   }
 
   if (typeof subscription.id !== 'undefined') {
@@ -143,10 +158,10 @@ exports.putResource = function * update () {
  * @returns {void}
  */
 exports.deleteResource = function * remove () {
-  const self = this
   let id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
+  const self = this
 
   log.debug('deleting subscription ID ' + id)
 
@@ -156,8 +171,7 @@ exports.deleteResource = function * remove () {
     if (!subscription) {
       throw new NotFoundError('Unknown subscription ID')
     }
-    const requestOwner = uri.make('account', self.req.user.name)
-    if (!(requestOwner === subscription.owner || self.req.user.is_admin)) {
+    if (!isOwnerOrAdmin(self.req.user, subscription)) {
       throw new UnauthorizedError('You don\'t have permission to delete this subscription')
     }
 

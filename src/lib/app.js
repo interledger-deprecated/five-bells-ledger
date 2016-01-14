@@ -94,10 +94,16 @@ class App {
       models.Account.createBodyParser(),
       accounts.putResource)
 
-    router.post('/subscriptions', models.Subscription.createBodyParser(), subscriptions.postResource)
-    router.get('/subscriptions/:id', subscriptions.getResource)
-    router.put('/subscriptions/:id', models.Subscription.createBodyParser(), subscriptions.putResource)
-    router.delete('/subscriptions/:id', subscriptions.deleteResource)
+    router.get('/subscriptions/:id',
+      passport.authenticate(['basic', 'http-signature'], { session: false }),
+      subscriptions.getResource)
+    router.put('/subscriptions/:id',
+      passport.authenticate(['basic', 'http-signature'], { session: false }),
+      models.Subscription.createBodyParser(),
+      subscriptions.putResource)
+    router.delete('/subscriptions/:id',
+      passport.authenticate(['basic', 'http-signature'], { session: false }),
+      subscriptions.deleteResource)
     return router
   }
 }

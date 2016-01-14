@@ -125,6 +125,27 @@ describe('Subscriptions', function () {
         .expect(403)
         .end()
     })
+
+    it('should return 403 if the user doesn\'t own the subject account', function *() {
+      this.exampleSubscription.subject = this.existingSubscription.subject
+      yield this.request()
+        .put(this.exampleSubscription.id)
+        .send(this.exampleSubscription)
+        .auth('alice', 'alice')
+        .expect(403)
+        .end()
+    })
+
+    it('should return 201 when an admin subscribes to any subject account', function *() {
+      this.exampleSubscription.owner = 'http://localhost/accounts/admin'
+      /* The subject is Alices's account */
+      yield this.request()
+        .put(this.exampleSubscription.id)
+        .send(this.exampleSubscription)
+        .auth('admin', 'admin')
+        .expect(201)
+        .end()
+    })
   //
   //   it('should return 409 if the transfer already exists', function *() {
   //     yield this.request()
