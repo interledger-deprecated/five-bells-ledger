@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 module.exports = {
   up: function (queryInterface, Sequelize) {
@@ -10,4 +10,4 @@ module.exports = {
     queryInterface.removeColumn('Transfers', 'additional_info')
     queryInterface.addColumn('Transfers', 'part_of_payment', Sequelize.STRING(1024))
   }
-};
+}
