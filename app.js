@@ -51,10 +51,10 @@ router.get('/accounts',
   passport.authenticate(['basic', 'http-signature'], { session: false }),
   filterAdmin,
   accounts.getCollection)
-router.get('/accounts/:id',
+router.get('/accounts/:name',
   passport.authenticate(['basic', 'http-signature'], { session: false }),
   accounts.getResource)
-router.put('/accounts/:id',
+router.put('/accounts/:name',
   passport.authenticate(['basic', 'http-signature'], { session: false }),
   filterAdmin,
   models.Account.createBodyParser(),

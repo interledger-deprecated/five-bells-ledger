@@ -194,6 +194,20 @@ describe('Accounts', function () {
       const row = yield Account.findByName('alice')
       expect(row.balance).to.equal(90)
     })
+
+    it('should return a 400 if the account name in the URL does not match the account name in the JSON', function *() {
+      const existingAccount = this.existingAccount
+      const newAccount = this.exampleAccounts.bob
+
+      delete existingAccount.password
+
+      yield this.request()
+      .put(newAccount.id)
+      .auth('admin', 'admin')
+      .send(existingAccount)
+      .expect(400)
+      .end()
+    })
   })
 
   describe('PUT /accounts/:uuid with public_key', function () {
