@@ -29,8 +29,13 @@ if (admin_pass) {
 }
 
 config.auth = {
-  basic_enabled: !isFalse(config.getEnv('AUTH_BASIC_ENABLED')),
-  http_signature_enabled: !isFalse(config.getEnv('AUTH_HTTP_SIGNATURE_ENABLED'))
+  basic_enabled: getBoolean('AUTH_BASIC_ENABLED'),
+  http_signature_enabled: getBoolean('AUTH_HTTP_SIGNATURE_ENABLED')
 }
 
-function isFalse (val) { return val === '0' || val === 'false' }
+function getBoolean (env) {
+  const val = config.getEnv(env)
+  if (val === undefined) return true
+  if (val === '0') return false
+  throw new Error('LEDGER_' + env + ' defaults to true; set to "0" for false')
+}
