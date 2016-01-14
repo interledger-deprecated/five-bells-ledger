@@ -4,9 +4,9 @@
 const _ = require('lodash')
 const db = require('../services/db')
 const log = require('../services/log')('accounts')
+const config = require('../services/config')
 const request = require('five-bells-shared/utils/request')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
-const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const Account = require('../models/account').Account
 
 exports.getCollection = function * find () {
@@ -42,11 +42,7 @@ exports.getResource = function * fetch () {
   name = name.toLowerCase()
   log.debug('fetching account name ' + name)
 
-  let can_modify = this.req.user.name === name || this.req.user.is_admin
-  if (!can_modify) {
-    throw new UnauthorizedError('You don\'t have permission to examine this user')
-  }
-
+  const can_examine = this.req.user && (this.req.user.name === name || this.req.user.is_admin)
   const account = yield Account.findByName(name)
   if (!account) {
     throw new NotFoundError('Unknown account')
@@ -54,10 +50,10 @@ exports.getResource = function * fetch () {
 
   // TODO get rid of this when we start using biginteger math everywhere
   account.balance = '' + account.balance
-
   delete account.password
 
-  this.body = account.getDataExternal()
+  this.body = can_examine ? account.getDataExternal() : account.getDataPublic()
+  this.body.ledger = config.server.base_uri
 }
 
 /**
