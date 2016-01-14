@@ -872,9 +872,9 @@
       "resolved": "https://registry.npmjs.org/five-bells-condition/-/five-bells-condition-2.0.0.tgz"
     },
     "five-bells-shared": {
-      "version": "8.7.0",
-      "from": "five-bells-shared@8.7.0",
-      "resolved": "https://registry.npmjs.org/five-bells-shared/-/five-bells-shared-8.7.0.tgz",
+      "version": "8.8.0",
+      "from": "five-bells-shared@8.8.0",
+      "resolved": "https://registry.npmjs.org/five-bells-shared/-/five-bells-shared-8.8.0.tgz",
       "dependencies": {
         "canonical-json": {
           "version": "0.0.4",
