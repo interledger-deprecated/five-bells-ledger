@@ -28,7 +28,7 @@ if (admin_pass) {
   }
 }
 
-config.auth_enabled = {
-  basic: config.getEnv('AUTH_BASIC_ENABLED') !== '0',
-  http_signature: config.getEnv('AUTH_HTTP_SIGNATURE_ENABLED') !== '0'
+config.auth = {
+  basic_enabled: config.getEnv('AUTH_BASIC_ENABLED') !== '0',
+  http_signature_enabled: config.getEnv('AUTH_HTTP_SIGNATURE_ENABLED') !== '0'
 }
