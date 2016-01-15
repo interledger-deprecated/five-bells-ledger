@@ -191,19 +191,6 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should not return the disabled field for a non-admin user', function *() {
-      yield this.request()
-        .get(this.existingAccount.id)
-        .auth('alice', 'alice')
-        .expect(200)
-        .expect(function (res) {
-          if (typeof res.body.is_disabled !== 'undefined') {
-            throw new Error('disabled should not be returned for non-admin users')
-          }
-        })
-        .end()
-    })
-
     it('sholuld allow an admin user to view a disabled account', function *() {
       yield this.request()
         .get(this.disabledAccount.id)

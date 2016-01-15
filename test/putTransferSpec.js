@@ -43,7 +43,8 @@ describe('PUT /transfers/:id', function () {
     this.executedTransfer = _.cloneDeep(require('./data/transferExecuted'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'))
     this.transferFromEve = _.cloneDeep(require('./data/transferFromEve'))
-    this.disabledTransfer = _.cloneDeep(require('./data/transferDisabledAccount'))
+    this.disabledTransferFrom = _.cloneDeep(require('./data/transferFromDisabledAccount'))
+    this.disabledTransferTo = _.cloneDeep(require('./data/transferToDisabledAccount'))
     this.proposedTransfer = _.cloneDeep(require('./data/transferProposed'))
 
     // Reset database
@@ -277,8 +278,17 @@ describe('PUT /transfers/:id', function () {
   })
 
   /* Disabled Accounts */
-  it('should return a 422 for a new transfer involving a disabled account', function *() {
-    const transfer = this.disabledTransfer
+  it('should return a 422 for a transfer from a disabled account', function *() {
+    const transfer = this.disabledTransferFrom
+    yield this.request()
+      .put(transfer.id)
+      .send(transfer)
+      .expect(422)
+      .end()
+  })
+
+  it('should return 422 for a transfer to a disabled account', function *() {
+    const transfer = this.disabledTransferTo
     yield this.request()
       .put(transfer.id)
       .send(transfer)
@@ -292,14 +302,15 @@ describe('PUT /transfers/:id', function () {
     /* prepare transfer: Alice -> Bob */
     yield this.request()
       .put(proposedTransfer.id)
+      .auth('alice', 'alice')
       .send(proposedTransfer)
       .expect(201)
       .end()
 
-    /* Disable alice's account */
-    const aliceAccount = yield Account.findByName(accounts.alice.name)
-    aliceAccount.is_disabled = true
-    aliceAccount.save()
+    /* Disable bobs's account */
+    const bobAccount = yield Account.findByName(accounts.bob.name)
+    bobAccount.is_disabled = true
+    bobAccount.save()
 
     /* execute transfer: Alice -> Bob*/
     yield this.request()
@@ -317,20 +328,20 @@ describe('PUT /transfers/:id', function () {
       id: 'http://localhost/accounts/bob',
       name: 'bob',
       balance: '10',
-      is_disabled: false,
+      is_disabled: true,
       ledger: 'http://localhost'
     })
     .end()
 
     yield this.request()
       .get(this.executedTransfer.debits[0].account)
-      .auth('admin', 'admin')
+      .auth('alice', 'alice')
       .expect(200)
       .expect({
         id: 'http://localhost/accounts/alice',
         name: 'alice',
         balance: '90',
-        is_disabled: true,
+        is_disabled: false,
         ledger: 'http://localhost'
       })
       .end()
