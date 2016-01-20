@@ -1,6 +1,7 @@
 /* @flow */
 'use strict'
 
-const app = require('./src/services/app')
-if (!module.parent) app.start()
-module.exports = app.app
+module.exports = require('./src/lib/app')
+if (!module.parent) {
+  require('./src/services/app').start()
+}
