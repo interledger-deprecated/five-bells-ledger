@@ -27,6 +27,7 @@
   "dependencies": {
     "five-bells-condition": "~2.0.0",
     "five-bells-shared": "~8.8.0",
+    "canonical-json": "0.0.4",
     "co": "^4.1.0",
     "co-defer": "^1.0.0",
     "co-emitter": "^0.2.3",

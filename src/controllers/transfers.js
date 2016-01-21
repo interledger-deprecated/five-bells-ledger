@@ -1,9 +1,11 @@
 /* @flow */
 'use strict'
 
+const crypto = require('crypto')
 const _ = require('lodash')
 const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
+const stringifyJSON = require('canonical-json')
 const db = require('../services/db')
 const makeAccountBalances = require('../lib/accountBalances')
 const config = require('../services/config')
@@ -72,6 +74,7 @@ exports.getResource = function * fetch () {
  * @apiParam {String} id Transfer
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  * @apiParam {String} type The signature type
+ * @apiParam {String} pretend_state The state to hash for preimage algorithms.
  *
  * @apiUse InvalidUriParameterError
  *
@@ -91,25 +94,40 @@ exports.getStateResource = function * getState () {
     id: uri.make('transfer', id),
     state: transferState
   }
-  let messageHash = hashJSON(message)
-
   let transferStateReceipt = {
     type: signatureType,
     message: message,
     signer: config.server.base_uri
   }
+
   if (signatureType === 'ed25519-sha512') {
     transferStateReceipt.public_key = config.keys.ed25519.public
-    transferStateReceipt.signature = tweetnacl.util.encodeBase64(
-      tweetnacl.sign.detached(
-        tweetnacl.util.decodeBase64(messageHash),
-        tweetnacl.util.decodeBase64(config.keys.ed25519.secret)))
-  // TODO add support for 'sha256'
+    transferStateReceipt.signature = sign(hashJSON(message))
+  } else if (signatureType === 'sha256') {
+    const preimage = _.clone(message)
+    preimage.secret = sign(sha512(message.id))
+    preimage.state = this.query.pretend_state || preimage.state
+    transferStateReceipt.digest = sha256(stringifyJSON(preimage))
   } else {
     throw new InvalidUriParameterError('type is not valid')
   }
 
   this.body = transferStateReceipt
+}
+
+function sign (base64Str) {
+  return tweetnacl.util.encodeBase64(
+    tweetnacl.sign.detached(
+      tweetnacl.util.decodeBase64(base64Str),
+      tweetnacl.util.decodeBase64(config.keys.ed25519.secret)))
+}
+
+function sha256 (str) {
+  return crypto.createHash('sha256').update(str).digest('base64')
+}
+
+function sha512 (str) {
+  return crypto.createHash('sha512').update(str).digest('base64')
 }
 
 function updateTransferObject (originalTransfer, transfer) {
