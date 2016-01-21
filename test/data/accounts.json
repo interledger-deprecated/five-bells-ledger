@@ -4,46 +4,62 @@
     "name": "admin",
     "balance": "0",
     "password": "admin",
-    "is_admin": true
+    "is_admin": true,
+    "is_disabled": false
   },
   "alice": {
     "id": "http://localhost/accounts/alice",
     "name": "alice",
     "balance": "100",
-    "password": "alice"
+    "password": "alice",
+    "is_disabled": false
   },
   "bob": {
     "id": "http://localhost/accounts/bob",
     "name": "bob",
     "balance": "0",
-    "password": "bob"
+    "password": "bob",
+    "is_disabled": false
   },
   "candice": {
     "id": "http://localhost/accounts/candice",
     "name": "candice",
     "balance": "50",
-    "password": "candice"
+    "password": "candice",
+    "is_disabled": false
   },
   "dave": {
     "id": "http://localhost/accounts/dave",
     "name": "dave",
     "balance": "0",
-    "password": "dave"
+    "password": "dave",
+    "is_disabled": false
   },
   "eve": {
     "id": "http://localhost/accounts/eve",
     "name": "eve",
-    "balance": "50"
+    "balance": "50",
+    "is_disabled": false
   },
   "hold": {
     "id": "http://localhost/accounts/hold",
     "name": "hold",
-    "balance": "0"
+    "balance": "0",
+    "is_disabled": false
   },
   "trader": {
     "id": "http://localhost/accounts/trader",
     "name": "trader",
     "balance": "10",
-    "connector": "http://localhost:4321"
+    "connector": "http://localhost:4321",
+    "balance": "0",
+    "is_disabled": false
+  },
+  "disabledAccount": {
+    "id": "http://localhost/accounts/disabled",
+    "name": "disabled",
+    "balance": "150",
+    "password": "disabled",
+    "is_disabled": true
   }
 }

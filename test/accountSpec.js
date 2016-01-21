@@ -30,6 +30,7 @@ describe('Accounts', function () {
     this.existingAccount = this.exampleAccounts.alice
     this.existingAccount2 = this.exampleAccounts.candice
     this.traderAccount = this.exampleAccounts.trader
+    this.disabledAccount = this.exampleAccounts.disabledAccount
 
     // Reset database
     yield dbHelper.reset()
@@ -40,7 +41,8 @@ describe('Accounts', function () {
       this.holdAccount,
       this.existingAccount,
       this.existingAccount2,
-      this.traderAccount
+      this.traderAccount,
+      this.disabledAccount
     ])
   })
 
@@ -51,17 +53,19 @@ describe('Accounts', function () {
       const account3 = this.existingAccount
       const account4 = this.existingAccount2
       const account5 = this.traderAccount
+      const account6 = this.disabledAccount
       // Passwords are not returned
       delete account1.password
       delete account2.password
       delete account3.password
       delete account4.password
       delete account5.password
+      delete account6.password
       yield this.request()
         .get('/accounts')
         .auth('admin', 'admin')
         .expect(200)
-        .expect([account1, account2, account3, account4, account5])
+        .expect([account1, account2, account3, account4, account5, account6])
         .end()
     })
 
@@ -171,6 +175,35 @@ describe('Accounts', function () {
             throw new Error('Balance should be a string')
           }
         })
+        .end()
+    })
+
+    it('should return the disabled field as a boolean for an admin user', function *() {
+      yield this.request()
+        .get(this.existingAccount.id)
+        .auth('admin', 'admin')
+        .expect(200)
+        .expect(function (res) {
+          if (typeof res.body.is_disabled !== 'boolean') {
+            throw new Error('disabled should be returned as a boolean')
+          }
+        })
+        .end()
+    })
+
+    it('sholuld allow an admin user to view a disabled account', function *() {
+      yield this.request()
+        .get(this.disabledAccount.id)
+        .auth('admin', 'admin')
+        .expect(200)
+        .end()
+    })
+
+    it('should return a 403 when a non-admin user tries to view a disabled account', function *() {
+      yield this.request()
+        .get(this.disabledAccount.id)
+        .auth('disabled', 'disabled')
+        .expect(403)
         .end()
     })
   })

@@ -16,6 +16,7 @@ const Subscription = require('../src/models/subscription').Subscription
 const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const notificationWorker = require('../src/services/notificationWorker')
+const accounts = require('./data/accounts')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -42,12 +43,14 @@ describe('PUT /transfers/:id', function () {
     this.executedTransfer = _.cloneDeep(require('./data/transferExecuted'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'))
     this.transferFromEve = _.cloneDeep(require('./data/transferFromEve'))
+    this.disabledTransferFrom = _.cloneDeep(require('./data/transferFromDisabledAccount'))
+    this.disabledTransferTo = _.cloneDeep(require('./data/transferToDisabledAccount'))
+    this.proposedTransfer = _.cloneDeep(require('./data/transferProposed'))
 
     // Reset database
     yield dbHelper.reset()
 
     // Store some example data
-    let accounts = require('./data/accounts')
     accounts.eve.public_key = publicKey
     yield dbHelper.addAccounts(_.values(accounts))
   })
@@ -270,6 +273,76 @@ describe('PUT /transfers/:id', function () {
       .expect(function (res) {
         expect(res.body.id).to.equal('UnprocessableEntityError')
         expect(res.body.message).to.equal('Total credits must equal total debits')
+      })
+      .end()
+  })
+
+  /* Disabled Accounts */
+  it('should return a 422 for a transfer from a disabled account', function *() {
+    const transfer = this.disabledTransferFrom
+    yield this.request()
+      .put(transfer.id)
+      .send(transfer)
+      .expect(422)
+      .end()
+  })
+
+  it('should return 422 for a transfer to a disabled account', function *() {
+    const transfer = this.disabledTransferTo
+    yield this.request()
+      .put(transfer.id)
+      .send(transfer)
+      .expect(422)
+      .end()
+  })
+
+  it('should allow a transfer involving a disabled account to complete execution', function *() {
+    const proposedTransfer = this.proposedTransfer
+    const executedTransfer = this.executedTransfer
+    /* prepare transfer: Alice -> Bob */
+    yield this.request()
+      .put(proposedTransfer.id)
+      .auth('alice', 'alice')
+      .send(proposedTransfer)
+      .expect(201)
+      .end()
+
+    /* Disable bobs's account */
+    const bobAccount = yield Account.findByName(accounts.bob.name)
+    bobAccount.is_disabled = true
+    bobAccount.save()
+
+    /* execute transfer: Alice -> Bob*/
+    yield this.request()
+      .put(executedTransfer.id)
+      .auth('alice', 'alice')
+      .send(executedTransfer)
+      .expect(200)
+      .end()
+
+    yield this.request()
+    .get(this.executedTransfer.credits[0].account)
+    .auth('admin', 'admin')
+    .expect(200)
+    .expect({
+      id: 'http://localhost/accounts/bob',
+      name: 'bob',
+      balance: '10',
+      is_disabled: true,
+      ledger: 'http://localhost'
+    })
+    .end()
+
+    yield this.request()
+      .get(this.executedTransfer.debits[0].account)
+      .auth('alice', 'alice')
+      .expect(200)
+      .expect({
+        id: 'http://localhost/accounts/alice',
+        name: 'alice',
+        balance: '90',
+        is_disabled: false,
+        ledger: 'http://localhost'
       })
       .end()
   })
@@ -951,7 +1024,8 @@ describe('PUT /transfers/:id', function () {
         id: 'http://localhost/accounts/bob',
         name: 'bob',
         ledger: 'http://localhost',
-        balance: '10'
+        balance: '10',
+        is_disabled: false
       })
       .end()
 
@@ -963,7 +1037,8 @@ describe('PUT /transfers/:id', function () {
         id: 'http://localhost/accounts/dave',
         name: 'dave',
         ledger: 'http://localhost',
-        balance: '10'
+        balance: '10',
+        is_disabled: false
       })
       .end()
   })
@@ -1010,7 +1085,8 @@ describe('PUT /transfers/:id', function () {
         id: 'http://localhost/accounts/alice',
         name: 'alice',
         ledger: 'http://localhost',
-        balance: '90'
+        balance: '90',
+        is_disabled: false
       }))
       .end()
 
@@ -1022,7 +1098,8 @@ describe('PUT /transfers/:id', function () {
         id: 'http://localhost/accounts/candice',
         name: 'candice',
         ledger: 'http://localhost',
-        balance: '40'
+        balance: '40',
+        is_disabled: false
       }))
       .end()
   })
@@ -1070,7 +1147,8 @@ describe('PUT /transfers/:id', function () {
           id: 'http://localhost/accounts/alice',
           name: 'alice',
           ledger: 'http://localhost',
-          balance: '50'
+          balance: '50',
+          is_disabled: false
         }))
         .end()
 
@@ -1082,7 +1160,8 @@ describe('PUT /transfers/:id', function () {
           id: 'http://localhost/accounts/candice',
           name: 'candice',
           ledger: 'http://localhost',
-          balance: '30'
+          balance: '30',
+          is_disabled: false
         }))
         .end()
 
@@ -1094,7 +1173,8 @@ describe('PUT /transfers/:id', function () {
           id: 'http://localhost/accounts/bob',
           name: 'bob',
           ledger: 'http://localhost',
-          balance: '30'
+          balance: '30',
+          is_disabled: false
         }))
         .end()
 
@@ -1106,7 +1186,8 @@ describe('PUT /transfers/:id', function () {
           id: 'http://localhost/accounts/dave',
           name: 'dave',
           ledger: 'http://localhost',
-          balance: '40'
+          balance: '40',
+          is_disabled: false
         }))
         .end()
     })

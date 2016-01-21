@@ -10,6 +10,11 @@ module.exports = {
       password: Sequelize.STRING,
       public_key: Sequelize.TEXT,
       is_admin: Sequelize.BOOLEAN,
+      is_disabled: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
+      },
       created_at: Sequelize.DATE,
       updated_at: Sequelize.DATE
     })

@@ -22,7 +22,7 @@ passport.use(new BasicStrategy(
 
     Account.findByName(username)
       .then(function (userObj) {
-        if (userObj && password && userObj.password === password) {
+        if (userObj && !userObj.is_disabled && password && userObj.password === password) {
           return done(null, userObj)
         } else {
           return done(new UnauthorizedError('Unknown or invalid account / password'))
@@ -38,7 +38,7 @@ passport.use(new HTTPSignatureStrategy(
 
     Account.findByName(username)
       .then(function (userObj) {
-        if (!userObj) {
+        if (!userObj || userObj.is_disabled) {
           return done(new UnauthorizedError('Unknown or invalid account'))
         }
         if (!userObj.public_key) {
