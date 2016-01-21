@@ -5,7 +5,7 @@ const db = require('../services/db')
 const log = require('../services/log')('subscriptions')
 const request = require('five-bells-shared/utils/request')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
-const Account = require('../models/account').Account
+const Account = require('../models/db/account').Account
 const Subscription = require('../models/subscription').Subscription
 const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
 

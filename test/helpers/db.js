@@ -1,7 +1,7 @@
 'use strict'
 
 const db = require('../../src/services/db')
-const Account = require('../../src/models/account').Account
+const Account = require('../../src/models/db/account').Account
 const Transfer = require('../../src/models/transfer').Transfer
 const Subscription = require('../../src/models/subscription').Subscription
 

@@ -4,7 +4,7 @@ const passport = require('koa-passport')
 const BasicStrategy = require('passport-http').BasicStrategy
 const HTTPSignatureStrategy = require('passport-http-signature')
 const AnonymousStrategy = require('passport-anonymous').Strategy
-const Account = require('../models/account').Account
+const Account = require('../models/db/account').Account
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const config = require('./config')
 
