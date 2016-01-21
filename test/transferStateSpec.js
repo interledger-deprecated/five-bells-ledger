@@ -1,6 +1,8 @@
 /*global describe, it*/
 'use strict'
+const crypto = require('crypto')
 const _ = require('lodash')
+const stringifyJSON = require('canonical-json')
 const sinon = require('sinon')
 const app = require('../src/services/app')
 const logger = require('../src/services/log')
@@ -69,6 +71,80 @@ describe('Transfer State', function () {
           signer: config.server.base_uri,
           public_key: config.keys.ed25519.public,
           signature: signature
+        })
+        .end()
+    })
+
+    it('supports type=sha256', function *() {
+      const transfer = _.cloneDeep(this.transferWithExpiry)
+      delete transfer.debits[0].authorized
+      delete transfer.debits[1].authorized
+      transfer.state = 'proposed'
+      yield this.request()
+        .put(transfer.id)
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      const currentToken = tweetnacl.util.encodeBase64(
+        tweetnacl.sign.detached(
+          tweetnacl.util.decodeBase64(sha512(transfer.id + ':' + transfer.state)),
+          this.keyPair.secretKey))
+      const stateReceipt = {
+        id: transfer.id,
+        state: transfer.state,
+        token: currentToken
+      }
+
+      yield this.request()
+        .get(transfer.id + '/state?type=sha256')
+        .expect(200, {
+          message: stateReceipt,
+          type: 'sha256',
+          signer: config.server.base_uri,
+          digest: sha256(stringifyJSON(stateReceipt))
+        })
+        .end()
+    })
+
+    it('supports type=sha256 and condition_state', function *() {
+      const transfer = _.cloneDeep(this.transferWithExpiry)
+      delete transfer.debits[0].authorized
+      delete transfer.debits[1].authorized
+      transfer.state = 'proposed'
+      yield this.request()
+        .put(transfer.id)
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      const currentToken = tweetnacl.util.encodeBase64(
+        tweetnacl.sign.detached(
+          tweetnacl.util.decodeBase64(sha512(transfer.id + ':' + transfer.state)),
+          this.keyPair.secretKey))
+      const conditionToken = tweetnacl.util.encodeBase64(
+        tweetnacl.sign.detached(
+          tweetnacl.util.decodeBase64(sha512(transfer.id + ':executed')),
+          this.keyPair.secretKey))
+      const stateReceipt = {
+        id: transfer.id,
+        state: transfer.state,
+        token: currentToken
+      }
+
+      yield this.request()
+        .get(transfer.id + '/state?type=sha256&condition_state=executed')
+        .expect(200, {
+          message: stateReceipt,
+          type: 'sha256',
+          signer: config.server.base_uri,
+          digest: sha256(stringifyJSON(stateReceipt)),
+          condition_state: 'executed',
+          condition_digest: sha256(stringifyJSON({
+            id: transfer.id,
+            state: 'executed',
+            token: conditionToken
+          }))
         })
         .end()
     })
@@ -193,3 +269,11 @@ describe('Transfer State', function () {
     })
   })
 })
+
+function sha256 (str) {
+  return crypto.createHash('sha256').update(str).digest('base64')
+}
+
+function sha512 (str) {
+  return crypto.createHash('sha512').update(str).digest('base64')
+}
