@@ -8,7 +8,7 @@ const logger = require('../src/services/log')
 const logHelper = require('five-bells-shared/testHelpers/log')
 
 function request () {
-  return superagent(app.app.listen())
+  return superagent(app.koa.listen())
 }
 
 describe('Health', function () {

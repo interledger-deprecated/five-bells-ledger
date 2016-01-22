@@ -6,6 +6,5 @@ module.exports = new App({
   config: require('./config'),
   db: require('./db'),
   timerWorker: require('./timerWorker'),
-  notificationWorker: require('./notificationWorker'),
-  fixtures: require('./fixtures')
+  notificationWorker: require('./notificationWorker')
 })

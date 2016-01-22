@@ -42,7 +42,7 @@ methods.forEach(function (method) {
 })
 
 exports.create = function (context, app) {
-  context.server = http.createServer(app.app.callback()).listen()
+  context.server = http.createServer(app.koa.callback()).listen()
   context.port = context.server.address().port
 
   context.request = function () {

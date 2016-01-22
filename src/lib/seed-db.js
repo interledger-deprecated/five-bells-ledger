@@ -1,27 +1,23 @@
 'use strict'
 const models = require('../models')
 
-function Fixtures (db, config) {
-  this.db = db
-  this.config = config
+module.exports = function * (config) {
+  yield setupHoldAccount()
+  if (config.default_admin) {
+    yield setupAdminAccount(config.default_admin)
+  }
 }
 
-Fixtures.prototype.setup = function * () {
-  yield this.setupHoldAccount()
-  yield this.setupAdminAccount()
-}
-
-Fixtures.prototype.setupHoldAccount = function * () {
+function * setupHoldAccount () {
   const holdAccount = yield models.Account.findByName('hold')
   if (!holdAccount) {
     yield models.Account.create({name: 'hold', balance: '0'})
   }
 }
 
-Fixtures.prototype.setupAdminAccount = function * () {
-  if (!this.config.default_admin) return
-  let adminParams = this.config.default_admin
-  let adminAccount = yield models.Account.findByName(adminParams.user)
+// adminParams - {user, pass}
+function * setupAdminAccount (adminParams) {
+  const adminAccount = yield models.Account.findByName(adminParams.user)
   // Update the password if the account already exists.
   if (adminAccount) {
     adminAccount.password = adminParams.pass
@@ -35,5 +31,3 @@ Fixtures.prototype.setupAdminAccount = function * () {
     })
   }
 }
-
-module.exports = Fixtures
