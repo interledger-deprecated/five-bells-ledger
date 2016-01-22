@@ -5,7 +5,7 @@ const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const expect = require('chai').expect
 const sinon = require('sinon')
-const app = require('../app')
+const app = require('../src/services/app')
 const logger = require('../src/services/log')
 const appHelper = require('./helpers/app')
 const dbHelper = require('./helpers/db')

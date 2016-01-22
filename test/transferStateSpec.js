@@ -2,7 +2,7 @@
 'use strict'
 const _ = require('lodash')
 const sinon = require('sinon')
-const app = require('../app')
+const app = require('../src/services/app')
 const logger = require('../src/services/log')
 const config = require('../src/services/config')
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')

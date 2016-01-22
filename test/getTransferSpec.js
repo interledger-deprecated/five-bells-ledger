@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
-const app = require('../app')
+const app = require('../src/services/app')
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
