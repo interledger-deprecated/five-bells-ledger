@@ -1,7 +1,7 @@
 'use strict'
 
 const _ = require('lodash')
-const Account = require('../models/account').Account
+const Account = require('../models/db/account').Account
 const UnprocessableEntityError =
 require('five-bells-shared/errors/unprocessable-entity-error')
 

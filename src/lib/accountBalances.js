@@ -4,7 +4,7 @@ const _ = require('lodash')
 const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
 const InsufficientFundsError = require('../errors/insufficient-funds-error')
 const log = require('../services/log')('account balances')
-const Account = require('../models/account').Account
+const Account = require('../models/db/account').Account
 const EntryGroup = require('../models/entry-group').EntryGroup
 
 function AccountBalances (transaction, transfer) {

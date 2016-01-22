@@ -5,7 +5,7 @@ const _ = require('lodash')
 const expect = require('chai').expect
 const sinon = require('sinon')
 const app = require('../src/services/app')
-const Account = require('../src/models/account').Account
+const Account = require('../src/models/db/account').Account
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
@@ -64,8 +64,8 @@ describe('Accounts', function () {
       yield this.request()
         .get('/accounts')
         .auth('admin', 'admin')
-        .expect(200)
         .expect([account1, account2, account3, account4, account5, account6])
+        .expect(200)
         .end()
     })
 
