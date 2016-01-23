@@ -1,31 +1,27 @@
 'use strict'
 
-const uuid = require('uuid4')
 const db = require('../services/db')
 const log = require('../services/log')('subscriptions')
+const uri = require('../services/uriManager')
 const request = require('five-bells-shared/utils/request')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
-const Account = require('../models/db/account').Account
+const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const Subscription = require('../models/subscription').Subscription
 const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
 
-/**
- * Validate a subscription semantically.
- *
- * We use schemas to validate data syntactically, this method takes care of all
- * remaining validations.
- *
- * @param {Object} subscription Subscription
- * @param {Object} tr Database transaction
- * @returns {void}
- */
-function * validateSubscriptionSemantics (subscription, transaction) {
-  const owner = yield Account.findByName(subscription.owner, { transaction })
+function isOwner (requestingUser, subscription) {
+  const requestOwner = uri.make('account', requestingUser.name)
+  return requestOwner === subscription.owner
+}
 
-  if (typeof owner === 'undefined') {
-    // TODO Add authentication and reenable this check
-    // throw new UnprocessableEntityError('Owner does not exist.')
-  }
+function isOwnerOrAdmin (requestingUser, subscription) {
+  const requestOwner = uri.make('account', requestingUser.name)
+  return requestOwner === subscription.owner || requestingUser.is_admin
+}
+
+function isSubjectOrAdmin (requestingUser, subscription) {
+  const requestOwner = uri.make('account', requestingUser.name)
+  return requestOwner === subscription.subject || requestingUser.is_admin
 }
 
 /**
@@ -37,7 +33,6 @@ function * validateSubscriptionSemantics (subscription, transaction) {
 function * storeSubscription (subscription) {
   yield db.transaction(function *(transaction) {
     // Check prerequisites
-    yield * validateSubscriptionSemantics(subscription, transaction)
 
     const duplicateSubscription = yield Subscription.findOne({
       where: {
@@ -71,6 +66,7 @@ function * storeSubscription (subscription) {
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
+ * @apiUse UnauthorizedError
  *
  * @returns {void}
  */
@@ -81,16 +77,18 @@ exports.getResource = function * fetch () {
   log.debug('fetching subscription ID ' + id)
 
   const subscription = yield Subscription.findById(id)
-  if (subscription) {
-    this.body = subscription.getDataExternal()
-  } else {
+  if (!subscription) {
     throw new NotFoundError('Unknown subscription ID')
+  } else if (!isOwnerOrAdmin(this.req.user, subscription)) {
+    throw new UnauthorizedError('You may only view subscriptions you own')
+  } else {
+    this.body = subscription.getDataExternal()
   }
 }
 
 /**
- * @api {post} /subscriptions Subscribe to an event
- * @apiName PostSubscription
+ * @api {put} /subscriptions Subscribe to an event
+ * @apiName PutSubscription
  * @apiGroup Subscription
  * @apiVersion 1.0.0
  *
@@ -103,32 +101,22 @@ exports.getResource = function * fetch () {
  *     }
  *
  * @apiUse InvalidBodyError
+ * @apiUse UnauthorizedError
  *
  * @returns {void}
  */
-exports.postResource = function * create () {
-  const subscription = this.body
-
-  // Generate a unique subscription ID outside of the transaction block
-  if (!subscription.id) {
-    subscription.id = uuid()
-  }
-  log.debug('preparing subscription ID ' + subscription.id)
-
-  // Validate and store subscription in database
-  yield * storeSubscription(subscription)
-
-  log.debug('subscription created')
-
-  this.body = subscription.getDataExternal()
-  this.status = 201
-}
 
 exports.putResource = function * update () {
   let id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
   const subscription = this.body
+
+  if (!isOwner(this.req.user, subscription)) {
+    throw new UnauthorizedError('You do not own this account')
+  } else if (!isSubjectOrAdmin(this.req.user, subscription)) {
+    throw new UnauthorizedError('You are not authorized to listen to this account')
+  }
 
   if (typeof subscription.id !== 'undefined') {
     request.assert.strictEqual(subscription.id, id,
@@ -140,12 +128,16 @@ exports.putResource = function * update () {
   log.debug('updating subscription ID ' + subscription.id)
   log.debug('subscribed ' + subscription.owner + ' at ' + subscription.target)
 
-  // Validate and store subscription in database
+  // SQLite's implementation of upsert does not tell you whether it created the
+  // row or whether it already existed. Since we need to know to return the
+  // correct HTTP status code we unfortunately have to do this in two steps.
+  let existed = yield Subscription.findById(id)
   yield * storeSubscription(subscription)
 
   log.debug('update completed')
 
   this.body = subscription.getDataExternal()
+  this.status = existed ? 200 : 201
 }
 
 /**
@@ -161,6 +153,7 @@ exports.putResource = function * update () {
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
+ * @apiUse UnauthorizedError
  *
  * @returns {void}
  */
@@ -168,6 +161,7 @@ exports.deleteResource = function * remove () {
   let id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
   id = id.toLowerCase()
+  const self = this
 
   log.debug('deleting subscription ID ' + id)
 
@@ -176,6 +170,9 @@ exports.deleteResource = function * remove () {
 
     if (!subscription) {
       throw new NotFoundError('Unknown subscription ID')
+    }
+    if (!isOwnerOrAdmin(self.req.user, subscription)) {
+      throw new UnauthorizedError('You don\'t have permission to delete this subscription')
     }
 
     subscription.destroy({ transaction })
