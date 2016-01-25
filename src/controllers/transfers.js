@@ -1,9 +1,11 @@
 /* @flow */
 'use strict'
 
+const crypto = require('crypto')
 const _ = require('lodash')
 const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
+const stringifyJSON = require('canonical-json')
 const db = require('../services/db')
 const makeAccountBalances = require('../lib/accountBalances')
 const validateNoDisabledAccounts = require('../lib/disabledAccounts')
@@ -73,6 +75,7 @@ exports.getResource = function * fetch () {
  * @apiParam {String} id Transfer
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  * @apiParam {String} type The signature type
+ * @apiParam {String} condition_state The state to hash for preimage algorithms' conditions.
  *
  * @apiUse InvalidUriParameterError
  *
@@ -92,25 +95,52 @@ exports.getStateResource = function * getState () {
     id: uri.make('transfer', id),
     state: transferState
   }
-  let messageHash = hashJSON(message)
-
   let transferStateReceipt = {
     type: signatureType,
     message: message,
     signer: config.server.base_uri
   }
+
   if (signatureType === 'ed25519-sha512') {
     transferStateReceipt.public_key = config.keys.ed25519.public
-    transferStateReceipt.signature = tweetnacl.util.encodeBase64(
-      tweetnacl.sign.detached(
-        tweetnacl.util.decodeBase64(messageHash),
-        tweetnacl.util.decodeBase64(config.keys.ed25519.secret)))
-  // TODO add support for 'sha256'
+    transferStateReceipt.signature = sign(hashJSON(message))
+  } else if (signatureType === 'sha256') {
+    const realPreImage = makePreImage(message.id, transferState)
+    transferStateReceipt.digest = sha256(stringifyJSON(realPreImage))
+    transferStateReceipt.message = makePreImage(message.id, transferState)
+    if (this.query.condition_state) {
+      const conditionPreImage = makePreImage(message.id, this.query.condition_state)
+      transferStateReceipt.condition_state = this.query.condition_state
+      transferStateReceipt.condition_digest = sha256(stringifyJSON(conditionPreImage))
+    }
   } else {
     throw new InvalidUriParameterError('type is not valid')
   }
 
   this.body = transferStateReceipt
+}
+
+function makePreImage (transfer_id, state) {
+  return {
+    id: transfer_id,
+    state: state,
+    token: sign(sha512(transfer_id + ':' + state))
+  }
+}
+
+function sign (base64Str) {
+  return tweetnacl.util.encodeBase64(
+    tweetnacl.sign.detached(
+      tweetnacl.util.decodeBase64(base64Str),
+      tweetnacl.util.decodeBase64(config.keys.ed25519.secret)))
+}
+
+function sha256 (str) {
+  return crypto.createHash('sha256').update(str).digest('base64')
+}
+
+function sha512 (str) {
+  return crypto.createHash('sha512').update(str).digest('base64')
 }
 
 function updateTransferObject (originalTransfer, transfer) {
