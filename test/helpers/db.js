@@ -2,8 +2,8 @@
 
 const db = require('../../src/services/db')
 const Account = require('../../src/models/db/account').Account
-const Transfer = require('../../src/models/transfer').Transfer
-const Subscription = require('../../src/models/subscription').Subscription
+const Transfer = require('../../src/models/db/transfer').Transfer
+const Subscription = require('../../src/models/db/subscription').Subscription
 
 exports.reset = function * () {
   yield db.sync()

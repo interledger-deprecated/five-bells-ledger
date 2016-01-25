@@ -4,7 +4,7 @@ const Model = require('five-bells-shared').Model
 const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
 
 const Sequelize = require('sequelize')
-const sequelize = require('../services/db')
+const sequelize = require('../../services/db')
 
 class EntryGroup extends Model {
   static convertFromPersistent (data) {

@@ -5,12 +5,12 @@ const _ = require('lodash')
 const Model = require('five-bells-shared').Model
 const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
 const Condition = require('five-bells-condition').Condition
-const validator = require('../services/validator')
-const uri = require('../services/uriManager')
+const validator = require('../../services/validator')
+const uri = require('../../services/uriManager')
 
 const Sequelize = require('sequelize')
 const JsonField = require('sequelize-json')
-const sequelize = require('../services/db')
+const sequelize = require('../../services/db')
 
 const FINAL_STATES = ['executed', 'failed', 'rejected']
 

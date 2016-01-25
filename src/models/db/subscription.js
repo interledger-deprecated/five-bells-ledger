@@ -2,11 +2,11 @@
 
 const Model = require('five-bells-shared').Model
 const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
-const validator = require('../services/validator')
-const uri = require('../services/uriManager')
+const validator = require('../../services/validator')
+const uri = require('../../services/uriManager')
 
 const Sequelize = require('sequelize')
-const sequelize = require('../services/db')
+const sequelize = require('../../services/db')
 
 class Subscription extends Model {
   static convertFromExternal (data) {

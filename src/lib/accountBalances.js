@@ -5,7 +5,7 @@ const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable
 const InsufficientFundsError = require('../errors/insufficient-funds-error')
 const log = require('../services/log')('account balances')
 const Account = require('../models/db/account').Account
-const EntryGroup = require('../models/entry-group').EntryGroup
+const EntryGroup = require('../models/db/entry-group').EntryGroup
 
 function AccountBalances (transaction, transfer) {
   this.transaction = transaction

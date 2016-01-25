@@ -4,8 +4,8 @@ const Model = require('five-bells-shared').Model
 const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
 const uri = require('../../services/uriManager')
 const validator = require('../../services/validator')
-const Entry = require('../entry').Entry
-const EntryGroup = require('../entry-group').EntryGroup
+const Entry = require('./entry').Entry
+const EntryGroup = require('./entry-group').EntryGroup
 
 const Sequelize = require('sequelize')
 const sequelize = require('../../services/db')

@@ -6,7 +6,7 @@ const log = require('../services/log')('expiry monitor')
 const makeAccountBalances = require('./accountBalances')
 const updateState = require('./updateState')
 const ExpiredTransferError = require('../errors/expired-transfer-error')
-const Transfer = require('../models/transfer').Transfer
+const Transfer = require('../models/db/transfer').Transfer
 
 class TransferExpiryMonitor {
   constructor (timeQueue, notificationWorker) {

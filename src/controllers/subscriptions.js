@@ -1,51 +1,7 @@
 'use strict'
 
-const db = require('../services/db')
-const log = require('../services/log')('subscriptions')
-const uri = require('../services/uriManager')
 const request = require('five-bells-shared/utils/request')
-const NotFoundError = require('five-bells-shared/errors/not-found-error')
-const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
-const Subscription = require('../models/subscription').Subscription
-const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
-
-function isOwnerOrAdmin (requestingUser, subscription) {
-  const requestOwner = uri.make('account', requestingUser.name)
-  return requestOwner === subscription.owner || requestingUser.is_admin
-}
-
-function isSubjectOrAdmin (requestingUser, subscription) {
-  const requestOwner = uri.make('account', requestingUser.name)
-  return requestOwner === subscription.subject || requestingUser.is_admin
-}
-
-/**
- * Store a subscription in the database.
- *
- * @param {Object} subscription Subscription
- * @returns {void}
- */
-function * storeSubscription (subscription) {
-  yield db.transaction(function *(transaction) {
-    // Check prerequisites
-
-    const duplicateSubscription = yield Subscription.findOne({
-      where: {
-        event: subscription.event,
-        subject: subscription.subject,
-        target: subscription.target
-      }
-    }, { transaction })
-
-    if (duplicateSubscription) {
-      throw new UnprocessableEntityError('Subscription with same event, subject, and target already exists')
-    }
-    // Store subscription in database
-    // TODO: Who to subscribe to should be defined by a separate `subject`
-    //       field.
-    yield Subscription.upsert(subscription, { transaction })
-  })
-}
+const model = require('../models/subscriptions')
 
 /**
  * @api {get} /subscriptions/:id Get RESThook subscription
@@ -65,20 +21,10 @@ function * storeSubscription (subscription) {
  *
  * @returns {void}
  */
-exports.getResource = function * fetch () {
-  let id = this.params.id
+function * getResource () {
+  const id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
-  id = id.toLowerCase()
-  log.debug('fetching subscription ID ' + id)
-
-  const subscription = yield Subscription.findById(id)
-  if (!subscription) {
-    throw new NotFoundError('Unknown subscription ID')
-  } else if (!isOwnerOrAdmin(this.req.user, subscription)) {
-    throw new UnauthorizedError('You may only view subscriptions you own')
-  } else {
-    this.body = subscription.getDataExternal()
-  }
+  this.body = yield model.getSubscription(id.toLowerCase(), this.req.user)
 }
 
 /**
@@ -100,39 +46,21 @@ exports.getResource = function * fetch () {
  *
  * @returns {void}
  */
-
-exports.putResource = function * update () {
-  let id = this.params.id
+function * putResource () {
+  const id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
-  id = id.toLowerCase()
   const subscription = this.body
 
-  if (!isOwnerOrAdmin(this.req.user, subscription)) {
-    throw new UnauthorizedError('You do not own this account')
-  } else if (!isSubjectOrAdmin(this.req.user, subscription)) {
-    throw new UnauthorizedError('You are not authorized to listen to this account')
-  }
-
   if (typeof subscription.id !== 'undefined') {
-    request.assert.strictEqual(subscription.id, id,
+    request.assert.strictEqual(
+      subscription.id.toLowerCase(), id.toLowerCase(),
       'Subscription ID must match the one in the URL')
-  } else {
-    subscription.id = id
   }
 
-  log.debug('updating subscription ID ' + subscription.id)
-  log.debug('subscribed ' + subscription.owner + ' at ' + subscription.target)
-
-  // SQLite's implementation of upsert does not tell you whether it created the
-  // row or whether it already existed. Since we need to know to return the
-  // correct HTTP status code we unfortunately have to do this in two steps.
-  let existed = yield Subscription.findById(id)
-  yield * storeSubscription(subscription)
-
-  log.debug('update completed')
-
-  this.body = subscription.getDataExternal()
-  this.status = existed ? 200 : 201
+  subscription.id = id.toLowerCase()
+  const result = yield model.setSubscription(subscription, this.req.user)
+  this.body = result.subscription
+  this.status = result.existed ? 200 : 201
 }
 
 /**
@@ -152,26 +80,15 @@ exports.putResource = function * update () {
  *
  * @returns {void}
  */
-exports.deleteResource = function * remove () {
-  let id = this.params.id
+function * deleteResource () {
+  const id = this.params.id
   request.validateUriParameter('id', id, 'Uuid')
-  id = id.toLowerCase()
-  const self = this
-
-  log.debug('deleting subscription ID ' + id)
-
-  yield db.transaction(function *(transaction) {
-    const subscription = yield Subscription.findById(id, { transaction })
-
-    if (!subscription) {
-      throw new NotFoundError('Unknown subscription ID')
-    }
-    if (!isOwnerOrAdmin(self.req.user, subscription)) {
-      throw new UnauthorizedError('You don\'t have permission to delete this subscription')
-    }
-
-    subscription.destroy({ transaction })
-  })
-
+  yield model.deleteSubscription(id.toLowerCase(), this.req.user)
   this.status = 204
+}
+
+module.exports = {
+  getResource,
+  putResource,
+  deleteResource
 }
