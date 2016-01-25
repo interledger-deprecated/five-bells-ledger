@@ -111,8 +111,10 @@ class NotificationWorker {
 
   * processNotificationWithInstances (notification, transfer, subscription) {
     this.log.debug('sending notification to ' + subscription.target)
+    const subscriptionURI = this.uri.make('subscription', subscription.id)
     const notificationBody = {
-      id: this.uri.make('subscription', subscription.id) + '/notifications/' + notification.id,
+      id: subscriptionURI + '/notifications/' + notification.id,
+      subscription: subscriptionURI,
       event: 'transfer.update',
       resource: transfer.getDataExternal()
     }
