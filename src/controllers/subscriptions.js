@@ -9,11 +9,6 @@ const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const Subscription = require('../models/subscription').Subscription
 const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
 
-function isOwner (requestingUser, subscription) {
-  const requestOwner = uri.make('account', requestingUser.name)
-  return requestOwner === subscription.owner
-}
-
 function isOwnerOrAdmin (requestingUser, subscription) {
   const requestOwner = uri.make('account', requestingUser.name)
   return requestOwner === subscription.owner || requestingUser.is_admin
@@ -112,7 +107,7 @@ exports.putResource = function * update () {
   id = id.toLowerCase()
   const subscription = this.body
 
-  if (!isOwner(this.req.user, subscription)) {
+  if (!isOwnerOrAdmin(this.req.user, subscription)) {
     throw new UnauthorizedError('You do not own this account')
   } else if (!isSubjectOrAdmin(this.req.user, subscription)) {
     throw new UnauthorizedError('You are not authorized to listen to this account')
