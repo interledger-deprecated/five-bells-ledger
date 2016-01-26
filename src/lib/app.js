@@ -18,6 +18,7 @@ const notifications = require('../controllers/notifications')
 const models = require('../models/db')
 const seedDB = require('./seed-db')
 const parseBody = require('co-body')
+const fs = require('fs')
 
 // Configure passport
 require('../services/auth')
@@ -60,7 +61,27 @@ class App {
     yield this.db.init()
     yield seedDB(this.config)
 
-    this.koa.listen(this.config.getIn(['server', 'port']))
+    if (this.config.getIn(['server', 'secure'])) {
+      const https = require('https')
+
+      // https://nodejs.org/api/tls.html#tls_tls_createserver_options_secureconnectionlistener
+      const options = {
+        port: this.config.getIn(['server', 'port']),
+        host: this.config.getIn(['server', 'bind_ip']),
+        pfx: fs.readFileSync('server.pfx'),
+        // key: fs.readFileSync('server-key.pem'),
+        // cert: fs.readFileSync('server-crt.pem'),
+        // ca: fs.readFileSync('ca-crt.pem'), // certificate authority(s)
+        // crl: fs.readFileSync('ca-crl.pem'), // certificate revokation list
+        requestCert: this.config.getIn(['auth', 'client_certificates_enabled']),
+        rejectUnauthorized: true
+      }
+
+      https.createServer(options, this.koa.callback()).listen(this.config.getIn(['server', 'port']))
+    } else {
+      this.koa.listen(this.config.getIn(['server', 'port']))
+    }
+
     this.log.info('ledger listening on ' +
       this.config.getIn(['server', 'bind_ip']) + ':' +
       this.config.getIn(['server', 'port']))
@@ -69,7 +90,9 @@ class App {
 
   _makeRouter () {
     const router = new Router()
-    router.get('/health', health.getResource)
+    router.get('/health',
+      passport.authenticate(['client-cert']),
+      health.getResource)
 
     router.put('/transfers/:id',
       passport.authenticate(['basic', 'http-signature', 'anonymous'], {
