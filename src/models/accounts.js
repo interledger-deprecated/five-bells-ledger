@@ -34,7 +34,7 @@ function * getAccount (name, requestingUser) {
 
   // TODO get rid of this when we start using biginteger math everywhere
   account.balance = '' + account.balance
-  delete account.password
+  delete account.password_hash
   const data = can_examine
     ? account.getDataExternal() : account.getDataPublic()
   data.ledger = config.server.base_uri

@@ -55,12 +55,12 @@ describe('Accounts', function () {
       const account5 = this.traderAccount
       const account6 = this.disabledAccount
       // Passwords are not returned
-      delete account1.password
-      delete account2.password
-      delete account3.password
-      delete account4.password
-      delete account5.password
-      delete account6.password
+      delete account1.password_hash
+      delete account2.password_hash
+      delete account3.password_hash
+      delete account4.password_hash
+      delete account5.password_hash
+      delete account6.password_hash
       yield this.request()
         .get('/accounts')
         .auth('admin', 'admin')
@@ -155,7 +155,7 @@ describe('Accounts', function () {
     it('should strip out the password field', function *() {
       const account = this.existingAccount
       const accountWithoutPassword = _.clone(account)
-      delete accountWithoutPassword.password
+      delete accountWithoutPassword.password_hash
       accountWithoutPassword.ledger = 'http://localhost'
       yield this.request()
         .get(this.existingAccount.id)
@@ -212,7 +212,7 @@ describe('Accounts', function () {
     it('should return 201', function *() {
       const account = this.exampleAccounts.bob
       // Passwords are not returned
-      delete account.password
+      delete account.password_hash
       yield this.request()
         .put(account.id)
         .auth('admin', 'admin')
@@ -232,7 +232,7 @@ describe('Accounts', function () {
       account.balance = '90'
 
       // Passwords are not returned
-      delete account.password
+      delete account.password_hash
 
       yield this.request()
         .put(this.existingAccount.id)
@@ -251,7 +251,7 @@ describe('Accounts', function () {
       const existingAccount = this.existingAccount
       const newAccount = this.exampleAccounts.bob
 
-      delete existingAccount.password
+      delete existingAccount.password_hash
 
       yield this.request()
       .put(newAccount.id)
@@ -266,7 +266,7 @@ describe('Accounts', function () {
     it('should return 201', function *() {
       const account = this.exampleAccounts.eve
       account.public_key = publicKey
-      delete account.password
+      delete account.password_hash
       yield this.request()
         .put(account.id)
         .auth('admin', 'admin')
