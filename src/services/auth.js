@@ -3,6 +3,7 @@
 const bcrypt = require('bcrypt')
 const passport = require('koa-passport')
 const BasicStrategy = require('passport-http').BasicStrategy
+const ClientCertStrategy = require('passport-client-certificate').Strategy
 const HTTPSignatureStrategy = require('passport-http-signature')
 const AnonymousStrategy = require('passport-anonymous').Strategy
 const Account = require('../models/db/account').Account
@@ -53,6 +54,22 @@ passport.use(new HTTPSignatureStrategy(
         done(null, userObj, userObj.public_key)
       })
   }))
+
+passport.use(new ClientCertStrategy((certificate, done) => {
+  if (!config.getIn(['auth', 'client_certificates_enabled'])) {
+    return done(new UnauthorizedError('Unsupported authentication method'))
+  }
+
+  const fingerprint = certificate.fingerprint.toUpperCase()
+  Account.findByFingerprint(fingerprint)
+    .then(function (userObj) {
+      if (!userObj || userObj.is_disabled || !userObj.fingerprint ||
+          userObj.fingerprint !== fingerprint) {
+        return done(new UnauthorizedError('Unknown or invalid account'))
+      }
+      done(null, userObj)
+    })
+}))
 
 // Allow unauthenticated requests (transfers will just
 // be in the proposed state)

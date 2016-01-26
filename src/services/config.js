@@ -20,11 +20,6 @@ if (admin_pass) {
   }
 }
 
-localConfig.auth = {
-  basic_enabled: Config.castBool(Config.getEnv('AUTH_BASIC_ENABLED'), true),
-  http_signature_enabled: Config.castBool(Config.getEnv('AUTH_HTTP_SIGNATURE_ENABLED'), true)
-}
-
 if (isRunningTests()) {
   localConfig.keys = {
     ed25519: {
