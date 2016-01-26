@@ -1,33 +1,10 @@
 /* @flow */
 'use strict'
 
-const crypto = require('crypto')
 const _ = require('lodash')
-const diff = require('deep-diff')
-const tweetnacl = require('tweetnacl')
-const stringifyJSON = require('canonical-json')
-const db = require('../services/db')
-const makeAccountBalances = require('../lib/accountBalances')
-const validateNoDisabledAccounts = require('../lib/disabledAccounts')
-const config = require('../services/config')
-const uri = require('../services/uriManager')
-const transferExpiryMonitor = require('../services/transferExpiryMonitor')
-const notificationWorker = require('../services/notificationWorker')
-const log = require('../services/log')('transfers')
 const requestUtil = require('five-bells-shared/utils/request')
-const updateState = require('../lib/updateState')
-const jsonld = require('five-bells-shared/utils/jsonld')
-const hashJSON = require('five-bells-shared/utils/hashJson')
-const Transfer = require('../models/transfer').Transfer
-const NotFoundError = require('five-bells-shared/errors/not-found-error')
+const model = require('../models/transfers')
 const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-parameter-error')
-const UnmetConditionError = require('five-bells-shared/errors/unmet-condition-error')
-const InvalidModificationError =
-require('five-bells-shared/errors/invalid-modification-error')
-const UnprocessableEntityError =
-require('five-bells-shared/errors/unprocessable-entity-error')
-const UnauthorizedError =
-require('five-bells-shared/errors/unauthorized-error')
 
 /**
  * @api {get} /transfers/:id Get local transfer object
@@ -46,20 +23,10 @@ require('five-bells-shared/errors/unauthorized-error')
  *
  * @returns {void}
  */
-exports.getResource = function * fetch () {
-  let id = this.params.id
+function * getResource () {
+  const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  id = id.toLowerCase()
-  log.debug('fetching transfer ID ' + id)
-
-  let transfer = yield Transfer.findById(id)
-  if (!transfer) {
-    throw new NotFoundError('Unknown transfer ID')
-  }
-
-  jsonld.setContext(this, 'transfer.jsonld')
-
-  this.body = transfer.getDataExternal()
+  this.body = yield model.getTransfer(id.toLowerCase())
 }
 
 /**
@@ -81,208 +48,17 @@ exports.getResource = function * fetch () {
  *
  * @returns {void}
  */
-exports.getStateResource = function * getState () {
-  let id = this.params.id
+function * getStateResource () {
+  const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  id = id.toLowerCase()
-  log.debug('fetching state receipt for transfer ID ' + id)
-
-  let signatureType = this.query.type || 'ed25519-sha512'
-  let transfer = yield Transfer.findById(id)
-  let transferState = transfer ? transfer.state : 'nonexistent'
-
-  let message = {
-    id: uri.make('transfer', id),
-    state: transferState
-  }
-  let transferStateReceipt = {
-    type: signatureType,
-    message: message,
-    signer: config.server.base_uri
-  }
-
-  if (signatureType === 'ed25519-sha512') {
-    transferStateReceipt.public_key = config.keys.ed25519.public
-    transferStateReceipt.signature = sign(hashJSON(message))
-  } else if (signatureType === 'sha256') {
-    const realPreImage = makePreImage(message.id, transferState)
-    transferStateReceipt.digest = sha256(stringifyJSON(realPreImage))
-    transferStateReceipt.message = makePreImage(message.id, transferState)
-    if (this.query.condition_state) {
-      const conditionPreImage = makePreImage(message.id, this.query.condition_state)
-      transferStateReceipt.condition_state = this.query.condition_state
-      transferStateReceipt.condition_digest = sha256(stringifyJSON(conditionPreImage))
-    }
-  } else {
+  const conditionState = this.query.condition_state
+  const signatureType = this.query.type || 'ed25519-sha512'
+  const signatureTypes = ['ed25519-sha512', 'sha256']
+  if (!_.includes(signatureTypes, signatureType)) {
     throw new InvalidUriParameterError('type is not valid')
   }
-
-  this.body = transferStateReceipt
-}
-
-function makePreImage (transfer_id, state) {
-  return {
-    id: transfer_id,
-    state: state,
-    token: sign(sha512(transfer_id + ':' + state))
-  }
-}
-
-function sign (base64Str) {
-  return tweetnacl.util.encodeBase64(
-    tweetnacl.sign.detached(
-      tweetnacl.util.decodeBase64(base64Str),
-      tweetnacl.util.decodeBase64(config.keys.ed25519.secret)))
-}
-
-function sha256 (str) {
-  return crypto.createHash('sha256').update(str).digest('base64')
-}
-
-function sha512 (str) {
-  return crypto.createHash('sha512').update(str).digest('base64')
-}
-
-function updateTransferObject (originalTransfer, transfer) {
-  let updatedTransferData = originalTransfer.getData()
-
-  // Ignore null properties
-  updatedTransferData = _.omit(updatedTransferData, _.isNull)
-
-  // Ignore internally managed properties
-  transfer.state = updatedTransferData.state
-  transfer.created_at = updatedTransferData.created_at
-  transfer.updated_at = updatedTransferData.updated_at
-  transfer.proposed_at = updatedTransferData.proposed_at
-  transfer.prepared_at = updatedTransferData.prepared_at
-  transfer.executed_at = updatedTransferData.executed_at
-  transfer.rejected_at = updatedTransferData.rejected_at
-
-  // Ignore undefined properties
-  const transferData = _.omit(transfer.getData(), _.isUndefined)
-
-  // Clients can add authorizations
-  // The validity of these authorizations will be checked
-  // in the validateAuthorizations function
-  _.forEach(updatedTransferData.debits, function (funds, i) {
-    if (!funds.authorized &&
-      transfer.debits[i] &&
-      transfer.debits[i].authorized) {
-      funds.authorized = true
-    }
-  })
-  _.forEach(updatedTransferData.credits, function (funds, i) {
-    if (!funds.authorized &&
-      transfer.credits[i] &&
-      transfer.credits[i].authorized) {
-      funds.authorized = true
-    }
-  })
-
-  // Clients may fulfill the execution/cancellation conditions
-  if (transfer.execution_condition_fulfillment) {
-    updatedTransferData.execution_condition_fulfillment =
-      transfer.execution_condition_fulfillment
-  }
-  if (transfer.cancellation_condition_fulfillment) {
-    updatedTransferData.cancellation_condition_fulfillment =
-      transfer.cancellation_condition_fulfillment
-  }
-
-  // The old and new objects should now be exactly equal
-  if (!_.isEqual(updatedTransferData, transferData)) {
-    // If they aren't, this means the user tried to update something they're not
-    // supposed to be able to modify.
-    // TODO InvalidTransformationError
-    throw new InvalidModificationError(
-      'Transfer may not be modified in this way',
-      diff(updatedTransferData, transferData))
-  }
-
-  originalTransfer.setData(updatedTransferData)
-  return originalTransfer
-}
-
-function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
-  // Check that the authorizedAccount is actually relevant to this transfer
-  if (authorizedAccount) {
-    if (!_.includes(_.pluck(transfer.debits, 'account'), authorizedAccount) &&
-      !_.includes(_.pluck(transfer.credits, 'account'), authorizedAccount)) {
-      // TODO: should this error be more specific or would that create
-      // a security vulnerability?
-      throw new UnauthorizedError('Unknown or invalid account / password')
-    }
-  }
-
-  // Go through each of the debits in the transfer
-  // Throw an error if authorized is set to true on any debit
-  // that was not set to true on the transferFromDb and is not
-  // owned by the authorizedAccount
-  _.forEach(transfer.debits, function (debit, debitIndex) {
-    // We don't care about debits where no one is attempting
-    // to mark them as authorized
-    if (!debit.authorized) {
-      return
-    }
-
-    if (debit.account !== authorizedAccount &&
-      (!previousDebits || !previousDebits[debitIndex].authorized)) {
-      throw new UnauthorizedError('Invalid attempt to authorize debit')
-    }
-  })
-
-// TODO: add credit authorization
-}
-
-function * processStateTransitions (tr, transfer) {
-  // Calculate per-account totals
-  let accountBalances = yield makeAccountBalances(tr, transfer)
-
-  // Check prerequisites
-  if (transfer.state === 'proposed') {
-    let sourceFunds = Array.isArray(transfer.debits)
-      ? transfer.debits
-      : [transfer.debits]
-    let authorized = true
-    sourceFunds.forEach(function (funds) {
-      if (!funds.authorized) {
-        authorized = false
-      } else {
-        // TODO Validate authorization public keys
-        _.noop()
-      }
-    })
-
-    if (authorized) {
-      // Hold sender funds
-      yield accountBalances.applyDebits()
-      updateState(transfer, 'prepared')
-    }
-  }
-
-  if (transfer.state === 'prepared' && transfer.hasFulfillment('execution')) {
-    if (!transfer.hasValidFulfillment('execution')) {
-      throw new UnmetConditionError('ConditionFulfillment failed')
-    }
-    yield accountBalances.applyCredits()
-
-    // Remove the expiry countdown
-    transferExpiryMonitor.unwatch(transfer.id)
-
-    updateState(transfer, 'executed')
-  }
-
-  let canRejectState = transfer.state === 'proposed' || transfer.state === 'prepared'
-  if (canRejectState && transfer.cancellation_condition_fulfillment) {
-    if (!transfer.hasValidFulfillment('cancellation')) {
-      throw new UnmetConditionError('ConditionFulfillment failed')
-    }
-    if (transfer.state === 'prepared') {
-      yield accountBalances.revertDebits()
-    }
-    updateState(transfer, 'rejected')
-    transferExpiryMonitor.unwatch(transfer.id)
-  }
+  this.body = yield model.getTransferStateReceipt(
+    id.toLowerCase(), signatureType, conditionState)
 }
 
 /**
@@ -359,126 +135,27 @@ function * processStateTransitions (tr, transfer) {
  * @param {String} id Transfer UUID
  * @returns {void}
  */
-exports.putResource = function * create () {
-  const _this = this
-
-  let id = _this.params.id
+function * putResource () {
+  const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  id = id.toLowerCase()
-  let transfer = this.body
-
-  // Do not allow modifications after the expires_at date
-  transferExpiryMonitor.validateNotExpired(transfer)
+  const transfer = this.body
 
   if (typeof transfer.id !== 'undefined') {
-    transfer.id = transfer.id.toLowerCase()
     requestUtil.assert.strictEqual(
-      transfer.id,
-      id,
+      transfer.id.toLowerCase(),
+      id.toLowerCase(),
       'Transfer ID must match the URI'
     )
   }
 
-  if (typeof transfer.ledger !== 'undefined') {
-    requestUtil.assert.strictEqual(
-      transfer.ledger,
-      config.server.base_uri,
-      'Transfer contains incorrect ledger URI'
-    )
-  }
+  transfer.id = id.toLowerCase()
+  const result = yield model.setTransfer(transfer, this.req.user)
+  this.body = result.transfer
+  this.status = result.existed ? 200 : 201
+}
 
-  requestUtil.assert.strictEqual(
-    transfer.type,
-    undefined,
-    'Transfer contains incorrect type')
-
-  transfer.id = id
-  transfer.ledger = config.server.base_uri
-
-  log.debug('putting transfer ID ' + transfer.id)
-  log.debug('' + transfer.debits[0].account + ' -> ' +
-    transfer.credits[0].account + ' : ' +
-    transfer.credits[0].amount)
-
-  // Do all static verification (signatures, validity, etc.) here
-
-  // Verify debits
-  let totalDebits = 0
-  let totalCredits = 0
-
-  transfer.debits.forEach(function (debit) {
-    if (debit.amount <= 0) {
-      throw new UnprocessableEntityError(
-        'Amount must be a positive number excluding zero.')
-    }
-    totalDebits += parseFloat(debit.amount)
-  })
-
-  transfer.credits.forEach(function (credit) {
-    if (credit.amount <= 0) {
-      throw new UnprocessableEntityError(
-        'Amount must be a positive number excluding zero.')
-    }
-    totalCredits += parseFloat(credit.amount)
-  })
-
-  if (totalCredits !== totalDebits) {
-    throw new UnprocessableEntityError(
-      'Total credits must equal total debits')
-  }
-
-  // TODO Validate that the execution_condition_fulfillment is correct
-
-  let originalTransfer, previousDebits
-  yield db.transaction(function *(transaction) {
-    originalTransfer = yield Transfer.findById(transfer.id, {transaction})
-    if (originalTransfer) {
-      log.debug('found an existing transfer with this ID')
-      previousDebits = originalTransfer.getData().debits
-
-      // This method will update the original transfer object using the new
-      // version, but only allowing specific fields to change.
-      transfer = updateTransferObject(originalTransfer, transfer)
-    } else {
-      yield validateNoDisabledAccounts(transaction, transfer)
-      // A brand-new transfer will start out as proposed
-      updateState(transfer, 'proposed')
-    }
-
-    // This method will check that any authorized:true fields added can
-    // only be added by the owner of the account
-    // _this.req.user is set by the passport middleware
-    let user = _this.req.user
-    validateAuthorizations(user && user.name, transfer, previousDebits)
-
-    yield processStateTransitions(transaction, transfer)
-
-    // Store transfer in database
-    if (originalTransfer) {
-      yield transfer.save({transaction})
-    } else {
-      yield Transfer.create(transfer, {transaction})
-    }
-
-    // Create persistent notification events. We're doing this within the same
-    // database transaction in order to maximize the reliability of the
-    // notification system. If the server crashes while trying to post a
-    // notification it should retry it when it comes back.
-    yield notificationWorker.queueNotifications(transfer, transaction)
-
-    // Start the expiry countdown if the transfer is not yet finalized
-    // If the expires_at has passed by this time we'll consider
-    // the transfer to have made it in before the deadline
-    if (!transfer.isFinalized()) {
-      yield transferExpiryMonitor.watch(transfer)
-    }
-  })
-
-  log.debug('changes written to database')
-
-  this.body = transfer.getDataExternal()
-  this.status = originalTransfer ? 200 : 201
-
-  // Process notifications soon
-  notificationWorker.scheduleProcessing()
+module.exports = {
+  getResource,
+  getStateResource,
+  putResource
 }

@@ -14,7 +14,7 @@ const health = require('../controllers/health')
 const transfers = require('../controllers/transfers')
 const accounts = require('../controllers/accounts')
 const subscriptions = require('../controllers/subscriptions')
-const models = require('../models')
+const models = require('../models/db')
 const seedDB = require('./seed-db')
 
 // Configure passport

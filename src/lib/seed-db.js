@@ -1,5 +1,5 @@
 'use strict'
-const models = require('../models')
+const models = require('../models/db')
 
 module.exports = function * (config) {
   yield setupHoldAccount()
