@@ -1,5 +1,6 @@
 'use strict'
 
+const bcrypt = require('bcrypt')
 const passport = require('koa-passport')
 const BasicStrategy = require('passport-http').BasicStrategy
 const HTTPSignatureStrategy = require('passport-http-signature')
@@ -22,11 +23,16 @@ passport.use(new BasicStrategy(
 
     Account.findByName(username)
       .then(function (userObj) {
-        if (userObj && !userObj.is_disabled && password && userObj.password === password) {
-          return done(null, userObj)
-        } else {
-          return done(new UnauthorizedError('Unknown or invalid account / password'))
+        if (!userObj || userObj.is_disabled || !userObj.password_hash) {
+          return done(new UnauthorizedError(
+            'Unknown or invalid account / password'))
         }
+        bcrypt.compare(password, userObj.password_hash, (error, result) => {
+          if (error || !result) {
+            return done(new UnauthorizedError('Invalid password'))
+          }
+          return done(null, userObj)
+        })
       })
   }))
 

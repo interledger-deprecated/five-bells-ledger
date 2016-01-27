@@ -3,7 +3,7 @@
     "id": "http://localhost/accounts/admin",
     "name": "admin",
     "balance": "0",
-    "password": "admin",
+    "password_hash": "$2a$10$cGwjYNVpi6TAAiJD2ZvMt.fFwM/UwYdXZWZGcClJvWYZIRJ0RLQD2",
     "is_admin": true,
     "is_disabled": false
   },
@@ -11,28 +11,28 @@
     "id": "http://localhost/accounts/alice",
     "name": "alice",
     "balance": "100",
-    "password": "alice",
+    "password_hash": "$2a$10$w8m9wi0QuVmDmShgLTxu7eIlC3VhgUc1SnN/S0Ugh12a1UPVNTjmK",
     "is_disabled": false
   },
   "bob": {
     "id": "http://localhost/accounts/bob",
     "name": "bob",
     "balance": "0",
-    "password": "bob",
+    "password_hash": "$2a$10$jpPZMWifvMUtydtbCQTR0.APM2v2lXqBhcJPFOk1GdWnZs0AHtNsG",
     "is_disabled": false
   },
   "candice": {
     "id": "http://localhost/accounts/candice",
     "name": "candice",
     "balance": "50",
-    "password": "candice",
+    "password_hash": "$2a$10$KqYqzwtCiD9zFQmH6svy0exzOQFNxNxWcoARD7YuumLPrnQA2nP.6",
     "is_disabled": false
   },
   "dave": {
     "id": "http://localhost/accounts/dave",
     "name": "dave",
     "balance": "0",
-    "password": "dave",
+    "password_hash": "$2a$10$BujYUiH2lZ1RLOmZyZrUyuQq4ZiMR6qCnarNSHZTpX.pCsSSAYAKy",
     "is_disabled": false
   },
   "eve": {
@@ -59,7 +59,7 @@
     "id": "http://localhost/accounts/disabled",
     "name": "disabled",
     "balance": "150",
-    "password": "disabled",
+    "password_hash": "$2a$10$vR4JcjPppWTWmwZdxW6McOKsiJ0BHQKNjM9EJ7yFc6n0aANgUImd6",
     "is_disabled": true
   }
 }
