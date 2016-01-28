@@ -942,7 +942,7 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .put(this.executedTransfer.id)
+        .put(this.executedTransfer.id + '/fulfillment')
         .send(transfer)
         .expect(200)
         .expect(_.assign({}, transfer, {

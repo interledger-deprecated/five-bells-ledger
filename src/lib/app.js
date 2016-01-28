@@ -76,6 +76,13 @@ class App {
       models.Transfer.createBodyParser(),
       transfers.putResource)
 
+    router.put('/transfers/:id/fulfillment',
+      passport.authenticate(['basic', 'http-signature', 'anonymous'], {
+        session: false
+      }),
+      models.Transfer.createBodyParser(),
+      transfers.putResource)
+
     router.get('/transfers/:id', transfers.getResource)
     router.get('/transfers/:id/state', transfers.getStateResource)
 
