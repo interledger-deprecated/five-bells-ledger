@@ -13,12 +13,11 @@ test:
   override:
     # Run lint
     - npm run lint
-    # Run migrations forwards and backwards (MySQL)
-    - docker run --name=ledger-test-migration-mysql -it --net=host -e LEDGER_DB_URI=mysql://ubuntu@localhost/circle_test -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm run migrate ; npm run migrate-undo'
-    # Run migrations forwards and backwards (Postgres)
-    - docker run --name=ledger-test-migration-postgres -it --net=host -e LEDGER_DB_URI=postgres://ubuntu@localhost/circle_test -v /usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm run migrate ; npm run migrate-undo'
-    # Run migrations forwards and backwards (SQLite)
-    - docker run --name=ledger-test-migration-sqlite -it -e LEDGER_DB_URI=sqlite:///tmp/test.db interledger/five-bells-ledger sh -c 'npm run migrate ; npm run migrate-undo'
+    # Wipe databases
+    - mysql -u ubuntu -e 'DROP DATABASE circle_test;'
+    - mysql -u ubuntu -e 'CREATE DATABASE circle_test;'
+    - psql -U ubuntu -c 'DROP DATABASE circle_test;'
+    - psql -U ubuntu -c 'CREATE DATABASE circle_test;'
     # Run tests (MySQL)
     - docker run --name=ledger-test-mysql -it --net=host -e LEDGER_UNIT_DB_URI=mysql://ubuntu@localhost/circle_test interledger/five-bells-ledger npm test
     # Run tests (Postgres)

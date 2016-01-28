@@ -8,7 +8,13 @@ config.parseServerConfig()
 config.parseDatabaseConfig()
 config.parseKeyConfig()
 
-if (process.env.NODE_ENV === 'unit') {
+function isRunningTests () {
+  return (process.argv[0].endsWith('mocha') ||
+    (process.argv.length > 1 && process.argv[0].endsWith('node') &&
+     process.argv[1].endsWith('mocha')))
+}
+
+if (isRunningTests()) {
   config.server.public_host = 'localhost'
   config.server.port = 61337
   config.server.public_port = 80

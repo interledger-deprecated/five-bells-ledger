@@ -14,11 +14,9 @@
   "scripts": {
     "start": "node src/app.js",
     "lint": "eslint .",
-    "migrate": "sequelize db:migrate",
-    "migrate-undo": "sequelize db:migrate:undo:all",
-    "test": "NODE_ENV=unit BLUEBIRD_DEBUG=1 BLUEBIRD_WARNINGS=0 node node_modules/.bin/istanbul test -- _mocha -r co-mocha",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls",
-    "apidoc": "./node_modules/.bin/apidoc -o apidoc-out -i src/controllers/"
+    "test": "istanbul test -- _mocha",
+    "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "apidoc": "apidoc -o apidoc-out -i src/controllers/"
   },
   "engines": {
     "node": ">=0.12",
