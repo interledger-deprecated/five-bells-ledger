@@ -5,7 +5,7 @@ const _ = require('lodash')
 const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
 const stringifyJSON = require('canonical-json')
-const db = require('../services/db')
+const db = require('./db/transfers')
 const makeAccountBalances = require('../lib/accountBalances')
 const validateNoDisabledAccounts = require('../lib/disabledAccounts')
 const config = require('../services/config')
@@ -15,7 +15,6 @@ const notificationWorker = require('../services/notificationWorker')
 const log = require('../services/log')('transfers')
 const updateState = require('../lib/updateState')
 const hashJSON = require('five-bells-shared/utils/hashJson')
-const Transfer = require('./db/transfer').Transfer
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
 const UnmetConditionError = require('five-bells-shared/errors/unmet-condition-error')
@@ -29,7 +28,7 @@ require('five-bells-shared/errors/unauthorized-error')
 function * getTransfer (id) {
   log.debug('fetching transfer ID ' + id)
 
-  let transfer = yield Transfer.findById(id)
+  let transfer = yield db.getTransfer(id)
   if (!transfer) {
     throw new NotFoundError('Unknown transfer ID')
   }
@@ -39,7 +38,7 @@ function * getTransfer (id) {
 
 function * getTransferStateReceipt (id, signatureType, conditionState) {
   log.debug('fetching state receipt for transfer ID ' + id)
-  const transfer = yield Transfer.findById(id)
+  const transfer = yield db.getTransfer(id)
   const transferState = transfer ? transfer.state : 'nonexistent'
   const message = {
     id: uri.make('transfer', id),
@@ -286,8 +285,8 @@ function * setTransfer (transfer, requestingUser) {
   // TODO Validate that the execution_condition_fulfillment is correct
 
   let originalTransfer, previousDebits
-  yield db.transaction(function *(transaction) {
-    originalTransfer = yield Transfer.findById(transfer.id, {transaction})
+  yield db.transaction(function * (transaction) {
+    originalTransfer = yield db.getTransfer(transfer.id, {transaction})
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
       previousDebits = originalTransfer.getData().debits
@@ -308,26 +307,21 @@ function * setTransfer (transfer, requestingUser) {
 
     yield processStateTransitions(transaction, transfer)
 
-    // Store transfer in database
-    if (originalTransfer) {
-      yield transfer.save({transaction})
-    } else {
-      yield Transfer.create(transfer, {transaction})
-    }
+    yield db.upsertTransfer(transfer, {transaction})
 
     // Create persistent notification events. We're doing this within the same
     // database transaction in order to maximize the reliability of the
     // notification system. If the server crashes while trying to post a
     // notification it should retry it when it comes back.
     yield notificationWorker.queueNotifications(transfer, transaction)
-
-    // Start the expiry countdown if the transfer is not yet finalized
-    // If the expires_at has passed by this time we'll consider
-    // the transfer to have made it in before the deadline
-    if (!transfer.isFinalized()) {
-      yield transferExpiryMonitor.watch(transfer)
-    }
   })
+
+  // Start the expiry countdown if the transfer is not yet finalized
+  // If the expires_at has passed by this time we'll consider
+  // the transfer to have made it in before the deadline
+  if (!transfer.isFinalized()) {
+    yield transferExpiryMonitor.watch(transfer)
+  }
 
   log.debug('changes written to database')
 

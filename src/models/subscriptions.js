@@ -1,44 +1,15 @@
 'use strict'
 
-const db = require('../services/db')
+const db = require('./db/subscriptions')
 const log = require('../services/log')('subscriptions')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
-const Subscription = require('./db/subscription').Subscription
 const subscriptionUtils = require('../lib/subscriptionUtils')
-
-/**
- * Store a subscription in the database.
- *
- * @param {Object} subscription Subscription
- * @returns {void}
- */
-function * storeSubscription (subscription) {
-  yield db.transaction(function *(transaction) {
-    // Check prerequisites
-
-    const duplicateSubscription = yield Subscription.findOne({
-      where: {
-        event: subscription.event,
-        subject: subscription.subject,
-        target: subscription.target
-      }
-    }, { transaction })
-
-    if (duplicateSubscription) {
-      throw new UnprocessableEntityError('Subscription with same event, subject, and target already exists')
-    }
-    // Store subscription in database
-    // TODO: Who to subscribe to should be defined by a separate `subject`
-    //       field.
-    yield Subscription.upsert(subscription, { transaction })
-  })
-}
 
 function * getSubscription (id, requestingUser) {
   log.debug('fetching subscription ID ' + id)
-  const subscription = yield Subscription.findById(id)
+  const subscription = yield db.getSubscription(id)
   if (!subscription) {
     throw new NotFoundError('Unknown subscription ID')
   } else if (!subscriptionUtils.isOwnerOrAdmin(requestingUser, subscription)) {
@@ -58,14 +29,18 @@ function * setSubscription (subscription, requestingUser) {
   log.debug('updating subscription ID ' + subscription.id)
   log.debug('subscribed ' + subscription.owner + ' at ' + subscription.target)
 
-  // SQLite's implementation of upsert does not tell you whether it created the
-  // row or whether it already existed. Since we need to know to return the
-  // correct HTTP status code we unfortunately have to do this in two steps.
-  let existed = yield Subscription.findById(subscription.id)
-  yield * storeSubscription(subscription)
+  let existed
+  yield db.transaction(function * (transaction) {
+    const duplicate = yield db.getMatchingSubscription(
+      subscription, {transaction})
+    if (duplicate) {
+      throw new UnprocessableEntityError(
+        'Subscription with same event, subject, and target already exists')
+    }
+    existed = yield db.upsertSubscription(subscription, {transaction})
+  })
 
   log.debug('update completed')
-
   return {
     subscription: subscription.getDataExternal(),
     existed: existed
@@ -74,18 +49,15 @@ function * setSubscription (subscription, requestingUser) {
 
 function * deleteSubscription (id, requestingUser) {
   log.debug('deleting subscription ID ' + id)
-
-  yield db.transaction(function *(transaction) {
-    const subscription = yield Subscription.findById(id, { transaction })
-
+  yield db.transaction(function * (transaction) {
+    const subscription = yield db.getSubscription(id, {transaction})
     if (!subscription) {
       throw new NotFoundError('Unknown subscription ID')
     }
     if (!subscriptionUtils.isOwnerOrAdmin(requestingUser, subscription)) {
       throw new UnauthorizedError('You don\'t have permission to delete this subscription')
     }
-
-    subscription.destroy({ transaction })
+    yield db.deleteSubscription(id, {transaction})
   })
 }
 
