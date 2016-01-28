@@ -1,0 +1,22 @@
+{
+  "id": "http://localhost/subscriptions/f49697a6-d52c-4f46-84c8-9070a31feab7/notifications/89ae630b-959a-47cc-adcf-d7be85e310c0",
+  "subscription": "http://localhost/subscriptions/f49697a6-d52c-4f46-84c8-9070a31feab7",
+  "event": "transfer.update",
+  "resource": {
+    "debits": [
+      {
+        "account": "http://localhost/accounts/alice",
+        "amount": "10",
+        "authorized": true
+      }
+    ],
+    "credits": [
+      {
+        "account": "http://localhost/accounts/bob",
+        "amount": "10"
+      }
+    ],
+    "id": "http://localhost/transfers/155dff3f-4915-44df-a707-acc4b527bcbd",
+    "ledger": "http://localhost"
+  }
+}
