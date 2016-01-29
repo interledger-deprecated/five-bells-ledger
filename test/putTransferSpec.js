@@ -974,9 +974,12 @@ describe('PUT /transfers/:id', function () {
 
     const notification = nock('http://subscriber.example')
       .post('/notifications', (body) => {
+        const idParts = body.id.split('/')
+        const notificationId = idParts[idParts.length - 1]
         expect(body).to.deep.equal({
           event: 'transfer.update',
-          id: subscription.id,
+          id: subscription.id + '/notifications/' + notificationId,
+          subscription: subscription.id,
           resource: transferResult
         })
         return true

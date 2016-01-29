@@ -4,6 +4,7 @@ const db = require('../../src/services/db')
 const Account = require('../../src/models/db/account').Account
 const Transfer = require('../../src/models/db/transfer').Transfer
 const Subscription = require('../../src/models/db/subscription').Subscription
+const Notification = require('../../src/models/db/notification').Notification
 
 exports.reset = function * () {
   yield db.sync()
@@ -37,4 +38,14 @@ exports.addSubscriptions = function * (subscriptions) {
     throw new Error('Requires an array of subscriptions, got ' + subscriptions)
   }
   yield Subscription.bulkCreateExternal(subscriptions)
+}
+
+exports.addNotifications = function * (notifications) {
+  if (!Array.isArray(notifications)) {
+    throw new Error('Requires an array of subscriptions, got ' + notifications)
+  }
+  for (let i = 0; i < notifications.length; i++) {
+    const notificationModel = Notification.build(notifications[i])
+    yield notificationModel.save()
+  }
 }

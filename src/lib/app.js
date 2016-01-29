@@ -14,6 +14,7 @@ const health = require('../controllers/health')
 const transfers = require('../controllers/transfers')
 const accounts = require('../controllers/accounts')
 const subscriptions = require('../controllers/subscriptions')
+const notifications = require('../controllers/notifications')
 const models = require('../models/db')
 const seedDB = require('./seed-db')
 
@@ -104,6 +105,10 @@ class App {
     router.delete('/subscriptions/:id',
       passport.authenticate(['basic', 'http-signature'], { session: false }),
       subscriptions.deleteResource)
+
+    router.get('/subscriptions/:subscription_id/notifications/:notification_id',
+      passport.authenticate(['basic', 'http-signature'], { session: false }),
+      notifications.getResource)
     return router
   }
 }

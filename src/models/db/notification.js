@@ -17,6 +17,11 @@ class Notification extends Model {
 }
 
 PersistentModelMixin(Notification, sequelize, {
+  id: {
+    type: Sequelize.UUID,
+    defaultValue: Sequelize.UUIDV4,
+    primaryKey: true
+  },
   subscription_id: Sequelize.UUID,
   transfer_id: Sequelize.UUID,
   retry_count: Sequelize.INTEGER,

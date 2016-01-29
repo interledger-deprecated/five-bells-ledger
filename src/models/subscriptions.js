@@ -2,21 +2,11 @@
 
 const db = require('../services/db')
 const log = require('../services/log')('subscriptions')
-const uri = require('../services/uriManager')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
-const Subscription = require('./db/subscription').Subscription
 const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
-
-function isOwnerOrAdmin (requestingUser, subscription) {
-  const requestOwner = uri.make('account', requestingUser.name)
-  return requestOwner === subscription.owner || requestingUser.is_admin
-}
-
-function isSubjectOrAdmin (requestingUser, subscription) {
-  const requestOwner = uri.make('account', requestingUser.name)
-  return requestOwner === subscription.subject || requestingUser.is_admin
-}
+const Subscription = require('./db/subscription').Subscription
+const subscriptionUtils = require('../lib/subscriptionUtils')
 
 /**
  * Store a subscription in the database.
@@ -51,7 +41,7 @@ function * getSubscription (id, requestingUser) {
   const subscription = yield Subscription.findById(id)
   if (!subscription) {
     throw new NotFoundError('Unknown subscription ID')
-  } else if (!isOwnerOrAdmin(requestingUser, subscription)) {
+  } else if (!subscriptionUtils.isOwnerOrAdmin(requestingUser, subscription)) {
     throw new UnauthorizedError('You may only view subscriptions you own')
   } else {
     return subscription.getDataExternal()
@@ -59,9 +49,9 @@ function * getSubscription (id, requestingUser) {
 }
 
 function * setSubscription (subscription, requestingUser) {
-  if (!isOwnerOrAdmin(requestingUser, subscription)) {
+  if (!subscriptionUtils.isOwnerOrAdmin(requestingUser, subscription)) {
     throw new UnauthorizedError('You do not own this account')
-  } else if (!isSubjectOrAdmin(requestingUser, subscription)) {
+  } else if (!subscriptionUtils.isSubjectOrAdmin(requestingUser, subscription)) {
     throw new UnauthorizedError('You are not authorized to listen to this account')
   }
 
@@ -91,7 +81,7 @@ function * deleteSubscription (id, requestingUser) {
     if (!subscription) {
       throw new NotFoundError('Unknown subscription ID')
     }
-    if (!isOwnerOrAdmin(requestingUser, subscription)) {
+    if (!subscriptionUtils.isOwnerOrAdmin(requestingUser, subscription)) {
       throw new UnauthorizedError('You don\'t have permission to delete this subscription')
     }
 
