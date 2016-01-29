@@ -147,12 +147,21 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 422 if the signature is invalid', function *() {
     const transfer = this.executedTransfer
-    transfer.execution_condition_fulfillment.signature = 'aW52YWxpZA=='
+
+    const fulfillment = _.cloneDeep(this.executedTransfer.execution_condition_fulfillment)
+    fulfillment.signature = 'aW52YWxpZA=='
 
     yield this.request()
       .put(this.executedTransfer.id)
       .auth('alice', 'alice')
       .send(transfer)
+      .expect(201)
+      .end()
+
+    yield this.request()
+      .put(this.executedTransfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .send(fulfillment)
       .expect(422)
       .end()
   })
@@ -663,9 +672,9 @@ describe('PUT /transfers/:id', function () {
         'signature': crypto.createHash('sha512').update('nope').digest('base64')
       }
       yield this.request()
-        .put(transfer.id)
+        .put(transfer.id + '/fulfillment')
         .auth('alice', 'alice')
-        .send(transfer)
+        .send(transfer.cancellation_condition_fulfillment)
         .expect(422)
         .expect({
           id: 'UnmetConditionError',
@@ -675,9 +684,9 @@ describe('PUT /transfers/:id', function () {
 
       transfer.cancellation_condition_fulfillment = this.executedTransfer.execution_condition_fulfillment
       yield this.request()
-        .put(transfer.id)
+        .put(transfer.id + '/fulfillment')
         .auth('alice', 'alice')
-        .send(transfer)
+        .send(transfer.cancellation_condition_fulfillment)
         .expect(200)
         .expect(_.assign({}, transfer, {
           state: 'rejected',
@@ -942,8 +951,8 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       yield this.request()
-        .put(this.executedTransfer.id)
-        .send(transfer)
+        .put(this.executedTransfer.id + '/fulfillment')
+        .send(transfer.execution_condition_fulfillment)
         .expect(200)
         .expect(_.assign({}, transfer, {
           state: 'executed',

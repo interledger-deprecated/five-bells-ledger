@@ -154,8 +154,17 @@ function * putResource () {
   this.status = result.existed ? 200 : 201
 }
 
+function * putFulfillment () {
+  const id = this.params.id
+  requestUtil.validateUriParameter('id', id, 'Uuid')
+  const fulfillment = this.body
+  this.body = yield model.fulfillTransfer(id, fulfillment)
+  this.status = 200
+}
+
 module.exports = {
   getResource,
   getStateResource,
-  putResource
+  putResource,
+  putFulfillment
 }

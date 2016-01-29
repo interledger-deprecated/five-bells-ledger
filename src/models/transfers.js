@@ -24,6 +24,7 @@ const UnprocessableEntityError =
 require('five-bells-shared/errors/unprocessable-entity-error')
 const UnauthorizedError =
 require('five-bells-shared/errors/unauthorized-error')
+const Condition = require('five-bells-condition').Condition
 
 function * getTransfer (id) {
   log.debug('fetching transfer ID ' + id)
@@ -234,6 +235,65 @@ function * processStateTransitions (tr, transfer) {
   }
 }
 
+function * fulfillTransfer (transferId, fulfillment) {
+  let transfer
+  yield db.transaction(function *(transaction) {
+    transfer = yield db.getTransfer(transferId, {transaction})
+
+    if (!transfer) {
+      throw new NotFoundError('Invalid transfer ID')
+    }
+
+    let accountBalances = yield makeAccountBalances(transaction, transfer)
+
+    // We don't know if notary is executing or rejecting transfer
+    const validated = transfer.state === 'prepared' && transfer.execution_condition && Condition.testFulfillment(transfer.execution_condition, fulfillment)
+    const rejected = (transfer.state === 'proposed' || transfer.state === 'prepared') && transfer.cancellation_condition && Condition.testFulfillment(transfer.cancellation_condition, fulfillment)
+
+    // should be mutually exclusive
+    if (validated && rejected) {
+      throw new InvalidModificationError('Transfer may not be modified in this way')
+    }
+
+    if (validated) {
+      yield accountBalances.applyCredits()
+      updateState(transfer, 'executed')
+      transfer.execution_condition_fulfillment = fulfillment
+    } else if (rejected) {
+      if (transfer.state === 'prepared') {
+        yield accountBalances.revertDebits()
+      }
+      updateState(transfer, 'rejected')
+      transfer.cancellation_condition_fulfillment = fulfillment
+    } else {
+      throw new UnmetConditionError('ConditionFulfillment failed')
+    }
+      // Remove the expiry countdown
+    transferExpiryMonitor.unwatch(transfer.id)
+    yield transfer.save({transaction})
+
+    // Create persistent notification events. We're doing this within the same
+    // database transaction in order to maximize the reliability of the
+    // notification system. If the server crashes while trying to post a
+    // notification it should retry it when it comes back.
+    yield notificationWorker.queueNotifications(transfer, transaction)
+
+    // Start the expiry countdown if the transfer is not yet finalized
+    // If the expires_at has passed by this time we'll consider
+    // the transfer to have made it in before the deadline
+    if (!transfer.isFinalized()) {
+      yield transferExpiryMonitor.watch(transfer)
+    }
+  })
+
+  log.debug('changes written to database')
+
+  // Process notifications soon
+  notificationWorker.scheduleProcessing()
+
+  return transfer.getDataExternal()
+}
+
 function * setTransfer (transfer, requestingUser) {
   // Do not allow modifications after the expires_at date
   transferExpiryMonitor.validateNotExpired(transfer)
@@ -337,5 +397,6 @@ function * setTransfer (transfer, requestingUser) {
 module.exports = {
   getTransfer,
   getTransferStateReceipt,
-  setTransfer
+  setTransfer,
+  fulfillTransfer
 }
