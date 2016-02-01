@@ -256,8 +256,6 @@ function * setTransfer (transfer, requestingUser) {
     transfer.credits[0].account + ' : ' +
     transfer.credits[0].amount)
 
-  // Do all static verification (signatures, validity, etc.) here
-
   // Verify debits
   let totalDebits = 0
   let totalCredits = 0
@@ -282,8 +280,6 @@ function * setTransfer (transfer, requestingUser) {
     throw new UnprocessableEntityError(
       'Total credits must equal total debits')
   }
-
-  // TODO Validate that the execution_condition_fulfillment is correct
 
   let originalTransfer, previousDebits
   yield db.transaction(function *(transaction) {
