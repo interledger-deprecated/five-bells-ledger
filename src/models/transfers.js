@@ -184,7 +184,7 @@ function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
 // TODO: add credit authorization
 }
 
-function * prepareTransfer (tr, transfer) {
+function * updateAuthorization (tr, transfer) {
   // Calculate per-account totals
   let accountBalances = yield makeAccountBalances(tr, transfer)
 
@@ -208,6 +208,15 @@ function * prepareTransfer (tr, transfer) {
       yield accountBalances.applyDebits()
       updateState(transfer, 'prepared')
     }
+
+    // If the transfer is prepared and has no execution condition, execute immediately
+    if (transfer.state === 'prepared' && !Boolean(transfer.execution_condition)) {
+      yield accountBalances.applyCredits()
+
+      // Remove the expiry countdown
+      transferExpiryMonitor.unwatch(transfer.id)
+      updateState(transfer, 'executed')
+    }
   }
 }
 
@@ -223,11 +232,12 @@ function * fulfillTransfer (transferId, fulfillment) {
     let accountBalances = yield makeAccountBalances(transaction, transfer)
 
     // We don't know if notary is executing or rejecting transfer
-    const isValidExecution = Boolean(transfer.execution_condition && Condition.testFulfillment(transfer.execution_condition, fulfillment))
-    const isValidCancellation = Boolean(transfer.cancellation_condition && Condition.testFulfillment(transfer.cancellation_condition, fulfillment))
+    const isValidExecution = Boolean(transfer.execution_condition &&
+      Condition.testFulfillment(transfer.execution_condition, fulfillment))
+    const isValidCancellation = Boolean(transfer.cancellation_condition &&
+      Condition.testFulfillment(transfer.cancellation_condition, fulfillment))
 
-    // Exactly one condition must be true, so booleans must sum to 1
-    if (isValidCancellation + isValidExecution !== 1) {
+    if (isValidCancellation === isValidExecution) {
       throw new UnmetConditionError('ConditionFulfillment failed')
     }
 
@@ -236,9 +246,10 @@ function * fulfillTransfer (transferId, fulfillment) {
 
     if (isValidExecution) {
       if (!canExecute) {
-        throw new InvalidModificationError('Transfer must be authorized before it can execute')
+        throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be executed')
       }
       yield accountBalances.applyCredits()
+      transfer.execution_condition_fulfillment = fulfillment
       updateState(transfer, 'executed')
     } else if (isValidCancellation) {
       if (!canCancel) {
@@ -247,6 +258,7 @@ function * fulfillTransfer (transferId, fulfillment) {
       if (transfer.state === 'prepared') {
         yield accountBalances.revertDebits()
       }
+      transfer.cancellation_condition_fulfillment = fulfillment
       updateState(transfer, 'rejected')
     }
 
@@ -347,7 +359,7 @@ function * setTransfer (transfer, requestingUser) {
     validateAuthorizations(requestingUser && requestingUser.name,
       transfer, previousDebits)
 
-    yield prepareTransfer(transaction, transfer)
+    yield updateAuthorization(transaction, transfer)
 
     yield db.upsertTransfer(transfer, {transaction})
 

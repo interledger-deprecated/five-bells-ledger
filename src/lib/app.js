@@ -83,9 +83,7 @@ class App {
       passport.authenticate(['basic', 'http-signature', 'anonymous'], {
         session: false
       }), function * (next) {
-        let json = yield parseBody(this)
-        this.body = json
-
+        this.body = yield parseBody(this)
         yield next
       },
       transfers.putFulfillment)
