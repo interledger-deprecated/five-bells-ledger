@@ -31,7 +31,7 @@
     "co-request": "^1.0.0",
     "deep-diff": "^0.3.0",
     "five-bells-condition": "~2.0.0",
-    "five-bells-shared": "~8.9.0",
+    "five-bells-shared": "~8.10.0",
     "koa": "^1.0.0",
     "koa-compress": "^1.0.6",
     "koa-cors": "0.0.16",

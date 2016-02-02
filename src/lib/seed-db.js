@@ -1,5 +1,5 @@
 'use strict'
-const bcrypt = require('bcrypt')
+const hashPassword = require('five-bells-shared/utils/hashPassword')
 const models = require('../models/db')
 
 module.exports = function * (config) {
@@ -14,20 +14,6 @@ function * setupHoldAccount () {
   if (!holdAccount) {
     yield models.Account.create({name: 'hold', balance: '0'})
   }
-}
-
-function * hashPassword (password) {
-  return yield new Promise((resolve, reject) => {
-    const rounds = 10
-    bcrypt.genSalt(rounds, (error, salt) => {
-      if (error) {
-        return reject(error)
-      }
-      bcrypt.hash(password, salt, (err, hash) => {
-        return err ? reject(err) : resolve(hash)
-      })
-    })
-  })
 }
 
 // adminParams - {user, pass}
