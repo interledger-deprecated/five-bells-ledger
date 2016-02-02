@@ -16,5 +16,11 @@
   }, {
     "account": "http://localhost/accounts/dave",
     "amount": "40"
-  }]
+  }],
+  "execution_condition": {
+    "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
+    "signer": "http://ledger.example",
+    "type": "ed25519-sha512",
+    "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
+  }
 }

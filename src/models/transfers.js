@@ -184,7 +184,7 @@ function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
 // TODO: add credit authorization
 }
 
-function * processStateTransitions (tr, transfer) {
+function * prepareTransfer (tr, transfer) {
   // Calculate per-account totals
   let accountBalances = yield makeAccountBalances(tr, transfer)
 
@@ -209,30 +209,6 @@ function * processStateTransitions (tr, transfer) {
       updateState(transfer, 'prepared')
     }
   }
-
-  if (transfer.state === 'prepared' && transfer.hasFulfillment('execution')) {
-    if (!transfer.hasValidFulfillment('execution')) {
-      throw new UnmetConditionError('ConditionFulfillment failed')
-    }
-    yield accountBalances.applyCredits()
-
-    // Remove the expiry countdown
-    transferExpiryMonitor.unwatch(transfer.id)
-
-    updateState(transfer, 'executed')
-  }
-
-  let canRejectState = transfer.state === 'proposed' || transfer.state === 'prepared'
-  if (canRejectState && transfer.cancellation_condition_fulfillment) {
-    if (!transfer.hasValidFulfillment('cancellation')) {
-      throw new UnmetConditionError('ConditionFulfillment failed')
-    }
-    if (transfer.state === 'prepared') {
-      yield accountBalances.revertDebits()
-    }
-    updateState(transfer, 'rejected')
-    transferExpiryMonitor.unwatch(transfer.id)
-  }
 }
 
 function * fulfillTransfer (transferId, fulfillment) {
@@ -247,28 +223,34 @@ function * fulfillTransfer (transferId, fulfillment) {
     let accountBalances = yield makeAccountBalances(transaction, transfer)
 
     // We don't know if notary is executing or rejecting transfer
-    const validated = transfer.state === 'prepared' && transfer.execution_condition && Condition.testFulfillment(transfer.execution_condition, fulfillment)
-    const rejected = (transfer.state === 'proposed' || transfer.state === 'prepared') && transfer.cancellation_condition && Condition.testFulfillment(transfer.cancellation_condition, fulfillment)
+    const isValidExecution = Boolean(transfer.execution_condition && Condition.testFulfillment(transfer.execution_condition, fulfillment))
+    const isValidCancellation = Boolean(transfer.cancellation_condition && Condition.testFulfillment(transfer.cancellation_condition, fulfillment))
 
-    // should be mutually exclusive
-    if (validated && rejected) {
-      throw new InvalidModificationError('Transfer may not be modified in this way')
+    // Exactly one condition must be true, so booleans must sum to 1
+    if (isValidCancellation + isValidExecution !== 1) {
+      throw new UnmetConditionError('ConditionFulfillment failed')
     }
 
-    if (validated) {
+    const canExecute = transfer.state === 'prepared'
+    const canCancel = transfer.state === 'proposed' || transfer.state === 'prepared'
+
+    if (isValidExecution) {
+      if (!canExecute) {
+        throw new InvalidModificationError('Transfer must be authorized before it can execute')
+      }
       yield accountBalances.applyCredits()
       updateState(transfer, 'executed')
-      transfer.execution_condition_fulfillment = fulfillment
-    } else if (rejected) {
+    } else if (isValidCancellation) {
+      if (!canCancel) {
+        throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be cancelled')
+      }
       if (transfer.state === 'prepared') {
         yield accountBalances.revertDebits()
       }
       updateState(transfer, 'rejected')
-      transfer.cancellation_condition_fulfillment = fulfillment
-    } else {
-      throw new UnmetConditionError('ConditionFulfillment failed')
     }
-      // Remove the expiry countdown
+
+    // Remove the expiry countdown
     transferExpiryMonitor.unwatch(transfer.id)
     yield transfer.save({transaction})
 
@@ -365,7 +347,7 @@ function * setTransfer (transfer, requestingUser) {
     validateAuthorizations(requestingUser && requestingUser.name,
       transfer, previousDebits)
 
-    yield processStateTransitions(transaction, transfer)
+    yield prepareTransfer(transaction, transfer)
 
     yield db.upsertTransfer(transfer, {transaction})
 
