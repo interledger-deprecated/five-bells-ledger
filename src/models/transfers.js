@@ -24,6 +24,7 @@ const UnprocessableEntityError =
 require('five-bells-shared/errors/unprocessable-entity-error')
 const UnauthorizedError =
 require('five-bells-shared/errors/unauthorized-error')
+const Condition = require('five-bells-condition').Condition
 
 function * getTransfer (id) {
   log.debug('fetching transfer ID ' + id)
@@ -183,7 +184,7 @@ function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
 // TODO: add credit authorization
 }
 
-function * processStateTransitions (tr, transfer) {
+function * updateAuthorization (tr, transfer) {
   // Calculate per-account totals
   let accountBalances = yield makeAccountBalances(tr, transfer)
 
@@ -207,31 +208,84 @@ function * processStateTransitions (tr, transfer) {
       yield accountBalances.applyDebits()
       updateState(transfer, 'prepared')
     }
-  }
 
-  if (transfer.state === 'prepared' && transfer.hasFulfillment('execution')) {
-    if (!transfer.hasValidFulfillment('execution')) {
+    // If the transfer is prepared and has no execution condition, execute immediately
+    if (transfer.state === 'prepared' && !Boolean(transfer.execution_condition)) {
+      yield accountBalances.applyCredits()
+
+      // Remove the expiry countdown
+      transferExpiryMonitor.unwatch(transfer.id)
+      updateState(transfer, 'executed')
+    }
+  }
+}
+
+function * fulfillTransfer (transferId, fulfillment) {
+  let transfer
+  yield db.transaction(function *(transaction) {
+    transfer = yield db.getTransfer(transferId, {transaction})
+
+    if (!transfer) {
+      throw new NotFoundError('Invalid transfer ID')
+    }
+
+    let accountBalances = yield makeAccountBalances(transaction, transfer)
+
+    // We don't know if notary is executing or rejecting transfer
+    const isValidExecution = Boolean(transfer.execution_condition &&
+      Condition.testFulfillment(transfer.execution_condition, fulfillment))
+    const isValidCancellation = Boolean(transfer.cancellation_condition &&
+      Condition.testFulfillment(transfer.cancellation_condition, fulfillment))
+
+    if (isValidCancellation === isValidExecution) {
       throw new UnmetConditionError('ConditionFulfillment failed')
     }
-    yield accountBalances.applyCredits()
+
+    const canExecute = transfer.state === 'prepared'
+    const canCancel = transfer.state === 'proposed' || transfer.state === 'prepared'
+
+    if (isValidExecution) {
+      if (!canExecute) {
+        throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be executed')
+      }
+      yield accountBalances.applyCredits()
+      transfer.execution_condition_fulfillment = fulfillment
+      updateState(transfer, 'executed')
+    } else if (isValidCancellation) {
+      if (!canCancel) {
+        throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be cancelled')
+      }
+      if (transfer.state === 'prepared') {
+        yield accountBalances.revertDebits()
+      }
+      transfer.cancellation_condition_fulfillment = fulfillment
+      updateState(transfer, 'rejected')
+    }
 
     // Remove the expiry countdown
     transferExpiryMonitor.unwatch(transfer.id)
+    yield transfer.save({transaction})
 
-    updateState(transfer, 'executed')
-  }
+    // Create persistent notification events. We're doing this within the same
+    // database transaction in order to maximize the reliability of the
+    // notification system. If the server crashes while trying to post a
+    // notification it should retry it when it comes back.
+    yield notificationWorker.queueNotifications(transfer, transaction)
 
-  let canRejectState = transfer.state === 'proposed' || transfer.state === 'prepared'
-  if (canRejectState && transfer.cancellation_condition_fulfillment) {
-    if (!transfer.hasValidFulfillment('cancellation')) {
-      throw new UnmetConditionError('ConditionFulfillment failed')
+    // Start the expiry countdown if the transfer is not yet finalized
+    // If the expires_at has passed by this time we'll consider
+    // the transfer to have made it in before the deadline
+    if (!transfer.isFinalized()) {
+      yield transferExpiryMonitor.watch(transfer)
     }
-    if (transfer.state === 'prepared') {
-      yield accountBalances.revertDebits()
-    }
-    updateState(transfer, 'rejected')
-    transferExpiryMonitor.unwatch(transfer.id)
-  }
+  })
+
+  log.debug('changes written to database')
+
+  // Process notifications soon
+  notificationWorker.scheduleProcessing()
+
+  return transfer.getDataExternal()
 }
 
 function * setTransfer (transfer, requestingUser) {
@@ -305,7 +359,7 @@ function * setTransfer (transfer, requestingUser) {
     validateAuthorizations(requestingUser && requestingUser.name,
       transfer, previousDebits)
 
-    yield processStateTransitions(transaction, transfer)
+    yield updateAuthorization(transaction, transfer)
 
     yield db.upsertTransfer(transfer, {transaction})
 
@@ -337,5 +391,6 @@ function * setTransfer (transfer, requestingUser) {
 module.exports = {
   getTransfer,
   getTransferStateReceipt,
-  setTransfer
+  setTransfer,
+  fulfillTransfer
 }
