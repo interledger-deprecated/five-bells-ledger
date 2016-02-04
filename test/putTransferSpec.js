@@ -607,6 +607,62 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
+  /* Fulfillment errors */
+  it('should return 400 if a valid execution condition is given to an unauthorized transfer', function *() {
+    const transfer = this.multiDebitTransfer
+
+    let transferWithoutAuthorization = _.cloneDeep(transfer)
+    delete transferWithoutAuthorization.debits[1].authorized
+
+    /* propose */
+    yield this.request()
+      .put(this.multiDebitTransfer.id)
+      .auth('alice', 'alice')
+      .send(transferWithoutAuthorization)
+      .expect(201)
+      .expect(_.assign({}, transferWithoutAuthorization, {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+
+    /* execute */
+    yield this.request()
+      .put(this.multiDebitTransfer.id + '/fulfillment')
+      .auth('candice', 'candice')
+      .send(this.executionConditionFulfillment)
+      .expect(400)
+      .end()
+  })
+
+  it('should return 400 if a valid cancellation condition is given for an executed transfer', function *() {
+    const transfer = _.cloneDeep(this.exampleTransfer)
+    transfer.cancellation_condition = this.executedTransfer.execution_condition
+    yield this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+
+    yield this.request()
+      .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .send(this.executionConditionFulfillment)
+      .expect(400)
+      .end()
+  })
+
   it('should keep the state as "proposed" if not all debits are authorized',
     function *() {
       const transfer = this.multiDebitTransfer
