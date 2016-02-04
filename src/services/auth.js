@@ -11,7 +11,7 @@ const config = require('./config')
 
 passport.use(new BasicStrategy(
   function (username, password, done) {
-    if (!config.auth.basic_enabled) {
+    if (!config.getIn(['auth', 'basic_enabled'])) {
       return done(new UnauthorizedError('Unsupported authentication method'))
     }
 
@@ -38,7 +38,7 @@ passport.use(new BasicStrategy(
 
 passport.use(new HTTPSignatureStrategy(
   function (username, done) {
-    if (!config.auth.http_signature_enabled) {
+    if (!config.getIn(['auth', 'http_signature_enabled'])) {
       return done(new UnauthorizedError('Unsupported authentication method'))
     }
 

@@ -1,40 +1,38 @@
 'use strict'
 
 const Config = require('five-bells-shared').Config
-
-const config = module.exports = new Config('ledger')
-
-config.parseServerConfig()
-config.parseDatabaseConfig()
-config.parseKeyConfig()
+const envPrefix = 'ledger'
 
 function isRunningTests () {
-  return (process.argv[0].endsWith('mocha') ||
+  return process.argv[0].endsWith('mocha') ||
     (process.argv.length > 1 && process.argv[0].endsWith('node') &&
-     process.argv[1].endsWith('mocha')))
+     process.argv[1].endsWith('mocha'))
 }
 
-if (isRunningTests()) {
-  config.server.public_host = 'localhost'
-  config.server.port = 61337
-  config.server.public_port = 80
-  // We use a different config parameter for unit tests, because typically one
-  // wouldn't want to use their production or even dev databases for unit tests
-  // and it'd be far to easy to do that accidentally by running npm test.
-  config.db.uri = process.env.LEDGER_UNIT_DB_URI || 'sqlite://'
-  config.updateDerivativeServerConfig()
-}
+const localConfig = {}
+const admin_user = Config.getEnv(envPrefix, 'ADMIN_USER') || 'admin'
+const admin_pass = Config.getEnv(envPrefix, 'ADMIN_PASS')
 
-let admin_user = config.getEnv('ADMIN_USER') || 'admin'
-let admin_pass = config.getEnv('ADMIN_PASS')
 if (admin_pass) {
-  config.default_admin = {
+  localConfig.default_admin = {
     user: admin_user,
     pass: admin_pass
   }
 }
 
-config.auth = {
-  basic_enabled: Config.castBool(config.getEnv('AUTH_BASIC_ENABLED'), true),
-  http_signature_enabled: Config.castBool(config.getEnv('AUTH_HTTP_SIGNATURE_ENABLED'), true)
+localConfig.auth = {
+  basic_enabled: Config.castBool(Config.getEnv('AUTH_BASIC_ENABLED'), true),
+  http_signature_enabled: Config.castBool(Config.getEnv('AUTH_HTTP_SIGNATURE_ENABLED'), true)
 }
+
+if (isRunningTests()) {
+  localConfig.keys = {
+    ed25519: {
+      secret: 'iMx6i3D3acJPc4aJlK0iT/pkJP3T+Dqte9wg6hXpXEv08CpNQSm1J5AI6n/' +
+        'QVBObeuQWdQVpgRQTAJzLLJJA/Q==',
+      public: '9PAqTUEptSeQCOp/0FQTm3rkFnUFaYEUEwCcyyySQP0='
+    }
+  }
+}
+
+module.exports = Config.loadConfig(envPrefix, localConfig)

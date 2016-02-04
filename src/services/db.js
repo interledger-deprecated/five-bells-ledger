@@ -5,6 +5,6 @@ const config = require('./config')
 const log = require('./log')('db')
 const DB = require('five-bells-shared').DB(Sequelize)
 
-module.exports = new DB(config.db.uri, {
+module.exports = new DB(config.getIn(['db', 'uri']), {
   logging: log.debug
 })

@@ -48,11 +48,11 @@ function * getTransferStateReceipt (id, signatureType, conditionState) {
   const transferStateReceipt = {
     type: signatureType,
     message: message,
-    signer: config.server.base_uri
+    signer: config.getIn(['server', 'base_uri'])
   }
 
   if (signatureType === 'ed25519-sha512') {
-    transferStateReceipt.public_key = config.keys.ed25519.public
+    transferStateReceipt.public_key = config.getIn(['keys', 'ed25519', 'public'])
     transferStateReceipt.signature = sign(hashJSON(message))
   } else if (signatureType === 'sha256') {
     const realPreImage = makePreImage(message.id, transferState)
@@ -82,7 +82,7 @@ function sign (base64Str) {
   return tweetnacl.util.encodeBase64(
     tweetnacl.sign.detached(
       tweetnacl.util.decodeBase64(base64Str),
-      tweetnacl.util.decodeBase64(config.keys.ed25519.secret)))
+      tweetnacl.util.decodeBase64(config.getIn(['keys', 'ed25519', 'secret']))))
 }
 
 function sha256 (str) {
@@ -293,7 +293,7 @@ function * setTransfer (transfer, requestingUser) {
   transferExpiryMonitor.validateNotExpired(transfer)
 
   if (typeof transfer.ledger !== 'undefined') {
-    if (transfer.ledger !== config.server.base_uri) {
+    if (transfer.ledger !== config.getIn(['server', 'base_uri'])) {
       throw new InvalidBodyError('Transfer contains incorrect ledger URI')
     }
   }
@@ -302,7 +302,7 @@ function * setTransfer (transfer, requestingUser) {
     throw new InvalidBodyError('Transfer contains incorrect type')
   }
 
-  transfer.ledger = config.server.base_uri
+  transfer.ledger = config.getIn(['server', 'base_uri'])
 
   log.debug('putting transfer ID ' + transfer.id)
   log.debug('' + transfer.debits[0].account + ' -> ' +

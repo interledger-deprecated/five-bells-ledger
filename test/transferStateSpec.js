@@ -25,16 +25,9 @@ describe('Transfer State', function () {
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
 
-    // Set up keys
-    config.keys.ed25519 = {
-      secret: 'iMx6i3D3acJPc4aJlK0iT/pkJP3T+Dqte9wg6hXpXEv08CpNQSm1J5AI6n/' +
-        'QVBObeuQWdQVpgRQTAJzLLJJA/Q==',
-      public: '9PAqTUEptSeQCOp/0FQTm3rkFnUFaYEUEwCcyyySQP0='
-    }
-
     this.keyPair =
       tweetnacl.sign.keyPair.fromSecretKey(
-        tweetnacl.util.decodeBase64(config.keys.ed25519.secret))
+        tweetnacl.util.decodeBase64(config.getIn(['keys', 'ed25519', 'secret'])))
 
     // Define example data
     this.executedTransfer = _.cloneDeep(require('./data/transferExecuted'))
@@ -68,8 +61,8 @@ describe('Transfer State', function () {
         .expect(200, {
           message: stateReceipt,
           type: 'ed25519-sha512',
-          signer: config.server.base_uri,
-          public_key: config.keys.ed25519.public,
+          signer: config.getIn(['server', 'base_uri']),
+          public_key: config.getIn(['keys', 'ed25519', 'public']),
           signature: signature
         })
         .end()
@@ -101,7 +94,7 @@ describe('Transfer State', function () {
         .expect(200, {
           message: stateReceipt,
           type: 'sha256',
-          signer: config.server.base_uri,
+          signer: config.getIn(['server', 'base_uri']),
           digest: sha256(stringifyJSON(stateReceipt))
         })
         .end()
@@ -137,7 +130,7 @@ describe('Transfer State', function () {
         .expect(200, {
           message: stateReceipt,
           type: 'sha256',
-          signer: config.server.base_uri,
+          signer: config.getIn(['server', 'base_uri']),
           digest: sha256(stringifyJSON(stateReceipt)),
           condition_state: 'executed',
           condition_digest: sha256(stringifyJSON({
@@ -178,8 +171,8 @@ describe('Transfer State', function () {
         .expect(200, {
           message: stateReceipt,
           type: 'ed25519-sha512',
-          signer: config.server.base_uri,
-          public_key: config.keys.ed25519.public,
+          signer: config.getIn(['server', 'base_uri']),
+          public_key: config.getIn(['keys', 'ed25519', 'public']),
           signature: signature
         })
         .end()
@@ -207,8 +200,8 @@ describe('Transfer State', function () {
           .expect(200, {
             message: stateReceipt,
             type: 'ed25519-sha512',
-            signer: config.server.base_uri,
-            public_key: config.keys.ed25519.public,
+            signer: config.getIn(['server', 'base_uri']),
+            public_key: config.getIn(['keys', 'ed25519', 'public']),
             signature: signature
           })
           .end()
@@ -261,8 +254,8 @@ describe('Transfer State', function () {
         .expect(200, {
           message: stateReceipt,
           type: 'ed25519-sha512',
-          signer: config.server.base_uri,
-          public_key: config.keys.ed25519.public,
+          signer: config.getIn(['server', 'base_uri']),
+          public_key: config.getIn(['keys', 'ed25519', 'public']),
           signature: signature
         })
         .end()
