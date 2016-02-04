@@ -162,9 +162,16 @@ function * putFulfillment () {
   this.status = 200
 }
 
+function * getFulfillment () {
+  const id = this.params.id
+  requestUtil.validateUriParameter('id', id, 'Uuid')
+  this.body = yield model.getFulfillment(id.toLowerCase())
+}
+
 module.exports = {
   getResource,
   getStateResource,
   putResource,
-  putFulfillment
+  putFulfillment,
+  getFulfillment
 }

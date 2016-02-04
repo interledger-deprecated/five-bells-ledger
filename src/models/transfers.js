@@ -363,9 +363,18 @@ function * setTransfer (transfer, requestingUser) {
   }
 }
 
+function * getFulfillment (transferId) {
+  const fulfillment = yield fulfillments.getFulfillment(transferId)
+  if (!fulfillment) {
+    throw new NotFoundError('This transfer has no fulfillment')
+  }
+  return fulfillment.getDataExternal()
+}
+
 module.exports = {
   getTransfer,
   getTransferStateReceipt,
   setTransfer,
-  fulfillTransfer
+  fulfillTransfer,
+  getFulfillment
 }

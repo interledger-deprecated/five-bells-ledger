@@ -1044,8 +1044,74 @@ describe('PUT /transfers/:id', function () {
         .end()
     })
 
-  /* Subscriptions */
+  /* view fulfillments */
+  it('should return 404 for fulfillment when given an invalid transfer id', function *() {
+    const transfer = this.executedTransfer
+    yield this.request()
+      .get(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .expect(404)
+      .end()
+  })
 
+  it('should return 404 if the transfer has no fulfillment', function *() {
+    const transfer = this.executedTransfer
+    yield this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .end()
+
+    yield this.request()
+      .get(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .expect(404)
+      .end()
+  })
+
+  it('should return a fulfillment', function *() {
+    const transfer = this.executedTransfer
+    delete transfer.state
+
+    const transferWithoutConditionFulfillment = _.cloneDeep(transfer)
+
+    yield this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transferWithoutConditionFulfillment)
+      .expect(201)
+      .expect(_.assign({}, transferWithoutConditionFulfillment, {
+        state: 'prepared',
+        timeline: {
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+
+    yield this.request()
+      .put(transfer.id + '/fulfillment')
+      .send(this.executionConditionFulfillment)
+      .expect(200)
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+
+    yield this.request()
+      .get(transfer.id + '/fulfillment')
+      .expect(200)
+      .expect(_.assign({}, this.executionConditionFulfillment))
+      .end()
+  })
+
+  /* Subscriptions */
   it('should trigger subscriptions', function *() {
     const subscription = require('./data/subscription1.json')
     yield Subscription.fromDataExternal(subscription).create()
@@ -1088,7 +1154,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   /* Idempotency of fulfillment */
-  it('should return 200 when a transfer is fulfilled (executed) multiple times', function *() {
+  it('should allow a transfer to be fulfilled (executed) multiple times', function *() {
     const transfer = this.executedTransfer
     yield this.request()
       .put(transfer.id)
@@ -1135,7 +1201,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 200 when a transfer is fulfilled (cancelled) multiple times', function *() {
+  it('should allow a transfer to be fulfilled (cancelled) multiple times', function *() {
     const transfer = this.executedTransfer
     transfer.cancellation_condition = _.cloneDeep(transfer.execution_condition)
     transfer.execution_condition.message_hash = 'zlaZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw=='
