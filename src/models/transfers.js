@@ -221,6 +221,7 @@ function * processImmediateExecution (transfer, accountBalances) {
 
 function * fulfillTransfer (transferId, fulfillment) {
   let transfer
+  let existingFulfillment
   yield db.transaction(function *(transaction) {
     transfer = yield db.getTransfer(transferId, {transaction})
 
@@ -249,7 +250,7 @@ function * fulfillTransfer (transferId, fulfillment) {
       }
       yield accountBalances.applyCredits()
       updateState(transfer, 'executed')
-      yield fulfillments.upsertFulfillment(fulfillment, {transaction})
+      existingFulfillment = yield fulfillments.upsertFulfillment(fulfillment, {transaction})
     } else if (isValidCancellation) {
       if (!canCancel) {
         throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be cancelled')
@@ -257,7 +258,7 @@ function * fulfillTransfer (transferId, fulfillment) {
       if (transfer.state === 'prepared') {
         yield accountBalances.revertDebits()
       }
-      yield fulfillments.upsertFulfillment(fulfillment, {transaction})
+      existingFulfillment = yield fulfillments.upsertFulfillment(fulfillment, {transaction})
       updateState(transfer, 'rejected')
     }
 
@@ -284,7 +285,10 @@ function * fulfillTransfer (transferId, fulfillment) {
   // Process notifications soon
   notificationWorker.scheduleProcessing()
 
-  return transfer.getDataExternal()
+  return {
+    fulfillment: fulfillment.getDataExternal(),
+    existed: existingFulfillment
+  }
 }
 
 function * setTransfer (transfer, requestingUser) {
