@@ -6,6 +6,7 @@ const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
 const stringifyJSON = require('canonical-json')
 const db = require('./db/transfers')
+const fulfillments = require('./db/conditionFulfillments')
 const makeAccountBalances = require('../lib/accountBalances')
 const validateNoDisabledAccounts = require('../lib/disabledAccounts')
 const config = require('../services/config')
@@ -231,9 +232,9 @@ function * fulfillTransfer (transferId, fulfillment) {
 
     // We don't know if notary is executing or rejecting transfer
     const isValidExecution = Boolean(transfer.execution_condition &&
-      Condition.testFulfillment(transfer.execution_condition, fulfillment))
+      Condition.testFulfillment(transfer.execution_condition, fulfillment.getData().condition_fulfillment))
     const isValidCancellation = Boolean(transfer.cancellation_condition &&
-      Condition.testFulfillment(transfer.cancellation_condition, fulfillment))
+      Condition.testFulfillment(transfer.cancellation_condition, fulfillment.getData().condition_fulfillment))
 
     if (isValidCancellation === isValidExecution) {
       throw new UnmetConditionError('ConditionFulfillment failed')
@@ -247,8 +248,9 @@ function * fulfillTransfer (transferId, fulfillment) {
         throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be executed')
       }
       yield accountBalances.applyCredits()
-      transfer.execution_condition_fulfillment = fulfillment
+      transfer.execution_condition_fulfillment = fulfillment.getData().condition_fulfillment
       updateState(transfer, 'executed')
+      yield fulfillments.upsertFulfillment(fulfillment, {transaction})
     } else if (isValidCancellation) {
       if (!canCancel) {
         throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be cancelled')
@@ -256,7 +258,8 @@ function * fulfillTransfer (transferId, fulfillment) {
       if (transfer.state === 'prepared') {
         yield accountBalances.revertDebits()
       }
-      transfer.cancellation_condition_fulfillment = fulfillment
+      yield fulfillments.upsertFulfillment(fulfillment, {transaction})
+      transfer.cancellation_condition_fulfillment = fulfillment.getData().condition_fulfillment
       updateState(transfer, 'rejected')
     }
 
