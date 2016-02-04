@@ -1090,6 +1090,107 @@ describe('PUT /transfers/:id', function () {
     notification.done()
   })
 
+  /* Idempotency of fulfillment */
+  it('should return 200 when a transfer is fulfilled (executed) multiple times', function *() {
+    const transfer = this.executedTransfer
+    yield this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(_.assign({}, transfer, {
+        state: 'prepared',
+        timeline: {
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+
+    yield this.request()
+      .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .send(this.executionConditionFulfillment)
+      .expect(200)
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        execution_condition_fulfillment: this.executionConditionFulfillment,
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+
+    yield this.request()
+      .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .send(this.executionConditionFulfillment)
+      .expect(200)
+      .expect(_.assign({}, transfer, {
+        state: 'executed',
+        execution_condition_fulfillment: this.executionConditionFulfillment,
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+  })
+
+  it('should return 200 when a transfer is fulfilled (cancelled) multiple times', function *() {
+    const transfer = this.executedTransfer
+    transfer.cancellation_condition = _.cloneDeep(transfer.execution_condition)
+    transfer.execution_condition.message_hash = 'zlaZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw=='
+    yield this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(_.assign({}, transfer, {
+        state: 'prepared',
+        timeline: {
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+
+    yield this.request()
+      .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .send(this.executionConditionFulfillment)
+      .expect(200)
+      .expect(_.assign({}, transfer, {
+        state: 'rejected',
+        cancellation_condition_fulfillment: this.executionConditionFulfillment,
+        timeline: {
+          rejected_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+
+    yield this.request()
+      .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .send(this.executionConditionFulfillment)
+      .expect(200)
+      .expect(_.assign({}, transfer, {
+        state: 'rejected',
+        cancellation_condition_fulfillment: this.executionConditionFulfillment,
+        timeline: {
+          rejected_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .end()
+  })
+
   /* Multiple credits and/or debits */
 
   it('should handle transfers with multiple credits', function *() {
