@@ -754,7 +754,6 @@ describe('PUT /transfers/:id', function () {
         .send(cancellationConditionFulfillment)
         .expect(200)
         .expect(_.assign({}, transfer, {
-          cancellation_condition_fulfillment: cancellationConditionFulfillment,
           state: 'rejected',
           timeline: {
             proposed_at: '2015-06-16T00:00:00.000Z',
@@ -905,7 +904,6 @@ describe('PUT /transfers/:id', function () {
       .send(this.executionConditionFulfillment)
       .expect(200)
       .expect(_.assign({}, transfer, {
-        execution_condition_fulfillment: this.executionConditionFulfillment,
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
@@ -1036,7 +1034,6 @@ describe('PUT /transfers/:id', function () {
         .send(this.executionConditionFulfillment)
         .expect(200)
         .expect(_.assign({}, transfer, {
-          execution_condition_fulfillment: this.executionConditionFulfillment,
           state: 'executed',
           timeline: {
             executed_at: '2015-06-16T00:00:00.000Z',
@@ -1114,7 +1111,6 @@ describe('PUT /transfers/:id', function () {
       .expect(200)
       .expect(_.assign({}, transfer, {
         state: 'executed',
-        execution_condition_fulfillment: this.executionConditionFulfillment,
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -1130,7 +1126,6 @@ describe('PUT /transfers/:id', function () {
       .expect(200)
       .expect(_.assign({}, transfer, {
         state: 'executed',
-        execution_condition_fulfillment: this.executionConditionFulfillment,
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -1165,7 +1160,6 @@ describe('PUT /transfers/:id', function () {
       .expect(200)
       .expect(_.assign({}, transfer, {
         state: 'rejected',
-        cancellation_condition_fulfillment: this.executionConditionFulfillment,
         timeline: {
           rejected_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -1181,7 +1175,6 @@ describe('PUT /transfers/:id', function () {
       .expect(200)
       .expect(_.assign({}, transfer, {
         state: 'rejected',
-        cancellation_condition_fulfillment: this.executionConditionFulfillment,
         timeline: {
           rejected_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -1216,7 +1209,6 @@ describe('PUT /transfers/:id', function () {
       .send(this.executionConditionFulfillment)
       .expect(200)
       .expect(_.assign({}, transfer, {
-        execution_condition_fulfillment: this.executionConditionFulfillment,
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
@@ -1295,7 +1287,6 @@ describe('PUT /transfers/:id', function () {
       .send(this.executionConditionFulfillment)
       .expect(200)
       .expect(_.assign({}, transfer, {
-        execution_condition_fulfillment: this.executionConditionFulfillment,
         state: 'executed',
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
@@ -1375,7 +1366,6 @@ describe('PUT /transfers/:id', function () {
         .send(this.executionConditionFulfillment)
         .expect(200)
         .expect(_.assign({}, transfer, {
-          execution_condition_fulfillment: this.executionConditionFulfillment,
           state: 'executed',
           timeline: {
             executed_at: '2015-06-16T00:00:00.000Z',

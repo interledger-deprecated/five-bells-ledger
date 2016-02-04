@@ -4,7 +4,6 @@ const _ = require('lodash')
 
 const Model = require('five-bells-shared').Model
 const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
-const Condition = require('five-bells-condition').Condition
 const validator = require('../../services/validator')
 const uri = require('../../services/uriManager')
 
@@ -84,26 +83,6 @@ class Transfer extends Model {
   isFinalized () {
     return _.includes(FINAL_STATES, this.state)
   }
-
-  _condition (action) {
-    return action === 'execution' ? this.execution_condition : this.cancellation_condition
-  }
-  _fulfillment (action) {
-    return action === 'execution' ? this.execution_condition_fulfillment : this.cancellation_condition_fulfillment
-  }
-
-  hasFulfillment (action) {
-    if (!this._condition(action)) return true
-    return !!this._fulfillment(action)
-  }
-
-  hasValidFulfillment (action) {
-    if (!this._condition(action)) return true
-    if (!this._fulfillment(action)) return false
-    return Condition.testFulfillment(
-      this._condition(action),
-      this._fulfillment(action))
-  }
 }
 
 Transfer.validateExternal = validator.create('Transfer')
@@ -119,9 +98,7 @@ PersistentModelMixin(Transfer, sequelize, {
   additional_info: JsonField(sequelize, 'Transfer', 'additional_info'),
   state: Sequelize.ENUM('proposed', 'prepared', 'executed', 'rejected'),
   execution_condition: JsonField(sequelize, 'Transfer', 'execution_condition'),
-  execution_condition_fulfillment: JsonField(sequelize, 'Transfer', 'execution_condition_fulfillment'),
   cancellation_condition: JsonField(sequelize, 'Transfer', 'cancellation_condition'),
-  cancellation_condition_fulfillment: JsonField(sequelize, 'Transfer', 'cancellation_condition_fulfillment'),
   expires_at: Sequelize.DATE,
   proposed_at: Sequelize.DATE,
   prepared_at: Sequelize.DATE,

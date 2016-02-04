@@ -248,7 +248,6 @@ function * fulfillTransfer (transferId, fulfillment) {
         throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be executed')
       }
       yield accountBalances.applyCredits()
-      transfer.execution_condition_fulfillment = fulfillment.getData().condition_fulfillment
       updateState(transfer, 'executed')
       yield fulfillments.upsertFulfillment(fulfillment, {transaction})
     } else if (isValidCancellation) {
@@ -259,7 +258,6 @@ function * fulfillTransfer (transferId, fulfillment) {
         yield accountBalances.revertDebits()
       }
       yield fulfillments.upsertFulfillment(fulfillment, {transaction})
-      transfer.cancellation_condition_fulfillment = fulfillment.getData().condition_fulfillment
       updateState(transfer, 'rejected')
     }
 
