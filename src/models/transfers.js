@@ -153,70 +153,68 @@ function updateTransferObject (originalTransfer, transfer) {
   return originalTransfer
 }
 
-function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
-  // Check that the authorizedAccount is actually relevant to this transfer
-  if (authorizedAccount) {
-    if (!_.includes(_.pluck(transfer.debits, 'account'), authorizedAccount) &&
-      !_.includes(_.pluck(transfer.credits, 'account'), authorizedAccount)) {
-      // TODO: should this error be more specific or would that create
-      // a security vulnerability?
-      throw new UnauthorizedError('Unknown or invalid account / password')
-    }
+function isAffectedAccount (account, transfer) {
+  return _.includes(_.pluck(transfer.debits, 'account'), account) ||
+      _.includes(_.pluck(transfer.credits, 'account'), account)
+}
+
+function validateIsAffectedAccount (account, transfer) {
+  if (account && !isAffectedAccount(account, transfer)) {
+    throw new UnauthorizedError('Unknown or invalid account / password')
   }
+}
 
-  // Go through each of the debits in the transfer
-  // Throw an error if authorized is set to true on any debit
-  // that was not set to true on the transferFromDb and is not
-  // owned by the authorizedAccount
-  _.forEach(transfer.debits, function (debit, debitIndex) {
-    // We don't care about debits where no one is attempting
-    // to mark them as authorized
-    if (!debit.authorized) {
-      return
-    }
-
-    if (debit.account !== authorizedAccount &&
-      (!previousDebits || !previousDebits[debitIndex].authorized)) {
+function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
+  if (previousDebits && transfer.debits.length !== previousDebits.length) {
+    throw new UnprocessableEntityError('Invalid change in number of debits')
+  }
+  transfer.debits.forEach((debit, i) => {
+    const previousAuthorization = previousDebits
+      ? previousDebits[i].authorized : false
+    if (debit.authorized && debit.authorized !== previousAuthorization &&
+        debit.account !== authorizedAccount) {
       throw new UnauthorizedError('Invalid attempt to authorize debit')
     }
   })
-
-// TODO: add credit authorization
+  // TODO: add credit authorization
 }
 
-function * updateAuthorization (tr, transfer) {
-  // Calculate per-account totals
-  let accountBalances = yield makeAccountBalances(tr, transfer)
+function validatePositiveAmounts (adjustments) {
+  if (_.some(adjustments, adjustment => parseFloat(adjustment.amount) <= 0)) {
+    throw new UnprocessableEntityError(
+        'Amount must be a positive number excluding zero.')
+  }
+}
 
-  // Check prerequisites
-  if (transfer.state === 'proposed') {
-    let sourceFunds = Array.isArray(transfer.debits)
-      ? transfer.debits
-      : [transfer.debits]
-    let authorized = true
-    sourceFunds.forEach(function (funds) {
-      if (!funds.authorized) {
-        authorized = false
-      } else {
-        // TODO Validate authorization public keys
-        _.noop()
-      }
-    })
+function validateCreditAndDebitAmounts (transfer) {
+  validatePositiveAmounts(transfer.debits)
+  validatePositiveAmounts(transfer.credits)
 
-    if (authorized) {
-      // Hold sender funds
-      yield accountBalances.applyDebits()
-      updateState(transfer, 'prepared')
-    }
+  const totalDebits = _.sum(_.map(transfer.debits, 'amount'))
+  const totalCredits = _.sum(_.map(transfer.credits, 'amount'))
 
-    // If the transfer is prepared and has no execution condition, execute immediately
-    if (transfer.state === 'prepared' && !Boolean(transfer.execution_condition)) {
-      yield accountBalances.applyCredits()
+  if (totalCredits !== totalDebits) {
+    throw new UnprocessableEntityError('Total credits must equal total debits')
+  }
+}
 
-      // Remove the expiry countdown
-      transferExpiryMonitor.unwatch(transfer.id)
-      updateState(transfer, 'executed')
-    }
+function isAuthorized (transfer) {
+  return _.every(transfer.debits, debit => debit.authorized)
+}
+
+function * processTransitionToPreparedState (transfer, accountBalances) {
+  if (transfer.state === 'proposed' && isAuthorized(transfer)) {
+    yield accountBalances.applyDebits()  // hold sender funds
+    updateState(transfer, 'prepared')
+  }
+}
+
+function * processImmediateExecution (transfer, accountBalances) {
+  if (transfer.state === 'prepared' &&
+      transfer.execution_condition === undefined) {
+    yield accountBalances.applyCredits()  // release held funds to recipient
+    transferExpiryMonitor.unwatch(transfer.id)
+    updateState(transfer, 'executed')
   }
 }
 
@@ -309,30 +307,7 @@ function * setTransfer (transfer, requestingUser) {
     transfer.credits[0].account + ' : ' +
     transfer.credits[0].amount)
 
-  // Verify debits
-  let totalDebits = 0
-  let totalCredits = 0
-
-  transfer.debits.forEach(function (debit) {
-    if (debit.amount <= 0) {
-      throw new UnprocessableEntityError(
-        'Amount must be a positive number excluding zero.')
-    }
-    totalDebits += parseFloat(debit.amount)
-  })
-
-  transfer.credits.forEach(function (credit) {
-    if (credit.amount <= 0) {
-      throw new UnprocessableEntityError(
-        'Amount must be a positive number excluding zero.')
-    }
-    totalCredits += parseFloat(credit.amount)
-  })
-
-  if (totalCredits !== totalDebits) {
-    throw new UnprocessableEntityError(
-      'Total credits must equal total debits')
-  }
+  validateCreditAndDebitAmounts(transfer)
 
   let originalTransfer, previousDebits
   yield db.transaction(function * (transaction) {
@@ -350,12 +325,15 @@ function * setTransfer (transfer, requestingUser) {
       updateState(transfer, 'proposed')
     }
 
+    const requestingUsername = requestingUser && requestingUser.name
+    validateIsAffectedAccount(requestingUsername, transfer)
     // This method will check that any authorized:true fields added can
     // only be added by the owner of the account
-    validateAuthorizations(requestingUser && requestingUser.name,
-      transfer, previousDebits)
+    validateAuthorizations(requestingUsername, transfer, previousDebits)
 
-    yield updateAuthorization(transaction, transfer)
+    const accountBalances = yield makeAccountBalances(transaction, transfer)
+    yield processTransitionToPreparedState(transfer, accountBalances)
+    yield processImmediateExecution(transfer, accountBalances)
 
     yield db.upsertTransfer(transfer, {transaction})
 
