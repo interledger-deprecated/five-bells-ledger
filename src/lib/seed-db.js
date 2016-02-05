@@ -4,8 +4,8 @@ const models = require('../models/db')
 
 module.exports = function * (config) {
   yield setupHoldAccount()
-  if (config.default_admin) {
-    yield setupAdminAccount(config.default_admin)
+  if (config.get('default_admin')) {
+    yield setupAdminAccount(config.get('default_admin'))
   }
 }
 

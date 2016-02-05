@@ -34,7 +34,7 @@ function * getAccount (name, requestingUser) {
   delete account.password_hash
   const data = can_examine
     ? account.getDataExternal() : account.getDataPublic()
-  data.ledger = config.server.base_uri
+  data.ledger = config.getIn(['server', 'base_uri'])
   return data
 }
 

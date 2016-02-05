@@ -56,15 +56,15 @@ class App {
     yield this.timerWorker.start()
     yield this.notificationWorker.start()
 
-    if (this.config.db.sync) yield this.db.sync()
+    if (this.config.getIn(['db', 'sync'])) yield this.db.sync()
     yield this.db.init()
     yield seedDB(this.config)
 
-    this.koa.listen(this.config.server.port)
+    this.koa.listen(this.config.getIn(['server', 'port']))
     this.log.info('ledger listening on ' +
-      this.config.server.bind_ip + ':' +
-      this.config.server.port)
-    this.log.info('public at ' + this.config.server.base_uri)
+      this.config.getIn(['server', 'bind_ip']) + ':' +
+      this.config.getIn(['server', 'port']))
+    this.log.info('public at ' + this.config.getIn(['server', 'base_uri']))
   }
 
   _makeRouter () {
