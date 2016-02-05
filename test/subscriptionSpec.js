@@ -24,10 +24,10 @@ describe('Subscriptions', function () {
     appHelper.create(this, app)
 
     // Define example data
-    this.exampleTransfer = _.cloneDeep(require('./data/transferSimple'))
+    this.exampleTransfer = _.cloneDeep(require('./data/transfers/transferSimple'))
     this.exampleSubscription = _.cloneDeep(require('./data/subscription1'))
     this.existingSubscription = _.cloneDeep(require('./data/subscription2'))
-    this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/transferWithExpiry'))
 
     // Reset database
     yield dbHelper.reset()

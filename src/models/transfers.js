@@ -221,7 +221,7 @@ function * processImmediateExecution (transfer, accountBalances) {
 
 function * fulfillTransfer (transferId, fulfillment) {
   let transfer
-  let existingFulfillment
+  let fulfillmentExists = false
   yield db.transaction(function *(transaction) {
     transfer = yield db.getTransfer(transferId, {transaction})
 
@@ -233,8 +233,10 @@ function * fulfillTransfer (transferId, fulfillment) {
 
     // We don't know if notary is executing or rejecting transfer
     const isValidExecution = Boolean(transfer.execution_condition &&
+      transfer.execution_condition.type === fulfillment.getData().condition_fulfillment.type &&
       Condition.testFulfillment(transfer.execution_condition, fulfillment.getData().condition_fulfillment))
     const isValidCancellation = Boolean(transfer.cancellation_condition &&
+      transfer.cancellation_condition.type === fulfillment.getData().condition_fulfillment.type &&
       Condition.testFulfillment(transfer.cancellation_condition, fulfillment.getData().condition_fulfillment))
 
     if (isValidCancellation === isValidExecution) {
@@ -250,7 +252,7 @@ function * fulfillTransfer (transferId, fulfillment) {
       }
       yield accountBalances.applyCredits()
       updateState(transfer, 'executed')
-      existingFulfillment = yield fulfillments.upsertFulfillment(fulfillment, {transaction})
+      fulfillmentExists = yield fulfillments.upsertFulfillment(fulfillment, {transaction})
     } else if (isValidCancellation) {
       if (!canCancel) {
         throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be cancelled')
@@ -258,7 +260,7 @@ function * fulfillTransfer (transferId, fulfillment) {
       if (transfer.state === 'prepared') {
         yield accountBalances.revertDebits()
       }
-      existingFulfillment = yield fulfillments.upsertFulfillment(fulfillment, {transaction})
+      fulfillmentExists = yield fulfillments.upsertFulfillment(fulfillment, {transaction})
       updateState(transfer, 'rejected')
     }
 
@@ -287,7 +289,7 @@ function * fulfillTransfer (transferId, fulfillment) {
 
   return {
     fulfillment: fulfillment.getDataExternal(),
-    existed: existingFulfillment
+    existed: fulfillmentExists
   }
 }
 

@@ -158,6 +158,7 @@ function * putFulfillment () {
   const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
   const fulfillment = this.body
+  fulfillment.setTransferId(id)
   const result = yield model.fulfillTransfer(id, fulfillment)
   this.body = result.fulfillment
   this.status = result.existed ? 200 : 201

@@ -32,21 +32,20 @@ describe('PUT /transfers/:id', function () {
     this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
 
     // Define example data
-    this.exampleTransfer = _.cloneDeep(require('./data/transferSimple'))
+    this.exampleTransfer = _.cloneDeep(require('./data/transfers/transferSimple'))
     this.transferNoAuthorization =
-      _.cloneDeep(require('./data/transferNoAuthorization'))
+      _.cloneDeep(require('./data/transfers/transferNoAuthorization'))
     this.multiCreditTransfer =
-      _.cloneDeep(require('./data/transferMultiCredit'))
-    this.multiDebitTransfer = _.cloneDeep(require('./data/transferMultiDebit'))
+      _.cloneDeep(require('./data/transfers/transferMultiCredit'))
+    this.multiDebitTransfer = _.cloneDeep(require('./data/transfers/transferMultiDebit'))
     this.multiDebitAndCreditTransfer =
-      _.cloneDeep(require('./data/transferMultiDebitAndCredit'))
-    this.executedTransfer = _.cloneDeep(require('./data/transferExecuted'))
-    this.transferWithExpiry = _.cloneDeep(require('./data/transferWithExpiry'))
-    this.transferFromEve = _.cloneDeep(require('./data/transferFromEve'))
-    this.disabledTransferFrom = _.cloneDeep(require('./data/transferFromDisabledAccount'))
-    this.disabledTransferTo = _.cloneDeep(require('./data/transferToDisabledAccount'))
-    this.proposedTransfer = _.cloneDeep(require('./data/transferProposed'))
-    this.executionConditionFulfillment = _.cloneDeep(require('./data/transferExecutionConditionFulfillment'))
+      _.cloneDeep(require('./data/transfers/transferMultiDebitAndCredit'))
+    this.executedTransfer = _.cloneDeep(require('./data/transfers/transferExecuted'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/transferWithExpiry'))
+    this.transferFromEve = _.cloneDeep(require('./data/transfers/transferFromEve'))
+    this.disabledTransferFrom = _.cloneDeep(require('./data/transfers/transferFromDisabledAccount'))
+    this.disabledTransferTo = _.cloneDeep(require('./data/transfers/transferToDisabledAccount'))
+    this.proposedTransfer = _.cloneDeep(require('./data/transfers/transferProposed'))
 
     // Reset database
     yield dbHelper.reset()
@@ -142,27 +141,6 @@ describe('PUT /transfers/:id', function () {
     yield this.request()
       .put(this.transferNoAuthorization.id)
       .send(transfer)
-      .expect(422)
-      .end()
-  })
-
-  it('should return 422 if the signature is invalid', function *() {
-    const transfer = this.executedTransfer
-
-    const fulfillment = _.cloneDeep(this.executionConditionFulfillment)
-    fulfillment.signature = 'aW52YWxpZA=='
-
-    yield this.request()
-      .put(this.executedTransfer.id)
-      .auth('alice', 'alice')
-      .send(transfer)
-      .expect(201)
-      .end()
-
-    yield this.request()
-      .put(this.executedTransfer.id + '/fulfillment')
-      .auth('alice', 'alice')
-      .send(fulfillment)
       .expect(422)
       .end()
   })
@@ -307,13 +285,12 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should allow a transfer involving a disabled account to complete execution', function *() {
-    const proposedTransfer = this.proposedTransfer
-    const executedTransfer = this.executedTransfer
+    const transferNoAuthorization = _.cloneDeep(this.transferNoAuthorization)
     /* propose transfer: Alice -> Bob */
     yield this.request()
-      .put(proposedTransfer.id)
+      .put(transferNoAuthorization.id)
       .auth('alice', 'alice')
-      .send(proposedTransfer)
+      .send(transferNoAuthorization)
       .expect(201)
       .end()
 
@@ -322,20 +299,14 @@ describe('PUT /transfers/:id', function () {
     bobAccount.is_disabled = true
     bobAccount.save()
 
-    /* prepare (authorize) transfer */
-    yield this.request()
-      .put(executedTransfer.id)
-      .auth('alice', 'alice')
-      .send(executedTransfer)
-      .expect(200)
-      .end()
+    transferNoAuthorization.debits[0].authorized = true
 
     /* execute transfer: Alice -> Bob */
     yield this.request()
-      .put(executedTransfer.id + '/fulfillment')
+      .put(transferNoAuthorization.id)
       .auth('alice', 'alice')
-      .send(this.executionConditionFulfillment)
-      .expect(201)
+      .send(transferNoAuthorization)
+      .expect(200)
       .end()
 
     yield this.request()
@@ -607,62 +578,6 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  /* Fulfillment errors */
-  it('should return 400 if a valid execution condition is given to an unauthorized transfer', function *() {
-    const transfer = this.multiDebitTransfer
-
-    let transferWithoutAuthorization = _.cloneDeep(transfer)
-    delete transferWithoutAuthorization.debits[1].authorized
-
-    /* propose */
-    yield this.request()
-      .put(this.multiDebitTransfer.id)
-      .auth('alice', 'alice')
-      .send(transferWithoutAuthorization)
-      .expect(201)
-      .expect(_.assign({}, transferWithoutAuthorization, {
-        state: 'proposed',
-        timeline: {
-          proposed_at: '2015-06-16T00:00:00.000Z'
-        }
-      }))
-      .end()
-
-    /* execute */
-    yield this.request()
-      .put(this.multiDebitTransfer.id + '/fulfillment')
-      .auth('candice', 'candice')
-      .send(this.executionConditionFulfillment)
-      .expect(400)
-      .end()
-  })
-
-  it('should return 400 if a valid cancellation condition is given for an executed transfer', function *() {
-    const transfer = _.cloneDeep(this.exampleTransfer)
-    transfer.cancellation_condition = this.executedTransfer.execution_condition
-    yield this.request()
-      .put(transfer.id)
-      .auth('alice', 'alice')
-      .send(transfer)
-      .expect(201)
-      .expect(_.assign({}, transfer, {
-        state: 'executed',
-        timeline: {
-          executed_at: '2015-06-16T00:00:00.000Z',
-          prepared_at: '2015-06-16T00:00:00.000Z',
-          proposed_at: '2015-06-16T00:00:00.000Z'
-        }
-      }))
-      .end()
-
-    yield this.request()
-      .put(transfer.id + '/fulfillment')
-      .auth('alice', 'alice')
-      .send(this.executionConditionFulfillment)
-      .expect(400)
-      .end()
-  })
-
   it('should keep the state as "proposed" if not all debits are authorized',
     function *() {
       const transfer = this.multiDebitTransfer
@@ -714,46 +629,6 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .end()
-    })
-
-  it('should set the state to "rejected" if and only if the ' +
-    'cancellation_condition_fulfillment is present',
-    function *() {
-      let transfer = _.cloneDeep(this.exampleTransfer)
-      delete transfer.debits[0].authorized
-      transfer.cancellation_condition = this.multiCreditTransfer.execution_condition
-
-      yield this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .end()
-
-      // Invalid fulfillment
-      const invalidCancellationConditionFulfillment = {
-        'type': 'ed25519-sha512',
-        'signature': crypto.createHash('sha512').update('nope').digest('base64')
-      }
-      yield this.request()
-        .put(transfer.id + '/fulfillment')
-        .auth('alice', 'alice')
-        .send(invalidCancellationConditionFulfillment)
-        .expect(422)
-        .expect({
-          id: 'UnmetConditionError',
-          message: 'ConditionFulfillment failed'
-        })
-        .end()
-
-      const cancellationConditionFulfillment = this.executionConditionFulfillment
-      yield this.request()
-        .put(transfer.id + '/fulfillment')
-        .auth('alice', 'alice')
-        .send(cancellationConditionFulfillment)
-        .expect(201)
-        .expect(_.assign({}, cancellationConditionFulfillment))
         .end()
     })
 
@@ -876,28 +751,19 @@ describe('PUT /transfers/:id', function () {
       }))
       .end()
 
-    /* authorize (prepare) */
     yield this.request()
       .put(this.multiDebitTransfer.id)
       .auth('candice', 'candice')
       .send(transfer)
       .expect(200)
       .expect(_.assign({}, transfer, {
-        state: 'prepared',
+        state: 'executed',
         timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .end()
-
-    /* execute */
-    yield this.request()
-      .put(this.multiDebitTransfer.id + '/fulfillment')
-      .auth('candice', 'candice')
-      .send(this.executionConditionFulfillment)
-      .expect(201)
-      .expect(_.assign({}, this.executionConditionFulfillment))
       .end()
   })
 
@@ -958,7 +824,6 @@ describe('PUT /transfers/:id', function () {
   })
 
   /* Execution conditions */
-
   it('should update the state from "proposed" to "prepared" when' +
   'authorization is added and an execution condition is present',
     function *() {
@@ -993,96 +858,6 @@ describe('PUT /transfers/:id', function () {
         }))
         .end()
     })
-
-  it('should update the state from "prepared" to "executed" ' +
-  'when the execution criteria is met',
-    function *() {
-      const transfer = this.executedTransfer
-      delete transfer.state
-
-      const transferWithoutConditionFulfillment = _.cloneDeep(transfer)
-
-      yield this.request()
-        .put(this.executedTransfer.id)
-        .auth('alice', 'alice')
-        .send(transferWithoutConditionFulfillment)
-        .expect(201)
-        .expect(_.assign({}, transferWithoutConditionFulfillment, {
-          state: 'prepared',
-          timeline: {
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .end()
-
-      yield this.request()
-        .put(this.executedTransfer.id + '/fulfillment')
-        .send(this.executionConditionFulfillment)
-        .expect(201)
-        .expect(_.assign({}, this.executionConditionFulfillment))
-        .end()
-    })
-
-  /* view fulfillments */
-  it('should return 404 for fulfillment when given an invalid transfer id', function *() {
-    const transfer = this.executedTransfer
-    yield this.request()
-      .get(transfer.id + '/fulfillment')
-      .auth('alice', 'alice')
-      .expect(404)
-      .end()
-  })
-
-  it('should return 404 if the transfer has no fulfillment', function *() {
-    const transfer = this.executedTransfer
-    yield this.request()
-      .put(transfer.id)
-      .auth('alice', 'alice')
-      .send(transfer)
-      .expect(201)
-      .end()
-
-    yield this.request()
-      .get(transfer.id + '/fulfillment')
-      .auth('alice', 'alice')
-      .expect(404)
-      .end()
-  })
-
-  it('should return a fulfillment', function *() {
-    const transfer = this.executedTransfer
-    delete transfer.state
-
-    const transferWithoutConditionFulfillment = _.cloneDeep(transfer)
-
-    yield this.request()
-      .put(transfer.id)
-      .auth('alice', 'alice')
-      .send(transferWithoutConditionFulfillment)
-      .expect(201)
-      .expect(_.assign({}, transferWithoutConditionFulfillment, {
-        state: 'prepared',
-        timeline: {
-          prepared_at: '2015-06-16T00:00:00.000Z',
-          proposed_at: '2015-06-16T00:00:00.000Z'
-        }
-      }))
-      .end()
-
-    yield this.request()
-      .put(transfer.id + '/fulfillment')
-      .send(this.executionConditionFulfillment)
-      .expect(201)
-      .expect(_.assign({}, this.executionConditionFulfillment))
-      .end()
-
-    yield this.request()
-      .get(transfer.id + '/fulfillment')
-      .expect(200)
-      .expect(_.assign({}, this.executionConditionFulfillment))
-      .end()
-  })
 
   /* Subscriptions */
   it('should trigger subscriptions', function *() {
@@ -1126,75 +901,6 @@ describe('PUT /transfers/:id', function () {
     notification.done()
   })
 
-  /* Idempotency of fulfillment */
-  it('should allow a transfer to be fulfilled (executed) multiple times', function *() {
-    const transfer = this.executedTransfer
-    yield this.request()
-      .put(transfer.id)
-      .auth('alice', 'alice')
-      .send(transfer)
-      .expect(201)
-      .expect(_.assign({}, transfer, {
-        state: 'prepared',
-        timeline: {
-          prepared_at: '2015-06-16T00:00:00.000Z',
-          proposed_at: '2015-06-16T00:00:00.000Z'
-        }
-      }))
-      .end()
-
-    yield this.request()
-      .put(transfer.id + '/fulfillment')
-      .auth('alice', 'alice')
-      .send(this.executionConditionFulfillment)
-      .expect(201)
-      .expect(_.assign({}, this.executionConditionFulfillment))
-      .end()
-
-    yield this.request()
-      .put(transfer.id + '/fulfillment')
-      .auth('alice', 'alice')
-      .send(this.executionConditionFulfillment)
-      .expect(200)
-      .expect(_.assign({}, this.executionConditionFulfillment))
-      .end()
-  })
-
-  it('should allow a transfer to be fulfilled (cancelled) multiple times', function *() {
-    const transfer = this.executedTransfer
-    transfer.cancellation_condition = _.cloneDeep(transfer.execution_condition)
-    transfer.execution_condition.message_hash = 'zlaZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw=='
-    yield this.request()
-      .put(transfer.id)
-      .auth('alice', 'alice')
-      .send(transfer)
-      .expect(201)
-      .expect(_.assign({}, transfer, {
-        state: 'prepared',
-        timeline: {
-          prepared_at: '2015-06-16T00:00:00.000Z',
-          proposed_at: '2015-06-16T00:00:00.000Z'
-        }
-      }))
-      .end()
-
-    yield this.request()
-      .put(transfer.id + '/fulfillment')
-      .auth('alice', 'alice')
-      .send(this.executionConditionFulfillment)
-      .expect(201)
-      .expect(_.assign({}, this.executionConditionFulfillment))
-      .end()
-
-    yield this.request()
-      .put(transfer.id + '/fulfillment')
-      .auth('alice', 'alice')
-      .send(this.executionConditionFulfillment)
-      .expect(200)
-      .expect(_.assign({}, this.executionConditionFulfillment))
-      .end()
-  })
-
   /* Multiple credits and/or debits */
 
   it('should handle transfers with multiple credits', function *() {
@@ -1206,20 +912,13 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(201)
       .expect(_.assign({}, transfer, {
-        state: 'prepared',
+        state: 'executed',
         timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .end()
-
-    yield this.request()
-      .put(this.multiCreditTransfer.id + '/fulfillment')
-      .auth('alice', 'alice')
-      .send(this.executionConditionFulfillment)
-      .expect(201)
-      .expect(_.assign({}, this.executionConditionFulfillment))
       .end()
 
     yield this.request()
@@ -1276,21 +975,13 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(200)
       .expect(_.assign({}, transfer, {
-        state: 'prepared',
+        state: 'executed',
         timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .end()
-
-    /* execute */
-    yield this.request()
-      .put(this.multiDebitTransfer.id + '/fulfillment')
-      .auth('candice', 'candice')
-      .send(this.executionConditionFulfillment)
-      .expect(201)
-      .expect(_.assign({}, this.executionConditionFulfillment))
       .end()
 
     yield this.request()
@@ -1348,21 +1039,13 @@ describe('PUT /transfers/:id', function () {
         .send(transfer)
         .expect(200)
         .expect(_.assign({}, transfer, {
-          state: 'prepared',
+          state: 'executed',
           timeline: {
+            executed_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .end()
-
-      /* execute */
-      yield this.request()
-        .put(this.multiDebitAndCreditTransfer.id + '/fulfillment')
-        .auth('candice', 'candice')
-        .send(this.executionConditionFulfillment)
-        .expect(201)
-        .expect(_.assign({}, this.executionConditionFulfillment))
         .end()
 
       yield this.request()
