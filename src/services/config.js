@@ -21,8 +21,9 @@ if (admin_pass) {
 }
 
 localConfig.auth = {
-  basic_enabled: Config.castBool(Config.getEnv('AUTH_BASIC_ENABLED'), true),
-  http_signature_enabled: Config.castBool(Config.getEnv('AUTH_HTTP_SIGNATURE_ENABLED'), true)
+  basic_enabled: Config.castBool(Config.getEnv(envPrefix, 'AUTH_BASIC_ENABLED'), true),
+  http_signature_enabled: Config.castBool(Config.getEnv(envPrefix, 'AUTH_HTTP_SIGNATURE_ENABLED'), true),
+  client_certificates_enabled: Config.castBool(Config.getEnv(envPrefix, 'AUTH_CLIENT_CERT_ENABLED'), true)
 }
 
 if (isRunningTests()) {

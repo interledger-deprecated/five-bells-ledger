@@ -3,3 +3,7 @@ apidoc-out/
 coverage/
 *.cluster
 /npm-debug.log
+*.pem
+*.cnf
+*.pfx
+*.srl
