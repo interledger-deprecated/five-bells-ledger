@@ -77,11 +77,11 @@ class App {
       models.Transfer.createBodyParser(),
       transfers.putResource)
 
-    router.put('/transfers/:id/fulfillment',
+    router.post('/transfers/:id/fulfillment',
       passport.authenticate(['basic', 'http-signature'], {
         session: false
       }), models.ConditionFulfillment.createBodyParser(),
-      transfers.putFulfillment)
+      transfers.postFulfillment)
     router.get('/transfers/:id/fulfillment',
       passport.authenticate(['basic', 'http-signature'], {
         session: false

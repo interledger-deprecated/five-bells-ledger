@@ -154,7 +154,7 @@ function * putResource () {
   this.status = result.existed ? 200 : 201
 }
 
-function * putFulfillment () {
+function * postFulfillment () {
   const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
   const fulfillment = this.body
@@ -174,6 +174,6 @@ module.exports = {
   getResource,
   getStateResource,
   putResource,
-  putFulfillment,
+  postFulfillment,
   getFulfillment
 }

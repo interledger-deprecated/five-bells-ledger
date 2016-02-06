@@ -243,8 +243,8 @@ function * fulfillTransfer (transferId, fulfillment) {
       throw new UnmetConditionError('ConditionFulfillment failed')
     }
 
-    const canExecute = transfer.state === 'prepared' || transfer.state === 'executed'
-    const canCancel = transfer.state === 'proposed' || transfer.state === 'prepared' || transfer.state === 'rejected'
+    const canExecute = transfer.state === 'prepared'
+    const canCancel = transfer.state === 'proposed' || transfer.state === 'prepared'
 
     if (isValidExecution) {
       if (!canExecute) {

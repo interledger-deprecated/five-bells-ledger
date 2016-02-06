@@ -3,6 +3,7 @@
 const _ = require('lodash')
 const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
+const expect = require('chai').expect
 const app = require('../src/services/app')
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
@@ -10,10 +11,11 @@ const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const accounts = require('./data/accounts')
+const Account = require('../src/models/db/account').Account
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
-describe('Transfer fulfillment', function () {
+describe('GET /fulfillment', function () {
   logHelper(logger)
 
   beforeEach(function *() {
@@ -63,7 +65,7 @@ describe('Transfer fulfillment', function () {
     const transfer = this.preparedTransfer
 
     yield this.request()
-      .put(transfer.id + '/fulfillment')
+      .post(transfer.id + '/fulfillment')
       .auth('alice', 'alice')
       .send(this.executionConditionFulfillment)
       .expect(201)
@@ -78,13 +80,13 @@ describe('Transfer fulfillment', function () {
       .end()
   })
 
-  /* PUT fulfillments */
+  /* post fulfillments */
   /* Fulfillment errors */
   it('should return 400 if a valid execution condition is given to an unauthorized transfer', function *() {
     const transfer = this.proposedTransfer
 
     yield this.request()
-      .put(transfer.id + '/fulfillment')
+      .post(transfer.id + '/fulfillment')
       .auth('candice', 'candice')
       .send(this.executionConditionFulfillment)
       .expect(400)
@@ -95,7 +97,7 @@ describe('Transfer fulfillment', function () {
     const transfer = this.executedTransfer
 
     yield this.request()
-      .put(transfer.id + '/fulfillment')
+      .post(transfer.id + '/fulfillment')
       .auth('alice', 'alice')
       .send(this.cancellationConditionFulfillment)
       .expect(400)
@@ -109,11 +111,41 @@ describe('Transfer fulfillment', function () {
     executionConditionFulfillment.signature = 'aW52YWxpZA=='
 
     yield this.request()
-      .put(transfer.id + '/fulfillment')
+      .post(transfer.id + '/fulfillment')
       .auth('alice', 'alice')
       .send(executionConditionFulfillment)
       .expect(422)
       .end()
+  })
+})
+
+describe('POST /fulfillment', function () {
+  logHelper(logger)
+
+  beforeEach(function *() {
+    appHelper.create(this, app)
+
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
+
+    this.proposedTransfer = _.cloneDeep(require('./data/transfers/transferProposed'))
+    this.preparedTransfer = _.cloneDeep(require('./data/transfers/transferPrepared'))
+    this.executedTransfer = _.cloneDeep(require('./data/transfers/transferExecuted'))
+    this.invalidTransfer = _.cloneDeep(require('./data/transfers/transferSimple'))
+    this.transferWithAndConditionType = _.cloneDeep(require('./data/transfers/transferWithAndCondition'))
+    this.executionConditionFulfillmentTypeAnd = _.cloneDeep(require('./data/transfers/executionAndConditionFulfillment'))
+
+    this.executionConditionFulfillment = _.cloneDeep(require('./data/transfers/executionConditionFulfillment'))
+    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/transfers/cancellationConditionFulfillment'))
+
+    // Reset database
+    yield dbHelper.reset()
+
+    yield dbHelper.addAccounts(_.values(accounts))
+  })
+
+  afterEach(function *() {
+    nock.cleanAll()
+    this.clock.restore()
   })
 
   it('should set the state to "rejected" if and only if the ' +
@@ -121,13 +153,20 @@ describe('Transfer fulfillment', function () {
     function *() {
       const transfer = this.preparedTransfer
 
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .end()
+
       // Invalid fulfillment
       const invalidCancellationConditionFulfillment = {
         'type': 'sha256',
         'message': 'please cancel this transfer'
       }
       yield this.request()
-        .put(transfer.id + '/fulfillment')
+        .post(transfer.id + '/fulfillment')
         .auth('alice', 'alice')
         .send(invalidCancellationConditionFulfillment)
         .expect(422)
@@ -137,13 +176,21 @@ describe('Transfer fulfillment', function () {
         })
         .end()
 
+      // Check balances
+      expect((yield Account.findByName('alice')).balance).to.equal(90)
+      expect((yield Account.findByName('bob')).balance).to.equal(0)
+
       yield this.request()
-        .put(transfer.id + '/fulfillment')
+        .post(transfer.id + '/fulfillment')
         .auth('alice', 'alice')
         .send(this.cancellationConditionFulfillment)
         .expect(201)
         .expect(this.cancellationConditionFulfillment)
         .end()
+
+      // Check balances
+      expect((yield Account.findByName('alice')).balance).to.equal(100)
+      expect((yield Account.findByName('bob')).balance).to.equal(0)
     })
 
   /* Execution conditions */
@@ -153,52 +200,106 @@ describe('Transfer fulfillment', function () {
       const transfer = this.preparedTransfer
 
       yield this.request()
-        .put(transfer.id + '/fulfillment')
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      yield this.request()
+        .post(transfer.id + '/fulfillment')
         .auth('alice', 'alice')
         .send(this.executionConditionFulfillment)
         .expect(201)
         .expect(this.executionConditionFulfillment)
         .end()
+
+      // Check balances
+      expect((yield Account.findByName('alice')).balance).to.equal(90)
+      expect((yield Account.findByName('bob')).balance).to.equal(10)
     })
 
-  /* Idempotency of fulfillment */
-  it('should allow a transfer to be fulfilled (executed) multiple times', function *() {
+  it('should execute when the condition is type "and"',
+    function *() {
+      const transfer = this.transferWithAndConditionType
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      yield this.request()
+        .post(transfer.id + '/fulfillment')
+        .auth('alice', 'alice')
+        .send(this.executionConditionFulfillmentTypeAnd)
+        .expect(201)
+        .expect(this.executionConditionFulfillmentTypeAnd)
+        .end()
+
+      // Check balances
+      expect((yield Account.findByName('alice')).balance).to.equal(90)
+      expect((yield Account.findByName('bob')).balance).to.equal(10)
+    })
+
+  it('should not allow a transfer to be fulfilled (executed) multiple times', function *() {
     const transfer = this.executedTransfer
 
     yield this.request()
-      .put(transfer.id + '/fulfillment')
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .end()
+
+    yield this.request()
+      .post(transfer.id + '/fulfillment')
       .auth('alice', 'alice')
       .send(this.executionConditionFulfillment)
       .expect(201)
       .expect(this.executionConditionFulfillment)
       .end()
 
+    // Check balances
+    expect((yield Account.findByName('alice')).balance).to.equal(90)
+    expect((yield Account.findByName('bob')).balance).to.equal(10)
+
     yield this.request()
-      .put(transfer.id + '/fulfillment')
+      .post(transfer.id + '/fulfillment')
       .auth('alice', 'alice')
       .send(this.executionConditionFulfillment)
-      .expect(200)
-      .expect(this.executionConditionFulfillment)
+      .expect(400)
       .end()
   })
 
-  it('should allow a transfer to be fulfilled (cancelled) multiple times', function *() {
+  it('should not allow a transfer to be fulfilled (cancelled) multiple times', function *() {
     const transfer = this.preparedTransfer
 
     yield this.request()
-      .put(transfer.id + '/fulfillment')
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .end()
+
+    yield this.request()
+      .post(transfer.id + '/fulfillment')
       .auth('alice', 'alice')
       .send(this.cancellationConditionFulfillment)
       .expect(201)
       .expect(this.cancellationConditionFulfillment)
       .end()
 
+    // Check balances
+    expect((yield Account.findByName('alice')).balance).to.equal(100)
+    expect((yield Account.findByName('bob')).balance).to.equal(0)
+
     yield this.request()
-      .put(transfer.id + '/fulfillment')
+      .post(transfer.id + '/fulfillment')
       .auth('alice', 'alice')
       .send(this.cancellationConditionFulfillment)
-      .expect(200)
-      .expect(this.cancellationConditionFulfillment)
+      .expect(400)
       .end()
   })
 })
