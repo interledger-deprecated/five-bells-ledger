@@ -38,12 +38,6 @@ class ConditionFulfillment extends Model {
       transfer_id: transferId
     })
   }
-
-  setConditionFulfillment (conditionFulfillment) {
-    super.setData({
-      condition_fulfillment: conditionFulfillment
-    })
-  }
 }
 
 PersistentModelMixin(ConditionFulfillment, sequelize, {
