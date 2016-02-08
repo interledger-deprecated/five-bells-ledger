@@ -16,7 +16,8 @@ function * _upsertFulfillment (fulfillment, options) {
   // correct HTTP status code we unfortunately have to do this in two steps.
   const existingFulfillment = yield ConditionFulfillment.findByTransfer(fulfillment.getData().transfer_id, options)
   if (existingFulfillment) {
-    ConditionFulfillment.upsert(existingFulfillment, options)
+    existingFulfillment.setDataExternal(fulfillment)
+    yield existingFulfillment.save(options)
   } else {
     yield ConditionFulfillment.createExternal(fulfillment, options)
   }
