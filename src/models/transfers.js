@@ -219,52 +219,61 @@ function * processImmediateExecution (transfer, accountBalances) {
   }
 }
 
+function validateConditionFulfillment (transfer, fulfillment) {
+  // We don't know if notary is executing or rejecting transfer
+  const type = _.get(fulfillment.getData(), 'condition_fulfillment.type')
+
+  const isValidExecution = Boolean(transfer.execution_condition &&
+    transfer.execution_condition.type === type &&
+    Condition.testFulfillment(transfer.execution_condition,
+      fulfillment.getData().condition_fulfillment))
+
+  const isValidCancellation = Boolean(transfer.cancellation_condition &&
+    transfer.cancellation_condition.type === type &&
+    Condition.testFulfillment(transfer.cancellation_condition,
+      fulfillment.getData().condition_fulfillment))
+
+  if (isValidCancellation === isValidExecution) {
+    throw new UnmetConditionError('ConditionFulfillment failed')
+  }
+
+  return isValidExecution   // true for execution, false for cancellation
+}
+
 function * fulfillTransfer (transferId, fulfillment) {
-  let transfer
   let fulfillmentExists = false
   yield db.transaction(function *(transaction) {
-    transfer = yield db.getTransfer(transferId, {transaction})
+    const transfer = yield db.getTransfer(transferId, {transaction})
 
     if (!transfer) {
       throw new NotFoundError('Invalid transfer ID')
     }
 
-    let accountBalances = yield makeAccountBalances(transaction, transfer)
+    const isExecution = validateConditionFulfillment(transfer, fulfillment)
+    const accountBalances = yield makeAccountBalances(transaction, transfer)
 
-    // We don't know if notary is executing or rejecting transfer
-    const isValidExecution = Boolean(transfer.execution_condition &&
-      transfer.execution_condition.type === fulfillment.getData().condition_fulfillment.type &&
-      Condition.testFulfillment(transfer.execution_condition, fulfillment.getData().condition_fulfillment))
-    const isValidCancellation = Boolean(transfer.cancellation_condition &&
-      transfer.cancellation_condition.type === fulfillment.getData().condition_fulfillment.type &&
-      Condition.testFulfillment(transfer.cancellation_condition, fulfillment.getData().condition_fulfillment))
-
-    if (isValidCancellation === isValidExecution) {
-      throw new UnmetConditionError('ConditionFulfillment failed')
-    }
-
-    const canExecute = transfer.state === 'prepared'
-    const canCancel = transfer.state === 'proposed' || transfer.state === 'prepared'
-
-    if (isValidExecution) {
-      if (!canExecute) {
-        throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be executed')
+    if (isExecution) {
+      if (transfer.state !== 'prepared') {
+        throw new InvalidModificationError('Transfers in state ' +
+          transfer.state + ' may not be executed')
       }
       yield accountBalances.applyCredits()
       updateState(transfer, 'executed')
-      fulfillmentExists = yield fulfillments.upsertFulfillment(fulfillment, {transaction})
-    } else if (isValidCancellation) {
-      if (!canCancel) {
-        throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be cancelled')
+      fulfillmentExists = yield fulfillments.upsertFulfillment(
+        fulfillment, {transaction})
+    } else {  // cancellation
+      if (transfer.state !== 'proposed' && transfer.state !== 'prepared') {
+        throw new InvalidModificationError('Transfers in state ' +
+          transfer.state + ' may not be cancelled')
       }
       if (transfer.state === 'prepared') {
         yield accountBalances.revertDebits()
       }
-      fulfillmentExists = yield fulfillments.upsertFulfillment(fulfillment, {transaction})
+      fulfillmentExists = yield fulfillments.upsertFulfillment(
+        fulfillment, {transaction})
       updateState(transfer, 'rejected')
     }
 
-    // Remove the expiry countdown
     transferExpiryMonitor.unwatch(transfer.id)
     yield transfer.save({transaction})
 
@@ -284,7 +293,6 @@ function * fulfillTransfer (transferId, fulfillment) {
 
   log.debug('changes written to database')
 
-  // Process notifications soon
   notificationWorker.scheduleProcessing()
 
   return {
