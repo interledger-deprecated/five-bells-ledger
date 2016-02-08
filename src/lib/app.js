@@ -78,12 +78,12 @@ class App {
       transfers.putResource)
 
     router.post('/transfers/:id/fulfillment',
-      passport.authenticate(['basic', 'http-signature'], {
+      passport.authenticate(['basic', 'http-signature', 'anonymous'], {
         session: false
       }), models.ConditionFulfillment.createBodyParser(),
       transfers.postFulfillment)
     router.get('/transfers/:id/fulfillment',
-      passport.authenticate(['basic', 'http-signature'], {
+      passport.authenticate(['basic', 'http-signature', 'anonymous'], {
         session: false
       }),
       transfers.getFulfillment)
