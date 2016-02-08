@@ -17,7 +17,6 @@ const subscriptions = require('../controllers/subscriptions')
 const notifications = require('../controllers/notifications')
 const models = require('../models/db')
 const seedDB = require('./seed-db')
-const parseBody = require('co-body')
 
 // Configure passport
 require('../services/auth')
@@ -78,15 +77,16 @@ class App {
       models.Transfer.createBodyParser(),
       transfers.putResource)
 
-    // TODO Need to add body parser for fulfillment object: https://github.com/interledger/five-bells-shared/blob/master/schemas/ConditionFulfillment.json#L32
-    router.put('/transfers/:id/fulfillment',
-      passport.authenticate(['basic', 'http-signature', 'anonymous'], {
+    router.post('/transfers/:id/fulfillment',
+      passport.authenticate(['basic', 'http-signature'], {
         session: false
-      }), function * (next) {
-        this.body = yield parseBody(this)
-        yield next
-      },
-      transfers.putFulfillment)
+      }), models.ConditionFulfillment.createBodyParser(),
+      transfers.postFulfillment)
+    router.get('/transfers/:id/fulfillment',
+      passport.authenticate(['basic', 'http-signature'], {
+        session: false
+      }),
+      transfers.getFulfillment)
 
     router.get('/transfers/:id', transfers.getResource)
     router.get('/transfers/:id/state', transfers.getStateResource)

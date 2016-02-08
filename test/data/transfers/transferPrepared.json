@@ -1,9 +1,10 @@
 {
-  "id": "http://localhost/transfers/155dff3f-4915-44df-a707-acc4b527bcbd",
+  "id": "http://localhost/transfers/4e36fe38-8171-4aab-b60e-08d4b56fbbf1",
   "ledger": "http://localhost",
   "debits": [{
     "account": "http://localhost/accounts/alice",
-    "amount": "10"
+    "amount": "10",
+    "authorized": true
   }],
   "credits": [{
     "account": "http://localhost/accounts/bob",
@@ -14,5 +15,10 @@
     "signer": "http://ledger.example",
     "type": "ed25519-sha512",
     "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
-  }
+  },
+  "cancellation_condition": {
+    "digest": "B5F839F2E05D875D1DF290917DED3C1AA10B906B9E9C788B521D993C2EEF44B8",
+    "type": "sha256"
+  },
+  "state": "prepared"
 }

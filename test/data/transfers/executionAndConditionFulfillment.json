@@ -1,0 +1,12 @@
+{
+  "type": "and",
+  "subfulfillments": [
+  {
+    "type": "sha256",
+    "message": "execute transfer"
+  },
+  {
+    "type": "sha256",
+    "message": "Execute it now!"
+  }]
+}

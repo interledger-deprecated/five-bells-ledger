@@ -288,7 +288,7 @@ describe('Accounts', function () {
   describe('Account#findEntry', function () {
     it('returns an Entry', function *() {
       yield dbHelper.addAccounts([this.exampleAccounts.bob])
-      const transfer = _.cloneDeep(require('./data/transferSimple'))
+      const transfer = _.cloneDeep(require('./data/transfers/transferSimple'))
       const transfer1ID = '155dff3f-4915-44df-a707-acc4b527bcbd'
       const transfer2ID = '155dff3f-4915-44df-a707-acc4b527bcbe'
       transfer.id = 'http://localhost/transfers/' + transfer1ID

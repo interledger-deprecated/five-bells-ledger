@@ -6,6 +6,7 @@ const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
 const stringifyJSON = require('canonical-json')
 const db = require('./db/transfers')
+const fulfillments = require('./db/conditionFulfillments')
 const makeAccountBalances = require('../lib/accountBalances')
 const validateNoDisabledAccounts = require('../lib/disabledAccounts')
 const config = require('../services/config')
@@ -220,6 +221,7 @@ function * processImmediateExecution (transfer, accountBalances) {
 
 function * fulfillTransfer (transferId, fulfillment) {
   let transfer
+  let fulfillmentExists = false
   yield db.transaction(function *(transaction) {
     transfer = yield db.getTransfer(transferId, {transaction})
 
@@ -231,9 +233,11 @@ function * fulfillTransfer (transferId, fulfillment) {
 
     // We don't know if notary is executing or rejecting transfer
     const isValidExecution = Boolean(transfer.execution_condition &&
-      Condition.testFulfillment(transfer.execution_condition, fulfillment))
+      transfer.execution_condition.type === fulfillment.getData().condition_fulfillment.type &&
+      Condition.testFulfillment(transfer.execution_condition, fulfillment.getData().condition_fulfillment))
     const isValidCancellation = Boolean(transfer.cancellation_condition &&
-      Condition.testFulfillment(transfer.cancellation_condition, fulfillment))
+      transfer.cancellation_condition.type === fulfillment.getData().condition_fulfillment.type &&
+      Condition.testFulfillment(transfer.cancellation_condition, fulfillment.getData().condition_fulfillment))
 
     if (isValidCancellation === isValidExecution) {
       throw new UnmetConditionError('ConditionFulfillment failed')
@@ -247,8 +251,8 @@ function * fulfillTransfer (transferId, fulfillment) {
         throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be executed')
       }
       yield accountBalances.applyCredits()
-      transfer.execution_condition_fulfillment = fulfillment
       updateState(transfer, 'executed')
+      fulfillmentExists = yield fulfillments.upsertFulfillment(fulfillment, {transaction})
     } else if (isValidCancellation) {
       if (!canCancel) {
         throw new InvalidModificationError('Transfers in state ' + transfer.state + ' may not be cancelled')
@@ -256,7 +260,7 @@ function * fulfillTransfer (transferId, fulfillment) {
       if (transfer.state === 'prepared') {
         yield accountBalances.revertDebits()
       }
-      transfer.cancellation_condition_fulfillment = fulfillment
+      fulfillmentExists = yield fulfillments.upsertFulfillment(fulfillment, {transaction})
       updateState(transfer, 'rejected')
     }
 
@@ -283,7 +287,10 @@ function * fulfillTransfer (transferId, fulfillment) {
   // Process notifications soon
   notificationWorker.scheduleProcessing()
 
-  return transfer.getDataExternal()
+  return {
+    fulfillment: fulfillment.getDataExternal(),
+    existed: fulfillmentExists
+  }
 }
 
 function * setTransfer (transfer, requestingUser) {
@@ -362,9 +369,18 @@ function * setTransfer (transfer, requestingUser) {
   }
 }
 
+function * getFulfillment (transferId) {
+  const fulfillment = yield fulfillments.getFulfillment(transferId)
+  if (!fulfillment) {
+    throw new NotFoundError('This transfer has no fulfillment')
+  }
+  return fulfillment.getDataExternal()
+}
+
 module.exports = {
   getTransfer,
   getTransferStateReceipt,
   setTransfer,
-  fulfillTransfer
+  fulfillTransfer,
+  getFulfillment
 }
