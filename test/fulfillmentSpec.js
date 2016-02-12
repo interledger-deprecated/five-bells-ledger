@@ -63,7 +63,7 @@ describe('GET /fulfillment', function () {
     const transfer = this.preparedTransfer
 
     yield this.request()
-      .post(transfer.id + '/fulfillment')
+      .put(transfer.id + '/fulfillment')
       .send(this.executionConditionFulfillment)
       .expect(201)
       .expect(this.executionConditionFulfillment)
@@ -76,13 +76,13 @@ describe('GET /fulfillment', function () {
       .end()
   })
 
-  /* post fulfillments */
+  /* put fulfillments */
   /* Fulfillment errors */
   it('should return 400 if a valid execution condition is given to an unauthorized transfer', function *() {
     const transfer = this.proposedTransfer
 
     yield this.request()
-      .post(transfer.id + '/fulfillment')
+      .put(transfer.id + '/fulfillment')
       .send(this.executionConditionFulfillment)
       .expect(400)
       .end()
@@ -92,7 +92,7 @@ describe('GET /fulfillment', function () {
     const transfer = this.executedTransfer
 
     yield this.request()
-      .post(transfer.id + '/fulfillment')
+      .put(transfer.id + '/fulfillment')
       .send(this.cancellationConditionFulfillment)
       .expect(400)
       .end()
@@ -105,14 +105,14 @@ describe('GET /fulfillment', function () {
     executionConditionFulfillment.signature = 'aW52YWxpZA=='
 
     yield this.request()
-      .post(transfer.id + '/fulfillment')
+      .put(transfer.id + '/fulfillment')
       .send(executionConditionFulfillment)
       .expect(422)
       .end()
   })
 })
 
-describe('POST /fulfillment', function () {
+describe('PUT /fulfillment', function () {
   logHelper(logger)
 
   beforeEach(function *() {
@@ -141,6 +141,15 @@ describe('POST /fulfillment', function () {
     this.clock.restore()
   })
 
+  it('should return 404 when fulfilling a non-existent transfer', function *() {
+    const transfer = this.preparedTransfer
+    yield this.request()
+      .put(transfer.id + '/fulfillment')
+      .send(this.executionConditionFulfillment)
+      .expect(404)
+      .end()
+  })
+
   it('should set the state to "rejected" if and only if the ' +
     'cancellation_condition_fulfillment is present',
     function *() {
@@ -159,7 +168,7 @@ describe('POST /fulfillment', function () {
         'message': 'please cancel this transfer'
       }
       yield this.request()
-        .post(transfer.id + '/fulfillment')
+        .put(transfer.id + '/fulfillment')
         .send(invalidCancellationConditionFulfillment)
         .expect(422)
         .expect({
@@ -173,7 +182,7 @@ describe('POST /fulfillment', function () {
       expect((yield Account.findByName('bob')).balance).to.equal(0)
 
       yield this.request()
-        .post(transfer.id + '/fulfillment')
+        .put(transfer.id + '/fulfillment')
         .send(this.cancellationConditionFulfillment)
         .expect(201)
         .expect(this.cancellationConditionFulfillment)
@@ -198,7 +207,7 @@ describe('POST /fulfillment', function () {
         .end()
 
       yield this.request()
-        .post(transfer.id + '/fulfillment')
+        .put(transfer.id + '/fulfillment')
         .send(this.executionConditionFulfillment)
         .expect(201)
         .expect(this.executionConditionFulfillment)
@@ -221,7 +230,7 @@ describe('POST /fulfillment', function () {
         .end()
 
       yield this.request()
-        .post(transfer.id + '/fulfillment')
+        .put(transfer.id + '/fulfillment')
         .send(this.executionConditionFulfillmentTypeAnd)
         .expect(201)
         .expect(this.executionConditionFulfillmentTypeAnd)
@@ -232,7 +241,7 @@ describe('POST /fulfillment', function () {
       expect((yield Account.findByName('bob')).balance).to.equal(10)
     })
 
-  it('should not allow a transfer to be fulfilled (executed) multiple times', function *() {
+  it('should not double spend when transfer is executed multiple times', function *() {
     const transfer = this.executedTransfer
 
     yield this.request()
@@ -243,7 +252,7 @@ describe('POST /fulfillment', function () {
       .end()
 
     yield this.request()
-      .post(transfer.id + '/fulfillment')
+      .put(transfer.id + '/fulfillment')
       .send(this.executionConditionFulfillment)
       .expect(201)
       .expect(this.executionConditionFulfillment)
@@ -254,13 +263,18 @@ describe('POST /fulfillment', function () {
     expect((yield Account.findByName('bob')).balance).to.equal(10)
 
     yield this.request()
-      .post(transfer.id + '/fulfillment')
+      .put(transfer.id + '/fulfillment')
       .send(this.executionConditionFulfillment)
-      .expect(400)
+      .expect(200)
+      .expect(this.executionConditionFulfillment)
       .end()
+
+    // Check balances
+    expect((yield Account.findByName('alice')).balance).to.equal(90)
+    expect((yield Account.findByName('bob')).balance).to.equal(10)
   })
 
-  it('should not allow a transfer to be fulfilled (cancelled) multiple times', function *() {
+  it('should allow a transfer to be cancelled multiple times', function *() {
     const transfer = this.preparedTransfer
 
     yield this.request()
@@ -271,7 +285,7 @@ describe('POST /fulfillment', function () {
       .end()
 
     yield this.request()
-      .post(transfer.id + '/fulfillment')
+      .put(transfer.id + '/fulfillment')
       .send(this.cancellationConditionFulfillment)
       .expect(201)
       .expect(this.cancellationConditionFulfillment)
@@ -282,9 +296,14 @@ describe('POST /fulfillment', function () {
     expect((yield Account.findByName('bob')).balance).to.equal(0)
 
     yield this.request()
-      .post(transfer.id + '/fulfillment')
+      .put(transfer.id + '/fulfillment')
       .send(this.cancellationConditionFulfillment)
-      .expect(400)
+      .expect(200)
+      .expect(this.cancellationConditionFulfillment)
       .end()
+
+    // Check balances
+    expect((yield Account.findByName('alice')).balance).to.equal(100)
+    expect((yield Account.findByName('bob')).balance).to.equal(0)
   })
 })
