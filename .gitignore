@@ -3,3 +3,4 @@ apidoc-out/
 coverage/
 *.cluster
 /npm-debug.log
+/integration-test/
