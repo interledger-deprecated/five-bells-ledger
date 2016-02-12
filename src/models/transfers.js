@@ -27,6 +27,9 @@ const UnauthorizedError =
 require('five-bells-shared/errors/unauthorized-error')
 const Condition = require('five-bells-condition').Condition
 
+const validExecutionStates = ['prepared']
+const validCancellationStates = ['prepared', 'proposed']
+
 function * getTransfer (id) {
   log.debug('fetching transfer ID ' + id)
 
@@ -240,9 +243,26 @@ function validateConditionFulfillment (transfer, fulfillment) {
   return isValidExecution   // true for execution, false for cancellation
 }
 
+function * cancelTransfer (transaction, transfer, fulfillment) {
+  const accountBalances = yield makeAccountBalances(transaction, transfer)
+  if (transfer.state === 'prepared') {
+    yield accountBalances.revertDebits()
+  }
+  yield fulfillments.upsertFulfillment(
+    fulfillment, {transaction})
+  updateState(transfer, 'rejected')
+}
+
+function * executeTransfer (transaction, transfer, fulfillment) {
+  const accountBalances = yield makeAccountBalances(transaction, transfer)
+  yield accountBalances.applyCredits()
+  updateState(transfer, 'executed')
+  yield fulfillments.upsertFulfillment(
+    fulfillment, {transaction})
+}
+
 function * fulfillTransfer (transferId, fulfillment) {
-  let fulfillmentExists = false
-  yield db.transaction(function *(transaction) {
+  const existingFulfillment = yield db.transaction(function *(transaction) {
     const transfer = yield db.getTransfer(transferId, {transaction})
 
     if (!transfer) {
@@ -250,28 +270,23 @@ function * fulfillTransfer (transferId, fulfillment) {
     }
 
     const isExecution = validateConditionFulfillment(transfer, fulfillment)
-    const accountBalances = yield makeAccountBalances(transaction, transfer)
+
+    if (isExecution && transfer.state === 'executed' || !isExecution && transfer.state === 'rejected') {
+      return (yield fulfillments.getFulfillment(transferId)).getDataExternal()
+    }
 
     if (isExecution) {
-      if (transfer.state !== 'prepared') {
+      if (!_.includes(validExecutionStates, transfer.state)) {
         throw new InvalidModificationError('Transfers in state ' +
           transfer.state + ' may not be executed')
       }
-      yield accountBalances.applyCredits()
-      updateState(transfer, 'executed')
-      fulfillmentExists = yield fulfillments.upsertFulfillment(
-        fulfillment, {transaction})
+      yield executeTransfer(transaction, transfer, fulfillment)
     } else {  // cancellation
-      if (transfer.state !== 'proposed' && transfer.state !== 'prepared') {
+      if (!_.includes(validCancellationStates, transfer.state)) {
         throw new InvalidModificationError('Transfers in state ' +
           transfer.state + ' may not be cancelled')
       }
-      if (transfer.state === 'prepared') {
-        yield accountBalances.revertDebits()
-      }
-      fulfillmentExists = yield fulfillments.upsertFulfillment(
-        fulfillment, {transaction})
-      updateState(transfer, 'rejected')
+      yield cancelTransfer(transaction, transfer, fulfillment)
     }
 
     transferExpiryMonitor.unwatch(transfer.id)
@@ -296,8 +311,8 @@ function * fulfillTransfer (transferId, fulfillment) {
   notificationWorker.scheduleProcessing()
 
   return {
-    fulfillment: fulfillment.getDataExternal(),
-    existed: fulfillmentExists
+    fulfillment: existingFulfillment || fulfillment.getDataExternal(),
+    existed: Boolean(existingFulfillment)
   }
 }
 
