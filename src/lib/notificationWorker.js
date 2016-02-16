@@ -6,7 +6,7 @@ const defer = require('co-defer')
 const request = require('co-request')
 
 class NotificationWorker {
-  constructor (uri, log, Notification, Transfer, Subscription) {
+  constructor (uri, log, Notification, Transfer, Subscription, Fulfillment) {
     this._timeout = null
 
     this.uri = uri
@@ -14,6 +14,7 @@ class NotificationWorker {
     this.Notification = Notification
     this.Transfer = Transfer
     this.Subscription = Subscription
+    this.Fulfillment = Fulfillment
 
     this.processingInterval = 1000
     this.initialRetryDelay = 2000
@@ -52,6 +53,8 @@ class NotificationWorker {
       return
     }
 
+    const fulfillment = yield this.Fulfillment.findByTransfer(transfer.id, { transaction })
+
     subscriptions = _.values(subscriptions)
     // log.debug('notifying ' + subscription.owner + ' at ' +
     //   subscription.target)
@@ -71,7 +74,7 @@ class NotificationWorker {
       let notification = notification_and_created[0]
       // We will schedule an immediate attempt to send the notification for
       // performance in the good case.
-      co(this.processNotificationWithInstances(notification, transfer, subscriptions[i])).catch((err) => {
+      co(this.processNotificationWithInstances(notification, transfer, subscriptions[i], fulfillment)).catch((err) => {
         this.log.debug('immediate notification send failed ' + err)
       })
     }, this)
@@ -106,10 +109,11 @@ class NotificationWorker {
   * processNotification (notification) {
     const transfer = this.Transfer.fromDatabaseModel(yield notification.getDatabaseModel().getTransfer())
     const subscription = this.Subscription.fromDatabaseModel(yield notification.getDatabaseModel().getSubscription())
-    yield this.processNotificationWithInstances(notification, transfer, subscription)
+    const fulfillment = yield this.Fulfillment.findByTransfer(transfer.id)
+    yield this.processNotificationWithInstances(notification, transfer, subscription, fulfillment)
   }
 
-  * processNotificationWithInstances (notification, transfer, subscription) {
+  * processNotificationWithInstances (notification, transfer, subscription, fulfillment) {
     this.log.debug('sending notification to ' + subscription.target)
     const subscriptionURI = this.uri.make('subscription', subscription.id)
     const notificationBody = {
@@ -117,6 +121,9 @@ class NotificationWorker {
       subscription: subscriptionURI,
       event: 'transfer.update',
       resource: transfer.getDataExternal()
+    }
+    if (fulfillment) {
+      notificationBody.fulfillment = fulfillment.getDataExternal()
     }
     try {
       const result = yield request(subscription.target, {

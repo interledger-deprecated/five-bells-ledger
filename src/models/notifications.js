@@ -6,6 +6,7 @@ const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const Notification = require('./db/notification').Notification
 const Transfer = require('./db/transfer').Transfer
+const Fulfillment = require('./db/conditionFulfillment').ConditionFulfillment
 const subscriptionUtils = require('../lib/subscriptionUtils')
 
 function * getNotification (subscriptionId, notificationId, requestingUser) {
@@ -25,12 +26,16 @@ function * getNotification (subscriptionId, notificationId, requestingUser) {
     throw new UnauthorizedError('You do not own this subscription')
   } else {
     const transfer = Transfer.fromDatabaseModel(yield notification.getDatabaseModel().getTransfer())
+    const fulfillment = yield Fulfillment.findByTransfer(transfer.id)
     const subscriptionURI = uri.make('subscription', notification.Subscription.id)
     const notificationBody = {
       id: subscriptionURI + '/notifications/' + notification.id,
       subscription: subscriptionURI,
       event: 'transfer.update',
       resource: transfer.getDataExternal()
+    }
+    if (fulfillment) {
+      notificationBody.fulfillment = fulfillment.getDataExternal()
     }
     return notificationBody
   }
