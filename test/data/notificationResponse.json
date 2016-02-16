@@ -17,10 +17,13 @@
       }
     ],
     "id": "http://localhost/transfers/155dff3f-4915-44df-a707-acc4b527bcbd",
-    "ledger": "http://localhost"
+    "ledger": "http://localhost",
+    "state": "executed"
   },
-  "fulfillment": {
-    "type": "ed25519-sha512",
-    "signature": "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
+  "related_resources": {
+    "execution_condition_fulfillment": {
+      "type": "ed25519-sha512",
+      "signature": "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
+    }
   }
 }

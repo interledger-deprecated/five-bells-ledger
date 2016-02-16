@@ -363,7 +363,9 @@ describe('PUT /fulfillment', function () {
           id: subscription.id + '/notifications/' + notificationId,
           subscription: subscription.id,
           resource: transferExecuted,
-          fulfillment: this.executionConditionFulfillment
+          related_resources: {
+            execution_condition_fulfillment: this.executionConditionFulfillment
+          }
         })
         return true
       })
@@ -434,7 +436,9 @@ describe('PUT /fulfillment', function () {
           id: subscription.id + '/notifications/' + notificationId,
           subscription: subscription.id,
           resource: transferCancelled,
-          fulfillment: this.cancellationConditionFulfillment
+          related_resources: {
+            cancellation_condition_fulfillment: this.cancellationConditionFulfillment
+          }
         })
         return true
       })

@@ -123,7 +123,15 @@ class NotificationWorker {
       resource: transfer.getDataExternal()
     }
     if (fulfillment) {
-      notificationBody.fulfillment = fulfillment.getDataExternal()
+      if (transfer.state === 'executed') {
+        notificationBody.related_resources = {
+          execution_condition_fulfillment: fulfillment.getDataExternal()
+        }
+      } else if (transfer.state === 'rejected') {
+        notificationBody.related_resources = {
+          cancellation_condition_fulfillment: fulfillment.getDataExternal()
+        }
+      }
     }
     try {
       const result = yield request(subscription.target, {

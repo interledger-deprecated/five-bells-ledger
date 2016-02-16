@@ -35,7 +35,15 @@ function * getNotification (subscriptionId, notificationId, requestingUser) {
       resource: transfer.getDataExternal()
     }
     if (fulfillment) {
-      notificationBody.fulfillment = fulfillment.getDataExternal()
+      if (transfer.state === 'executed') {
+        notificationBody.related_resources = {
+          execution_condition_fulfillment: fulfillment.getDataExternal()
+        }
+      } else if (transfer.state === 'rejected') {
+        notificationBody.related_resources = {
+          cancellation_condition_fulfillment: fulfillment.getDataExternal()
+        }
+      }
     }
     return notificationBody
   }
