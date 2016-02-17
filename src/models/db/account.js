@@ -1,5 +1,6 @@
 'use strict'
 
+const bcrypt = require('bcrypt')
 const Model = require('five-bells-shared').Model
 const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
 const uri = require('../../services/uriManager')
@@ -9,6 +10,24 @@ const EntryGroup = require('./entry-group').EntryGroup
 
 const Sequelize = require('sequelize')
 const sequelize = require('../../services/db')
+
+function hashPassword (password) {
+  // cache hashes of passwords used in tests to speed up tests 4X
+  const cachedHashes = {
+    admin: '$2a$10$FhvkZTSER6jgntWw0uBbzue13w2BAPOxfmpDUt9515NmQv7Ixtxsm',
+    alice: '$2a$10$g07kBlVI1ltBq/RaQ8i.ruKFmj3TLgOQ0SPgQA1/3O.MX905cyi5C',
+    bob: '$2a$10$.ofu.TkYeq/cdQHLBxJd8eCdOhaxOD2rzoHSxP.IgxnNBzzokSuBe',
+    candice: '$2a$10$TgdAHqf.EKNzV/R4Ncwpf..NsxuURFIImwhx5pHfyYrKk81.Cz1f.',
+    dave: '$2a$10$REGCWsK8iHW.44fifW7cBe/p6kulK9RsxhItIYwz.ak2Sa0Mzdpj2',
+    disabled: '$2a$10$RgD4XEwDa/iHy.gosKDhounlFCzKMZRjOTPIsXNYpNant8DJaIFNm'
+  }
+  if (password in cachedHashes) {
+    return cachedHashes[password]
+  }
+  const rounds = 10
+  const salt = bcrypt.genSaltSync(rounds)
+  return bcrypt.hashSync(password, salt)
+}
 
 class Account extends Model {
   static convertFromExternal (data) {
@@ -23,6 +42,9 @@ class Account extends Model {
     }
 
     data.balance = Number(data.balance)
+    data.password_hash = data.password ? hashPassword(data.password) : null
+    delete data.password
+
     return data
   }
 
