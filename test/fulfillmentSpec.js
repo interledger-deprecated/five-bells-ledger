@@ -29,8 +29,8 @@ describe('GET /fulfillment', function () {
     this.executedTransfer = _.cloneDeep(require('./data/transfers/transferExecuted'))
     this.invalidTransfer = _.cloneDeep(require('./data/transfers/transferSimple'))
 
-    this.executionConditionFulfillment = _.cloneDeep(require('./data/transfers/executionConditionFulfillment'))
-    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/transfers/cancellationConditionFulfillment'))
+    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
+    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
 
     // Reset database
     yield dbHelper.reset()
@@ -126,10 +126,10 @@ describe('PUT /fulfillment', function () {
     this.executedTransfer = _.cloneDeep(require('./data/transfers/transferExecuted'))
     this.invalidTransfer = _.cloneDeep(require('./data/transfers/transferSimple'))
     this.transferWithAndConditionType = _.cloneDeep(require('./data/transfers/transferWithAndCondition'))
-    this.executionConditionFulfillmentTypeAnd = _.cloneDeep(require('./data/transfers/executionAndConditionFulfillment'))
+    this.executionConditionFulfillmentTypeAnd = _.cloneDeep(require('./data/fulfillments/executionTypeAnd'))
 
-    this.executionConditionFulfillment = _.cloneDeep(require('./data/transfers/executionConditionFulfillment'))
-    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/transfers/cancellationConditionFulfillment'))
+    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
+    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
 
     // Reset database
     yield dbHelper.reset()
