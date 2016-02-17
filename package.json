@@ -1,6 +1,6 @@
 {
   "name": "five-bells-ledger",
-  "version": "10.0.0",
+  "version": "10.0.1",
   "description": "Five Bells ledger reference implementation",
   "keywords": [
     "interledger",
@@ -31,7 +31,7 @@
     "co-request": "^1.0.0",
     "deep-diff": "^0.3.0",
     "five-bells-condition": "~2.0.0",
-    "five-bells-shared": "~9.0.1",
+    "five-bells-shared": "~9.1.2",
     "koa": "^1.0.0",
     "koa-compress": "^1.0.6",
     "koa-cors": "0.0.16",
