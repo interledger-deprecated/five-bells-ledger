@@ -29,7 +29,7 @@ describe('Notifications', function () {
     const idParts = this.exampleTransfer.id.split('/')
     this.existingFulfillment = {
       transfer_id: idParts[idParts.length - 1],
-      condition_fulfillment: _.cloneDeep(require('./data/transfers/executionConditionFulfillment'))
+      condition_fulfillment: _.cloneDeep(require('./data/fulfillments/execution'))
     }
 
     // Reset database
