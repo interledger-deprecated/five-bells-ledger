@@ -19,10 +19,10 @@ describe('Notifications', function () {
     appHelper.create(this, app)
 
     // Define example data
-    this.exampleTransfer = _.cloneDeep(require('./data/transfers/transferSimple'))
+    this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))
     this.existingSubscription = _.cloneDeep(require('./data/subscription1'))
     this.exampleSubscription = _.cloneDeep(require('./data/subscription2'))
-    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/transferWithExpiry'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
     this.existingNotification = _.cloneDeep(require('./data/notificationDatabaseEntry'))
     this.notificationResponse = _.cloneDeep(require('./data/notificationResponse'))
 

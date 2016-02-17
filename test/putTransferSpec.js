@@ -32,20 +32,20 @@ describe('PUT /transfers/:id', function () {
     this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
 
     // Define example data
-    this.exampleTransfer = _.cloneDeep(require('./data/transfers/transferSimple'))
+    this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))
     this.transferNoAuthorization =
-      _.cloneDeep(require('./data/transfers/transferNoAuthorization'))
+      _.cloneDeep(require('./data/transfers/noAuthorization'))
     this.multiCreditTransfer =
-      _.cloneDeep(require('./data/transfers/transferMultiCredit'))
-    this.multiDebitTransfer = _.cloneDeep(require('./data/transfers/transferMultiDebit'))
+      _.cloneDeep(require('./data/transfers/multiCredit'))
+    this.multiDebitTransfer = _.cloneDeep(require('./data/transfers/multiDebit'))
     this.multiDebitAndCreditTransfer =
-      _.cloneDeep(require('./data/transfers/transferMultiDebitAndCredit'))
-    this.executedTransfer = _.cloneDeep(require('./data/transfers/transferExecuted'))
-    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/transferWithExpiry'))
-    this.transferFromEve = _.cloneDeep(require('./data/transfers/transferFromEve'))
-    this.disabledTransferFrom = _.cloneDeep(require('./data/transfers/transferFromDisabledAccount'))
-    this.disabledTransferTo = _.cloneDeep(require('./data/transfers/transferToDisabledAccount'))
-    this.proposedTransfer = _.cloneDeep(require('./data/transfers/transferProposed'))
+      _.cloneDeep(require('./data/transfers/multiDebitAndCredit'))
+    this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
+    this.transferFromEve = _.cloneDeep(require('./data/transfers/fromEve'))
+    this.disabledTransferFrom = _.cloneDeep(require('./data/transfers/fromDisabledAccount'))
+    this.disabledTransferTo = _.cloneDeep(require('./data/transfers/toDisabledAccount'))
+    this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
 
     // Reset database
     yield dbHelper.reset()

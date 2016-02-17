@@ -30,8 +30,8 @@ describe('Transfer State', function () {
         tweetnacl.util.decodeBase64(config.getIn(['keys', 'ed25519', 'secret'])))
 
     // Define example data
-    this.executedTransfer = _.cloneDeep(require('./data/transfers/transferExecuted'))
-    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/transferWithExpiry'))
+    this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
 
     // Reset database
     yield dbHelper.reset()

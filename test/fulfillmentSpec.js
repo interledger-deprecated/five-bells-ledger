@@ -24,10 +24,10 @@ describe('GET /fulfillment', function () {
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
 
-    this.proposedTransfer = _.cloneDeep(require('./data/transfers/transferProposed'))
-    this.preparedTransfer = _.cloneDeep(require('./data/transfers/transferPrepared'))
-    this.executedTransfer = _.cloneDeep(require('./data/transfers/transferExecuted'))
-    this.invalidTransfer = _.cloneDeep(require('./data/transfers/transferSimple'))
+    this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
+    this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
+    this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
+    this.invalidTransfer = _.cloneDeep(require('./data/transfers/simple'))
 
     this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
     this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
@@ -121,11 +121,11 @@ describe('PUT /fulfillment', function () {
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
 
-    this.proposedTransfer = _.cloneDeep(require('./data/transfers/transferProposed'))
-    this.preparedTransfer = _.cloneDeep(require('./data/transfers/transferPrepared'))
-    this.executedTransfer = _.cloneDeep(require('./data/transfers/transferExecuted'))
-    this.invalidTransfer = _.cloneDeep(require('./data/transfers/transferSimple'))
-    this.transferWithAndConditionType = _.cloneDeep(require('./data/transfers/transferWithAndCondition'))
+    this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
+    this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
+    this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
+    this.invalidTransfer = _.cloneDeep(require('./data/transfers/simple'))
+    this.transferWithAndConditionType = _.cloneDeep(require('./data/transfers/withAndCondition'))
     this.executionConditionFulfillmentTypeAnd = _.cloneDeep(require('./data/fulfillments/executionTypeAnd'))
 
     this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
