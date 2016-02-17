@@ -36,6 +36,7 @@ class TransferExpiryMonitor {
 
       if (!transfer.isFinalized()) {
         updateState(transfer, 'rejected')
+        transfer.rejection_reason = 'expired'
         yield transfer.save({ transaction })
 
         // Return the money to the original senders

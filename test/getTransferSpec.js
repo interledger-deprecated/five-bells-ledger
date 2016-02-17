@@ -80,6 +80,7 @@ describe('GET /transfers/:uuid', function () {
       .get(transfer.id)
       .expect(200, _.assign({}, transfer, {
         state: 'rejected',
+        rejection_reason: 'expired',
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z',
           rejected_at: transfer.expires_at

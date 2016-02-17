@@ -97,6 +97,7 @@ PersistentModelMixin(Transfer, sequelize, {
   credits: JsonField(sequelize, 'Transfer', 'credits'),
   additional_info: JsonField(sequelize, 'Transfer', 'additional_info'),
   state: Sequelize.ENUM('proposed', 'prepared', 'executed', 'rejected'),
+  rejection_reason: Sequelize.ENUM('expired', 'cancelled'),
   execution_condition: JsonField(sequelize, 'Transfer', 'execution_condition'),
   cancellation_condition: JsonField(sequelize, 'Transfer', 'cancellation_condition'),
   expires_at: Sequelize.DATE,
