@@ -9,5 +9,6 @@
   "credits": [{
     "account": "http://localhost/accounts/bob",
     "amount": "10"
-  }]
+  }],
+  "state": "executed"
 }

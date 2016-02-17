@@ -26,6 +26,12 @@ describe('Notifications', function () {
     this.existingNotification = _.cloneDeep(require('./data/notificationDatabaseEntry'))
     this.notificationResponse = _.cloneDeep(require('./data/notificationResponse'))
 
+    const idParts = this.exampleTransfer.id.split('/')
+    this.existingFulfillment = {
+      transfer_id: idParts[idParts.length - 1],
+      condition_fulfillment: _.cloneDeep(require('./data/transfers/executionConditionFulfillment'))
+    }
+
     // Reset database
     yield dbHelper.reset()
 
@@ -37,6 +43,7 @@ describe('Notifications', function () {
     yield dbHelper.addTransfers([this.exampleTransfer])
     yield dbHelper.addSubscriptions([this.existingSubscription])
     yield dbHelper.addNotifications([this.existingNotification])
+    yield dbHelper.addFulfillments([this.existingFulfillment])
   })
 
   describe('GET /subscriptions/:subscription_id/notifications/:notification_id', function () {
