@@ -22,14 +22,14 @@ describe('GET /transfers/:uuid', function () {
     this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
 
     // Define example data
-    this.exampleTransfer = _.cloneDeep(require('./data/transfers/transferSimple'))
-    this.existingTransfer = _.cloneDeep(require('./data/transfers/transferNoAuthorization'))
-    this.multiCreditTransfer = _.cloneDeep(require('./data/transfers/transferMultiCredit'))
-    this.multiDebitTransfer = _.cloneDeep(require('./data/transfers/transferMultiDebit'))
+    this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))
+    this.existingTransfer = _.cloneDeep(require('./data/transfers/noAuthorization'))
+    this.multiCreditTransfer = _.cloneDeep(require('./data/transfers/multiCredit'))
+    this.multiDebitTransfer = _.cloneDeep(require('./data/transfers/multiDebit'))
     this.multiDebitAndCreditTransfer =
-      _.cloneDeep(require('./data/transfers/transferMultiDebitAndCredit'))
-    this.executedTransfer = _.cloneDeep(require('./data/transfers/transferExecuted'))
-    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/transferWithExpiry'))
+      _.cloneDeep(require('./data/transfers/multiDebitAndCredit'))
+    this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
 
     // Reset database
     yield dbHelper.reset()
