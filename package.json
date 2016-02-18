@@ -49,7 +49,7 @@
     "passport-http": "^0.3.0",
     "passport-http-signature": "^1.0.0",
     "priorityqueuejs": "^1.0.0",
-    "sequelize": "^3.6.0",
+    "sequelize": "3.14.0",
     "sequelize-cli": "^2.0.0",
     "sequelize-json": "^2.1.0",
     "tweetnacl": "^0.13.1",
