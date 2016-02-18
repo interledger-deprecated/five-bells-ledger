@@ -1,6 +1,6 @@
 {
   "name": "five-bells-ledger",
-  "version": "10.0.1",
+  "version": "10.0.2",
   "description": "Five Bells ledger reference implementation",
   "keywords": [
     "interledger",
@@ -72,7 +72,7 @@
     "eslint-config-standard": "^4.1.0",
     "eslint-plugin-standard": "^1.2.0",
     "istanbul": "0.4.0",
-    "mocha": "^2.1.0",
+    "mocha": "~2.3.4",
     "nock": "^2.10.0",
     "sinon": "^1.14.1",
     "sinon-chai": "^2.7.0",
