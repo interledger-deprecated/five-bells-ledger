@@ -250,6 +250,7 @@ function * cancelTransfer (transaction, transfer, fulfillment) {
   }
   yield fulfillments.upsertFulfillment(
     fulfillment, {transaction})
+  transfer.rejection_reason = 'cancelled'
   updateState(transfer, 'rejected')
 }
 

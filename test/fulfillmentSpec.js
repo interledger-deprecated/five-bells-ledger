@@ -420,6 +420,7 @@ describe('PUT /fulfillment', function () {
 
     const transferCancelled = _.assign({}, transfer, {
       state: 'rejected',
+      rejection_reason: 'cancelled',
       timeline: {
         rejected_at: '2015-06-16T00:00:00.000Z',
         prepared_at: '2015-06-16T00:00:00.000Z',
