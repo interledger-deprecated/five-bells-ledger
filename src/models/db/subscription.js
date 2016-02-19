@@ -1,12 +1,10 @@
 'use strict'
 
 const Model = require('five-bells-shared').Model
-const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
+const PersistentModelMixin = require('five-bells-shared').PersistentKnexModelMixin
 const validator = require('../../services/validator')
 const uri = require('../../services/uriManager')
-
-const Sequelize = require('sequelize')
-const sequelize = require('../../services/db')
+const knex = require('../../lib/knex').knex
 
 class Subscription extends Model {
   static convertFromExternal (data) {
@@ -34,44 +32,7 @@ class Subscription extends Model {
 
 Subscription.validateExternal = validator.create('Subscription')
 
-PersistentModelMixin(Subscription, sequelize, {
-  id: {
-    type: Sequelize.UUID,
-    primaryKey: true
-  },
-  owner: Sequelize.STRING(1024),
-  event: Sequelize.STRING,
-  subject: Sequelize.STRING(1024),
-  target: Sequelize.STRING(1024)
-})
+Subscription.tableName = 'subscriptions'
+PersistentModelMixin(Subscription, knex)
 
-/*
-const Subscription = sequelize.define('Subscription', {
-  id: {
-    type: Sequelize.UUID,
-    primaryKey: true
-  },
-  owner: Sequelize.STRING(1024),
-  event: Sequelize.STRING,
-  subject: Sequelize.STRING(1024),
-  target: Sequelize.STRING(1024)
-}, ModelMixin.getOptions({
-  classMethods: {
-    validator: validate.bind(null, 'Subscription'),
-    filterInput: function (data) {
-      // ID is optional on the incoming side
-      if (data.id) {
-        data.id = uri.parse(data.id, 'subscription').id.toLowerCase()
-      }
-
-      return data
-    },
-    filterOutput: function (data) {
-      data.id = uri.make('subscription', data.id.toLowerCase())
-
-      return data
-    }
-  }
-}))
-*/
 exports.Subscription = Subscription

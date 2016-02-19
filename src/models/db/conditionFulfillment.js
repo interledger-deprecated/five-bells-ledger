@@ -1,12 +1,9 @@
 'use strict'
 
 const Model = require('five-bells-shared').Model
-const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
-const JsonField = require('sequelize-json')
+const PersistentModelMixin = require('five-bells-shared').PersistentKnexModelMixin
 const validator = require('../../services/validator')
-const Sequelize = require('sequelize')
-const sequelize = require('../../services/db')
-const Transfer = require('./transfer').Transfer
+const knex = require('../../lib/knex').knex
 
 class ConditionFulfillment extends Model {
 
@@ -23,14 +20,17 @@ class ConditionFulfillment extends Model {
   static convertFromPersistent (data) {
     delete data.created_at
     delete data.updated_at
+    data.condition_fulfillment = JSON.parse(data.condition_fulfillment)
+    return data
+  }
+
+  static convertToPersistent (data) {
+    data.condition_fulfillment = JSON.stringify(data.condition_fulfillment)
     return data
   }
 
   static findByTransfer (transferId, options) {
-    return ConditionFulfillment.findOne({
-      where: {transfer_id: transferId},
-      transaction: options && options.transaction
-    })
+    return ConditionFulfillment.findByKey('transfer_id', transferId, options)
   }
 
   setTransferId (transferId) {
@@ -40,16 +40,9 @@ class ConditionFulfillment extends Model {
   }
 }
 
-PersistentModelMixin(ConditionFulfillment, sequelize, {
-  id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-  transfer_id: Sequelize.UUID,
-  condition_fulfillment: JsonField(sequelize, 'ConditionFulfillment', 'condition_fulfillment')
-}, {
-  indexes: [{ unique: true, fields: ['transfer_id'] }]
-})
+PersistentModelMixin(ConditionFulfillment, knex)
 
+ConditionFulfillment.tableName = 'fulfillments'
 ConditionFulfillment.validateExternal = validator.create('ConditionFulfillment')
-
-ConditionFulfillment.DbModel.belongsTo(Transfer.DbModel)
 
 exports.ConditionFulfillment = ConditionFulfillment

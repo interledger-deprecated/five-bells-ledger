@@ -34,7 +34,7 @@ describe('Subscriptions', function () {
     yield dbHelper.reset()
 
     // Use fake time
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     // Store some example data
     yield dbHelper.addAccounts(_.values(require('./data/accounts')))

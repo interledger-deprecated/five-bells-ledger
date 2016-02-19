@@ -1,10 +1,8 @@
 'use strict'
 
 const Model = require('five-bells-shared').Model
-const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
-
-const Sequelize = require('sequelize')
-const sequelize = require('../../services/db')
+const PersistentModelMixin = require('five-bells-shared').PersistentKnexModelMixin
+const knex = require('../../lib/knex').knex
 
 class EntryGroup extends Model {
   static convertFromPersistent (data) {
@@ -14,10 +12,7 @@ class EntryGroup extends Model {
   }
 }
 
-PersistentModelMixin(EntryGroup, sequelize, {
-  id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-  created_at: Sequelize.DATE,
-  updated_at: Sequelize.DATE
-})
+EntryGroup.tableName = 'entry_groups'
+PersistentModelMixin(EntryGroup, knex)
 
 exports.EntryGroup = EntryGroup

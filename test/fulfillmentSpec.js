@@ -26,7 +26,7 @@ describe('GET /fulfillment', function () {
   beforeEach(function *() {
     appHelper.create(this, app)
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
@@ -125,7 +125,7 @@ describe('PUT /fulfillment', function () {
   beforeEach(function *() {
     appHelper.create(this, app)
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
@@ -328,7 +328,7 @@ describe('PUT /fulfillment', function () {
 
   it('should trigger subscriptions when notification is executed', function *() {
     const subscription = require('./data/subscription1.json')
-    yield Subscription.fromDataExternal(subscription).create()
+    yield Subscription.createExternal(subscription)
 
     const transfer = this.preparedTransfer
     const transferPrepared = _.assign({}, transfer, {
@@ -405,7 +405,7 @@ describe('PUT /fulfillment', function () {
 
   it('should trigger subscriptions when notification is cancelled', function *() {
     const subscription = require('./data/subscription1.json')
-    yield Subscription.fromDataExternal(subscription).create()
+    yield Subscription.createExternal(subscription)
 
     const transfer = this.preparedTransfer
     const transferPrepared = _.assign({}, transfer, {

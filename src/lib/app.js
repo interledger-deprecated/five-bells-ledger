@@ -18,6 +18,7 @@ const subscriptions = require('../controllers/subscriptions')
 const notifications = require('../controllers/notifications')
 const models = require('../models/db')
 const seedDB = require('./seed-db')
+const knex = require('./knex')
 
 // Configure passport
 require('../services/auth')
@@ -56,8 +57,9 @@ class App {
     yield this.timerWorker.start()
     yield this.notificationWorker.start()
 
-    if (this.config.getIn(['db', 'sync'])) yield this.db.sync()
-    yield this.db.init()
+    if (this.config.getIn(['db', 'sync'])) {
+      yield knex.knex.migrate.latest(knex.config)
+    }
     yield seedDB(this.config)
 
     if (this.config.getIn(['server', 'secure'])) {

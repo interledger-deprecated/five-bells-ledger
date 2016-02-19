@@ -22,6 +22,7 @@ describe('Accounts', function () {
 
   beforeEach(function *() {
     appHelper.create(this, app)
+    yield dbHelper.init()
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
@@ -296,49 +297,6 @@ describe('Accounts', function () {
       // Check balances
       const user = (yield Account.findByName('eve'))
       expect(user.public_key).to.equal(publicKey)
-    })
-  })
-
-  describe('Account#findEntry', function () {
-    it('returns an Entry', function *() {
-      yield dbHelper.addAccounts([this.exampleAccounts.bob])
-      const transfer = _.cloneDeep(require('./data/transfers/simple'))
-      const transfer1ID = '155dff3f-4915-44df-a707-acc4b527bcbd'
-      const transfer2ID = '155dff3f-4915-44df-a707-acc4b527bcbe'
-      transfer.id = 'http://localhost/transfers/' + transfer1ID
-      yield this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
-        .end()
-
-      let now = new Date()
-
-      // MySQL uses second-resolution, so we need to tick 1000ms to
-      // ensure success.
-      this.clock.tick(1000)
-
-      transfer.id = 'http://localhost/transfers/' + transfer2ID
-      yield this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
-        .end()
-
-      const account = yield Account.findByName('alice')
-      const entry1 = yield account.findEntry(now)
-      const entry2 = yield account.findEntry(new Date())
-
-      expect(entry1.transfer_id).to.equal(transfer1ID)
-      expect(entry1.account).to.equal(account.primary)
-      expect(entry1.balance).to.equal(90)
-      expect(entry2.transfer_id).to.equal(transfer2ID)
-      expect(entry2.account).to.equal(account.primary)
-      expect(entry2.balance).to.equal(80)
     })
   })
 })

@@ -6,17 +6,18 @@ const Account = require('./account').Account
 const db = require('../../services/db')
 
 function * getAccounts (options) {
-  return (yield Account.findAll(options))
+  const jsonAccounts = yield Account.findAll(options)
+  return jsonAccounts.map(Account.fromDatabaseModel.bind(Account))
 }
 
 function * getConnectorAccounts (options) {
-  return (yield Account.findAll(_.assign({}, options, {
-    where: { connector: { $ne: null } }
-  })))
+  const jsonAccounts = yield Account.findAll(options)
+  return jsonAccounts.filter(account => account.connector)
+    .map(Account.fromDatabaseModel.bind(Account))
 }
 
 function * getAccount (name, options) {
-  return (yield Account.findByName(name, options))
+  return yield Account.findByName(name, options)
 }
 
 function * _upsertAccount (account, options) {
@@ -26,17 +27,17 @@ function * _upsertAccount (account, options) {
   // correct HTTP status code we unfortunately have to do this in two steps.
   const existingAccount = yield Account.findByName(account.name, options)
   if (existingAccount) {
-    existingAccount.setDataExternal(account)
+    existingAccount.setData(account)
     yield existingAccount.save(options)
   } else {
-    yield Account.createExternal(account, options)
+    yield Account.create(account, options)
   }
   return Boolean(existingAccount)
 }
 
 function * upsertAccount (account, options) {
   if (options && options.transaction) {
-    return (yield _upsertAccount(account, options))
+    return yield _upsertAccount(account, options)
   } else {
     let result
     yield db.transaction(function * (transaction) {

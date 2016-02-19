@@ -3,15 +3,12 @@
 const _ = require('lodash')
 
 const Model = require('five-bells-shared').Model
-const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
+const PersistentModelMixin = require('five-bells-shared').PersistentKnexModelMixin
 const validator = require('../../services/validator')
 const uri = require('../../services/uriManager')
 
-const Sequelize = require('sequelize')
-const JsonField = require('sequelize-json')
-const sequelize = require('../../services/db')
-
 const FINAL_STATES = require('five-bells-shared').TransferStateDictionary.finalStates
+const knex = require('../../lib/knex').knex
 
 class Transfer extends Model {
   static convertFromExternal (data) {
@@ -72,11 +69,24 @@ class Transfer extends Model {
   static convertFromPersistent (data) {
     delete data.created_at
     delete data.updated_at
+    data.credits = JSON.parse(data.credits)
+    data.debits = JSON.parse(data.debits)
+    data.execution_condition = JSON.parse(data.execution_condition)
+    data.cancellation_condition = JSON.parse(data.cancellation_condition)
+    data.additional_info = JSON.parse(data.additional_info)
+    if (data.expires_at) {
+      data.expires_at = new Date(data.expires_at)
+    }
     data = _.omit(data, _.isNull)
     return data
   }
 
   static convertToPersistent (data) {
+    data.credits = JSON.stringify(data.credits)
+    data.debits = JSON.stringify(data.debits)
+    data.execution_condition = JSON.stringify(data.execution_condition)
+    data.cancellation_condition = JSON.stringify(data.cancellation_condition)
+    data.additional_info = JSON.stringify(data.additional_info)
     return data
   }
 
@@ -87,24 +97,7 @@ class Transfer extends Model {
 
 Transfer.validateExternal = validator.create('Transfer')
 
-PersistentModelMixin(Transfer, sequelize, {
-  id: {
-    type: Sequelize.UUID,
-    primaryKey: true
-  },
-  ledger: Sequelize.STRING(1024),
-  debits: JsonField(sequelize, 'Transfer', 'debits'),
-  credits: JsonField(sequelize, 'Transfer', 'credits'),
-  additional_info: JsonField(sequelize, 'Transfer', 'additional_info'),
-  state: Sequelize.ENUM('proposed', 'prepared', 'executed', 'rejected'),
-  rejection_reason: Sequelize.ENUM('expired', 'cancelled'),
-  execution_condition: JsonField(sequelize, 'Transfer', 'execution_condition'),
-  cancellation_condition: JsonField(sequelize, 'Transfer', 'cancellation_condition'),
-  expires_at: Sequelize.DATE,
-  proposed_at: Sequelize.DATE,
-  prepared_at: Sequelize.DATE,
-  executed_at: Sequelize.DATE,
-  rejected_at: Sequelize.DATE
-})
+Transfer.tableName = 'transfers'
+PersistentModelMixin(Transfer, knex)
 
 exports.Transfer = Transfer

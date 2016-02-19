@@ -1,10 +1,8 @@
 'use strict'
 
 const Model = require('five-bells-shared').Model
-const PersistentModelMixin = require('five-bells-shared').PersistentModelMixin
-
-const Sequelize = require('sequelize')
-const sequelize = require('../../services/db')
+const PersistentModelMixin = require('five-bells-shared').PersistentKnexModelMixin
+const knex = require('../../lib/knex').knex
 
 class Entry extends Model {
   static convertFromExternal (data) {
@@ -29,14 +27,7 @@ class Entry extends Model {
   }
 }
 
-PersistentModelMixin(Entry, sequelize, {
-  id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-  entry_group: Sequelize.INTEGER,
-  transfer_id: Sequelize.UUID,
-  account: Sequelize.INTEGER,
-  balance: Sequelize.DECIMAL(10, 2),
-  created_at: Sequelize.DATE,
-  updated_at: Sequelize.DATE
-})
+Entry.tableName = 'entries'
+PersistentModelMixin(Entry, knex)
 
 exports.Entry = Entry
