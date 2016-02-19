@@ -54,6 +54,7 @@ class Account extends Model {
     delete data.primary
     delete data.password_hash
     delete data.public_key
+    delete data.fingerprint
     if (!data.connector) delete data.connector
     if (!data.is_admin) delete data.is_admin
     return data
@@ -88,6 +89,13 @@ class Account extends Model {
   static findByName (name, options) {
     return Account.findOne({
       where: {name: name},
+      transaction: options && options.transaction
+    })
+  }
+
+  static findByFingerprint (fingerprint, options) {
+    return Account.findOne({
+      where: {fingerprint: fingerprint},
       transaction: options && options.transaction
     })
   }
@@ -131,7 +139,13 @@ PersistentModelMixin(Account, sequelize, {
   password_hash: Sequelize.STRING,
   public_key: Sequelize.TEXT,
   is_admin: Sequelize.BOOLEAN,
-  is_disabled: Sequelize.BOOLEAN
-})
+  is_disabled: Sequelize.BOOLEAN,
+  fingerprint: Sequelize.STRING
+},
+  {
+    indexes: [
+      {fields: ['fingerprint']}
+    ]
+  })
 
 exports.Account = Account
