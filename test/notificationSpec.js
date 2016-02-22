@@ -9,6 +9,14 @@ const logger = require('../src/services/log')
 const appHelper = require('./helpers/app')
 const dbHelper = require('./helpers/db')
 const logHelper = require('five-bells-shared/testHelpers/log')
+const notificationValidator = require('../src/services/validator').create('Notification')
+
+function validateNotification (res) {
+  const validatorResult = notificationValidator(res.body)
+  if (!validatorResult.valid) {
+    throw new Error('Notification schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
+  }
+}
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -53,6 +61,7 @@ describe('Notifications', function () {
         .auth('alice', 'alice')
         .expect(200)
         .expect(this.notificationResponse)
+        .expect(validateNotification)
         .end()
     })
 
@@ -86,6 +95,7 @@ describe('Notifications', function () {
         .auth('admin', 'admin')
         .expect(200)
         .expect(this.notificationResponse)
+        .expect(validateNotification)
         .end()
     })
   })
