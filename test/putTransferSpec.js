@@ -416,6 +416,22 @@ describe('PUT /transfers/:id', function () {
     expect((yield Account.findByName('bob')).balance).to.equal(10)
   })
 
+  it.skip('should round properly', function *() {
+    const transferWithoutId = _.cloneDeep(this.exampleTransfer)
+    delete transferWithoutId.id
+    transferWithoutId.debits[0].amount = transferWithoutId.credits[0].amount = '5.0101'
+    for (let i = 0; i < 2; i++) {
+      const transferID = this.exampleTransfer.id.slice(0, -1) + i
+      yield this.request()
+        .put(transferID)
+        .auth('alice', 'alice')
+        .send(transferWithoutId)
+        .expect(201)
+        .end()
+    }
+    expect((yield Account.findByName('alice')).balance).to.equal(89.9798)
+  })
+
   it('should accept a transfer with an upper case ID but convert the ID ' +
     'to lower case', function *() {
     const transfer = _.cloneDeep(this.exampleTransfer)
