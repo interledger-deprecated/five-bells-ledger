@@ -74,6 +74,24 @@ function * getTransferStateReceipt (id, signatureType, conditionState) {
   return transferStateReceipt
 }
 
+function getPublicKey () {
+  return {
+    public_key: config.getIn(['keys', 'ed25519', 'public'])
+  }
+}
+
+function * getPreimage (transferId, state) {
+  if (!state) {
+    const transfer = yield db.getTransfer(transferId)
+    state = transfer ? transfer.state : 'nonexistent'
+  }
+  const conditionPreImage = makePreImage(transferId, state)
+  return {
+    condition_state: state,
+    condition_digest: sha256(stringifyJSON(conditionPreImage))
+  }
+}
+
 function makePreImage (transfer_id, state) {
   return {
     id: transfer_id,
@@ -406,5 +424,7 @@ module.exports = {
   getTransferStateReceipt,
   setTransfer,
   fulfillTransfer,
-  getFulfillment
+  getFulfillment,
+  getPublicKey,
+  getPreimage
 }

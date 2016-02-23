@@ -61,6 +61,17 @@ function * getStateResource () {
     id.toLowerCase(), signatureType, conditionState)
 }
 
+function getPublicKey () {
+  this.body = model.getPublicKey()
+}
+
+function * getPreimage () {
+  const id = this.params.id
+  requestUtil.validateUriParameter('id', id, 'Uuid')
+  const conditionState = this.query.condition_state
+  this.body = yield model.getPreimage(id, conditionState)
+}
+
 /**
  * @api {put} /transfers/:id Make a local transfer
  * @apiName PutTransfer
@@ -175,5 +186,7 @@ module.exports = {
   getStateResource,
   putResource,
   putFulfillment,
-  getFulfillment
+  getFulfillment,
+  getPublicKey,
+  getPreimage
 }
