@@ -3,10 +3,10 @@
 const _ = require('lodash')
 const co = require('co')
 const defer = require('co-defer')
-const request = require('co-request')
+const utils = require('./notificationUtils')
 
 class NotificationWorker {
-  constructor (uri, log, Notification, Transfer, Subscription, Fulfillment) {
+  constructor (uri, log, Notification, Transfer, Subscription, Fulfillment, config) {
     this._timeout = null
 
     this.uri = uri
@@ -15,6 +15,7 @@ class NotificationWorker {
     this.Transfer = Transfer
     this.Subscription = Subscription
     this.Fulfillment = Fulfillment
+    this.config = config
 
     this.processingInterval = 1000
     this.initialRetryDelay = 2000
@@ -134,11 +135,8 @@ class NotificationWorker {
       }
     }
     try {
-      const result = yield request(subscription.target, {
-        method: 'post',
-        json: true,
-        body: notificationBody
-      })
+      const result = yield utils.sendNotification(
+        subscription.target, notificationBody, this.config)
       // Success!
       if (result.statusCode < 400) {
         yield notification.destroy()

@@ -17,7 +17,6 @@ const subscriptions = require('../controllers/subscriptions')
 const notifications = require('../controllers/notifications')
 const models = require('../models/db')
 const seedDB = require('./seed-db')
-const fs = require('fs')
 
 // Configure passport
 require('../services/auth')
@@ -67,10 +66,10 @@ class App {
       const options = {
         port: this.config.getIn(['server', 'port']),
         host: this.config.getIn(['server', 'bind_ip']),
-        key: fs.readFileSync(tls.key),
-        cert: fs.readFileSync(tls.cert),
-        ca: tls.ca && fs.readFileSync(tls.ca),
-        crl: tls.crl && fs.readFileSync(tls.crl),
+        key: tls.key,
+        cert: tls.cert,
+        ca: tls.ca,
+        crl: tls.crl,
         requestCert: this.config.getIn(['auth', 'client_certificates_enabled']),
 
         // Certificates are checked in the passport-client-cert middleware
