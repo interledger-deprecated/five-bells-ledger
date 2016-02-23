@@ -116,6 +116,8 @@ class App {
 
     router.get('/transfers/:id', transfers.getResource)
     router.get('/transfers/:id/state', transfers.getStateResource)
+    router.get('/transfers/:id/hash_preimage', transfers.getPreimage)
+    router.get('/transfers/public_key', transfers.getPublicKey)
 
     router.get('/connectors',
       accounts.getConnectors)
