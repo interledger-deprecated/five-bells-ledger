@@ -15,6 +15,19 @@ const model = require('../models/subscriptions')
  * @apiParam {String} id Subscription
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
+ * @apiExample {shell} Get subscription
+ *    curl -x GET -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l" http://usd-ledger.example/USD/subscriptions/f49697a6-d52c-4f46-84c8-9070a31feab7
+ *
+ * @apiSuccessExample {json} 200 Notification Response:
+ *    HTTP/1.1 200 OK
+ *    {
+ *      "id": "http://usd-ledger.example/USD/subscriptions/f49697a6-d52c-4f46-84c8-9070a31feab7",
+ *      "owner": "http://usd-ledger.example/USD/accounts/alice",
+ *      "subject": "http://usd-ledger.example/USD/accounts/alice",
+ *      "event": "transfer.update",
+ *      "target": "http://subscriber.example/notifications"
+ *    }
+ *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
  * @apiUse UnauthorizedError
@@ -33,12 +46,15 @@ function * getResource () {
  * @apiGroup Subscription
  * @apiVersion 1.0.0
  *
+ * @apiDescription Note that the format of the notification `POST`ed to the `target`
+ *    is the same as what is returned from `GET /subscriptions/:subscription_id/notifications/:notification_id`
+ *
  * @apiParamExample {json} Request Body Example
  *     {
  *       "id": "f49697a6-d52c-4f46-84c8-9070a31feab7",
- *       "owner": "alice",
+ *       "owner": "http://usd-ledger.example/USD/accounts/alice",
  *       "event": "transfer.create",
- *       "target": "http://192.0.2.1/test"
+ *       "target": "http://subscriber.example/notifications"
  *     }
  *
  * @apiUse InvalidBodyError
