@@ -29,6 +29,8 @@ const Condition = require('five-bells-condition').Condition
 
 const validExecutionStates = ['prepared']
 const validCancellationStates = ['prepared', 'proposed']
+const SIGNATURE_TYPE_ED25519 = 'ed25519-sha512'
+const SIGNATURE_TYPE_SHA256 = 'sha256'
 
 function * getTransfer (id) {
   log.debug('fetching transfer ID ' + id)
@@ -45,41 +47,52 @@ function * getTransferStateReceipt (id, signatureType, conditionState) {
   log.debug('fetching state receipt for transfer ID ' + id)
   const transfer = yield db.getTransfer(id)
   const transferState = transfer ? transfer.state : 'nonexistent'
-  const message = {
-    id: uri.make('transfer', id),
-    state: transferState
-  }
-  const transferStateReceipt = {
-    type: signatureType,
-    message: message,
-    signer: config.getIn(['server', 'base_uri'])
-  }
 
-  if (signatureType === 'ed25519-sha512') {
-    transferStateReceipt.public_key = config.getIn(['keys', 'ed25519', 'public'])
-    transferStateReceipt.signature = sign(hashJSON(message))
-  } else if (signatureType === 'sha256') {
-    const realPreImage = makePreImage(message.id, transferState)
-    transferStateReceipt.digest = sha256(stringifyJSON(realPreImage))
-    transferStateReceipt.message = makePreImage(message.id, transferState)
-    if (conditionState) {
-      const conditionPreImage = makePreImage(message.id, conditionState)
-      transferStateReceipt.condition_state = conditionState
-      transferStateReceipt.condition_digest = sha256(stringifyJSON(conditionPreImage))
-    }
+  if (signatureType === SIGNATURE_TYPE_ED25519) {
+    return makeEd25519Receipt(uri.make('transfer', id), transferState)
+  } else if (signatureType === SIGNATURE_TYPE_SHA256) {
+    return makeSha256Receipt(uri.make('transfer', id), transferState, conditionState)
   } else {
     throw new UnprocessableEntityError('type is not valid')
   }
-
-  return transferStateReceipt
 }
 
-function makePreImage (transfer_id, state) {
+function makeEd25519Receipt (transferId, transferState) {
+  const message = makeTransferStateMessage(transferId, transferState, SIGNATURE_TYPE_ED25519)
   return {
-    id: transfer_id,
-    state: state,
-    token: sign(sha512(transfer_id + ':' + state))
+    type: SIGNATURE_TYPE_ED25519,
+    message: message,
+    signer: config.getIn(['server', 'base_uri']),
+    public_key: config.getIn(['keys', 'ed25519', 'public']),
+    signature: sign(hashJSON(message))
   }
+}
+
+function makeSha256Receipt (transferId, transferState, conditionState) {
+  const message = makeTransferStateMessage(transferId, transferState, SIGNATURE_TYPE_SHA256)
+  const receipt = {
+    type: SIGNATURE_TYPE_SHA256,
+    message: message,
+    signer: config.getIn(['server', 'base_uri']),
+    digest: sha256(stringifyJSON(message))
+  }
+  if (conditionState) {
+    const conditionMessage = makeTransferStateMessage(transferId, conditionState, SIGNATURE_TYPE_SHA256)
+    receipt.condition_state = conditionState
+    receipt.condition_digest = sha256(stringifyJSON(conditionMessage))
+  }
+  return receipt
+}
+
+function makeTransferStateMessage (transfer_id, state, signatureType) {
+  const message = {
+    id: transfer_id,
+    state: state
+  }
+  if (signatureType === SIGNATURE_TYPE_SHA256) {
+    message.token = sign(sha512(transfer_id + ':' + state))
+  }
+  return message
 }
 
 function sign (base64Str) {
