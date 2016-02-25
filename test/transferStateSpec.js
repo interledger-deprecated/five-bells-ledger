@@ -14,22 +14,7 @@ const logHelper = require('five-bells-shared/testHelpers/log')
 const tweetnacl = require('tweetnacl')
 const validate = require('five-bells-shared/services/validate')
 const hashJSON = require('five-bells-shared/utils/hashJson')
-const transferStateValidator = require('../src/services/validator').create('TransferStateReceipt')
-const transferValidator = require('../src/services/validator').create('Transfer')
-
-function validateTransfer (res) {
-  const validatorResult = transferValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Transfer schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
-
-function validateTransferStateReceipt (res) {
-  const validatorResult = transferStateValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Transfer state receipt schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
+const validator = require('./helpers/validator')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -81,7 +66,7 @@ describe('Transfer State', function () {
           public_key: config.getIn(['keys', 'ed25519', 'public']),
           signature: signature
         })
-        .expect(validateTransferStateReceipt)
+        .expect(validator.validateTransferStateReceipt)
         .end()
     })
 
@@ -94,7 +79,7 @@ describe('Transfer State', function () {
         .put(transfer.id)
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       const currentToken = tweetnacl.util.encodeBase64(
@@ -115,7 +100,7 @@ describe('Transfer State', function () {
           signer: config.getIn(['server', 'base_uri']),
           digest: sha256(stringifyJSON(stateReceipt))
         })
-        .expect(validateTransferStateReceipt)
+        .expect(validator.validateTransferStateReceipt)
         .end()
     })
 
@@ -128,7 +113,7 @@ describe('Transfer State', function () {
         .put(transfer.id)
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       const currentToken = tweetnacl.util.encodeBase64(
@@ -159,7 +144,7 @@ describe('Transfer State', function () {
             token: conditionToken
           }))
         })
-        .expect(validateTransferStateReceipt)
+        .expect(validator.validateTransferStateReceipt)
         .end()
     })
 
@@ -196,7 +181,7 @@ describe('Transfer State', function () {
           public_key: config.getIn(['keys', 'ed25519', 'public']),
           signature: signature
         })
-        .expect(validateTransferStateReceipt)
+        .expect(validator.validateTransferStateReceipt)
         .end()
     })
 
@@ -226,7 +211,7 @@ describe('Transfer State', function () {
             public_key: config.getIn(['keys', 'ed25519', 'public']),
             signature: signature
           })
-          .expect(validateTransferStateReceipt)
+          .expect(validator.validateTransferStateReceipt)
           .end()
       })
 
@@ -243,7 +228,7 @@ describe('Transfer State', function () {
             throw new Error('Not a valid TransferStateReceipt')
           }
         })
-        .expect(validateTransferStateReceipt)
+        .expect(validator.validateTransferStateReceipt)
         .end()
     })
 
@@ -257,7 +242,7 @@ describe('Transfer State', function () {
         .put(transfer.id)
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       const stateReceipt = {
@@ -283,7 +268,7 @@ describe('Transfer State', function () {
           public_key: config.getIn(['keys', 'ed25519', 'public']),
           signature: signature
         })
-        .expect(validateTransferStateReceipt)
+        .expect(validator.validateTransferStateReceipt)
         .end()
     })
   })

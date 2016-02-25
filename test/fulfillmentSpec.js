@@ -13,30 +13,7 @@ const sinon = require('sinon')
 const accounts = require('./data/accounts')
 const Account = require('../src/models/db/account').Account
 const Subscription = require('../src/models/db/subscription').Subscription
-const fulfillmentValidator = require('../src/services/validator').create('ConditionFulfillment')
-const transferValidator = require('../src/services/validator').create('Transfer')
-const notificationValidator = require('../src/services/validator').create('Notification')
-
-function validateFulfillment (res) {
-  const validatorResult = fulfillmentValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Fulfillment schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
-
-function validateTransfer (res) {
-  const validatorResult = transferValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Transfer schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
-
-function validateNotification (body) {
-  const validatorResult = notificationValidator(body)
-  if (!validatorResult.valid) {
-    throw new Error('Notification schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
+const validator = require('./helpers/validator')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -92,14 +69,14 @@ describe('GET /fulfillment', function () {
       .send(this.executionConditionFulfillment)
       .expect(201)
       .expect(this.executionConditionFulfillment)
-      .expect(validateFulfillment)
+      .expect(validator.validateFulfillment)
       .end()
 
     yield this.request()
       .get(transfer.id + '/fulfillment')
       .expect(200)
       .expect(this.executionConditionFulfillment)
-      .expect(validateFulfillment)
+      .expect(validator.validateFulfillment)
       .end()
   })
 
@@ -187,7 +164,7 @@ describe('PUT /fulfillment', function () {
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       // Invalid fulfillment
@@ -214,7 +191,7 @@ describe('PUT /fulfillment', function () {
         .send(this.cancellationConditionFulfillment)
         .expect(201)
         .expect(this.cancellationConditionFulfillment)
-        .expect(validateFulfillment)
+        .expect(validator.validateFulfillment)
         .end()
 
       // Check balances
@@ -233,7 +210,7 @@ describe('PUT /fulfillment', function () {
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       yield this.request()
@@ -241,7 +218,7 @@ describe('PUT /fulfillment', function () {
         .send(this.executionConditionFulfillment)
         .expect(201)
         .expect(this.executionConditionFulfillment)
-        .expect(validateFulfillment)
+        .expect(validator.validateFulfillment)
         .end()
 
       // Check balances
@@ -258,7 +235,7 @@ describe('PUT /fulfillment', function () {
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       yield this.request()
@@ -266,7 +243,7 @@ describe('PUT /fulfillment', function () {
         .send(this.executionConditionFulfillmentTypeAnd)
         .expect(201)
         .expect(this.executionConditionFulfillmentTypeAnd)
-        .expect(validateFulfillment)
+        .expect(validator.validateFulfillment)
         .end()
 
       // Check balances
@@ -282,7 +259,7 @@ describe('PUT /fulfillment', function () {
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     yield this.request()
@@ -290,7 +267,7 @@ describe('PUT /fulfillment', function () {
       .send(this.executionConditionFulfillment)
       .expect(201)
       .expect(this.executionConditionFulfillment)
-      .expect(validateFulfillment)
+      .expect(validator.validateFulfillment)
       .end()
 
     // Check balances
@@ -302,7 +279,7 @@ describe('PUT /fulfillment', function () {
       .send(this.executionConditionFulfillment)
       .expect(200)
       .expect(this.executionConditionFulfillment)
-      .expect(validateFulfillment)
+      .expect(validator.validateFulfillment)
       .end()
 
     // Check balances
@@ -318,7 +295,7 @@ describe('PUT /fulfillment', function () {
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     yield this.request()
@@ -326,7 +303,7 @@ describe('PUT /fulfillment', function () {
       .send(this.cancellationConditionFulfillment)
       .expect(201)
       .expect(this.cancellationConditionFulfillment)
-      .expect(validateFulfillment)
+      .expect(validator.validateFulfillment)
       .end()
 
     // Check balances
@@ -338,7 +315,7 @@ describe('PUT /fulfillment', function () {
       .send(this.cancellationConditionFulfillment)
       .expect(200)
       .expect(this.cancellationConditionFulfillment)
-      .expect(validateFulfillment)
+      .expect(validator.validateFulfillment)
       .end()
 
     // Check balances
@@ -369,7 +346,7 @@ describe('PUT /fulfillment', function () {
           subscription: subscription.id,
           resource: transferPrepared
         })
-        expect(validateNotification.bind(validateNotification, body)).to.not.throw(Error)
+        expect(validator.validateNotification.bind(validator.validateNotification, {body: body})).to.not.throw(Error)
         return true
       })
       .reply(204)
@@ -380,7 +357,7 @@ describe('PUT /fulfillment', function () {
       .send(transfer)
       .expect(201)
       .expect(transferPrepared)
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     notificationPrepared.done()
@@ -407,7 +384,7 @@ describe('PUT /fulfillment', function () {
             execution_condition_fulfillment: this.executionConditionFulfillment
           }
         })
-        expect(validateNotification.bind(validateNotification, body)).to.not.throw(Error)
+        expect(validator.validateNotification.bind(validator.validateNotification, {body: body})).to.not.throw(Error)
         return true
       })
       .reply(204)
@@ -417,7 +394,7 @@ describe('PUT /fulfillment', function () {
       .send(this.executionConditionFulfillment)
       .expect(201)
       .expect(this.executionConditionFulfillment)
-      .expect(validateFulfillment)
+      .expect(validator.validateFulfillment)
       .end()
 
     notificationExecuted.done()
@@ -446,7 +423,7 @@ describe('PUT /fulfillment', function () {
           subscription: subscription.id,
           resource: transferPrepared
         })
-        expect(validateNotification.bind(validateNotification, body)).to.not.throw(Error)
+        expect(validator.validateNotification.bind(validator.validateNotification, {body: body})).to.not.throw(Error)
         return true
       })
       .reply(204)
@@ -457,7 +434,7 @@ describe('PUT /fulfillment', function () {
       .send(transfer)
       .expect(201)
       .expect(transferPrepared)
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     notificationPrepared.done()
@@ -485,7 +462,7 @@ describe('PUT /fulfillment', function () {
             cancellation_condition_fulfillment: this.cancellationConditionFulfillment
           }
         })
-        expect(validateNotification.bind(validateNotification, body)).to.not.throw(Error)
+        expect(validator.validateNotification.bind(validator.validateNotification, {body: body})).to.not.throw(Error)
         return true
       })
       .reply(204)

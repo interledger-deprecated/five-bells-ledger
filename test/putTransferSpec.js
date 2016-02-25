@@ -17,22 +17,7 @@ const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const notificationWorker = require('../src/services/notificationWorker')
 const accounts = require('./data/accounts')
-const transferValidator = require('../src/services/validator').create('Transfer')
-const accountValidator = require('../src/services/validator').create('Account')
-
-function validateTransfer (res) {
-  const validatorResult = transferValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Transfer schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
-
-function validateAccount (res) {
-  const validatorResult = accountValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Account schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
+const validator = require('./helpers/validator')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -172,7 +157,7 @@ describe('PUT /transfers/:id', function () {
         .put(transfer.id)
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       this.clock.tick(2000)
@@ -181,7 +166,7 @@ describe('PUT /transfers/:id', function () {
         .put(transfer.id)
         .send(transfer)
         .expect(200)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
     })
 
@@ -203,7 +188,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     this.clock.tick(2000)
@@ -239,7 +224,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     this.clock.tick(2000)
@@ -312,7 +297,7 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transferNoAuthorization)
       .expect(201)
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     /* Disable bobs's account */
@@ -328,7 +313,7 @@ describe('PUT /transfers/:id', function () {
       .auth('alice', 'alice')
       .send(transferNoAuthorization)
       .expect(200)
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     yield this.request()
@@ -342,7 +327,7 @@ describe('PUT /transfers/:id', function () {
       is_disabled: true,
       ledger: 'http://localhost'
     })
-    .expect(validateAccount)
+    .expect(validator.validateAccount)
     .end()
 
     yield this.request()
@@ -356,7 +341,7 @@ describe('PUT /transfers/:id', function () {
         is_disabled: false,
         ledger: 'http://localhost'
       })
-      .expect(validateAccount)
+      .expect(validator.validateAccount)
       .end()
   })
 
@@ -377,7 +362,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     // Check balances
@@ -400,7 +385,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     yield this.request()
@@ -415,7 +400,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
   })
 
@@ -436,7 +421,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     // Check balances
@@ -481,7 +466,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
   })
 
@@ -503,7 +488,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
   })
 
@@ -607,7 +592,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     // Remove a debit and change credits to match
@@ -641,7 +626,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
     })
 
@@ -663,7 +648,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       yield this.request()
@@ -678,7 +663,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
     })
 
@@ -699,7 +684,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
   })
 
@@ -719,7 +704,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     yield this.request()
@@ -750,7 +735,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       yield this.request()
@@ -766,7 +751,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
     })
 
@@ -788,7 +773,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     yield this.request()
@@ -804,7 +789,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     yield this.request()
@@ -820,7 +805,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
   })
 
@@ -840,7 +825,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
     })
 
@@ -861,7 +846,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     this.clock.tick(1)
@@ -879,7 +864,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
   })
 
@@ -902,7 +887,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       yield this.request()
@@ -917,7 +902,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
     })
 
@@ -957,7 +942,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(201)
       .expect(transferResult)
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     yield notificationWorker.processNotificationQueue()
@@ -983,7 +968,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     yield this.request()
@@ -997,7 +982,7 @@ describe('PUT /transfers/:id', function () {
         balance: '10',
         is_disabled: false
       })
-      .expect(validateAccount)
+      .expect(validator.validateAccount)
       .end()
 
     yield this.request()
@@ -1011,7 +996,7 @@ describe('PUT /transfers/:id', function () {
         balance: '10',
         is_disabled: false
       })
-      .expect(validateAccount)
+      .expect(validator.validateAccount)
       .end()
   })
 
@@ -1033,7 +1018,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     /* prepare */
@@ -1050,7 +1035,7 @@ describe('PUT /transfers/:id', function () {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     yield this.request()
@@ -1064,7 +1049,7 @@ describe('PUT /transfers/:id', function () {
         balance: '90',
         is_disabled: false
       }))
-      .expect(validateAccount)
+      .expect(validator.validateAccount)
       .end()
 
     yield this.request()
@@ -1078,7 +1063,7 @@ describe('PUT /transfers/:id', function () {
         balance: '40',
         is_disabled: false
       }))
-      .expect(validateAccount)
+      .expect(validator.validateAccount)
       .end()
   })
 
@@ -1101,7 +1086,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       /* prepare (authorize) */
@@ -1118,7 +1103,7 @@ describe('PUT /transfers/:id', function () {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
         }))
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       yield this.request()
@@ -1132,7 +1117,7 @@ describe('PUT /transfers/:id', function () {
           balance: '50',
           is_disabled: false
         }))
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
 
       yield this.request()
@@ -1146,7 +1131,7 @@ describe('PUT /transfers/:id', function () {
           balance: '30',
           is_disabled: false
         }))
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
 
       yield this.request()
@@ -1160,7 +1145,7 @@ describe('PUT /transfers/:id', function () {
           balance: '30',
           is_disabled: false
         }))
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
 
       yield this.request()
@@ -1174,7 +1159,7 @@ describe('PUT /transfers/:id', function () {
           balance: '40',
           is_disabled: false
         }))
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
     })
 
@@ -1198,7 +1183,7 @@ describe('PUT /transfers/:id', function () {
         'signature="' + signature + '"')
       .send(transfer)
       .expect(201)
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
   })
 
