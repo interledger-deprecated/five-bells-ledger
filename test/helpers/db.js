@@ -8,16 +8,11 @@ const Notification = require('../../src/models/db/notification').Notification
 const Fulfillment = require('../../src/models/db/conditionFulfillment').ConditionFulfillment
 
 exports.reset = function * () {
-  console.log('Reset db ....')
-  console.log('Beginning db transaction')
   yield db.transaction(function * (transaction) {
-    console.log('Syncing db')
     yield db.sync()
-    console.log('Synced db')
     if (db.getDialect() === 'mysql') {
       yield db.query('SET FOREIGN_KEY_CHECKS = 0', { transaction })
     }
-    console.log('Truncanting db')
     yield db.truncate({ transaction, cascade: true })
     if (db.getDialect() === 'mysql') {
       yield db.query('SET FOREIGN_KEY_CHECKS = 1', { transaction })
