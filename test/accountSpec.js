@@ -11,31 +11,11 @@ const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
 
-const accountValidator = require('../src/services/validator').create('Account')
-const transferValidator = require('../src/services/validator').create('Transfer')
+const validator = require('./helpers/validator')
+
 const publicKey = fs.readFileSync(__dirname + '/data/public.pem', 'utf8')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
-
-function validateAccounts (res) {
-  res.body.forEach(account => {
-    validateAccount({body: account})
-  })
-}
-
-function validateAccount (res) {
-  const validatorResult = accountValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Account schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
-
-function validateTransfer (res) {
-  const validatorResult = transferValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Transfer schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
 
 describe('Accounts', function () {
   logHelper(logger)
@@ -87,7 +67,7 @@ describe('Accounts', function () {
         .get('/accounts')
         .auth('admin', 'admin')
         .expect([account1, account2, account3, account4, account5, account6])
-        .expect(validateAccounts)
+        .expect(validator.validateAccounts)
         .expect(200)
         .end()
     })
@@ -116,7 +96,7 @@ describe('Accounts', function () {
             connector: 'http://localhost:4321'
           }
         ])
-        .expect(validateAccounts)
+        .expect(validator.validateAccounts)
         .end()
     })
   })
@@ -127,7 +107,7 @@ describe('Accounts', function () {
         .get(this.existingAccount.id)
         .auth('admin', 'admin')
         .expect(200)
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
     })
 
@@ -147,7 +127,7 @@ describe('Accounts', function () {
           name: this.existingAccount.name,
           ledger: 'http://localhost'
         })
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
     })
 
@@ -175,7 +155,7 @@ describe('Accounts', function () {
           name: this.existingAccount2.name,
           ledger: 'http://localhost'
         })
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
     })
 
@@ -189,7 +169,7 @@ describe('Accounts', function () {
         .auth('admin', 'admin')
         .expect(200)
         .expect(accountWithoutPassword)
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
     })
 
@@ -203,7 +183,7 @@ describe('Accounts', function () {
             throw new Error('Balance should be a string')
           }
         })
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
     })
 
@@ -217,7 +197,7 @@ describe('Accounts', function () {
             throw new Error('disabled should be returned as a boolean')
           }
         })
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
     })
 
@@ -226,7 +206,7 @@ describe('Accounts', function () {
         .get(this.disabledAccount.id)
         .auth('admin', 'admin')
         .expect(200)
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
     })
 
@@ -250,7 +230,7 @@ describe('Accounts', function () {
         .send(account)
         .expect(201)
         .expect(account)
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
 
       // Check balances
@@ -272,7 +252,7 @@ describe('Accounts', function () {
         .send(account)
         .expect(200)
         .expect(account)
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
 
       // Check balances
@@ -310,7 +290,7 @@ describe('Accounts', function () {
           expect(res.body.public_key).to.equal(undefined)
         })
         .expect(201)
-        .expect(validateAccount)
+        .expect(validator.validateAccount)
         .end()
 
       // Check balances
@@ -331,7 +311,7 @@ describe('Accounts', function () {
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       let now = new Date()
@@ -346,7 +326,7 @@ describe('Accounts', function () {
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
 
       const account = yield Account.findByName('alice')

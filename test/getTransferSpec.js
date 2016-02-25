@@ -10,14 +10,8 @@ const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
-const transferValidator = require('../src/services/validator').create('Transfer')
+const validator = require('./helpers/validator')
 
-function validateTransfer (res) {
-  const validatorResult = transferValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Transfer schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
 describe('GET /transfers/:uuid', function () {
@@ -57,7 +51,7 @@ describe('GET /transfers/:uuid', function () {
       .get(transfer.id)
       .expect(200)
       .expect(transfer)
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
   })
 
@@ -77,7 +71,7 @@ describe('GET /transfers/:uuid', function () {
       .put(transfer.id)
       .send(transfer)
       .expect(201)
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
 
     this.clock.tick(1000)
@@ -95,7 +89,7 @@ describe('GET /transfers/:uuid', function () {
           rejected_at: transfer.expires_at
         }
       }))
-      .expect(validateTransfer)
+      .expect(validator.validateTransfer)
       .end()
   })
 })

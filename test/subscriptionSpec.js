@@ -14,22 +14,7 @@ const uri = require('../src/services/uriManager')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 const notificationWorker = require('../src/services/notificationWorker')
-const subscriptionValidator = require('../src/services/validator').create('Subscription')
-const transferValidator = require('../src/services/validator').create('Transfer')
-
-function validateTransfer (res) {
-  const validatorResult = transferValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Transfer schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
-
-function validateSubscription (res) {
-  const validatorResult = subscriptionValidator(res.body)
-  if (!validatorResult.valid) {
-    throw new Error('Subscription schema validation error: ' + JSON.stringify(_.omit(validatorResult.errors[0], ['stack'])))
-  }
-}
+const validator = require('./helpers/validator')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -63,7 +48,7 @@ describe('Subscriptions', function () {
         .auth('bob', 'bob')
         .expect(200)
         .expect(this.existingSubscription)
-        .expect(validateSubscription)
+        .expect(validator.validateSubscription)
         .end()
     })
 
@@ -89,7 +74,7 @@ describe('Subscriptions', function () {
         .auth('admin', 'admin')
         .expect(200)
         .expect(this.existingSubscription)
-        .expect(validateSubscription)
+        .expect(validator.validateSubscription)
         .end()
     })
   })
@@ -103,7 +88,7 @@ describe('Subscriptions', function () {
         .auth('alice', 'alice')
         .expect(201)
         .expect(this.exampleSubscription)
-        .expect(validateSubscription)
+        .expect(validator.validateSubscription)
         .end()
 
       // Check that the subscription landed in the database
@@ -119,7 +104,7 @@ describe('Subscriptions', function () {
         .auth('bob', 'bob')
         .expect(200)
         .expect(this.existingSubscription)
-        .expect(validateSubscription)
+        .expect(validator.validateSubscription)
         .end()
 
       // Check that the subscription url is changed in the database
@@ -164,7 +149,7 @@ describe('Subscriptions', function () {
         .send(this.exampleSubscription)
         .auth('admin', 'admin')
         .expect(201)
-        .expect(validateSubscription)
+        .expect(validator.validateSubscription)
         .end()
     })
   })
@@ -211,7 +196,7 @@ describe('Subscriptions', function () {
         .put(transfer.id)
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
       this.clock.tick(1000)
 
@@ -239,7 +224,7 @@ describe('Subscriptions', function () {
         .put(transfer.id)
         .send(transfer)
         .expect(201)
-        .expect(validateTransfer)
+        .expect(validator.validateTransfer)
         .end()
       subscriberNock1.done()
 
