@@ -8,5 +8,5 @@ var pg = require('pg')
 delete pg.native
 
 module.exports = new DB(config.getIn(['db', 'uri']), {
-  // logging: console.log
+  logging: console.log
 })
