@@ -52,13 +52,13 @@ function * getStateResource () {
   const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
   const conditionState = this.query.condition_state
-  const signatureType = this.query.type || 'ed25519-sha512'
-  const signatureTypes = ['ed25519-sha512', 'sha256']
-  if (!_.includes(signatureTypes, signatureType)) {
+  const receiptType = this.query.type || 'ed25519-sha512'
+  const receiptTypes = ['ed25519-sha512', 'sha256']
+  if (!_.includes(receiptTypes, receiptType)) {
     throw new InvalidUriParameterError('type is not valid')
   }
   this.body = yield model.getTransferStateReceipt(
-    id.toLowerCase(), signatureType, conditionState)
+    id.toLowerCase(), receiptType, conditionState)
 }
 
 /**
