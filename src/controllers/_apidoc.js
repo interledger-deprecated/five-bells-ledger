@@ -96,3 +96,16 @@
  *       "message": "Error description here."
  *     }
  */
+
+ /**
+  * @apiDefine UnmetConditionError
+  *
+  * @apiError UnmetConditionError Execution Condition Not Met
+  *
+  * @apiErrorExample UnmetConditionError
+  *     HTTP/1.1 422 Unprocessable Entity
+  *     {
+  *       "id": "UnmetConditionError",
+  *       "message": "Error description here."
+  *     }
+  */

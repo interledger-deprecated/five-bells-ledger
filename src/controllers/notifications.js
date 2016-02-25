@@ -9,13 +9,51 @@ const model = require('../models/notifications')
  * @apiGroup Notification
  * @apiVersion 1.0.0
  *
- * @apiDescription Use this to query about the details of a notification
+ * @apiDescription Use this to query about the details of a notification. Only accounts
+ *    that were related to the notification event are authorized.
  *
  * @apiParam {String} id Subscription
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
  * @apiParam {String} id Notification
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ *
+ * @apiExample {shell} Get notification
+ *    curl -x GET -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l" http://usd-ledger.example/USD/subscriptions/f49697a6-d52c-4f46-84c8-9070a31feab7/notifications/89ae630b-959a-47cc-adcf-d7be85e310c0
+ *
+ * @apiSuccessExample {json} 200 Notification Response:
+ *    HTTP/1.1 200 OK
+ *    {
+ *      "id": "http://usd-ledger.example/USD/subscriptions/f49697a6-d52c-4f46-84c8-9070a31feab7/notifications/89ae630b-959a-47cc-adcf-d7be85e310c0",
+ *      "subscription": "http://usd-ledger.example/USD/subscriptions/f49697a6-d52c-4f46-84c8-9070a31feab7",
+ *      "event": "transfer.update",
+ *      "resource": {
+ *        "id": "http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+ *        "ledger": "http://usd-ledger.example/USD",
+ *        "debits": [{
+ *          "account": "http://usd-ledger.example/USD/accounts/alice",
+ *          "amount": "50"
+ *        }],
+ *        "credits": [{
+ *          "account": "http://usd-ledger.example/USD/accounts/bob",
+ *          "amount": "50"
+ *        }],
+ *        "execution_condition": {
+ *          "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
+ *          "signer": "http://ledger.example",
+ *          "type": "ed25519-sha512",
+ *          "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
+ *        },
+ *        "expires_at": "2015-06-16T00:00:01.000Z",
+ *        "state": "executed"
+ *      },
+ *      "related_resources": {
+ *        "execution_condition_fulfillment": {
+ *          "type": "ed25519-sha512",
+ *          "signature": "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
+ *        }
+ *      }
+ *    }
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
