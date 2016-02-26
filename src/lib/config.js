@@ -13,11 +13,13 @@ function loadConfig () {
   const localConfig = {}
   const admin_user = Config.getEnv(envPrefix, 'ADMIN_USER') || 'admin'
   const admin_pass = Config.getEnv(envPrefix, 'ADMIN_PASS')
+  const admin_fingerprint = Config.getEnv(envPrefix, 'ADMIN_TLS_FINGERPRINT')
 
   if (admin_pass) {
     localConfig.default_admin = {
       user: admin_user,
-      pass: admin_pass
+      pass: admin_pass,
+      fingerprint: admin_fingerprint
     }
   }
 
