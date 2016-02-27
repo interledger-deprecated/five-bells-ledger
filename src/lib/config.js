@@ -23,6 +23,12 @@ function loadConfig () {
     }
   }
 
+  // optional
+  localConfig.currency = {
+    code: Config.getEnv(envPrefix, 'CURRENCY_CODE') || null,
+    symbol: Config.getEnv(envPrefix, 'CURRENCY_SYMBOL') || null
+  }
+
   if (isRunningTests()) {
     localConfig.keys = {
       ed25519: {

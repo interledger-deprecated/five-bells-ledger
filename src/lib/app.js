@@ -10,6 +10,7 @@ const path = require('path')
 const logger = require('koa-mag')
 const errorHandler = require('five-bells-shared/middlewares/error-handler')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
+const metadata = require('../controllers/metadata')
 const health = require('../controllers/health')
 const transfers = require('../controllers/transfers')
 const accounts = require('../controllers/accounts')
@@ -93,6 +94,7 @@ class App {
 
   _makeRouter () {
     const router = new Router()
+    router.get('/', metadata.getResource)
     router.get('/health', health.getResource)
 
     router.put('/transfers/:id',
