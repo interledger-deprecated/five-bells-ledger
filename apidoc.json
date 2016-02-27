@@ -1,4 +1,16 @@
 {
   "title": "Five Bells Ledger API",
-  "url": "https://acme-ledger.example"
+  "url": "https://acme-ledger.example",
+  "order": [
+    "Transfer",
+    "PutTransfer",
+    "PutTransferFulfillment",
+    "GetTransfer",
+    "GetTransferFulfillment",
+    "Account",
+    "Subscription",
+    "PutSubscription",
+    "GetSubscription",
+    "Notification"
+  ]
 }
