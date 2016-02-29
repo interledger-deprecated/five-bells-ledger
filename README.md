@@ -55,6 +55,12 @@ With the following configuration options set as environment variables:
 * `LEDGER_UNIT_DB_URI` (default `'sqlite://'`) Database to use for running unit tests. Configured separately for safety.
 * `LEDGER_AUTH_BASIC_ENABLED` (default `1`) whether or not to allow HTTP basic authentication.
 * `LEDGER_AUTH_HTTP_SIGNATURE_ENABLED` (default `1`) whether or not to allow HTTP signature authentication.
+* `LEDGER_AUTH_CLIENT_CERT_ENABLED` (default `0`) whether or not to allow TLS Client Certificate authentication (requires HTTPS).
+* `LEDGER_USE_HTTPS` (default `0`) whether or not to run the server using HTTPS.
+* `LEDGER_TLS_KEY` (default: none) the path to the server private key file. Required if using HTTPS.
+* `LEDGER_TLS_CERTIFICATE` (default: none) the path to the server certificate file. Required if using HTTPS.
+* `LEDGER_TLS_CRL` (default: none) the path to the server certificate revokation list file. Optional if using HTTPS.
+* `LEDGER_TLS_CA` (default: none) the path to a trusted certificate to be used in addition to using the [default list](https://github.com/nodejs/node/blob/v4.3.0/src/node_root_certs.h). Optional if using HTTPS.
 
 
 ## Running with Docker (Alternative Method)
