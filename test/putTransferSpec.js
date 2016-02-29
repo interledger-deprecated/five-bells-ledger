@@ -8,6 +8,7 @@ const expect = require('chai').expect
 const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const app = require('../src/services/app')
+const config = require('../src/services/config')
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
@@ -1262,5 +1263,85 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(401)
       .end()
+  })
+
+  describe('FEATURE_CREDIT_AUTH=true', function () {
+    // Kludge to work around immutable config
+    const features = _.find(config._root.entries, function (entry) {
+      return entry[0] === 'features'
+    })[1]
+    const hasCreditAuth = _.find(features._root.entries, function (entry) {
+      return entry[0] === 'hasCreditAuth'
+    })
+    before(function () { hasCreditAuth[1] = true })
+    after(function () { hasCreditAuth[1] = false })
+
+    it('succeeds if no authorization is provided', function *() {
+      const transfer = this.exampleTransfer
+      const transferWithoutAuthorization = _.cloneDeep(transfer)
+      delete transferWithoutAuthorization.debits[0].authorized
+      yield this.request()
+        .put(transfer.id)
+        .send(transferWithoutAuthorization)
+        .expect(201)
+        .expect(_.assign({}, transferWithoutAuthorization, {
+          state: 'proposed',
+          timeline: { proposed_at: '2015-06-16T00:00:00.000Z' }
+        }))
+        .expect(validator.validateTransfer)
+        .end()
+    })
+
+    it('should return 403 if authorized:true is set for any credits that are ' +
+    'not owned by the authorized account', function *() {
+      const transfer = this.exampleTransfer
+      delete transfer.debits[0].authorized
+      transfer.credits[0].authorized = true
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(403)
+        .expect(function (res) {
+          expect(res.body.id).to.equal('UnauthorizedError')
+          expect(res.body.message).to.equal('Invalid attempt to authorize credit')
+        })
+        .end()
+    })
+
+    it('should execute the transfer if it is authorized and ' +
+    'there is no execution condition', function *() {
+      const transfer = this.exampleTransfer
+
+      yield this.request()
+        .put(this.exampleTransfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {
+          state: 'proposed',
+          timeline: { proposed_at: '2015-06-16T00:00:00.000Z' }
+        }))
+        .expect(validator.validateTransfer)
+        .end()
+
+      transfer.credits[0].authorized = true
+      yield this.request()
+        .put(this.exampleTransfer.id)
+        .auth('bob', 'bob')
+        .send(transfer)
+        .expect(200)
+        .expect(_.assign({}, transfer, {
+          state: 'executed',
+          timeline: {
+            executed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            proposed_at: '2015-06-16T00:00:00.000Z'
+          }
+        }))
+        .expect(validator.validateTransfer)
+        .end()
+    })
   })
 })

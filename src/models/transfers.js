@@ -184,19 +184,23 @@ function validateIsAffectedAccount (account, transfer) {
   }
 }
 
-function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
-  if (previousDebits && transfer.debits.length !== previousDebits.length) {
-    throw new UnprocessableEntityError('Invalid change in number of debits')
+/**
+ * @param {Account} authorizedAccount
+ * @param {Funds} funds
+ * @param {Funds|undefined} previousFunds
+ * @param {String} type "debit" or "credit"
+ */
+function validateAuthorizations (authorizedAccount, fundsList, previousFunds, fundsType) {
+  if (previousFunds && fundsList.length !== previousFunds.length) {
+    throw new UnprocessableEntityError('Invalid change in number of ' + fundsType + 's')
   }
-  transfer.debits.forEach((debit, i) => {
-    const previousAuthorization = previousDebits
-      ? previousDebits[i].authorized : false
-    if (debit.authorized && debit.authorized !== previousAuthorization &&
-        debit.account !== authorizedAccount) {
-      throw new UnauthorizedError('Invalid attempt to authorize debit')
+  fundsList.forEach((funds, i) => {
+    const previousAuthorization = previousFunds && previousFunds[i].authorized
+    if (funds.authorized && funds.authorized !== previousAuthorization &&
+        funds.account !== authorizedAccount) {
+      throw new UnauthorizedError('Invalid attempt to authorize ' + fundsType)
     }
   })
-  // TODO: add credit authorization
 }
 
 function validatePositiveAmounts (adjustments) {
@@ -219,7 +223,11 @@ function validateCreditAndDebitAmounts (transfer) {
 }
 
 function isAuthorized (transfer) {
-  return _.every(transfer.debits, (debit) => debit.authorized)
+  const areDebitsAuthorized = _.every(transfer.debits, 'authorized')
+  if (config.getIn(['features', 'hasCreditAuth'])) {
+    return areDebitsAuthorized && _.every(transfer.credits, 'authorized')
+  }
+  return areDebitsAuthorized
 }
 
 function * processTransitionToPreparedState (transfer, accountBalances) {
@@ -356,12 +364,13 @@ function * setTransfer (transfer, requestingUser) {
 
   validateCreditAndDebitAmounts(transfer)
 
-  let originalTransfer, previousDebits
+  let originalTransfer, previousDebits, previousCredits
   yield db.transaction(function * (transaction) {
     originalTransfer = yield db.getTransfer(transfer.id, {transaction})
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
       previousDebits = originalTransfer.getData().debits
+      previousCredits = originalTransfer.getData().credits
 
       // This method will update the original transfer object using the new
       // version, but only allowing specific fields to change.
@@ -376,7 +385,8 @@ function * setTransfer (transfer, requestingUser) {
     validateIsAffectedAccount(requestingUsername, transfer)
     // This method will check that any authorized:true fields added can
     // only be added by the owner of the account
-    validateAuthorizations(requestingUsername, transfer, previousDebits)
+    validateAuthorizations(requestingUsername, transfer.debits, previousDebits, 'debit')
+    validateAuthorizations(requestingUsername, transfer.credits, previousCredits, 'credit')
 
     const accountBalances = yield makeAccountBalances(transaction, transfer)
     yield processTransitionToPreparedState(transfer, accountBalances)
