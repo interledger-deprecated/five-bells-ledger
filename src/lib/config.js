@@ -13,7 +13,7 @@ function isRunningTests () {
 function loadConfig () {
   const localConfig = {
     features: {
-      hasCreditAuth: Config.getEnv('FEATURE_CREDIT_AUTH')
+      hasCreditAuth: Config.castBool(Config.getEnv('FEATURE_CREDIT_AUTH'))
     }
   }
 

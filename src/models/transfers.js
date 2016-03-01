@@ -186,9 +186,9 @@ function validateIsAffectedAccount (account, transfer) {
 
 /**
  * @param {Account} authorizedAccount
- * @param {Funds} funds
+ * @param {Funds} fundsList
  * @param {Funds|undefined} previousFunds
- * @param {String} type "debit" or "credit"
+ * @param {String} fundsType "debit" or "credit"
  */
 function validateAuthorizations (authorizedAccount, fundsList, previousFunds, fundsType) {
   if (previousFunds && fundsList.length !== previousFunds.length) {
