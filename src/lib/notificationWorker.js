@@ -4,6 +4,9 @@ const _ = require('lodash')
 const co = require('co')
 const defer = require('co-defer')
 const utils = require('./notificationUtils')
+const transferDictionary = require('five-bells-shared').TransferStateDictionary
+
+const transferStates = transferDictionary.transferStates
 
 class NotificationWorker {
   constructor (uri, log, Notification, Transfer, Subscription, Fulfillment, config) {
@@ -124,11 +127,11 @@ class NotificationWorker {
       resource: transfer.getDataExternal()
     }
     if (fulfillment) {
-      if (transfer.state === 'executed') {
+      if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
         notificationBody.related_resources = {
           execution_condition_fulfillment: fulfillment.getDataExternal()
         }
-      } else if (transfer.state === 'rejected') {
+      } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
         notificationBody.related_resources = {
           cancellation_condition_fulfillment: fulfillment.getDataExternal()
         }

@@ -11,6 +11,9 @@ const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 const validator = require('./helpers/validator')
+const transferDictionary = require('five-bells-shared').TransferStateDictionary
+
+const transferStates = transferDictionary.transferStates
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -82,7 +85,7 @@ describe('GET /transfers/:uuid', function () {
     yield this.request()
       .get(transfer.id)
       .expect(200, _.assign({}, transfer, {
-        state: 'rejected',
+        state: transferStates.TRANSFER_STATE_REJECTED,
         rejection_reason: 'expired',
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z',

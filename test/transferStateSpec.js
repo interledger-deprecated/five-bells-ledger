@@ -15,6 +15,9 @@ const tweetnacl = require('tweetnacl')
 const validate = require('five-bells-shared/services/validate')
 const hashJSON = require('five-bells-shared/utils/hashJson')
 const validator = require('./helpers/validator')
+const transferDictionary = require('five-bells-shared').TransferStateDictionary
+
+const transferStates = transferDictionary.transferStates
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -49,7 +52,7 @@ describe('Transfer State', function () {
     it('should return a 200 if the transfer does not exist', function *() {
       const stateReceipt = {
         id: 'http://localhost/transfers/03b7c787-e104-4390-934e-693072c6eda2',
-        state: 'nonexistent'
+        state: transferStates.TRANSFER_STATE_NONEXISTENT
       }
       const stateReceiptHash = hashJSON(stateReceipt)
       const signature = tweetnacl.util.encodeBase64(
@@ -74,7 +77,7 @@ describe('Transfer State', function () {
       const transfer = _.cloneDeep(this.transferWithExpiry)
       delete transfer.debits[0].authorized
       delete transfer.debits[1].authorized
-      transfer.state = 'proposed'
+      transfer.state = transferStates.TRANSFER_STATE_PROPOSED
       yield this.request()
         .put(transfer.id)
         .send(transfer)
@@ -108,7 +111,7 @@ describe('Transfer State', function () {
       const transfer = _.cloneDeep(this.transferWithExpiry)
       delete transfer.debits[0].authorized
       delete transfer.debits[1].authorized
-      transfer.state = 'proposed'
+      transfer.state = transferStates.TRANSFER_STATE_PROPOSED
       yield this.request()
         .put(transfer.id)
         .send(transfer)
@@ -137,10 +140,10 @@ describe('Transfer State', function () {
           type: 'sha256',
           signer: config.getIn(['server', 'base_uri']),
           digest: sha256(stringifyJSON(stateReceipt)),
-          condition_state: 'executed',
+          condition_state: transferStates.TRANSFER_STATE_EXECUTED,
           condition_digest: sha256(stringifyJSON({
             id: transfer.id,
-            state: 'executed',
+            state: transferStates.TRANSFER_STATE_EXECUTED,
             token: conditionToken
           }))
         })
@@ -188,7 +191,7 @@ describe('Transfer State', function () {
     it('should return the correct state if the transfer is prepared',
       function *() {
         const transfer = _.cloneDeep(this.executedTransfer)
-        transfer.state = 'prepared'
+        transfer.state = transferStates.TRANSFER_STATE_PREPARED
 
         yield dbHelper.addTransfers([transfer])
 
@@ -247,7 +250,7 @@ describe('Transfer State', function () {
 
       const stateReceipt = {
         id: transfer.id,
-        state: 'rejected'
+        state: transferStates.TRANSFER_STATE_REJECTED
       }
       const stateReceiptHash = hashJSON(stateReceipt)
       const signature = tweetnacl.util.encodeBase64(

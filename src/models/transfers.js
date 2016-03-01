@@ -26,9 +26,12 @@ require('five-bells-shared/errors/unprocessable-entity-error')
 const UnauthorizedError =
 require('five-bells-shared/errors/unauthorized-error')
 const Condition = require('five-bells-condition').Condition
+const transferDictionary = require('five-bells-shared').TransferStateDictionary
 
-const validExecutionStates = ['prepared']
-const validCancellationStates = ['prepared', 'proposed']
+const transferStates = transferDictionary.transferStates
+const validExecutionStates = transferDictionary.validExecutionStates
+const validCancellationStates = transferDictionary.validCancellationStates
+
 const RECEIPT_TYPE_ED25519 = 'ed25519-sha512'
 const RECEIPT_TYPE_SHA256 = 'sha256'
 
@@ -46,7 +49,7 @@ function * getTransfer (id) {
 function * getTransferStateReceipt (id, receiptType, conditionState) {
   log.debug('fetching state receipt for transfer ID ' + id)
   const transfer = yield db.getTransfer(id)
-  const transferState = transfer ? transfer.state : 'nonexistent'
+  const transferState = transfer ? transfer.state : transferStates.TRANSFER_STATE_NONEXISTENT
 
   if (receiptType === RECEIPT_TYPE_ED25519) {
     return makeEd25519Receipt(uri.make('transfer', id), transferState)
@@ -220,18 +223,18 @@ function isAuthorized (transfer) {
 }
 
 function * processTransitionToPreparedState (transfer, accountBalances) {
-  if (transfer.state === 'proposed' && isAuthorized(transfer)) {
+  if (transfer.state === transferStates.TRANSFER_STATE_PROPOSED && isAuthorized(transfer)) {
     yield accountBalances.applyDebits()  // hold sender funds
-    updateState(transfer, 'prepared')
+    updateState(transfer, transferStates.TRANSFER_STATE_PREPARED)
   }
 }
 
 function * processImmediateExecution (transfer, accountBalances) {
-  if (transfer.state === 'prepared' &&
+  if (transfer.state === transferStates.TRANSFER_STATE_PREPARED &&
       transfer.execution_condition === undefined) {
     yield accountBalances.applyCredits()  // release held funds to recipient
     transferExpiryMonitor.unwatch(transfer.id)
-    updateState(transfer, 'executed')
+    updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED)
   }
 }
 
@@ -258,19 +261,19 @@ function validateConditionFulfillment (transfer, fulfillment) {
 
 function * cancelTransfer (transaction, transfer, fulfillment) {
   const accountBalances = yield makeAccountBalances(transaction, transfer)
-  if (transfer.state === 'prepared') {
+  if (transfer.state === transferStates.TRANSFER_STATE_PREPARED) {
     yield accountBalances.revertDebits()
   }
   yield fulfillments.upsertFulfillment(
     fulfillment, {transaction})
   transfer.rejection_reason = 'cancelled'
-  updateState(transfer, 'rejected')
+  updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
 }
 
 function * executeTransfer (transaction, transfer, fulfillment) {
   const accountBalances = yield makeAccountBalances(transaction, transfer)
   yield accountBalances.applyCredits()
-  updateState(transfer, 'executed')
+  updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED)
   yield fulfillments.upsertFulfillment(
     fulfillment, {transaction})
 }
@@ -285,7 +288,7 @@ function * fulfillTransfer (transferId, fulfillment) {
 
     const isExecution = validateConditionFulfillment(transfer, fulfillment)
 
-    if (isExecution && transfer.state === 'executed' || !isExecution && transfer.state === 'rejected') {
+    if (isExecution && transfer.state === transferStates.TRANSFER_STATE_EXECUTED || !isExecution && transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
       return (yield fulfillments.getFulfillment(transferId)).getDataExternal()
     }
 
@@ -366,7 +369,7 @@ function * setTransfer (transfer, requestingUser) {
     } else {
       yield validateNoDisabledAccounts(transaction, transfer)
       // A brand-new transfer will start out as proposed
-      updateState(transfer, 'proposed')
+      updateState(transfer, transferStates.TRANSFER_STATE_PROPOSED)
     }
 
     const requestingUsername = requestingUser && requestingUser.name

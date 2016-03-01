@@ -11,7 +11,7 @@ const Sequelize = require('sequelize')
 const JsonField = require('sequelize-json')
 const sequelize = require('../../services/db')
 
-const FINAL_STATES = ['executed', 'failed', 'rejected']
+const FINAL_STATES = require('five-bells-shared').TransferStateDictionary.finalStates
 
 class Transfer extends Model {
   static convertFromExternal (data) {
