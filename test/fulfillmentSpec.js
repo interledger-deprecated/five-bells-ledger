@@ -14,6 +14,9 @@ const accounts = require('./data/accounts')
 const Account = require('../src/models/db/account').Account
 const Subscription = require('../src/models/db/subscription').Subscription
 const validator = require('./helpers/validator')
+const transferDictionary = require('five-bells-shared').TransferStateDictionary
+
+const transferStates = transferDictionary.transferStates
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -363,7 +366,7 @@ describe('PUT /fulfillment', function () {
     notificationPrepared.done()
 
     const transferExecuted = _.assign({}, transfer, {
-      state: 'executed',
+      state: transferStates.TRANSFER_STATE_EXECUTED,
       timeline: {
         executed_at: '2015-06-16T00:00:00.000Z',
         prepared_at: '2015-06-16T00:00:00.000Z',
@@ -440,7 +443,7 @@ describe('PUT /fulfillment', function () {
     notificationPrepared.done()
 
     const transferCancelled = _.assign({}, transfer, {
-      state: 'rejected',
+      state: transferStates.TRANSFER_STATE_REJECTED,
       rejection_reason: 'cancelled',
       timeline: {
         rejected_at: '2015-06-16T00:00:00.000Z',

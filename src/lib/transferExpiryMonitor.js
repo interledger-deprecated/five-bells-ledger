@@ -7,6 +7,9 @@ const makeAccountBalances = require('./accountBalances')
 const updateState = require('./updateState')
 const ExpiredTransferError = require('../errors/expired-transfer-error')
 const Transfer = require('../models/db/transfer').Transfer
+const transferDictionary = require('five-bells-shared').TransferStateDictionary
+
+const transferStates = transferDictionary.transferStates
 
 class TransferExpiryMonitor {
   constructor (timeQueue, notificationWorker) {
@@ -35,7 +38,7 @@ class TransferExpiryMonitor {
       }
 
       if (!transfer.isFinalized()) {
-        updateState(transfer, 'rejected')
+        updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
         transfer.rejection_reason = 'expired'
         yield transfer.save({ transaction })
 
@@ -65,9 +68,8 @@ class TransferExpiryMonitor {
         log.debug('transfer ' + transfer.id +
           ' will expire in ' + expiry.diff(now, 'milliseconds') + 'ms')
       }
-    } else if (transfer.state === 'executed' ||
-      transfer.state === 'rejected' ||
-      transfer.state === 'failed') {
+    } else if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED ||
+      transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
       this.unwatch(transfer.id)
     }
   }

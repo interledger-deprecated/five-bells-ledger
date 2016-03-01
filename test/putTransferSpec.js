@@ -18,6 +18,9 @@ const sinon = require('sinon')
 const notificationWorker = require('../src/services/notificationWorker')
 const accounts = require('./data/accounts')
 const validator = require('./helpers/validator')
+const transferDictionary = require('five-bells-shared').TransferStateDictionary
+
+const transferStates = transferDictionary.transferStates
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -183,7 +186,7 @@ describe('PUT /transfers/:id', function () {
       .send(transferNoAuthorization)
       .expect(201)
       .expect(_.assign({}, transferNoAuthorization, {
-        state: 'proposed',
+        state: transferStates.TRANSFER_STATE_PROPOSED,
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -219,7 +222,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(201)
       .expect(_.assign({}, transfer, {
-        state: 'proposed',
+        state: transferStates.TRANSFER_STATE_PROPOSED,
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -355,7 +358,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(201)
       .expect(_.assign({}, transfer, {
-        state: 'executed',
+        state: transferStates.TRANSFER_STATE_EXECUTED,
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -378,7 +381,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(201)
       .expect(_.assign({}, transfer, {
-        state: 'executed',
+        state: transferStates.TRANSFER_STATE_EXECUTED,
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -393,7 +396,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(200)
       .expect(_.assign({}, transfer, {
-        state: 'executed',
+        state: transferStates.TRANSFER_STATE_EXECUTED,
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -414,7 +417,7 @@ describe('PUT /transfers/:id', function () {
       .expect(201)
       .expect(_.assign({}, this.exampleTransfer,
         {
-          state: 'executed',
+          state: transferStates.TRANSFER_STATE_EXECUTED,
           timeline: {
             executed_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
@@ -459,7 +462,7 @@ describe('PUT /transfers/:id', function () {
       .expect(201)
       .expect(_.assign({}, transfer, {
         id: transfer.id.toLowerCase(),
-        state: 'executed',
+        state: transferStates.TRANSFER_STATE_EXECUTED,
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -483,7 +486,7 @@ describe('PUT /transfers/:id', function () {
       .send(transferWithoutAuthorization)
       .expect(201)
       .expect(_.assign({}, transferWithoutAuthorization, {
-        state: 'proposed',
+        state: transferStates.TRANSFER_STATE_PROPOSED,
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -587,7 +590,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(201)
       .expect(_.assign({}, transfer, {
-        state: 'proposed',
+        state: transferStates.TRANSFER_STATE_PROPOSED,
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -621,7 +624,7 @@ describe('PUT /transfers/:id', function () {
         .send(transfer)
         .expect(201)
         .expect(_.assign({}, transfer, {
-          state: 'proposed',
+          state: transferStates.TRANSFER_STATE_PROPOSED,
           timeline: {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -643,7 +646,7 @@ describe('PUT /transfers/:id', function () {
         .send(incompleteTransfer)
         .expect(201)
         .expect(_.assign({}, incompleteTransfer, {
-          state: 'proposed',
+          state: transferStates.TRANSFER_STATE_PROPOSED,
           timeline: {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -657,7 +660,7 @@ describe('PUT /transfers/:id', function () {
         .send(transfer)
         .expect(200)
         .expect(_.assign({}, transfer, {
-          state: 'prepared',
+          state: transferStates.TRANSFER_STATE_PREPARED,
           timeline: {
             prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z'
@@ -677,7 +680,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(201)
       .expect(_.assign({}, transfer, {
-        state: 'executed',
+        state: transferStates.TRANSFER_STATE_EXECUTED,
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -699,7 +702,7 @@ describe('PUT /transfers/:id', function () {
       .send(incompleteTransfer)
       .expect(201)
       .expect(_.assign({}, incompleteTransfer, {
-        state: 'proposed',
+        state: transferStates.TRANSFER_STATE_PROPOSED,
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -730,7 +733,7 @@ describe('PUT /transfers/:id', function () {
         .send(unauthorizedTransfer)
         .expect(201)
         .expect(_.assign({}, unauthorizedTransfer, {
-          state: 'proposed',
+          state: transferStates.TRANSFER_STATE_PROPOSED,
           timeline: {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -744,7 +747,7 @@ describe('PUT /transfers/:id', function () {
         .send(transfer)
         .expect(200)
         .expect(_.assign({}, transfer, {
-          state: 'executed',
+          state: transferStates.TRANSFER_STATE_EXECUTED,
           timeline: {
             executed_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
@@ -768,7 +771,7 @@ describe('PUT /transfers/:id', function () {
       .send(unauthorizedTransfer)
       .expect(201)
       .expect(_.assign({}, unauthorizedTransfer, {
-        state: 'proposed',
+        state: transferStates.TRANSFER_STATE_PROPOSED,
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -784,7 +787,7 @@ describe('PUT /transfers/:id', function () {
       }))
       .expect(200)
       .expect(_.assign({}, unauthorizedTransfer, {
-        state: 'proposed',
+        state: transferStates.TRANSFER_STATE_PROPOSED,
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -798,7 +801,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(200)
       .expect(_.assign({}, transfer, {
-        state: 'executed',
+        state: transferStates.TRANSFER_STATE_EXECUTED,
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -820,7 +823,7 @@ describe('PUT /transfers/:id', function () {
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {
-          state: 'proposed',
+          state: transferStates.TRANSFER_STATE_PROPOSED,
           timeline: {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -841,7 +844,7 @@ describe('PUT /transfers/:id', function () {
       .send(transferWithoutAuthorization)
       .expect(201)
       .expect(_.assign({}, transferWithoutAuthorization, {
-        state: 'proposed',
+        state: transferStates.TRANSFER_STATE_PROPOSED,
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -857,7 +860,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(200)
       .expect(_.assign({}, transfer, {
-        state: 'executed',
+        state: transferStates.TRANSFER_STATE_EXECUTED,
         timeline: {
           executed_at: '2015-06-16T00:00:00.001Z',
           prepared_at: '2015-06-16T00:00:00.001Z',
@@ -882,7 +885,7 @@ describe('PUT /transfers/:id', function () {
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {
-          state: 'proposed',
+          state: transferStates.TRANSFER_STATE_PROPOSED,
           timeline: {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -896,7 +899,7 @@ describe('PUT /transfers/:id', function () {
         .send(transfer)
         .expect(200)
         .expect(_.assign({}, transfer, {
-          state: 'prepared',
+          state: transferStates.TRANSFER_STATE_PREPARED,
           timeline: {
             prepared_at: '2015-06-16T00:00:00.000Z',
             proposed_at: '2015-06-16T00:00:00.000Z'
@@ -913,7 +916,7 @@ describe('PUT /transfers/:id', function () {
 
     const transfer = this.exampleTransfer
     const transferResult = _.assign({}, transfer, {
-      state: 'executed',
+      state: transferStates.TRANSFER_STATE_EXECUTED,
       timeline: {
         executed_at: '2015-06-16T00:00:00.000Z',
         prepared_at: '2015-06-16T00:00:00.000Z',
@@ -961,7 +964,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(201)
       .expect(_.assign({}, transfer, {
-        state: 'executed',
+        state: transferStates.TRANSFER_STATE_EXECUTED,
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -1013,7 +1016,7 @@ describe('PUT /transfers/:id', function () {
       .send(transferWithoutAuthorization)
       .expect(201)
       .expect(_.assign({}, transferWithoutAuthorization, {
-        state: 'proposed',
+        state: transferStates.TRANSFER_STATE_PROPOSED,
         timeline: {
           proposed_at: '2015-06-16T00:00:00.000Z'
         }
@@ -1028,7 +1031,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(200)
       .expect(_.assign({}, transfer, {
-        state: 'executed',
+        state: transferStates.TRANSFER_STATE_EXECUTED,
         timeline: {
           executed_at: '2015-06-16T00:00:00.000Z',
           prepared_at: '2015-06-16T00:00:00.000Z',
@@ -1081,7 +1084,7 @@ describe('PUT /transfers/:id', function () {
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {
-          state: 'proposed',
+          state: transferStates.TRANSFER_STATE_PROPOSED,
           timeline: {
             proposed_at: '2015-06-16T00:00:00.000Z'
           }
@@ -1096,7 +1099,7 @@ describe('PUT /transfers/:id', function () {
         .send(transfer)
         .expect(200)
         .expect(_.assign({}, transfer, {
-          state: 'executed',
+          state: transferStates.TRANSFER_STATE_EXECUTED,
           timeline: {
             executed_at: '2015-06-16T00:00:00.000Z',
             prepared_at: '2015-06-16T00:00:00.000Z',
