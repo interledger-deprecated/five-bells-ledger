@@ -17,7 +17,9 @@
     "test": "istanbul test -- _mocha",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "apidoc": "apidoc -o apidoc-out -i src/controllers/",
-    "integration": "integration all"
+    "integration": "integration all",
+    "preversion": "npm test",
+    "postversion": "git push --follow-tags"
   },
   "engines": {
     "node": ">=0.12",
