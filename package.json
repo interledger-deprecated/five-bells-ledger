@@ -18,8 +18,7 @@
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "apidoc": "apidoc -o apidoc-out -i src/controllers/",
     "integration": "integration all",
-    "preversion": "npm test",
-    "postversion": "git push --follow-tags"
+    "bump": "version-bump"
   },
   "engines": {
     "node": ">=0.12",
@@ -34,7 +33,7 @@
     "co-request": "^1.0.0",
     "deep-diff": "^0.3.0",
     "five-bells-condition": "~2.0.0",
-    "five-bells-shared": "^11.1.1",
+    "five-bells-shared": "^11.2.0",
     "koa": "^1.0.0",
     "koa-compress": "^1.0.6",
     "koa-cors": "0.0.16",
