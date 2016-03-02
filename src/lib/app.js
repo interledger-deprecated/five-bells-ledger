@@ -98,21 +98,22 @@ class App {
     router.get('/health', health.getResource)
 
     router.put('/transfers/:id',
-      passport.authenticate(['basic', 'http-signature', 'anonymous'], {
+      passport.authenticate(['basic', 'http-signature', 'client-cert'], {
         session: false
       }),
       models.Transfer.createBodyParser(),
       transfers.putResource)
 
     router.put('/transfers/:id/fulfillment',
-      passport.authenticate(['basic', 'http-signature', 'anonymous'], {
+      passport.authenticate(['anonymous'], {
         session: false
       }), models.ConditionFulfillment.createBodyParser(),
       transfers.putFulfillment)
     router.get('/transfers/:id/fulfillment',
-      passport.authenticate(['basic', 'http-signature', 'anonymous'], {
-        session: false
-      }),
+      passport.authenticate(
+        ['basic', 'http-signature', 'client-cert', 'anonymous'], {
+          session: false
+        }),
       transfers.getFulfillment)
 
     router.get('/transfers/:id', transfers.getResource)
@@ -121,31 +122,51 @@ class App {
     router.get('/connectors',
       accounts.getConnectors)
     router.get('/accounts',
-      passport.authenticate(['basic', 'http-signature'], { session: false }),
+      passport.authenticate(['basic', 'http-signature', 'client-cert'], {
+        session: false
+      }),
       filterAdmin,
       accounts.getCollection)
     router.get('/accounts/:name',
-      passport.authenticate(['basic', 'http-signature', 'anonymous'], { session: false }),
+      passport.authenticate(
+        ['basic', 'http-signature', 'client-cert', 'anonymous'], {
+          session: false
+        }),
       accounts.getResource)
     router.put('/accounts/:name',
-      passport.authenticate(['basic', 'http-signature'], { session: false }),
+      passport.authenticate(
+        ['basic', 'http-signature', 'client-cert', 'anonymous'], {
+          session: false
+        }),
       filterAdmin,
       models.Account.createBodyParser(),
       accounts.putResource)
 
     router.get('/subscriptions/:id',
-      passport.authenticate(['basic', 'http-signature'], { session: false }),
+      passport.authenticate(
+        ['basic', 'http-signature', 'client-cert'], {
+          session: false
+        }),
       subscriptions.getResource)
     router.put('/subscriptions/:id',
-      passport.authenticate(['basic', 'http-signature'], { session: false }),
+      passport.authenticate(
+        ['basic', 'http-signature', 'client-cert'], {
+          session: false
+        }),
       models.Subscription.createBodyParser(),
       subscriptions.putResource)
     router.delete('/subscriptions/:id',
-      passport.authenticate(['basic', 'http-signature'], { session: false }),
+      passport.authenticate(
+        ['basic', 'http-signature', 'client-cert'], {
+          session: false
+        }),
       subscriptions.deleteResource)
 
     router.get('/subscriptions/:subscription_id/notifications/:notification_id',
-      passport.authenticate(['basic', 'http-signature'], { session: false }),
+      passport.authenticate(
+        ['basic', 'http-signature', 'client-cert'], {
+          session: false
+        }),
       notifications.getResource)
     return router
   }
