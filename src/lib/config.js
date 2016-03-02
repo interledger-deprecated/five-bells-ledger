@@ -1,5 +1,6 @@
 'use strict'
 
+const _ = require('lodash')
 const Config = require('five-bells-shared').Config
 const envPrefix = 'ledger'
 
@@ -15,12 +16,12 @@ function loadConfig () {
   const admin_pass = Config.getEnv(envPrefix, 'ADMIN_PASS')
   const admin_fingerprint = Config.getEnv(envPrefix, 'ADMIN_TLS_FINGERPRINT')
 
-  if (admin_pass) {
-    localConfig.default_admin = {
+  if (admin_pass || admin_fingerprint) {
+    localConfig.default_admin = _.omit({
       user: admin_user,
       pass: admin_pass,
       fingerprint: admin_fingerprint
-    }
+    }, _.isUndefined)
   }
 
   // optional
