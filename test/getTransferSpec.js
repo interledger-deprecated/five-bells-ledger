@@ -72,6 +72,7 @@ describe('GET /transfers/:uuid', function () {
 
     yield this.request()
       .put(transfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
       .expect(validator.validateTransfer)

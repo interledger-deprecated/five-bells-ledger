@@ -100,7 +100,7 @@ class App {
     router.get('/health', health.getResource)
 
     router.put('/transfers/:id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert', 'anonymous'], {
+      passport.authenticate(['basic', 'http-signature', 'client-cert'], {
         session: false
       }),
       models.Transfer.createBodyParser(),

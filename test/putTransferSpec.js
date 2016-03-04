@@ -73,6 +73,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(this.exampleTransfer.id + 'bogus')
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(400)
       .end()
@@ -83,6 +84,7 @@ describe('PUT /transfers/:id', function () {
     transfer.debits[0].amount = 'bogus'
     yield this.request()
       .put(transfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(400)
       .end()
@@ -93,6 +95,7 @@ describe('PUT /transfers/:id', function () {
     transfer.debits[0].amount = '0'
     yield this.request()
       .put(transfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
       .end()
@@ -103,6 +106,7 @@ describe('PUT /transfers/:id', function () {
     transfer.credits[0].amount = '0'
     yield this.request()
       .put(transfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
       .end()
@@ -125,6 +129,7 @@ describe('PUT /transfers/:id', function () {
     transfer.debits[0].account = 'http://localhost/accounts/alois'
     yield this.request()
       .put(this.transferNoAuthorization.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
       .end()
@@ -135,6 +140,7 @@ describe('PUT /transfers/:id', function () {
     transfer.credits[0].account = 'http://localhost/accounts/blob'
     yield this.request()
       .put(this.transferNoAuthorization.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
       .end()
@@ -145,6 +151,7 @@ describe('PUT /transfers/:id', function () {
     transfer.credits[0].amount = '122'
     yield this.request()
       .put(this.transferNoAuthorization.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
       .end()
@@ -159,6 +166,7 @@ describe('PUT /transfers/:id', function () {
 
       yield this.request()
         .put(transfer.id)
+        .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
         .expect(validator.validateTransfer)
@@ -168,6 +176,7 @@ describe('PUT /transfers/:id', function () {
 
       yield this.request()
         .put(transfer.id)
+        .auth('alice', 'alice')
         .send(transfer)
         .expect(200)
         .expect(validator.validateTransfer)
@@ -184,6 +193,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(this.transferWithExpiry.id)
+      .auth('alice', 'alice')
       .send(transferNoAuthorization)
       .expect(201)
       .expect(_.assign({}, transferNoAuthorization, {
@@ -220,6 +230,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(this.transferWithExpiry.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
       .expect(_.assign({}, transfer, {
@@ -235,6 +246,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(this.transferWithExpiry.id)
+      .auth('alice', 'alice')
       .send(transferWithoutExpiry)
       .expect(400)
       .expect(function (res) {
@@ -250,6 +262,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(this.multiDebitAndCreditTransfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
       .expect(function (res) {
@@ -265,6 +278,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(this.multiDebitAndCreditTransfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
       .expect(function (res) {
@@ -279,6 +293,7 @@ describe('PUT /transfers/:id', function () {
     const transfer = this.disabledTransferFrom
     yield this.request()
       .put(transfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
       .end()
@@ -288,6 +303,7 @@ describe('PUT /transfers/:id', function () {
     const transfer = this.disabledTransferTo
     yield this.request()
       .put(transfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
       .end()
@@ -394,6 +410,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(transfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(200)
       .expect(_.assign({}, transfer, {
@@ -484,6 +501,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(transfer.id)
+      .auth('alice', 'alice')
       .send(transferWithoutAuthorization)
       .expect(201)
       .expect(_.assign({}, transferWithoutAuthorization, {
@@ -543,23 +561,46 @@ describe('PUT /transfers/:id', function () {
       .expect(403)
       .expect(function (res) {
         expect(res.body.id).to.equal('UnauthorizedError')
-        expect(res.body.message).to.equal('Unknown or invalid account ' +
-          '/ password')
+        expect(res.body.message).to.equal('Invalid attempt to authorize debit')
       })
       .end()
   })
 
-  it('should return 403 if authorized:true is set without any authorization',
+  it('should return 401 if authorized:true is set without any authentication',
     function *() {
       const transfer = this.exampleTransfer
 
       yield this.request()
         .put(transfer.id)
         .send(transfer)
+        .expect(401)
+        .end()
+    })
+
+  it('should return 401 if authorized:false is set without any authentication',
+    function *() {
+      const transfer = this.exampleTransfer
+      delete transfer.debits[0].authorized
+
+      yield this.request()
+        .put(transfer.id)
+        .send(transfer)
+        .expect(401)
+        .end()
+    })
+
+  it('should return 403 if authentication invalid',
+    function *() {
+      const transfer = this.exampleTransfer
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'wrongPassword')
+        .send(transfer)
         .expect(403)
-        .expect(function (res) {
+        .expect((res) => {
           expect(res.body.id).to.equal('UnauthorizedError')
-          expect(res.body.message).to.equal('Invalid attempt to authorize debit')
+          expect(res.body.message).to.equal('Invalid password')
         })
         .end()
     })
@@ -588,6 +629,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(transfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
       .expect(_.assign({}, transfer, {
@@ -605,6 +647,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(transfer.id)
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(400)
       .expect(function (res) {
@@ -700,6 +743,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(this.exampleTransfer.id)
+      .auth('alice', 'alice')
       .send(incompleteTransfer)
       .expect(201)
       .expect(_.assign({}, incompleteTransfer, {
@@ -713,6 +757,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(this.exampleTransfer.id)
+      .auth('candice', 'candice')
       .send(transfer)
       .expect(403)
       .expect(function (res) {
@@ -731,6 +776,7 @@ describe('PUT /transfers/:id', function () {
 
       yield this.request()
         .put(this.exampleTransfer.id)
+        .auth('alice', 'alice')
         .send(unauthorizedTransfer)
         .expect(201)
         .expect(_.assign({}, unauthorizedTransfer, {
@@ -769,6 +815,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(this.multiDebitTransfer.id)
+      .auth('alice', 'alice')
       .send(unauthorizedTransfer)
       .expect(201)
       .expect(_.assign({}, unauthorizedTransfer, {
@@ -821,6 +868,7 @@ describe('PUT /transfers/:id', function () {
 
       yield this.request()
         .put(this.exampleTransfer.id)
+        .auth('alice', 'alice')
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {
@@ -842,6 +890,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(this.exampleTransfer.id)
+      .auth('alice', 'alice')
       .send(transferWithoutAuthorization)
       .expect(201)
       .expect(_.assign({}, transferWithoutAuthorization, {
@@ -873,7 +922,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   /* Execution conditions */
-  it('should update the state from "proposed" to "prepared" when' +
+  it('should update the state from "proposed" to "prepared" when ' +
   'authorization is added and an execution condition is present',
     function *() {
       const transfer = this.executedTransfer
@@ -883,6 +932,7 @@ describe('PUT /transfers/:id', function () {
 
       yield this.request()
         .put(this.executedTransfer.id)
+        .auth('alice', 'alice')
         .send(transferWithoutAuthorization)
         .expect(201)
         .expect(_.assign({}, transferWithoutAuthorization, {
@@ -1191,7 +1241,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 403 if the http-signature is invalid', function *() {
+  it('should return 401 if the http-signature is invalid', function *() {
     const transfer = this.transferFromEve
     const date = (new Date()).toUTCString()
     const signature = crypto.createSign('RSA-SHA256')
@@ -1210,7 +1260,7 @@ describe('PUT /transfers/:id', function () {
         'headers="(request-target) date",' +
         'signature="' + signature + '"')
       .send(transfer)
-      .expect(403)
+      .expect(401)
       .end()
   })
 })

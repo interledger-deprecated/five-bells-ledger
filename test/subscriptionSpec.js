@@ -194,6 +194,7 @@ describe('Subscriptions', function () {
 
       yield this.request()
         .put(transfer.id)
+        .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
         .expect(validator.validateTransfer)
@@ -222,6 +223,7 @@ describe('Subscriptions', function () {
       delete transfer.debits[0].authorized
       yield this.request()
         .put(transfer.id)
+        .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
         .expect(validator.validateTransfer)
