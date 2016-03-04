@@ -23,7 +23,7 @@ describe('GET /transfers/:uuid', function () {
   beforeEach(function *() {
     appHelper.create(this, app)
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setTimeout', 'setImmediate')
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))

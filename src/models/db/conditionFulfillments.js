@@ -6,7 +6,7 @@ const ConditionFulfillment = require('./conditionFulfillment').ConditionFulfillm
 const db = require('../../services/db')
 
 function * getFulfillment (transferId, options) {
-  return (yield ConditionFulfillment.findByTransfer(transferId, options))
+  return yield ConditionFulfillment.findByTransfer(transferId, options)
 }
 
 function * _upsertFulfillment (fulfillment, options) {
@@ -16,17 +16,17 @@ function * _upsertFulfillment (fulfillment, options) {
   // correct HTTP status code we unfortunately have to do this in two steps.
   const existingFulfillment = yield ConditionFulfillment.findByTransfer(fulfillment.getData().transfer_id, options)
   if (existingFulfillment) {
-    existingFulfillment.setDataExternal(fulfillment)
+    existingFulfillment.setData(fulfillment)
     yield existingFulfillment.save(options)
   } else {
-    yield ConditionFulfillment.createExternal(fulfillment, options)
+    yield ConditionFulfillment.create(fulfillment, options)
   }
   return Boolean(existingFulfillment)
 }
 
 function * upsertFulfillment (fulfillment, options) {
   if (options && options.transaction) {
-    return (yield _upsertFulfillment(fulfillment, options))
+    return yield _upsertFulfillment(fulfillment, options)
   } else {
     let result
     yield db.transaction(function * (transaction) {

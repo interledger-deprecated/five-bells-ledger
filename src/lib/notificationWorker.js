@@ -5,8 +5,23 @@ const co = require('co')
 const defer = require('co-defer')
 const utils = require('./notificationUtils')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
-
 const transferStates = transferDictionary.transferStates
+const knex = require('./knex').knex
+const uuid4 = require('uuid4')
+
+function * findOrCreate (Notification, data) {
+  const options = {transaction: data.transaction}
+  const result = yield Notification.findWhere(data.where, options)
+  if (result.length) {
+    return result
+  }
+  const values = _.assign({}, data.defaults, data.where)
+  if (!values.id) {
+    values.id = uuid4()
+  }
+  yield Notification.create(values, options)
+  return yield Notification.findWhere(data.where, options)
+}
 
 class NotificationWorker {
   constructor (uri, log, Notification, Transfer, Subscription, Fulfillment, config) {
@@ -34,25 +49,10 @@ class NotificationWorker {
     const affectedAccounts = _([transfer.debits, transfer.credits])
       .flatten().pluck('account').map((account) => this.uri.make('account', account)).value()
     affectedAccounts.push('*')
-
-    let subscriptions = yield this.Subscription.findAll({
-      where: {
-        $and: [{
-          $or: [{
-            event: 'transfer.update'
-          }, {
-            event: 'transfer.*'
-          }, {
-            event: '*'
-          }]
-        }, {
-          subject: {
-            $in: affectedAccounts
-          }
-        }]
-      },
-      transaction
-    })
+    let subscriptions = yield transaction.from('subscriptions')
+      .whereIn('subject', affectedAccounts)
+      .whereIn('event', ['transfer.update', 'transfer.*', '*'])
+      .select().then()
     if (!subscriptions) {
       return
     }
@@ -62,15 +62,16 @@ class NotificationWorker {
     subscriptions = _.values(subscriptions)
     // log.debug('notifying ' + subscription.owner + ' at ' +
     //   subscription.target)
-    ;(yield subscriptions.map((subscription) => {
-      return this.Notification.findOrCreate({
+    const self = this
+    ;(yield subscriptions.map(function * (subscription) {
+      return yield findOrCreate(self.Notification, {
         where: {
           subscription_id: subscription.id,
           transfer_id: transfer.id
         },
         defaults: {
           // Don't retry right away
-          retry_at: new Date(Date.now() + this.initialRetryDelay)
+          retry_at: new Date(Date.now() + self.initialRetryDelay)
         },
         transaction
       })
@@ -93,14 +94,10 @@ class NotificationWorker {
   }
 
   * processNotificationQueue () {
-    const notifications = yield this.Notification.findAll({
-      where: {
-        $or: [
-          { retry_at: null },
-          { retry_at: {lt: new Date()} }
-        ]
-      }
-    })
+    const notifications = yield knex('notifications')
+      .where('retry_at', null)
+      .orWhere('retry_at', '<', new Date())
+      .select().map(this.Notification.fromDatabaseModel)
     this.log.debug('processing ' + notifications.length + ' notifications')
     yield notifications.map(this.processNotification.bind(this))
 
@@ -111,8 +108,8 @@ class NotificationWorker {
   }
 
   * processNotification (notification) {
-    const transfer = this.Transfer.fromDatabaseModel(yield notification.getDatabaseModel().getTransfer())
-    const subscription = this.Subscription.fromDatabaseModel(yield notification.getDatabaseModel().getSubscription())
+    const transfer = yield this.Transfer.findById(notification.transfer_id)
+    const subscription = yield this.Subscription.findById(notification.subscription_id)
     const fulfillment = yield this.Fulfillment.findByTransfer(transfer.id)
     yield this.processNotificationWithInstances(notification, transfer, subscription, fulfillment)
   }

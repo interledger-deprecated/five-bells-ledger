@@ -1,12 +1,12 @@
 'use strict'
 
-const Sequelize = require('sequelize')
-const config = require('./config')
-const log = require('./log')('db')
-const DB = require('five-bells-shared').DB(Sequelize)
-var pg = require('pg')
-delete pg.native
+const co = require('co')
+const knex = require('../lib/knex').knex
 
-module.exports = new DB(config.getIn(['db', 'uri']), {
-  logging: log.debug
-})
+function transaction (callback) {
+  return knex.transaction(co.wrap(callback))
+}
+
+module.exports = {
+  transaction
+}

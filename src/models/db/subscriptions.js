@@ -6,16 +6,16 @@ const db = require('../../services/db')
 const Subscription = require('./subscription').Subscription
 
 function * getSubscription (id, options) {
-  return (yield Subscription.findById(id, options))
+  return yield Subscription.findById(id, options)
 }
 
 function * getMatchingSubscription (subscription, options) {
-  return (yield Subscription.findOne({where: {
+  const results = yield Subscription.findWhere({
     event: subscription.event,
     subject: subscription.subject,
     target: subscription.target
-  }
-  }, options))
+  }, options)
+  return results.length > 0 ? results[0] : null
 }
 
 function * _upsertSubscription (subscription, options) {
@@ -25,13 +25,18 @@ function * _upsertSubscription (subscription, options) {
   // correct HTTP status code we unfortunately have to do this in two steps.
   const existingSubscription = yield Subscription.findById(
     subscription.id, options)
-  yield Subscription.upsert(subscription, options)
+  if (existingSubscription) {
+    existingSubscription.setData(subscription)
+    yield existingSubscription.save(options)
+  } else {
+    yield Subscription.create(subscription, options)
+  }
   return Boolean(existingSubscription)
 }
 
 function * upsertSubscription (subscription, options) {
   if (options && options.transaction) {
-    return (yield _upsertSubscription(subscription, options))
+    return yield _upsertSubscription(subscription, options)
   } else {
     let result
     yield db.transaction(function * (transaction) {
@@ -43,7 +48,7 @@ function * upsertSubscription (subscription, options) {
 }
 
 function * deleteSubscription (id, options) {
-  Subscription.DbModel.destroy(_.assign({}, options, {where: {id: id}}))
+  yield Subscription.destroy(_.assign({}, options, {where: {id: id}}))
 }
 
 module.exports = {

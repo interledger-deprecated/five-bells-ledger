@@ -32,6 +32,7 @@ describe('TimerWorker', function () {
 
   afterEach(function () {
     this.timerWorker.stop()
+    this.clock.restore()
   })
 
   describe('.start()', function () {
