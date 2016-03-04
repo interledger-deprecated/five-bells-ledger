@@ -18,7 +18,7 @@ function validateAccount (res) {
 }
 
 function validateAccounts (res) {
-  res.body.forEach(account => {
+  res.body.forEach((account) => {
     validateAccount({body: account})
   })
 }

@@ -12,7 +12,7 @@ function * getAccounts (options) {
 
 function * getConnectorAccounts (options) {
   const jsonAccounts = yield Account.findAll(options)
-  return jsonAccounts.filter(account => account.connector)
+  return jsonAccounts.filter((account) => account.connector)
     .map(Account.fromDatabaseModel.bind(Account))
 }
 

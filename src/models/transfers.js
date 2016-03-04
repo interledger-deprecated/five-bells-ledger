@@ -200,7 +200,7 @@ function validateAuthorizations (authorizedAccount, transfer, previousDebits) {
 }
 
 function validatePositiveAmounts (adjustments) {
-  if (_.some(adjustments, adjustment => parseFloat(adjustment.amount) <= 0)) {
+  if (_.some(adjustments, (adjustment) => parseFloat(adjustment.amount) <= 0)) {
     throw new UnprocessableEntityError(
         'Amount must be a positive number excluding zero.')
   }
@@ -219,7 +219,7 @@ function validateCreditAndDebitAmounts (transfer) {
 }
 
 function isAuthorized (transfer) {
-  return _.every(transfer.debits, debit => debit.authorized)
+  return _.every(transfer.debits, (debit) => debit.authorized)
 }
 
 function * processTransitionToPreparedState (transfer, accountBalances) {

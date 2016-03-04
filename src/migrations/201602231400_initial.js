@@ -1,7 +1,7 @@
 'use strict'
 
 function createAccountsTable (knex) {
-  return knex.schema.createTableIfNotExists('accounts', table => {
+  return knex.schema.createTableIfNotExists('accounts', (table) => {
     table.increments()
     table.string('name').unique()
     table.decimal('balance', 10, 2)
@@ -15,7 +15,7 @@ function createAccountsTable (knex) {
 }
 
 function createFulfillmentsTable (knex) {
-  return knex.schema.createTableIfNotExists('fulfillments', table => {
+  return knex.schema.createTableIfNotExists('fulfillments', (table) => {
     table.increments()
     table.uuid('transfer_id').unique().index()
     table.text('condition_fulfillment')
@@ -23,14 +23,14 @@ function createFulfillmentsTable (knex) {
 }
 
 function createEntryGroupsTable (knex) {
-  return knex.schema.createTableIfNotExists('entry_groups', table => {
+  return knex.schema.createTableIfNotExists('entry_groups', (table) => {
     table.increments()
     table.timestamp('created_at').defaultTo(knex.fn.now())
   })
 }
 
 function createEntriesTable (knex) {
-  return knex.schema.createTableIfNotExists('entries', table => {
+  return knex.schema.createTableIfNotExists('entries', (table) => {
     table.increments()
     table.integer('entry_group')
     table.uuid('transfer_id')
@@ -41,7 +41,7 @@ function createEntriesTable (knex) {
 }
 
 function createNotificationsTable (knex) {
-  return knex.schema.createTableIfNotExists('notifications', table => {
+  return knex.schema.createTableIfNotExists('notifications', (table) => {
     table.uuid('id').primary()
     table.uuid('subscription_id')
     table.uuid('transfer_id')
@@ -52,7 +52,7 @@ function createNotificationsTable (knex) {
 }
 
 function createSubscriptionsTable (knex) {
-  return knex.schema.createTableIfNotExists('subscriptions', table => {
+  return knex.schema.createTableIfNotExists('subscriptions', (table) => {
     table.uuid('id').primary()
     table.string('owner', 1024)
     table.string('event')
@@ -62,7 +62,7 @@ function createSubscriptionsTable (knex) {
 }
 
 function createTransfersTable (knex) {
-  return knex.schema.createTableIfNotExists('transfers', table => {
+  return knex.schema.createTableIfNotExists('transfers', (table) => {
     table.uuid('id').primary()
     table.string('ledger', 1024)
     table.text('debits')

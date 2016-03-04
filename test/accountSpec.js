@@ -13,7 +13,7 @@ const logHelper = require('five-bells-shared/testHelpers/log')
 
 const validator = require('./helpers/validator')
 
-const publicKey = fs.readFileSync(__dirname + '/data/public.pem', 'utf8')
+const publicKey = fs.readFileSync('./test/data/public.pem', 'utf8')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 

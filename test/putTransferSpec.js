@@ -24,8 +24,8 @@ const transferStates = transferDictionary.transferStates
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
-const publicKey = fs.readFileSync(__dirname + '/data/public.pem', 'utf8')
-const privateKey = fs.readFileSync(__dirname + '/data/private.pem', 'utf8')
+const publicKey = fs.readFileSync('./test/data/public.pem', 'utf8')
+const privateKey = fs.readFileSync('./test/data/private.pem', 'utf8')
 
 describe('PUT /transfers/:id', function () {
   logHelper(logger)
