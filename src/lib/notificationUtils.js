@@ -20,7 +20,7 @@ function tlsOptions (target, config) {
 }
 
 function * sendNotification (target, notificationBody, config) {
-  yield* request(target, _.assign({
+  yield * request(target, _.assign({
     method: 'post',
     json: true,
     body: notificationBody

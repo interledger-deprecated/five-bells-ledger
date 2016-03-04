@@ -8,12 +8,12 @@ const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 
 function * getAccounts () {
   const accounts = yield db.getAccounts()
-  return accounts.map(account => account.getDataExternal())
+  return accounts.map((account) => account.getDataExternal())
 }
 
 function * getConnectors () {
   const accounts = yield db.getConnectorAccounts()
-  return accounts.map(account => account.getDataConnector())
+  return accounts.map((account) => account.getDataConnector())
 }
 
 function * getAccount (name, requestingUser) {
