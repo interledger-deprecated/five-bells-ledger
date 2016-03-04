@@ -22,17 +22,9 @@ function createFulfillmentsTable (knex) {
   })
 }
 
-function createEntryGroupsTable (knex) {
-  return knex.schema.createTableIfNotExists('entry_groups', (table) => {
-    table.increments()
-    table.timestamp('created_at').defaultTo(knex.fn.now())
-  })
-}
-
 function createEntriesTable (knex) {
   return knex.schema.createTableIfNotExists('entries', (table) => {
     table.increments()
-    table.integer('entry_group')
     table.uuid('transfer_id')
     table.integer('account')
     table.decimal('balance', 10, 2)
@@ -84,7 +76,6 @@ exports.up = function (knex, Promise) {
   return Promise.all([
     createAccountsTable(knex),
     createFulfillmentsTable(knex),
-    createEntryGroupsTable(knex),
     createEntriesTable(knex),
     createNotificationsTable(knex),
     createSubscriptionsTable(knex),
@@ -96,7 +87,6 @@ exports.down = function (knex, Promise) {
   return Promise.all([
     knex.schema.dropTableIfExists('accounts'),
     knex.schema.dropTableIfExists('fulfillments'),
-    knex.schema.dropTableIfExists('entry_groups'),
     knex.schema.dropTableIfExists('entries'),
     knex.schema.dropTableIfExists('notifications'),
     knex.schema.dropTableIfExists('subscriptions'),
