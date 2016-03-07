@@ -16,7 +16,6 @@ exports.reset = function * () {
   yield knex('accounts').truncate().then()
   yield knex('fulfillments').truncate().then()
   yield knex('entries').truncate().then()
-  yield knex('entry_groups').truncate().then()
   yield knex('notifications').truncate().then()
   yield knex('subscriptions').truncate().then()
   yield knex('transfers').truncate().then()
