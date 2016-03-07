@@ -26,7 +26,7 @@ describe('Transfer State', function () {
 
   beforeEach(function * () {
     appHelper.create(this, app)
-
+    yield dbHelper.init()
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     this.keyPair =
@@ -36,9 +36,6 @@ describe('Transfer State', function () {
     // Define example data
     this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
-
-    // Reset database
-    yield dbHelper.reset()
 
     // Store some example data
     yield dbHelper.addAccounts(_.values(require('./data/accounts')))

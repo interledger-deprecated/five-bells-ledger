@@ -17,7 +17,7 @@ function createAccountsTable (knex) {
 function createFulfillmentsTable (knex) {
   return knex.schema.createTableIfNotExists('fulfillments', (table) => {
     table.increments()
-    table.uuid('transfer_id').unique().index()
+    table.uuid('transfer_id').references('id').inTable('transfers').index()
     table.text('condition_fulfillment')
   })
 }
@@ -25,6 +25,8 @@ function createFulfillmentsTable (knex) {
 function createEntriesTable (knex) {
   return knex.schema.createTableIfNotExists('entries', (table) => {
     table.increments()
+    // A FK references to transfers table will cause an error here
+    // there are cases in which an entry is inserted before the corresponding transfer is inserted
     table.uuid('transfer_id')
     table.integer('account')
     table.decimal('balance', 10, 2)
@@ -36,7 +38,7 @@ function createNotificationsTable (knex) {
   return knex.schema.createTableIfNotExists('notifications', (table) => {
     table.uuid('id').primary()
     table.uuid('subscription_id')
-    table.uuid('transfer_id')
+    table.uuid('transfer_id').references('id').inTable('transfers')
     table.integer('retry_count')
     table.datetime('retry_at').index()
     table.index(['subscription_id', 'transfer_id'], 'subscription_transfer')
@@ -75,21 +77,21 @@ function createTransfersTable (knex) {
 exports.up = function (knex, Promise) {
   return Promise.all([
     createAccountsTable(knex),
-    createFulfillmentsTable(knex),
-    createEntriesTable(knex),
-    createNotificationsTable(knex),
+    createTransfersTable(knex),
     createSubscriptionsTable(knex),
-    createTransfersTable(knex)
+    createNotificationsTable(knex),
+    createEntriesTable(knex),
+    createFulfillmentsTable(knex)
   ])
 }
 
 exports.down = function (knex, Promise) {
   return Promise.all([
-    knex.schema.dropTableIfExists('accounts'),
     knex.schema.dropTableIfExists('fulfillments'),
     knex.schema.dropTableIfExists('entries'),
     knex.schema.dropTableIfExists('notifications'),
     knex.schema.dropTableIfExists('subscriptions'),
-    knex.schema.dropTableIfExists('transfers')
+    knex.schema.dropTableIfExists('transfers'),
+    knex.schema.dropTableIfExists('accounts')
   ])
 }

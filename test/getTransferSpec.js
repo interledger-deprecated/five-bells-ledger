@@ -22,7 +22,7 @@ describe('GET /transfers/:uuid', function () {
 
   beforeEach(function * () {
     appHelper.create(this, app)
-
+    yield dbHelper.init()
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     // Define example data
@@ -34,9 +34,6 @@ describe('GET /transfers/:uuid', function () {
       _.cloneDeep(require('./data/transfers/multiDebitAndCredit'))
     this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
-
-    // Reset database
-    yield dbHelper.reset()
 
     // Store some example data
     yield dbHelper.addAccounts(_.values(require('./data/accounts')))

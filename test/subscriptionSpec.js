@@ -23,15 +23,12 @@ describe('Subscriptions', function () {
 
   beforeEach(function * () {
     appHelper.create(this, app)
-
+    yield dbHelper.init()
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))
     this.exampleSubscription = _.cloneDeep(require('./data/subscription1'))
     this.existingSubscription = _.cloneDeep(require('./data/subscription2'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
-
-    // Reset database
-    yield dbHelper.reset()
 
     // Use fake time
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')

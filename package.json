@@ -14,7 +14,8 @@
   "scripts": {
     "start": "node src/app.js",
     "lint": "eslint .",
-    "test": "istanbul test -- _mocha --timeout 150000",
+    "test": "istanbul test -- _mocha",
+    "test-oracle": "LEDGER_DB_ENV=oracledev DYLD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "apidoc": "apidoc -o apidoc-out -i src/controllers/",
     "integration": "integration all",
