@@ -1276,7 +1276,7 @@ describe('PUT /transfers/:id', function () {
     before(function () { hasCreditAuth[1] = true })
     after(function () { hasCreditAuth[1] = false })
 
-    it('succeeds if no authorization is provided', function *() {
+    it('succeeds if no authorization is provided', function * () {
       const transfer = this.exampleTransfer
       const transferWithoutAuthorization = _.cloneDeep(transfer)
       delete transferWithoutAuthorization.debits[0].authorized
@@ -1293,7 +1293,7 @@ describe('PUT /transfers/:id', function () {
     })
 
     it('should return 403 if authorized:true is set for any credits that are ' +
-    'not owned by the authorized account', function *() {
+    'not owned by the authorized account', function * () {
       const transfer = this.exampleTransfer
       delete transfer.debits[0].authorized
       transfer.credits[0].authorized = true
@@ -1311,7 +1311,7 @@ describe('PUT /transfers/:id', function () {
     })
 
     it('should execute the transfer if it is authorized and ' +
-    'there is no execution condition', function *() {
+    'there is no execution condition', function * () {
       const transfer = this.exampleTransfer
 
       yield this.request()
