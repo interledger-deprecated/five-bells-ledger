@@ -24,7 +24,7 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('Transfer State', function () {
   logHelper(logger)
 
-  beforeEach(function *() {
+  beforeEach(function * () {
     appHelper.create(this, app)
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
@@ -44,12 +44,12 @@ describe('Transfer State', function () {
     yield dbHelper.addAccounts(_.values(require('./data/accounts')))
   })
 
-  afterEach(function *() {
+  afterEach(function * () {
     this.clock.restore()
   })
 
   describe('GET /transfers/:uuid/state', function () {
-    it('should return a 200 if the transfer does not exist', function *() {
+    it('should return a 200 if the transfer does not exist', function * () {
       const stateReceipt = {
         id: 'http://localhost/transfers/03b7c787-e104-4390-934e-693072c6eda2',
         state: transferStates.TRANSFER_STATE_NONEXISTENT
@@ -73,7 +73,7 @@ describe('Transfer State', function () {
         .end()
     })
 
-    it('supports type=sha256', function *() {
+    it('supports type=sha256', function * () {
       const transfer = _.cloneDeep(this.transferWithExpiry)
       delete transfer.debits[0].authorized
       delete transfer.debits[1].authorized
@@ -108,7 +108,7 @@ describe('Transfer State', function () {
         .end()
     })
 
-    it('supports type=sha256 and condition_state', function *() {
+    it('supports type=sha256 and condition_state', function * () {
       const transfer = _.cloneDeep(this.transferWithExpiry)
       delete transfer.debits[0].authorized
       delete transfer.debits[1].authorized
@@ -153,7 +153,7 @@ describe('Transfer State', function () {
         .end()
     })
 
-    it('returns 400 if the ?type parameter is invalid', function *() {
+    it('returns 400 if the ?type parameter is invalid', function * () {
       yield this.request()
         .get(this.executedTransfer.id + '/state?type=bogus')
         .expect(400, {
@@ -164,7 +164,7 @@ describe('Transfer State', function () {
     })
 
     it('should return a 200 and a signed receipt including the message, ' +
-      'messageHash, type, public_key, and signature', function *() {
+      'messageHash, type, public_key, and signature', function * () {
       yield dbHelper.addTransfers([this.executedTransfer])
 
       const stateReceipt = {
@@ -191,7 +191,7 @@ describe('Transfer State', function () {
     })
 
     it('should return the correct state if the transfer is prepared',
-      function *() {
+      function * () {
         const transfer = _.cloneDeep(this.executedTransfer)
         transfer.state = transferStates.TRANSFER_STATE_PREPARED
 
@@ -220,7 +220,7 @@ describe('Transfer State', function () {
           .end()
       })
 
-    it('should return a valid TransferStateReceipt', function *() {
+    it('should return a valid TransferStateReceipt', function * () {
       const transfer = _.cloneDeep(this.executedTransfer)
 
       yield dbHelper.addTransfers([transfer])
@@ -238,7 +238,7 @@ describe('Transfer State', function () {
     })
 
     it('should return a rejected transfer receipt if the expires_at date ' +
-      'has passed', function *() {
+      'has passed', function * () {
       const transfer = this.transferWithExpiry
       delete transfer.debits[0].authorized
       delete transfer.debits[1].authorized

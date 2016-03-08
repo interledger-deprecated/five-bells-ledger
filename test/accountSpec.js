@@ -20,7 +20,7 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('Accounts', function () {
   logHelper(logger)
 
-  beforeEach(function *() {
+  beforeEach(function * () {
     appHelper.create(this, app)
     yield dbHelper.init()
 
@@ -50,7 +50,7 @@ describe('Accounts', function () {
   })
 
   describe('GET /accounts', function () {
-    it('should return 200', function *() {
+    it('should return 200', function * () {
       const account1 = this.adminAccount
       const account2 = this.holdAccount
       const account3 = this.existingAccount
@@ -73,7 +73,7 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should return 401/403 if the user isn\'t an admin', function *() {
+    it('should return 401/403 if the user isn\'t an admin', function * () {
       yield this.request()
         .get('/accounts')
         .expect(401)
@@ -87,7 +87,7 @@ describe('Accounts', function () {
   })
 
   describe('GET /connectors', function () {
-    it('should return 200', function *() {
+    it('should return 200', function * () {
       yield this.request()
         .get('/connectors')
         .expect(200, [
@@ -103,7 +103,7 @@ describe('Accounts', function () {
   })
 
   describe('GET /accounts/:uuid', function () {
-    it('should return 200 for an account that exists', function *() {
+    it('should return 200 for an account that exists', function * () {
       yield this.request()
         .get(this.existingAccount.id)
         .auth('admin', 'admin')
@@ -112,7 +112,7 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should return 404 when the account does not exist', function *() {
+    it('should return 404 when the account does not exist', function * () {
       yield this.request()
         .get(this.exampleAccounts.bob.id)
         .auth('admin', 'admin')
@@ -120,7 +120,7 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should return 200 + partial data, when not authenticated', function *() {
+    it('should return 200 + partial data, when not authenticated', function * () {
       yield this.request()
         .get(this.existingAccount.id)
         .expect(200, {
@@ -132,14 +132,14 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should return 404 when not authenticated + nonexistent target', function *() {
+    it('should return 404 when not authenticated + nonexistent target', function * () {
       yield this.request()
         .get(this.exampleAccounts.bob.id)
         .expect(404)
         .end()
     })
 
-    it('should return 403 with invalid credentials', function *() {
+    it('should return 403 with invalid credentials', function * () {
       yield this.request()
         .get(this.existingAccount.id)
         .auth('bob', 'bob')
@@ -147,7 +147,7 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should return partial data for valid but unauthorized credentials', function *() {
+    it('should return partial data for valid but unauthorized credentials', function * () {
       yield this.request()
         .get(this.existingAccount2.id)
         .auth('alice', 'alice')
@@ -160,7 +160,7 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should strip out the password field', function *() {
+    it('should strip out the password field', function * () {
       const account = this.existingAccount
       const accountWithoutPassword = _.clone(account)
       delete accountWithoutPassword.password
@@ -174,7 +174,7 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should return the balance as a string', function *() {
+    it('should return the balance as a string', function * () {
       yield this.request()
         .get(this.existingAccount.id)
         .auth('admin', 'admin')
@@ -188,7 +188,7 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should return the disabled field as a boolean for an admin user', function *() {
+    it('should return the disabled field as a boolean for an admin user', function * () {
       yield this.request()
         .get(this.existingAccount.id)
         .auth('admin', 'admin')
@@ -202,7 +202,7 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('sholuld allow an admin user to view a disabled account', function *() {
+    it('sholuld allow an admin user to view a disabled account', function * () {
       yield this.request()
         .get(this.disabledAccount.id)
         .auth('admin', 'admin')
@@ -211,7 +211,7 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should return a 403 when a non-admin user tries to view a disabled account', function *() {
+    it('should return a 403 when a non-admin user tries to view a disabled account', function * () {
       yield this.request()
         .get(this.disabledAccount.id)
         .auth('disabled', 'disabled')
@@ -221,7 +221,7 @@ describe('Accounts', function () {
   })
 
   describe('PUT /accounts/:uuid', function () {
-    it('should return 201', function *() {
+    it('should return 201', function * () {
       const account = this.exampleAccounts.bob
       // Passwords are not returned
       delete account.password
@@ -238,7 +238,7 @@ describe('Accounts', function () {
       expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(account)
     })
 
-    it('should return 200 if the account already exists', function *() {
+    it('should return 200 if the account already exists', function * () {
       const account = this.existingAccount
 
       // Update balance
@@ -261,7 +261,7 @@ describe('Accounts', function () {
       expect(row.balance).to.equal(90)
     })
 
-    it('should return a 400 if the account name in the URL does not match the account name in the JSON', function *() {
+    it('should return a 400 if the account name in the URL does not match the account name in the JSON', function * () {
       const existingAccount = this.existingAccount
       const newAccount = this.exampleAccounts.bob
 
@@ -277,7 +277,7 @@ describe('Accounts', function () {
   })
 
   describe('PUT /accounts/:uuid with public_key', function () {
-    it('should return 201', function *() {
+    it('should return 201', function * () {
       const account = this.exampleAccounts.eve
       account.public_key = publicKey
       delete account.password

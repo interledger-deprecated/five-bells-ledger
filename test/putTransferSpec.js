@@ -30,7 +30,7 @@ const privateKey = fs.readFileSync('./test/data/private.pem', 'utf8')
 describe('PUT /transfers/:id', function () {
   logHelper(logger)
 
-  beforeEach(function *() {
+  beforeEach(function * () {
     appHelper.create(this, app)
     yield dbHelper.init()
 
@@ -60,14 +60,14 @@ describe('PUT /transfers/:id', function () {
     yield dbHelper.addAccounts(_.values(accounts))
   })
 
-  afterEach(function *() {
+  afterEach(function * () {
     nock.cleanAll()
     this.clock.restore()
   })
 
   /* Invalid transfer objects */
 
-  it('should return 400 if the transfer ID is invalid', function *() {
+  it('should return 400 if the transfer ID is invalid', function * () {
     const transfer = _.clone(this.exampleTransfer)
     delete transfer.id
 
@@ -79,7 +79,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 400 if the transfer is invalid', function *() {
+  it('should return 400 if the transfer is invalid', function * () {
     const transfer = this.exampleTransfer
     transfer.debits[0].amount = 'bogus'
     yield this.request()
@@ -90,7 +90,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 422 if the source amount is zero', function *() {
+  it('should return 422 if the source amount is zero', function * () {
     const transfer = this.exampleTransfer
     transfer.debits[0].amount = '0'
     yield this.request()
@@ -101,7 +101,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 422 if the destination amount is zero', function *() {
+  it('should return 422 if the destination amount is zero', function * () {
     const transfer = this.exampleTransfer
     transfer.credits[0].amount = '0'
     yield this.request()
@@ -112,7 +112,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it("should return 422 if the sender doesn't have enough money", function *() {
+  it("should return 422 if the sender doesn't have enough money", function * () {
     const transfer = this.exampleTransfer
     transfer.debits[0].amount = '101'
     transfer.credits[0].amount = '101'
@@ -124,7 +124,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it("should return 422 if the sender doesn't exist", function *() {
+  it("should return 422 if the sender doesn't exist", function * () {
     const transfer = this.transferNoAuthorization
     transfer.debits[0].account = 'http://localhost/accounts/alois'
     yield this.request()
@@ -135,7 +135,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it("should return 422 if the recipient doesn't exist", function *() {
+  it("should return 422 if the recipient doesn't exist", function * () {
     const transfer = this.transferNoAuthorization
     transfer.credits[0].account = 'http://localhost/accounts/blob'
     yield this.request()
@@ -146,7 +146,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it("should return 422 if source and destination amounts don't match", function *() {
+  it("should return 422 if source and destination amounts don't match", function * () {
     const transfer = this.transferNoAuthorization
     transfer.credits[0].amount = '122'
     yield this.request()
@@ -158,7 +158,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should return 200 if a transfer is posted with the same expiry date',
-    function *() {
+    function * () {
       const transfer = _.cloneDeep(this.transferWithExpiry)
       delete transfer.debits[0].authorized
       delete transfer.debits[1].authorized
@@ -184,7 +184,7 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should return 422 if a transfer is modified after its ' +
-    'expiry date', function *() {
+    'expiry date', function * () {
     const transfer = this.transferWithExpiry
     delete transfer.debits[0].authorized
 
@@ -220,7 +220,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 422 if the expires_at field is removed', function *() {
+  it('should return 422 if the expires_at field is removed', function * () {
     let transfer = this.transferWithExpiry
     delete transfer.debits[0].authorized
     delete transfer.debits[1].authorized
@@ -256,7 +256,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 422 if the credits are greater than the debits', function *() {
+  it('should return 422 if the credits are greater than the debits', function * () {
     const transfer = this.multiDebitAndCreditTransfer
     transfer.credits[0].amount = String(parseFloat(transfer.credits[0].amount) + 0.00000001)
 
@@ -272,7 +272,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 422 if the debits are greater than the credits', function *() {
+  it('should return 422 if the debits are greater than the credits', function * () {
     const transfer = this.multiDebitAndCreditTransfer
     transfer.debits[0].amount = String(parseFloat(transfer.debits[0].amount) + 0.00000001)
 
@@ -289,7 +289,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   /* Disabled Accounts */
-  it('should return a 422 for a transfer from a disabled account', function *() {
+  it('should return a 422 for a transfer from a disabled account', function * () {
     const transfer = this.disabledTransferFrom
     yield this.request()
       .put(transfer.id)
@@ -299,7 +299,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 422 for a transfer to a disabled account', function *() {
+  it('should return 422 for a transfer to a disabled account', function * () {
     const transfer = this.disabledTransferTo
     yield this.request()
       .put(transfer.id)
@@ -309,7 +309,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should allow a transfer involving a disabled account to complete execution', function *() {
+  it('should allow a transfer involving a disabled account to complete execution', function * () {
     const transferNoAuthorization = _.cloneDeep(this.transferNoAuthorization)
     /* propose transfer: Alice -> Bob */
     yield this.request()
@@ -367,7 +367,7 @@ describe('PUT /transfers/:id', function () {
 
   /* Idempotency */
 
-  it('should return 201 for a newly created transfer', function *() {
+  it('should return 201 for a newly created transfer', function * () {
     const transfer = this.exampleTransfer
     yield this.request()
       .put(transfer.id)
@@ -390,7 +390,7 @@ describe('PUT /transfers/:id', function () {
     expect((yield Account.findByName('bob')).balance).to.equal(10)
   })
 
-  it('should return 200 if the transfer already exists', function *() {
+  it('should return 200 if the transfer already exists', function * () {
     const transfer = this.exampleTransfer
     yield this.request()
       .put(transfer.id)
@@ -425,7 +425,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 201 if the transfer does not have an ID set', function *() {
+  it('should return 201 if the transfer does not have an ID set', function * () {
     const transferWithoutId = _.cloneDeep(this.exampleTransfer)
     delete transferWithoutId.id
     yield this.request()
@@ -450,7 +450,7 @@ describe('PUT /transfers/:id', function () {
     expect((yield Account.findByName('bob')).balance).to.equal(10)
   })
 
-  it.skip('should round properly', function *() {
+  it.skip('should round properly', function * () {
     const transferWithoutId = _.cloneDeep(this.exampleTransfer)
     delete transferWithoutId.id
     transferWithoutId.debits[0].amount = transferWithoutId.credits[0].amount = '5.0101'
@@ -467,7 +467,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should accept a transfer with an upper case ID but convert the ID ' +
-    'to lower case', function *() {
+    'to lower case', function * () {
     const transfer = _.cloneDeep(this.exampleTransfer)
     // This URI uppercases everything that should be case-insensitive
     const prefix = 'HTTP://LOCALHOST/transfers/'
@@ -494,7 +494,7 @@ describe('PUT /transfers/:id', function () {
   /* Authorization */
 
   it('should set the transfer state to "proposed" and authorized to false ' +
-    'if no authorization is provided', function *() {
+    'if no authorization is provided', function * () {
     const transfer = this.exampleTransfer
     const transferWithoutAuthorization = _.cloneDeep(transfer)
     delete transferWithoutAuthorization.debits[0].authorized
@@ -514,7 +514,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 403 if invalid authorization is given', function *() {
+  it('should return 403 if invalid authorization is given', function * () {
     const transfer = this.exampleTransfer
     const transferWithoutAuthorization = _.cloneDeep(transfer)
     delete transferWithoutAuthorization.debits[0].authorized
@@ -531,7 +531,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 403 if password is missing', function *() {
+  it('should return 403 if password is missing', function * () {
     const transfer = this.exampleTransfer
     const transferWithoutAuthorization = _.cloneDeep(transfer)
     delete transferWithoutAuthorization.debits[0].authorized
@@ -549,7 +549,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should return 403 if authorization is provided that is irrelevant ' +
-    'to the transfer', function *() {
+    'to the transfer', function * () {
     const transfer = this.exampleTransfer
     const transferWithoutAuthorization = _.cloneDeep(transfer)
     delete transferWithoutAuthorization.debits[0].authorized
@@ -567,7 +567,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should return 401 if authorized:true is set without any authentication',
-    function *() {
+    function * () {
       const transfer = this.exampleTransfer
 
       yield this.request()
@@ -578,7 +578,7 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should return 401 if authorized:false is set without any authentication',
-    function *() {
+    function * () {
       const transfer = this.exampleTransfer
       delete transfer.debits[0].authorized
 
@@ -590,7 +590,7 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should return 403 if authentication invalid',
-    function *() {
+    function * () {
       const transfer = this.exampleTransfer
 
       yield this.request()
@@ -606,7 +606,7 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should return 403 if authorized:true is set for any debits that are ' +
-    'not owned by the authorized account', function *() {
+    'not owned by the authorized account', function * () {
     const transfer = this.multiDebitTransfer
 
     yield this.request()
@@ -621,7 +621,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 400 if an unauthorized debit is removed', function *() {
+  it('should return 400 if an unauthorized debit is removed', function * () {
     const transfer = this.multiDebitTransfer
 
     delete transfer.debits[0].authorized
@@ -658,7 +658,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should keep the state as "proposed" if not all debits are authorized',
-    function *() {
+    function * () {
       const transfer = this.multiDebitTransfer
       delete transfer.debits[1].authorized
 
@@ -678,7 +678,7 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should only set the state to "prepared" if all debits are authorized',
-    function *() {
+    function * () {
       let transfer = this.multiDebitTransfer
       transfer.execution_condition = this.executedTransfer.execution_condition
       let incompleteTransfer = _.cloneDeep(transfer)
@@ -715,7 +715,7 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should execute the transfer if it is authorized and ' +
-    'there is no execution condition', function *() {
+    'there is no execution condition', function * () {
     const transfer = this.exampleTransfer
 
     yield this.request()
@@ -736,7 +736,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should return 403 if an unauthorized user attempts to ' +
-    'modify the "authorized" field', function *() {
+    'modify the "authorized" field', function * () {
     const transfer = this.exampleTransfer
     let incompleteTransfer = _.cloneDeep(transfer)
     delete incompleteTransfer.debits[0].authorized
@@ -768,7 +768,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should allow authorizations to be added after the transfer is proposed',
-    function *() {
+    function * () {
       let transfer = this.exampleTransfer
 
       let unauthorizedTransfer = _.cloneDeep(transfer)
@@ -806,7 +806,7 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should allow additional authorizations to be added after ' +
-    'the transfer is proposed', function *() {
+    'the transfer is proposed', function * () {
     let transfer = this.multiDebitTransfer
 
     let unauthorizedTransfer = _.cloneDeep(transfer)
@@ -861,7 +861,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should set the transfer state to "proposed" if no authorization is given',
-    function *() {
+    function * () {
       const transfer = this.exampleTransfer
       const transferWithoutAuthorization = _.cloneDeep(transfer)
       delete transferWithoutAuthorization.debits[0].authorized
@@ -882,7 +882,7 @@ describe('PUT /transfers/:id', function () {
     })
 
   it('should update the state from "proposed" to "executed" when ' +
-    'authorization is added and no execution condition is given', function *() {
+    'authorization is added and no execution condition is given', function * () {
     const transfer = this.exampleTransfer
 
     const transferWithoutAuthorization = _.cloneDeep(transfer)
@@ -924,7 +924,7 @@ describe('PUT /transfers/:id', function () {
   /* Execution conditions */
   it('should update the state from "proposed" to "prepared" when ' +
   'authorization is added and an execution condition is present',
-    function *() {
+    function * () {
       const transfer = this.executedTransfer
 
       const transferWithoutAuthorization = _.cloneDeep(transfer)
@@ -961,7 +961,7 @@ describe('PUT /transfers/:id', function () {
     })
 
   /* Subscriptions */
-  it('should trigger subscriptions', function *() {
+  it('should trigger subscriptions', function * () {
     const subscription = require('./data/subscription1.json')
     yield Subscription.createExternal(subscription)
 
@@ -1006,7 +1006,7 @@ describe('PUT /transfers/:id', function () {
 
   /* Multiple credits and/or debits */
 
-  it('should handle transfers with multiple credits', function *() {
+  it('should handle transfers with multiple credits', function * () {
     const transfer = this.multiCreditTransfer
 
     yield this.request()
@@ -1054,7 +1054,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should handle transfers with multiple debits', function *() {
+  it('should handle transfers with multiple debits', function * () {
     const transfer = this.multiDebitTransfer
 
     let transferWithoutAuthorization = _.cloneDeep(transfer)
@@ -1122,7 +1122,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should handle transfers with multiple debits and multiple credits',
-    function *() {
+    function * () {
       const transfer = this.multiDebitAndCreditTransfer
 
       let transferWithoutAuthorization = _.cloneDeep(transfer)
@@ -1217,7 +1217,7 @@ describe('PUT /transfers/:id', function () {
         .end()
     })
 
-  it('should return 200 if the http-signature is valid', function *() {
+  it('should return 200 if the http-signature is valid', function * () {
     const transfer = this.transferFromEve
     const date = (new Date()).toUTCString()
     const signature = crypto.createSign('RSA-SHA256')
@@ -1241,7 +1241,7 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
-  it('should return 401 if the http-signature is invalid', function *() {
+  it('should return 401 if the http-signature is invalid', function * () {
     const transfer = this.transferFromEve
     const date = (new Date()).toUTCString()
     const signature = crypto.createSign('RSA-SHA256')

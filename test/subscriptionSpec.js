@@ -21,7 +21,7 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('Subscriptions', function () {
   logHelper(logger)
 
-  beforeEach(function *() {
+  beforeEach(function * () {
     appHelper.create(this, app)
 
     // Define example data
@@ -42,7 +42,7 @@ describe('Subscriptions', function () {
   })
 
   describe('GET /subscriptions/:uuid', function () {
-    it('should return 200', function *() {
+    it('should return 200', function * () {
       yield this.request()
         .get(this.existingSubscription.id)
         .auth('bob', 'bob')
@@ -52,7 +52,7 @@ describe('Subscriptions', function () {
         .end()
     })
 
-    it('should return 404 for a non-existent subscription', function *() {
+    it('should return 404 for a non-existent subscription', function * () {
       yield this.request()
         .get(this.exampleSubscription.id)
         .auth('bob', 'bob')
@@ -60,7 +60,7 @@ describe('Subscriptions', function () {
         .end()
     })
 
-    it('should return 403 for a subscription the user doesn\'t own', function *() {
+    it('should return 403 for a subscription the user doesn\'t own', function * () {
       yield this.request()
         .get(this.existingSubscription.id)
         .auth('alice', 'alice')
@@ -68,7 +68,7 @@ describe('Subscriptions', function () {
         .end()
     })
 
-    it('should allow an admin to view any subscription', function *() {
+    it('should allow an admin to view any subscription', function * () {
       yield this.request()
         .get(this.existingSubscription.id)
         .auth('admin', 'admin')
@@ -80,7 +80,7 @@ describe('Subscriptions', function () {
   })
 
   describe('PUT /subscriptions', function () {
-    it('should return 201', function *() {
+    it('should return 201', function * () {
       const id = uri.parse(this.exampleSubscription.id, 'subscription').id
       yield this.request()
         .put(this.exampleSubscription.id)
@@ -96,7 +96,7 @@ describe('Subscriptions', function () {
         .to.deep.equal(this.exampleSubscription)
     })
 
-    it('should return 200 when updating the target URL', function *() {
+    it('should return 200 when updating the target URL', function * () {
       this.existingSubscription.target = 'http://subscriber2.example/hooks'
       yield this.request()
         .put(this.existingSubscription.id)
@@ -113,7 +113,7 @@ describe('Subscriptions', function () {
         .to.deep.equal(this.existingSubscription)
     })
 
-    it('should return a 422 when the event/target/subject matches an existing subscription', function *() {
+    it('should return a 422 when the event/target/subject matches an existing subscription', function * () {
       yield this.request()
         .put(this.existingSubscription.id)
         .send(this.existingSubscription)
@@ -122,7 +122,7 @@ describe('Subscriptions', function () {
         .end()
     })
 
-    it('should return 403 for an account the user does not own', function *() {
+    it('should return 403 for an account the user does not own', function * () {
       yield this.request()
         .put(this.exampleSubscription.id)
         .send(this.exampleSubscription)
@@ -131,7 +131,7 @@ describe('Subscriptions', function () {
         .end()
     })
 
-    it('should return 403 if the user doesn\'t own the subject account', function *() {
+    it('should return 403 if the user doesn\'t own the subject account', function * () {
       this.exampleSubscription.subject = this.existingSubscription.subject
       yield this.request()
         .put(this.exampleSubscription.id)
@@ -141,7 +141,7 @@ describe('Subscriptions', function () {
         .end()
     })
 
-    it('should return 201 when an admin subscribes to any subject account', function *() {
+    it('should return 201 when an admin subscribes to any subject account', function * () {
       this.exampleSubscription.owner = 'http://localhost/accounts/admin'
       /* The subject is Alices's account */
       yield this.request()
@@ -155,7 +155,7 @@ describe('Subscriptions', function () {
   })
 
   describe('DELETE /subscriptions/:uuid', function () {
-    it('should return 204', function *() {
+    it('should return 204', function * () {
       yield this.request()
         .delete(this.existingSubscription.id)
         .auth('bob', 'bob')
@@ -163,7 +163,7 @@ describe('Subscriptions', function () {
         .end()
     })
 
-    it('should return 403 if the user tries to delete a subscription they don\'t own', function *() {
+    it('should return 403 if the user tries to delete a subscription they don\'t own', function * () {
       yield this.request()
         .delete(this.existingSubscription.id)
         .auth('alice', 'alice')
@@ -171,7 +171,7 @@ describe('Subscriptions', function () {
         .end()
     })
 
-    it('should return 204 when an admin deletes any subscription', function *() {
+    it('should return 204 when an admin deletes any subscription', function * () {
       yield this.request()
         .delete(this.existingSubscription.id)
         .auth('admin', 'admin')
@@ -211,7 +211,7 @@ describe('Subscriptions', function () {
   })
 
   describe('Retry failed notifications', function () {
-    it('re-posts the notification until success', function *() {
+    it('re-posts the notification until success', function * () {
       const subscriberNock1 = nock('http://subscriber.example')
         .post('/notifications')
         .reply(400) // fail the first time

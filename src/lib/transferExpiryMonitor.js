@@ -28,7 +28,7 @@ class TransferExpiryMonitor {
   * expireTransfer (transferId) {
     const _this = this
 
-    yield db.transaction(function *(transaction) {
+    yield db.transaction(function * (transaction) {
       let transfer = yield Transfer.findById(transferId, { transaction })
 
       if (!transfer) {

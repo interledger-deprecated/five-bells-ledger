@@ -20,7 +20,7 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('GET /transfers/:uuid', function () {
   logHelper(logger)
 
-  beforeEach(function *() {
+  beforeEach(function * () {
     appHelper.create(this, app)
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
@@ -43,12 +43,12 @@ describe('GET /transfers/:uuid', function () {
     yield dbHelper.addTransfers([this.existingTransfer])
   })
 
-  afterEach(function *() {
+  afterEach(function * () {
     nock.cleanAll()
     this.clock.restore()
   })
 
-  it('should return 200 for an existing transfer', function *() {
+  it('should return 200 for an existing transfer', function * () {
     const transfer = this.existingTransfer
     yield this.request()
       .get(transfer.id)
@@ -58,14 +58,14 @@ describe('GET /transfers/:uuid', function () {
       .end()
   })
 
-  it('should return 404 when the transfer does not exist', function *() {
+  it('should return 404 when the transfer does not exist', function * () {
     yield this.request()
       .get(this.exampleTransfer.id)
       .expect(404)
       .end()
   })
 
-  it('should return a rejected transfer if the expiry date has passed', function *() {
+  it('should return a rejected transfer if the expiry date has passed', function * () {
     const transfer = this.transferWithExpiry
     delete transfer.debits[0].authorized
     delete transfer.debits[1].authorized
