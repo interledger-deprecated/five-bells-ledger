@@ -38,7 +38,8 @@ AccountBalances.prototype._getAccountBalances = function * (creditsOrDebits) {
 
     accounts[account] = {
       balance: +accountObj.balance,
-      totalAmount: +_.sum(_.map(amounts, parseFloat))
+      totalAmount: +_.sum(_.map(amounts, parseFloat)),
+      minimumAllowedBalance: accountObj.minimum_allowed_balance
     }
   }
   return accounts
@@ -52,7 +53,7 @@ AccountBalances.prototype._applyDebits = function * (accounts) {
     const debitAccount = accounts[sender]
 
     // Check senders' balances
-    if (debitAccount.balance < debitAccount.totalAmount) {
+    if (debitAccount.balance - debitAccount.totalAmount < debitAccount.minimumAllowedBalance) {
       throw new InsufficientFundsError('Sender has insufficient funds.',
         sender)
     }

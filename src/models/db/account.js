@@ -43,6 +43,14 @@ class Account extends Model {
     data.password_hash = data.password ? hashPassword(data.password) : null
     delete data.password
 
+    if (!data.minimum_allowed_balance) {
+      data.minimum_allowed_balance = 0
+    } else if (data.minimum_allowed_balance === '-infinity') {
+      data.minimum_allowed_balance = Number.NEGATIVE_INFINITY
+    } else {
+      data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
+    }
+
     return data
   }
 
@@ -53,6 +61,11 @@ class Account extends Model {
     delete data.password_hash
     delete data.public_key
     delete data.fingerprint
+    if (data.minimum_allowed_balance === Number.NEGATIVE_INFINITY) {
+      data.minimum_allowed_balance = '-infinity'
+    } else {
+      data.minimum_allowed_balance = String(Number(data.minimum_allowed_balance))
+    }
     if (!data.connector) delete data.connector
     if (!data.is_admin) delete data.is_admin
     return data
@@ -71,6 +84,11 @@ class Account extends Model {
     data.is_disabled = Boolean(data.is_disabled)
     data.is_admin = Boolean(data.is_admin)
     data.balance = Number(data.balance)
+    if (data.minimum_allowed_balance === null) {
+      data.minimum_allowed_balance = Number.NEGATIVE_INFINITY
+    } else {
+      data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
+    }
     delete data.created_at
     delete data.updated_at
     return data
@@ -78,6 +96,11 @@ class Account extends Model {
 
   static convertToPersistent (data) {
     data.balance = Number(data.balance)
+    if (data.minimum_allowed_balance === Number.NEGATIVE_INFINITY) {
+      data.minimum_allowed_balance = null
+    } else {
+      data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
+    }
     return data
   }
 

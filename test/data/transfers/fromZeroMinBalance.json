@@ -1,0 +1,13 @@
+{
+  "id": "http://localhost/transfers/f1ec03c9-4a81-4f36-bdc8-1e8da056b317",
+  "ledger": "http://localhost",
+  "debits": [{
+    "account": "http://localhost/accounts/nominbal",
+    "amount": "10",
+    "authorized": true
+  }],
+  "credits": [{
+    "account": "http://localhost/accounts/bob",
+    "amount": "10"
+  }]
+}

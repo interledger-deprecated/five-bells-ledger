@@ -5,47 +5,54 @@
     "balance": "0",
     "password": "admin",
     "is_admin": true,
-    "is_disabled": false
+    "is_disabled": false,
+    "minimum_allowed_balance": "0"
   },
   "alice": {
     "id": "http://localhost/accounts/alice",
     "name": "alice",
     "balance": "100",
     "password": "alice",
-    "is_disabled": false
+    "is_disabled": false,
+    "minimum_allowed_balance": "0"
   },
   "bob": {
     "id": "http://localhost/accounts/bob",
     "name": "bob",
     "balance": "0",
     "password": "bob",
-    "is_disabled": false
+    "is_disabled": false,
+    "minimum_allowed_balance": "0"
   },
   "candice": {
     "id": "http://localhost/accounts/candice",
     "name": "candice",
     "balance": "50",
     "password": "candice",
-    "is_disabled": false
+    "is_disabled": false,
+    "minimum_allowed_balance": "0"
   },
   "dave": {
     "id": "http://localhost/accounts/dave",
     "name": "dave",
     "balance": "0",
     "password": "dave",
-    "is_disabled": false
+    "is_disabled": false,
+    "minimum_allowed_balance": "0"
   },
   "eve": {
     "id": "http://localhost/accounts/eve",
     "name": "eve",
     "balance": "50",
-    "is_disabled": false
+    "is_disabled": false,
+    "minimum_allowed_balance": "0"
   },
   "hold": {
     "id": "http://localhost/accounts/hold",
     "name": "hold",
     "balance": "0",
-    "is_disabled": false
+    "is_disabled": false,
+    "minimum_allowed_balance": "0"
   },
   "trader": {
     "id": "http://localhost/accounts/trader",
@@ -53,13 +60,38 @@
     "balance": "10",
     "connector": "http://localhost:4321",
     "balance": "0",
-    "is_disabled": false
+    "is_disabled": false,
+    "minimum_allowed_balance": "0"
   },
   "disabledAccount": {
     "id": "http://localhost/accounts/disabled",
     "name": "disabled",
     "balance": "150",
     "password": "disabled",
-    "is_disabled": true
+    "is_disabled": true,
+    "minimum_allowed_balance": "0"
+  },
+  "infiniteMinBalance": {
+    "id": "http://localhost/accounts/infiniteminbal",
+    "name": "infiniteminbal",
+    "balance": "0",
+    "password": "infiniteminbal",
+    "is_disabled": false,
+    "minimum_allowed_balance": "-infinity"
+  },
+  "finiteMinBalance": {
+    "id": "http://localhost/accounts/finiteminbal",
+    "name": "finiteminbal",
+    "balance": "0",
+    "password": "finiteminbal",
+    "is_disabled": false,
+    "minimum_allowed_balance": "-100"
+  },
+  "unspecifiedMinBalance": {
+    "id": "http://localhost/accounts/nominbal",
+    "name": "nominbal",
+    "balance": "0",
+    "password": "nominbal",
+    "is_disabled": false
   }
 }

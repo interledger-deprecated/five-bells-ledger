@@ -11,6 +11,7 @@ function createAccountsTable (knex) {
     table.boolean('is_admin')
     table.boolean('is_disabled')
     table.string('fingerprint').index('fingerprint')
+    table.decimal('minimum_allowed_balance', 10, 2).defaultTo(0)
   })
 }
 
