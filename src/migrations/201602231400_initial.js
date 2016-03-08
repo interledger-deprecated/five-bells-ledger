@@ -17,7 +17,7 @@ function createAccountsTable (knex) {
 function createFulfillmentsTable (knex) {
   return knex.schema.createTableIfNotExists('fulfillments', (table) => {
     table.increments()
-    table.uuid('transfer_id').references('id').inTable('transfers').index()
+    table.uuid('transfer_id').index()
     table.text('condition_fulfillment')
   })
 }
@@ -38,7 +38,7 @@ function createNotificationsTable (knex) {
   return knex.schema.createTableIfNotExists('notifications', (table) => {
     table.uuid('id').primary()
     table.uuid('subscription_id')
-    table.uuid('transfer_id').references('id').inTable('transfers')
+    table.uuid('transfer_id')
     table.integer('retry_count')
     table.datetime('retry_at').index()
     table.index(['subscription_id', 'transfer_id'], 'subscription_transfer')
