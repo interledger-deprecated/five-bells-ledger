@@ -18,7 +18,7 @@ class TimerWorker {
 
     // Make sure we only have one listener waiting for new
     // items to be added to the timeQueue
-    _this.listener = function *() {
+    _this.listener = function * () {
       yield _this.processTimeQueue()
     }
     _this.timeQueue.on('insert', _this.listener)
@@ -47,7 +47,7 @@ class TimerWorker {
     // will be triggered right away so we'll just set it to
     // the longest possible timeout and that will cause us to check again
     const timeoutDuration = Math.min(moment(earliestDate).diff(moment()), MAX_32INT)
-    this.timeout = defer.setTimeout(function *() {
+    this.timeout = defer.setTimeout(function * () {
       yield _this.processTimeQueue()
     }, timeoutDuration)
   }

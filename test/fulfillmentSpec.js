@@ -23,7 +23,7 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('GET /fulfillment', function () {
   logHelper(logger)
 
-  beforeEach(function *() {
+  beforeEach(function * () {
     appHelper.create(this, app)
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
@@ -43,20 +43,20 @@ describe('GET /fulfillment', function () {
     yield dbHelper.addTransfers([this.proposedTransfer, this.preparedTransfer, this.executedTransfer])
   })
 
-  afterEach(function *() {
+  afterEach(function * () {
     nock.cleanAll()
     this.clock.restore()
   })
 
   /* GET fulfillments */
-  it('should return 404 for fulfillment when given an invalid transfer id', function *() {
+  it('should return 404 for fulfillment when given an invalid transfer id', function * () {
     yield this.request()
       .get(this.invalidTransfer.id + '/fulfillment')
       .expect(404)
       .end()
   })
 
-  it('should return 404 if the transfer has no fulfillment', function *() {
+  it('should return 404 if the transfer has no fulfillment', function * () {
     const transfer = this.proposedTransfer
     yield this.request()
       .get(transfer.id + '/fulfillment')
@@ -64,7 +64,7 @@ describe('GET /fulfillment', function () {
       .end()
   })
 
-  it('should return a fulfillment', function *() {
+  it('should return a fulfillment', function * () {
     const transfer = this.preparedTransfer
 
     yield this.request()
@@ -85,7 +85,7 @@ describe('GET /fulfillment', function () {
 
   /* put fulfillments */
   /* Fulfillment errors */
-  it('should return 400 if a valid execution condition is given to an unauthorized transfer', function *() {
+  it('should return 400 if a valid execution condition is given to an unauthorized transfer', function * () {
     const transfer = this.proposedTransfer
 
     yield this.request()
@@ -95,7 +95,7 @@ describe('GET /fulfillment', function () {
       .end()
   })
 
-  it('should return 400 if a valid cancellation condition is given for an executed transfer', function *() {
+  it('should return 400 if a valid cancellation condition is given for an executed transfer', function * () {
     const transfer = this.executedTransfer
 
     yield this.request()
@@ -105,7 +105,7 @@ describe('GET /fulfillment', function () {
       .end()
   })
 
-  it('should return 422 if the signature is invalid', function *() {
+  it('should return 422 if the signature is invalid', function * () {
     const transfer = this.executedTransfer
 
     const executionConditionFulfillment = _.cloneDeep(this.executionConditionFulfillment)
@@ -122,7 +122,7 @@ describe('GET /fulfillment', function () {
 describe('PUT /fulfillment', function () {
   logHelper(logger)
 
-  beforeEach(function *() {
+  beforeEach(function * () {
     appHelper.create(this, app)
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
@@ -143,12 +143,12 @@ describe('PUT /fulfillment', function () {
     yield dbHelper.addAccounts(_.values(accounts))
   })
 
-  afterEach(function *() {
+  afterEach(function * () {
     nock.cleanAll()
     this.clock.restore()
   })
 
-  it('should return 404 when fulfilling a non-existent transfer', function *() {
+  it('should return 404 when fulfilling a non-existent transfer', function * () {
     const transfer = this.preparedTransfer
     yield this.request()
       .put(transfer.id + '/fulfillment')
@@ -159,7 +159,7 @@ describe('PUT /fulfillment', function () {
 
   it('should set the state to "rejected" if and only if the ' +
     'cancellation_condition_fulfillment is present',
-    function *() {
+    function * () {
       const transfer = this.preparedTransfer
 
       yield this.request()
@@ -205,7 +205,7 @@ describe('PUT /fulfillment', function () {
   /* Execution conditions */
   it('should update the state from "prepared" to "executed" ' +
   'when the execution criteria is met',
-    function *() {
+    function * () {
       const transfer = this.preparedTransfer
 
       yield this.request()
@@ -230,7 +230,7 @@ describe('PUT /fulfillment', function () {
     })
 
   it('should execute when the condition is type "and"',
-    function *() {
+    function * () {
       const transfer = this.transferWithAndConditionType
 
       yield this.request()
@@ -254,7 +254,7 @@ describe('PUT /fulfillment', function () {
       expect((yield Account.findByName('bob')).balance).to.equal(10)
     })
 
-  it('should not double spend when transfer is executed multiple times', function *() {
+  it('should not double spend when transfer is executed multiple times', function * () {
     const transfer = this.executedTransfer
 
     yield this.request()
@@ -290,7 +290,7 @@ describe('PUT /fulfillment', function () {
     expect((yield Account.findByName('bob')).balance).to.equal(10)
   })
 
-  it('should allow a transfer to be cancelled multiple times', function *() {
+  it('should allow a transfer to be cancelled multiple times', function * () {
     const transfer = this.preparedTransfer
 
     yield this.request()
@@ -326,7 +326,7 @@ describe('PUT /fulfillment', function () {
     expect((yield Account.findByName('bob')).balance).to.equal(0)
   })
 
-  it('should trigger subscriptions when notification is executed', function *() {
+  it('should trigger subscriptions when notification is executed', function * () {
     const subscription = require('./data/subscription1.json')
     yield Subscription.createExternal(subscription)
 
@@ -403,7 +403,7 @@ describe('PUT /fulfillment', function () {
     notificationExecuted.done()
   })
 
-  it('should trigger subscriptions when notification is cancelled', function *() {
+  it('should trigger subscriptions when notification is cancelled', function * () {
     const subscription = require('./data/subscription1.json')
     yield Subscription.createExternal(subscription)
 

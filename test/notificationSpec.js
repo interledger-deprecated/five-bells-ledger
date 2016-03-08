@@ -16,7 +16,7 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('Notifications', function () {
   logHelper(logger)
 
-  beforeEach(function *() {
+  beforeEach(function * () {
     appHelper.create(this, app)
 
     // Define example data
@@ -48,7 +48,7 @@ describe('Notifications', function () {
   })
 
   describe('GET /subscriptions/:subscription_id/notifications/:notification_id', function () {
-    it('should return 200', function *() {
+    it('should return 200', function * () {
       yield this.request()
         .get(this.existingSubscription.id + '/notifications/' + this.existingNotification.id)
         .auth('alice', 'alice')
@@ -58,7 +58,7 @@ describe('Notifications', function () {
         .end()
     })
 
-    it('should return 404 for a non-existent subscription id', function *() {
+    it('should return 404 for a non-existent subscription id', function * () {
       yield this.request()
         .get(this.exampleSubscription.id + '/notifications/' + this.existingNotification.id)
         .auth('bob', 'bob')
@@ -66,7 +66,7 @@ describe('Notifications', function () {
         .end()
     })
 
-    it('should return 404 for a non-existent notification id', function *() {
+    it('should return 404 for a non-existent notification id', function * () {
       yield this.request()
         .get(this.existingSubscription.id + '/notifications/ad78bd3c-68ce-488a-9dba-acd99cbff637')
         .auth('bob', 'bob')
@@ -74,7 +74,7 @@ describe('Notifications', function () {
         .end()
     })
 
-    it('should return 403 for a notification from a subscription the user doesn\'t own', function *() {
+    it('should return 403 for a notification from a subscription the user doesn\'t own', function * () {
       yield this.request()
         .get(this.existingSubscription.id + '/notifications/' + this.existingNotification.id)
         .auth('bob', 'bob')
@@ -82,7 +82,7 @@ describe('Notifications', function () {
         .end()
     })
 
-    it('should allow an admin to view any notification', function *() {
+    it('should allow an admin to view any notification', function * () {
       yield this.request()
         .get(this.existingSubscription.id + '/notifications/' + this.existingNotification.id)
         .auth('admin', 'admin')

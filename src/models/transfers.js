@@ -279,7 +279,7 @@ function * executeTransfer (transaction, transfer, fulfillment) {
 }
 
 function * fulfillTransfer (transferId, fulfillment) {
-  const existingFulfillment = yield db.transaction(function *(transaction) {
+  const existingFulfillment = yield db.transaction(function * (transaction) {
     const transfer = yield db.getTransfer(transferId, {transaction})
 
     if (!transfer) {
