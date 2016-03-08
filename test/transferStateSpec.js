@@ -80,6 +80,7 @@ describe('Transfer State', function () {
       transfer.state = transferStates.TRANSFER_STATE_PROPOSED
       yield this.request()
         .put(transfer.id)
+        .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
         .expect(validator.validateTransfer)
@@ -114,6 +115,7 @@ describe('Transfer State', function () {
       transfer.state = transferStates.TRANSFER_STATE_PROPOSED
       yield this.request()
         .put(transfer.id)
+        .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
         .expect(validator.validateTransfer)
@@ -243,6 +245,7 @@ describe('Transfer State', function () {
 
       yield this.request()
         .put(transfer.id)
+        .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
         .expect(validator.validateTransfer)

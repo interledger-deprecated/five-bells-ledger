@@ -180,7 +180,7 @@ function isAffectedAccount (account, transfer) {
 
 function validateIsAffectedAccount (account, transfer) {
   if (account && !isAffectedAccount(account, transfer)) {
-    throw new UnauthorizedError('Unknown or invalid account / password')
+    throw new UnauthorizedError('Invalid attempt to authorize debit')
   }
 }
 
