@@ -52,9 +52,6 @@ describe('PUT /transfers/:id', function () {
     this.disabledTransferTo = _.cloneDeep(require('./data/transfers/toDisabledAccount'))
     this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
 
-    // Reset database
-    yield dbHelper.reset()
-
     // Store some example data
     accounts.eve.public_key = publicKey
     yield dbHelper.addAccounts(_.values(accounts))

@@ -1,1 +1,1 @@
--r co-mocha
+-r co-mocha --timeout 150000

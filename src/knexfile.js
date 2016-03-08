@@ -51,7 +51,7 @@ module.exports = {
   },
   // Test with Oracle on Mac
   // Set environment variables
-  // NOTARY_DB_ENV=oracledev DYLD_LIBRARY_PATH='/opt/oracle/instantclient'
+  // LEDGER_DB_ENV=oracledev DYLD_LIBRARY_PATH='/opt/oracle/instantclient'
   oracledev: {
     'debug': true,
     'client': 'strong-oracle',
@@ -62,6 +62,7 @@ module.exports = {
       password: 'oracle',
       adapter: 'oracle'
     },
+    useNullAsDefault: true,
     pool: {
       min: 0,
       max: 7
@@ -74,7 +75,7 @@ module.exports = {
   // Set environment variables
   // NOTARY_DB_ENV=oracledci LD_LIBRARY_PATH='/opt/oracle/instantclient'
   oracleci: {
-    'debug': true,
+    'debug': false,
     'client': 'strong-oracle',
     'connection': {
       database: '',
@@ -83,6 +84,7 @@ module.exports = {
       password: 'oracle',
       adapter: 'oracle'
     },
+    useNullAsDefault: true,
     pool: {
       min: 0,
       max: 7

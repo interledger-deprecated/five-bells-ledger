@@ -35,9 +35,6 @@ describe('Accounts', function () {
     this.traderAccount = this.exampleAccounts.trader
     this.disabledAccount = this.exampleAccounts.disabledAccount
 
-    // Reset database
-    yield dbHelper.reset()
-
     // Store some example data
     yield dbHelper.addAccounts([
       this.adminAccount,

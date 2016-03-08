@@ -77,6 +77,18 @@ class Transfer extends Model {
     if (data.expires_at) {
       data.expires_at = new Date(data.expires_at)
     }
+    if (data.proposed_at) {
+      data.proposed_at = new Date(data.proposed_at)
+    }
+    if (data.prepared_at) {
+      data.prepared_at = new Date(data.prepared_at)
+    }
+    if (data.executed_at) {
+      data.executed_at = new Date(data.executed_at)
+    }
+    if (data.rejected_at) {
+      data.rejected_at = new Date(data.rejected_at)
+    }
     data = _.omit(data, _.isNull)
     return data
   }
@@ -87,6 +99,18 @@ class Transfer extends Model {
     data.execution_condition = JSON.stringify(data.execution_condition)
     data.cancellation_condition = JSON.stringify(data.cancellation_condition)
     data.additional_info = JSON.stringify(data.additional_info)
+    if (data.proposed_at) {
+      data.proposed_at = new Date(data.proposed_at)
+    }
+    if (data.prepared_at) {
+      data.prepared_at = new Date(data.prepared_at)
+    }
+    if (data.executed_at) {
+      data.executed_at = new Date(data.executed_at)
+    }
+    if (data.rejected_at) {
+      data.rejected_at = new Date(data.rejected_at)
+    }
     return data
   }
 

@@ -18,7 +18,7 @@ describe('Notifications', function () {
 
   beforeEach(function * () {
     appHelper.create(this, app)
-
+    yield dbHelper.init()
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))
     this.existingSubscription = _.cloneDeep(require('./data/subscription1'))
@@ -32,9 +32,6 @@ describe('Notifications', function () {
       transfer_id: idParts[idParts.length - 1],
       condition_fulfillment: _.cloneDeep(require('./data/fulfillments/execution'))
     }
-
-    // Reset database
-    yield dbHelper.reset()
 
     // Use fake time
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
