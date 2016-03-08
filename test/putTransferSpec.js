@@ -1266,15 +1266,8 @@ describe('PUT /transfers/:id', function () {
   })
 
   describe('FEATURE_CREDIT_AUTH=true', function () {
-    // Kludge to work around immutable config
-    const features = _.find(config._root.entries, function (entry) {
-      return entry[0] === 'features'
-    })[1]
-    const hasCreditAuth = _.find(features._root.entries, function (entry) {
-      return entry[0] === 'hasCreditAuth'
-    })
-    before(function () { hasCreditAuth[1] = true })
-    after(function () { hasCreditAuth[1] = false })
+    before(function () { config.features.hasCreditAuth = true })
+    after(function () { config.features.hasCreditAuth = false })
 
     it('should return 403 if authorized:true is set for any credits that are ' +
     'not owned by the authorized account', function * () {
