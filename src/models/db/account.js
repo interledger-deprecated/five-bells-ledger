@@ -86,10 +86,7 @@ class Account extends Model {
   }
 
   static findByFingerprint (fingerprint, options) {
-    return Account.findOne({
-      where: {fingerprint: fingerprint},
-      transaction: options && options.transaction
-    })
+    return Account.findByKey('fingerprint', fingerprint, options)
   }
 
   createEntry (values, options) {
