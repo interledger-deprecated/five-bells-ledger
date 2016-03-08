@@ -1276,22 +1276,6 @@ describe('PUT /transfers/:id', function () {
     before(function () { hasCreditAuth[1] = true })
     after(function () { hasCreditAuth[1] = false })
 
-    it('succeeds if no authorization is provided', function * () {
-      const transfer = this.exampleTransfer
-      const transferWithoutAuthorization = _.cloneDeep(transfer)
-      delete transferWithoutAuthorization.debits[0].authorized
-      yield this.request()
-        .put(transfer.id)
-        .send(transferWithoutAuthorization)
-        .expect(201)
-        .expect(_.assign({}, transferWithoutAuthorization, {
-          state: 'proposed',
-          timeline: { proposed_at: '2015-06-16T00:00:00.000Z' }
-        }))
-        .expect(validator.validateTransfer)
-        .end()
-    })
-
     it('should return 403 if authorized:true is set for any credits that are ' +
     'not owned by the authorized account', function * () {
       const transfer = this.exampleTransfer
