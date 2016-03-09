@@ -37,8 +37,8 @@ AccountBalances.prototype._getAccountBalances = function * (creditsOrDebits) {
     }
 
     accounts[account] = {
-      balance: +accountObj.balance,
-      totalAmount: +_.sum(_.map(amounts, parseFloat)),
+      balance: accountObj.balance,
+      totalAmount: _.sum(_.map(amounts, parseFloat)),
       minimumAllowedBalance: accountObj.minimum_allowed_balance
     }
   }

@@ -468,9 +468,9 @@
       }
     },
     "five-bells-shared": {
-      "version": "12.1.0",
-      "from": "five-bells-shared@12.1.0",
-      "resolved": "https://registry.npmjs.org/five-bells-shared/-/five-bells-shared-12.1.0.tgz",
+      "version": "12.1.1",
+      "from": "five-bells-shared@12.1.1",
+      "resolved": "https://registry.npmjs.org/five-bells-shared/-/five-bells-shared-12.1.1.tgz",
       "dependencies": {
         "co-body": {
           "version": "1.2.0",
