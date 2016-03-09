@@ -15,12 +15,13 @@
     "start": "node src/app.js",
     "lint": "eslint .",
     "test": "istanbul test -- _mocha",
-    "test-oracle": "LEDGER_DB_ENV=oracledev DYLD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
-    "test-oracle-ci": "LEDGER_DB_ENV=oracleci LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
+    "test-oracle": "LEDGER_UNIT_DB_URI='oracle://system:oracle@192.168.99.100:49161/' DYLD_LIBRARY_PATH=/opt/oracle/instantclient LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
+    "test-oracle-ci": "LEDGER_UNIT_DB_URI='oracle://system:oracle@localhost:49161/' LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "apidoc": "apidoc -o apidoc-out -i src/controllers/",
     "integration": "integration all",
-    "bump": "version-bump"
+    "bump": "version-bump",
+    "drop-oracle-tables": "scripts/drop-oracle-tables.sh"
   },
   "engines": {
     "node": ">=0.12",
@@ -73,7 +74,7 @@
     "coveralls": "^2.11.2",
     "eslint": "^2.0.0",
     "eslint-config-standard": "^5.1.0",
-    "five-bells-integration-test": "^1.1.3",
+    "five-bells-integration-test": "^1.1.4",
     "istanbul": "0.4.0",
     "mocha": "~2.3.4",
     "nock": "^2.10.0",
