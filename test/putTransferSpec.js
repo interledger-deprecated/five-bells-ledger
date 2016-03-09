@@ -51,6 +51,9 @@ describe('PUT /transfers/:id', function () {
     this.disabledTransferFrom = _.cloneDeep(require('./data/transfers/fromDisabledAccount'))
     this.disabledTransferTo = _.cloneDeep(require('./data/transfers/toDisabledAccount'))
     this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
+    this.fromZeroMinBalanceAccountTransfer = _.cloneDeep(require('./data/transfers/fromZeroMinBalance'))
+    this.fromFiniteMinBalanceAccountTransfer = _.cloneDeep(require('./data/transfers/fromFiniteMinBalance'))
+    this.fromInfiniteMinBalanceAccountTransfer = _.cloneDeep(require('./data/transfers/fromInfiniteMinBalance'))
 
     // Store some example data
     accounts.eve.public_key = publicKey
@@ -342,7 +345,8 @@ describe('PUT /transfers/:id', function () {
       name: 'bob',
       balance: '10',
       is_disabled: true,
-      ledger: 'http://localhost'
+      ledger: 'http://localhost',
+      minimum_allowed_balance: '0'
     })
     .expect(validator.validateAccount)
     .end()
@@ -356,7 +360,8 @@ describe('PUT /transfers/:id', function () {
         name: 'alice',
         balance: '90',
         is_disabled: false,
-        ledger: 'http://localhost'
+        ledger: 'http://localhost',
+        minimum_allowed_balance: '0'
       })
       .expect(validator.validateAccount)
       .end()
@@ -1031,7 +1036,8 @@ describe('PUT /transfers/:id', function () {
         name: 'bob',
         ledger: 'http://localhost',
         balance: '10',
-        is_disabled: false
+        is_disabled: false,
+        minimum_allowed_balance: '0'
       })
       .expect(validator.validateAccount)
       .end()
@@ -1045,7 +1051,8 @@ describe('PUT /transfers/:id', function () {
         name: 'dave',
         ledger: 'http://localhost',
         balance: '10',
-        is_disabled: false
+        is_disabled: false,
+        minimum_allowed_balance: '0'
       })
       .expect(validator.validateAccount)
       .end()
@@ -1098,7 +1105,8 @@ describe('PUT /transfers/:id', function () {
         name: 'alice',
         ledger: 'http://localhost',
         balance: '90',
-        is_disabled: false
+        is_disabled: false,
+        minimum_allowed_balance: '0'
       }))
       .expect(validator.validateAccount)
       .end()
@@ -1112,7 +1120,8 @@ describe('PUT /transfers/:id', function () {
         name: 'candice',
         ledger: 'http://localhost',
         balance: '40',
-        is_disabled: false
+        is_disabled: false,
+        minimum_allowed_balance: '0'
       }))
       .expect(validator.validateAccount)
       .end()
@@ -1166,7 +1175,8 @@ describe('PUT /transfers/:id', function () {
           name: 'alice',
           ledger: 'http://localhost',
           balance: '50',
-          is_disabled: false
+          is_disabled: false,
+          minimum_allowed_balance: '0'
         }))
         .expect(validator.validateAccount)
         .end()
@@ -1180,7 +1190,8 @@ describe('PUT /transfers/:id', function () {
           name: 'candice',
           ledger: 'http://localhost',
           balance: '30',
-          is_disabled: false
+          is_disabled: false,
+          minimum_allowed_balance: '0'
         }))
         .expect(validator.validateAccount)
         .end()
@@ -1194,7 +1205,8 @@ describe('PUT /transfers/:id', function () {
           name: 'bob',
           ledger: 'http://localhost',
           balance: '30',
-          is_disabled: false
+          is_disabled: false,
+          minimum_allowed_balance: '0'
         }))
         .expect(validator.validateAccount)
         .end()
@@ -1208,11 +1220,105 @@ describe('PUT /transfers/:id', function () {
           name: 'dave',
           ledger: 'http://localhost',
           balance: '40',
-          is_disabled: false
+          is_disabled: false,
+          minimum_allowed_balance: '0'
         }))
         .expect(validator.validateAccount)
         .end()
     })
+
+  it('should allow sender balance to go negative', function * () {
+    yield this.request()
+      .put(this.fromFiniteMinBalanceAccountTransfer.id)
+      .auth('finiteminbal', 'finiteminbal')
+      .send(this.fromFiniteMinBalanceAccountTransfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
+      .end()
+
+    yield this.request()
+      .get(this.fromFiniteMinBalanceAccountTransfer.debits[0].account)
+      .auth('admin', 'admin')
+      .expect(200)
+      .expect(_.assign({}, {
+        id: 'http://localhost/accounts/finiteminbal',
+        name: 'finiteminbal',
+        ledger: 'http://localhost',
+        balance: '-50',
+        is_disabled: false,
+        minimum_allowed_balance: '-100'
+      }))
+      .expect(validator.validateAccount)
+      .end()
+
+    yield this.request()
+      .get(this.fromFiniteMinBalanceAccountTransfer.credits[0].account)
+      .auth('admin', 'admin')
+      .expect(200)
+      .expect(_.assign({}, {
+        id: 'http://localhost/accounts/bob',
+        name: 'bob',
+        ledger: 'http://localhost',
+        balance: '50',
+        is_disabled: false,
+        minimum_allowed_balance: '0'
+      }))
+      .expect(validator.validateAccount)
+      .end()
+  })
+
+  it('should allow sender balance to go arbitrarily negative', function * () {
+    const transfer = this.fromInfiniteMinBalanceAccountTransfer
+
+    yield this.request()
+      .put(transfer.id)
+      .auth('infiniteminbal', 'infiniteminbal')
+      .send(transfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
+      .end()
+
+    yield this.request()
+      .get(transfer.debits[0].account)
+      .auth('admin', 'admin')
+      .expect(200)
+      .expect(_.assign({}, {
+        id: 'http://localhost/accounts/infiniteminbal',
+        name: 'infiniteminbal',
+        ledger: 'http://localhost',
+        balance: '-10000000',
+        is_disabled: false,
+        minimum_allowed_balance: '-infinity'
+      }))
+      .expect(validator.validateAccount)
+      .end()
+
+    yield this.request()
+      .get(transfer.credits[0].account)
+      .auth('admin', 'admin')
+      .expect(200)
+      .expect(_.assign({}, {
+        id: 'http://localhost/accounts/bob',
+        name: 'bob',
+        ledger: 'http://localhost',
+        balance: '10000000',
+        is_disabled: false,
+        minimum_allowed_balance: '0'
+      }))
+      .expect(validator.validateAccount)
+      .end()
+  })
+
+  it('should thow InsufficientFunds error when sender balance goes below minimum_allowed_balance', function * () {
+    const transfer = this.fromZeroMinBalanceAccountTransfer
+
+    yield this.request()
+      .put(transfer.id)
+      .auth('nominbal', 'nominbal')
+      .send(transfer)
+      .expect(422)
+      .end()
+  })
 
   it('should return 200 if the http-signature is valid', function * () {
     const transfer = this.transferFromEve

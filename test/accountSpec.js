@@ -34,6 +34,9 @@ describe('Accounts', function () {
     this.existingAccount2 = this.exampleAccounts.candice
     this.traderAccount = this.exampleAccounts.trader
     this.disabledAccount = this.exampleAccounts.disabledAccount
+    this.infiniteMinBalance = this.exampleAccounts.infiniteMinBalance
+    this.finiteMinBalance = this.exampleAccounts.finiteMinBalance
+    this.unspecifiedMinBalance = this.exampleAccounts.unspecifiedMinBalance
 
     // Store some example data
     yield dbHelper.addAccounts([
@@ -185,6 +188,20 @@ describe('Accounts', function () {
         .end()
     })
 
+    it('should return the minimum_allowed_balance as a string', function * () {
+      yield this.request()
+        .get(this.existingAccount.id)
+        .auth('admin', 'admin')
+        .expect(200)
+        .expect(function (res) {
+          if (typeof res.body.minimum_allowed_balance !== 'string') {
+            throw new Error('minimum_allowed_balance should be a string')
+          }
+        })
+        .expect(validator.validateAccount)
+        .end()
+    })
+
     it('should return the disabled field as a boolean for an admin user', function * () {
       yield this.request()
         .get(this.existingAccount.id)
@@ -213,6 +230,57 @@ describe('Accounts', function () {
         .get(this.disabledAccount.id)
         .auth('disabled', 'disabled')
         .expect(403)
+        .end()
+    })
+
+    it('should return 0 as a minimum_allowed_balance', function * () {
+      yield dbHelper.addAccounts([this.unspecifiedMinBalance])
+
+      const account = this.unspecifiedMinBalance
+      delete account.password
+      yield this.request()
+        .get(account.id)
+        .auth('admin', 'admin')
+        .expect(200)
+        .expect(_.assign({}, account, {
+          minimum_allowed_balance: '0',
+          ledger: 'http://localhost'
+        }))
+        .expect(validator.validateAccount)
+        .end()
+    })
+
+    it('should return -infinity as a minimum_allowed_balance', function * () {
+      yield dbHelper.addAccounts([this.infiniteMinBalance])
+
+      const account = this.infiniteMinBalance
+      delete account.password
+      yield this.request()
+        .get(account.id)
+        .auth('admin', 'admin')
+        .expect(200)
+        .expect(_.assign({}, account, {
+          minimum_allowed_balance: '-infinity',
+          ledger: 'http://localhost'
+        }))
+        .expect(validator.validateAccount)
+        .end()
+    })
+
+    it('should return -100 as a minimum_allowed_balance', function * () {
+      yield dbHelper.addAccounts([this.finiteMinBalance])
+
+      const account = this.finiteMinBalance
+      delete account.password
+      yield this.request()
+        .get(account.id)
+        .auth('admin', 'admin')
+        .expect(200)
+        .expect(_.assign({}, account, {
+          minimum_allowed_balance: '-100',
+          ledger: 'http://localhost'
+        }))
+        .expect(validator.validateAccount)
         .end()
     })
   })
@@ -265,11 +333,52 @@ describe('Accounts', function () {
       delete existingAccount.password
 
       yield this.request()
-      .put(newAccount.id)
-      .auth('admin', 'admin')
-      .send(existingAccount)
-      .expect(400)
-      .end()
+        .put(newAccount.id)
+        .auth('admin', 'admin')
+        .send(existingAccount)
+        .expect(400)
+        .end()
+    })
+
+    it('should default minimum_allowed_balance to 0 when unspecified', function * () {
+      const noMinBalanceAccount = this.unspecifiedMinBalance
+      delete noMinBalanceAccount.password
+      yield this.request()
+        .put(noMinBalanceAccount.id)
+        .auth('admin', 'admin')
+        .send(noMinBalanceAccount)
+        .expect(201)
+        .expect(_.assign({}, noMinBalanceAccount, {
+          minimum_allowed_balance: '0'
+        }))
+        .expect(validator.validateAccount)
+        .end()
+    })
+
+    it('should allow "-infinity" as a valid minimum_allowed_balance', function * () {
+      const infiniteMinBalanceAccount = this.infiniteMinBalance
+      delete infiniteMinBalanceAccount.password
+      yield this.request()
+        .put(infiniteMinBalanceAccount.id)
+        .auth('admin', 'admin')
+        .send(infiniteMinBalanceAccount)
+        .expect(201)
+        .expect(infiniteMinBalanceAccount)
+        .expect(validator.validateAccount)
+        .end()
+    })
+
+    it('should allow the user to specify a minimum_allowed_balance', function * () {
+      const finiteMinBalanceAccount = this.finiteMinBalance
+      delete finiteMinBalanceAccount.password
+      yield this.request()
+        .put(finiteMinBalanceAccount.id)
+        .auth('admin', 'admin')
+        .send(finiteMinBalanceAccount)
+        .expect(201)
+        .expect(finiteMinBalanceAccount)
+        .expect(validator.validateAccount)
+        .end()
     })
   })
 
