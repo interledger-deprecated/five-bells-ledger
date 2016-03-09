@@ -325,8 +325,6 @@ function * fulfillTransfer (transferId, fulfillment) {
 
   log.debug('changes written to database')
 
-  notificationWorker.scheduleProcessing()
-
   return {
     fulfillment: existingFulfillment || fulfillment.getDataExternal(),
     existed: Boolean(existingFulfillment)
@@ -399,9 +397,6 @@ function * setTransfer (transfer, requestingUser) {
   }
 
   log.debug('changes written to database')
-
-  // Process notifications soon
-  notificationWorker.scheduleProcessing()
 
   return {
     transfer: transfer.getDataExternal(),

@@ -196,6 +196,7 @@ describe('Subscriptions', function () {
         .expect(201)
         .expect(validator.validateTransfer)
         .end()
+      yield notificationWorker.processNotificationQueue()
       this.clock.tick(1000)
 
       // In production this function should be triggered by the workers started in app.js
@@ -225,6 +226,7 @@ describe('Subscriptions', function () {
         .expect(201)
         .expect(validator.validateTransfer)
         .end()
+      yield notificationWorker.processNotificationQueue()
       subscriberNock1.done()
 
       this.clock.tick(500)

@@ -6,6 +6,7 @@ nock.enableNetConnect(['localhost', '127.0.0.1'])
 const expect = require('chai').expect
 const app = require('../src/services/app')
 const logger = require('../src/services/log')
+const notificationWorker = require('../src/services/notificationWorker')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
@@ -356,6 +357,7 @@ describe('PUT /fulfillment', function () {
       .expect(transferPrepared)
       .expect(validator.validateTransfer)
       .end()
+    yield notificationWorker.processNotificationQueue()
 
     notificationPrepared.done()
 
@@ -393,6 +395,7 @@ describe('PUT /fulfillment', function () {
       .expect(this.executionConditionFulfillment)
       .expect(validator.validateFulfillment)
       .end()
+    yield notificationWorker.processNotificationQueue()
 
     notificationExecuted.done()
   })
@@ -433,6 +436,7 @@ describe('PUT /fulfillment', function () {
       .expect(transferPrepared)
       .expect(validator.validateTransfer)
       .end()
+    yield notificationWorker.processNotificationQueue()
 
     notificationPrepared.done()
 
@@ -470,6 +474,7 @@ describe('PUT /fulfillment', function () {
       .expect(201)
       .expect(this.cancellationConditionFulfillment)
       .end()
+    yield notificationWorker.processNotificationQueue()
 
     notificationCancelled.done()
   })

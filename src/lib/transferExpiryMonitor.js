@@ -51,10 +51,6 @@ class TransferExpiryMonitor {
         yield _this.notificationWorker.queueNotifications(transfer, transaction)
       }
     })
-
-    // Should process transfer state notifications soon, because some transfers
-    // may have changed state
-    this.notificationWorker.scheduleProcessing()
   }
 
   * watch (transfer) {

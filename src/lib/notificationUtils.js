@@ -19,8 +19,8 @@ function tlsOptions (target, config) {
   }, _.isUndefined) : {}
 }
 
-function * sendNotification (target, notificationBody, config) {
-  yield * request(target, _.assign({
+function sendNotification (target, notificationBody, config) {
+  return request(target, _.assign({
     method: 'post',
     json: true,
     body: notificationBody

@@ -55,7 +55,7 @@ class App {
     // Start timerWorker to trigger the transferExpiryMonitor
     // when transfers are going to expire
     yield this.timerWorker.start()
-    yield this.notificationWorker.start()
+    this.notificationWorker.start()
 
     if (this.config.getIn(['db', 'sync'])) {
       yield knex.knex.migrate.latest(knex.config)
