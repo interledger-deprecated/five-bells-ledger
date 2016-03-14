@@ -83,7 +83,9 @@ class Account extends Model {
     // some databases store booleans as 0 and 1, and knex does not convert
     data.is_disabled = Boolean(data.is_disabled)
     data.is_admin = Boolean(data.is_admin)
-    data.balance = Number(data.balance)
+    // oracle has balance stored properly, but knex returns it with a small
+    // rounding error, possibly a bug in knex; using toFixed as workaround
+    data.balance = Number(Number(data.balance).toFixed(2))
     if (data.minimum_allowed_balance === null) {
       data.minimum_allowed_balance = Number.NEGATIVE_INFINITY
     } else {
@@ -95,7 +97,7 @@ class Account extends Model {
   }
 
   static convertToPersistent (data) {
-    data.balance = Number(data.balance)
+    data.balance = Number(Number(data.balance).toFixed(2))
     if (data.minimum_allowed_balance === Number.NEGATIVE_INFINITY) {
       data.minimum_allowed_balance = null
     } else {
