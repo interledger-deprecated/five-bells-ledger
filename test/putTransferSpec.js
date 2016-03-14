@@ -453,7 +453,7 @@ describe('PUT /transfers/:id', function () {
     expect((yield Account.findByName('bob')).balance).to.equal(10)
   })
 
-  it.skip('should round properly', function * () {
+  it('should maintain correct precision', function * () {
     const transferWithoutId = _.cloneDeep(this.exampleTransfer)
     delete transferWithoutId.id
     transferWithoutId.debits[0].amount = transferWithoutId.credits[0].amount = '5.0101'
