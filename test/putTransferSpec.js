@@ -453,7 +453,10 @@ describe('PUT /transfers/:id', function () {
     expect((yield Account.findByName('bob')).balance).to.equal(10)
   })
 
-  it.skip('should round properly', function * () {
+  // In CI, Oracle is setup with Decimal(10,2) and SQLite doesn't care about precision
+  // So this test will pass for SQLite and fail for Oracle
+  // TODO: Configuration for specifiyng amount precision for the ledger
+  it.skip('should maintain correct precision', function * () {
     const transferWithoutId = _.cloneDeep(this.exampleTransfer)
     delete transferWithoutId.id
     transferWithoutId.debits[0].amount = transferWithoutId.credits[0].amount = '5.0101'
