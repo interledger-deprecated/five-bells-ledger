@@ -68,7 +68,8 @@ AccountBalances.prototype._applyDebits = function * (accounts) {
     const debitAccount = accounts[sender]
 
     // Check senders' balances
-    if (debitAccount.balance - debitAccount.totalAmount < debitAccount.minimumAllowedBalance) {
+    if (new Bignumber(debitAccount.minimumAllowedBalance).greaterThan(
+          difference([debitAccount.balance, debitAccount.totalAmount]))) {
       throw new InsufficientFundsError('Sender has insufficient funds.',
         sender)
     }
