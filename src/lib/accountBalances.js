@@ -5,6 +5,7 @@ const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable
 const InsufficientFundsError = require('../errors/insufficient-funds-error')
 const log = require('../services/log')('account balances')
 const Account = require('../models/db/account').Account
+const Bignumber = require('bignumber.js')
 
 function AccountBalances (transaction, transfer) {
   this.transaction = transaction
@@ -22,6 +23,20 @@ AccountBalances.prototype.applyDebits = function * () { yield this._applyDebits(
 AccountBalances.prototype.applyCredits = function * () { yield this._applyCredits(this._credits) }
 AccountBalances.prototype.revertDebits = function * () { yield this._applyCredits(this._debits) }
 
+function sum (numbers) {
+  const numStrings = _.map(numbers, String)
+  return _.reduce(_.rest(numStrings), (result, num) => {
+    return result.plus(num)
+  }, new Bignumber(_.first(numStrings))).toString()
+}
+
+function difference (numbers) {
+  const numStrings = _.map(numbers, String)
+  return _.reduce(_.rest(numStrings), (result, num) => {
+    return result.minus(num)
+  }, new Bignumber(_.first(numStrings))).toString()
+}
+
 AccountBalances.prototype._getAccountBalances = function * (creditsOrDebits) {
   let accounts = _.groupBy(creditsOrDebits, function (creditOrDebit) {
     return creditOrDebit.account
@@ -38,7 +53,7 @@ AccountBalances.prototype._getAccountBalances = function * (creditsOrDebits) {
 
     accounts[account] = {
       balance: accountObj.balance,
-      totalAmount: _.sum(_.map(amounts, parseFloat)),
+      totalAmount: sum(amounts),
       minimumAllowedBalance: accountObj.minimum_allowed_balance
     }
   }
@@ -61,9 +76,9 @@ AccountBalances.prototype._applyDebits = function * (accounts) {
     // Take money out of senders' accounts
     const account = yield Account.findByName(sender, { transaction })
     log.debug('sender ' + sender + ' balance: ' + account.balance +
-      ' -> ' + (account.balance - debitAccount.totalAmount))
-    account.balance -= debitAccount.totalAmount
-    holdAccount.balance += debitAccount.totalAmount
+      ' -> ' + (difference([account.balance, debitAccount.totalAmount])))
+    account.balance = difference([account.balance, debitAccount.totalAmount])
+    holdAccount.balance = sum([holdAccount.balance, debitAccount.totalAmount])
     yield this._saveAccount(account)
   }
   yield this._saveAccount(holdAccount)
@@ -78,9 +93,9 @@ AccountBalances.prototype._applyCredits = function * (accounts) {
 
     const account = yield Account.findByName(recipient, { transaction })
     log.debug('recipient ' + recipient + ' balance: ' + account.balance +
-      ' -> ' + (account.balance + creditAccount.totalAmount))
-    account.balance += creditAccount.totalAmount
-    holdAccount.balance -= creditAccount.totalAmount
+      ' -> ' + sum([account.balance, creditAccount.totalAmount]))
+    account.balance = sum([account.balance, creditAccount.totalAmount])
+    holdAccount.balance = difference([holdAccount.balance, creditAccount.totalAmount])
     yield this._saveAccount(account)
   }
   yield this._saveAccount(holdAccount)
