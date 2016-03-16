@@ -288,19 +288,18 @@ describe('Accounts', function () {
   describe('PUT /accounts/:uuid', function () {
     it('should return 201', function * () {
       const account = this.exampleAccounts.bob
-      // Passwords are not returned
-      delete account.password
+      const withoutPassword = _.omit(account, 'password')
       yield this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(account)
         .expect(201)
-        .expect(account)
+        .expect(withoutPassword)
         .expect(validator.validateAccount)
         .end()
 
       // Check balances
-      expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(account)
+      expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(withoutPassword)
     })
 
     it('should return 200 if the account already exists', function * () {
@@ -416,6 +415,71 @@ describe('Accounts', function () {
         .get(uri)
         .auth('admin', 'admin')
         .expect(expected)
+        .end()
+    })
+
+    it('should lowercase account name -- uppercased in url', function * () {
+      const lowerCased = this.exampleAccounts.bob
+      const account = _.assign({}, lowerCased, {id: lowerCased.id.toUpperCase()})
+      const withoutPassword = _.omit(lowerCased, 'password')
+
+      yield this.request()
+        .put(account.id)
+        .auth('admin', 'admin')
+        .send(account)
+        .expect(201)
+        .expect(withoutPassword)
+        .expect(validator.validateAccount)
+        .end()
+
+      // Check balances
+      expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(withoutPassword)
+    })
+
+    it('should lowercase account name -- uppercased in body', function * () {
+      const lowerCased = this.exampleAccounts.bob
+      const account = _.assign({}, lowerCased, {name: lowerCased.name.toUpperCase()})
+      const withoutPassword = _.omit(lowerCased, 'password')
+
+      yield this.request()
+        .put(account.id)
+        .auth('admin', 'admin')
+        .send(account)
+        .expect(201)
+        .expect(withoutPassword)
+        .expect(validator.validateAccount)
+        .end()
+
+      // Check balances
+      expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(withoutPassword)
+    })
+
+    it('should lowercase account name -- omit id in body', function * () {
+      const lowerCased = this.exampleAccounts.bob
+      const account = _.assign({}, lowerCased, {name: lowerCased.name.toUpperCase()})
+      const withoutPassword = _.omit(lowerCased, 'password')
+
+      yield this.request()
+        .put(account.id)
+        .auth('admin', 'admin')
+        .send(_.omit(account, 'id'))
+        .expect(201)
+        .expect(withoutPassword)
+        .expect(validator.validateAccount)
+        .end()
+
+      // Check balances
+      expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(withoutPassword)
+    })
+
+    it('should return 400 if name and id are omitted in body', function * () {
+      const account = this.exampleAccounts.bob
+
+      yield this.request()
+        .put(account.id)
+        .auth('admin', 'admin')
+        .send(_.omit(account, ['name', 'id']))
+        .expect(400)
         .end()
     })
   })

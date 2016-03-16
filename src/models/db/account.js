@@ -37,6 +37,8 @@ class Account extends Model {
     if (data.id) {
       data.name = uri.parse(data.id, 'account').name.toLowerCase()
       delete data.id
+    } else {
+      data.name = data.name.toLowerCase()
     }
 
     if (data.balance) {
