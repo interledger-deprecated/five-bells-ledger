@@ -1,6 +1,7 @@
 /*global describe, it*/
 'use strict'
 const fs = require('fs')
+const assert = require('assert')
 const crypto = require('crypto')
 const parseURL = require('url').parse
 const _ = require('lodash')
@@ -124,6 +125,32 @@ describe('PUT /transfers/:id', function () {
     yield this.request()
       .put(transfer.id)
       .auth('alice', 'alice')
+      .send(transfer)
+      .expect(422)
+      .end()
+  })
+
+  it('should return 422 if the sender amount precision is too high', function * () {
+    assert.strictEqual(config.amount.precision, 10) // default precision is 10
+    const transfer = this.exampleTransfer
+    transfer.debits[0].amount = '100000000.23'
+    transfer.credits[0].amount = '100000000.23'
+    yield this.request()
+      .put(transfer.id)
+      .auth('bob', 'bob')
+      .send(transfer)
+      .expect(422)
+      .end()
+  })
+
+  it('should return 422 if the sender amount scale is too high', function * () {
+    assert.strictEqual(config.amount.scale, 2) // default scale is 2
+    const transfer = this.exampleTransfer
+    transfer.debits[0].amount = '1.123'
+    transfer.credits[0].amount = '1.123'
+    yield this.request()
+      .put(transfer.id)
+      .auth('bob', 'bob')
       .send(transfer)
       .expect(422)
       .end()
@@ -263,7 +290,7 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 422 if the credits are greater than the debits', function * () {
     const transfer = this.multiDebitAndCreditTransfer
-    transfer.credits[0].amount = String(parseFloat(transfer.credits[0].amount) + 0.00000001)
+    transfer.credits[0].amount = String(parseFloat(transfer.credits[0].amount) + 0.01)
 
     yield this.request()
       .put(this.multiDebitAndCreditTransfer.id)
@@ -279,7 +306,7 @@ describe('PUT /transfers/:id', function () {
 
   it('should return 422 if the debits are greater than the credits', function * () {
     const transfer = this.multiDebitAndCreditTransfer
-    transfer.debits[0].amount = String(parseFloat(transfer.debits[0].amount) + 0.00000001)
+    transfer.debits[0].amount = String(parseFloat(transfer.debits[0].amount) + 0.01)
 
     yield this.request()
       .put(this.multiDebitAndCreditTransfer.id)

@@ -15,7 +15,9 @@ const metadata = {
     account: '/accounts/:name',
     subscription: '/subscriptions/:id',
     subscription_notification: '/subscriptions/:subscription_id/notifications/:notification_id'
-  }
+  },
+  precision: config.get('amount.precision'),
+  scale: config.get('amount.scale')
 }
 
 /**
