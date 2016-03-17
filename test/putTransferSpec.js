@@ -1318,7 +1318,7 @@ describe('PUT /transfers/:id', function () {
 
     yield this.request()
       .put(transfer.id)
-      .auth('nominbal', 'nominbal')
+      .auth('alice', 'alice')
       .send(transfer)
       .expect(422)
       .end()

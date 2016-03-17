@@ -6,7 +6,9 @@ const knex = require('../../lib/knex').knex
 
 class Entry extends Model {
   static convertFromExternal (data) {
-    data.balance = Number(data.balance)
+    if (data.balance) {
+      data.balance = Number(data.balance)
+    }
     return data
   }
 

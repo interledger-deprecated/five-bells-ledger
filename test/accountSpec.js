@@ -380,6 +380,44 @@ describe('Accounts', function () {
         .expect(validator.validateAccount)
         .end()
     })
+
+    it('should allow admin user to disable an account', function * () {
+      const uri = 'http://localhost/accounts/abbey'
+      const account = {
+        name: 'abbey',
+        balance: '50',
+        password: 'password01'
+      }
+      const updatedAccount = {
+        name: account.name,
+        is_disabled: true
+      }
+      const expected = {
+        balance: '50',
+        id: 'http://localhost/accounts/abbey',
+        is_disabled: true,
+        ledger: 'http://localhost',
+        minimum_allowed_balance: '0',
+        name: 'abbey'
+      }
+      yield this.request()  // create "abbey" account
+        .put(uri)
+        .auth('admin', 'admin')
+        .send(account)
+        .expect(201)
+        .end()
+      yield this.request()  // disable "abbey" account
+        .put(uri)
+        .auth('admin', 'admin')
+        .send(updatedAccount)
+        .expect(200)
+        .end()
+      yield this.request()  // check "abbey" account
+        .get(uri)
+        .auth('admin', 'admin')
+        .expect(expected)
+        .end()
+    })
   })
 
   describe('PUT /accounts/:uuid with public_key', function () {

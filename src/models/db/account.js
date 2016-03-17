@@ -39,16 +39,20 @@ class Account extends Model {
       delete data.id
     }
 
-    data.balance = Number(data.balance)
-    data.password_hash = data.password ? hashPassword(data.password) : null
-    delete data.password
+    if (data.balance) {
+      data.balance = Number(data.balance)
+    }
+    if (data.password) {
+      data.password_hash = hashPassword(data.password)
+      delete data.password
+    }
 
-    if (!data.minimum_allowed_balance) {
-      data.minimum_allowed_balance = 0
-    } else if (data.minimum_allowed_balance === '-infinity') {
-      data.minimum_allowed_balance = Number.NEGATIVE_INFINITY
-    } else {
-      data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
+    if (data.minimum_allowed_balance) {
+      if (data.minimum_allowed_balance === '-infinity') {
+        data.minimum_allowed_balance = Number.NEGATIVE_INFINITY
+      } else {
+        data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
+      }
     }
 
     return data
@@ -63,8 +67,10 @@ class Account extends Model {
     delete data.fingerprint
     if (data.minimum_allowed_balance === Number.NEGATIVE_INFINITY) {
       data.minimum_allowed_balance = '-infinity'
-    } else {
+    } else if (data.minimum_allowed_balance) {
       data.minimum_allowed_balance = String(Number(data.minimum_allowed_balance))
+    } else {
+      data.minimum_allowed_balance = '0'
     }
     if (!data.connector) delete data.connector
     if (!data.is_admin) delete data.is_admin
@@ -88,8 +94,10 @@ class Account extends Model {
     data.balance = Number(Number(data.balance).toFixed(2))
     if (data.minimum_allowed_balance === null) {
       data.minimum_allowed_balance = Number.NEGATIVE_INFINITY
-    } else {
+    } else if (data.minimum_allowed_balance) {
       data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
+    } else {
+      data.minimum_allowed_balance = 0
     }
     delete data.created_at
     delete data.updated_at
@@ -97,11 +105,15 @@ class Account extends Model {
   }
 
   static convertToPersistent (data) {
-    data.balance = Number(Number(data.balance).toFixed(2))
-    if (data.minimum_allowed_balance === Number.NEGATIVE_INFINITY) {
-      data.minimum_allowed_balance = null
-    } else {
-      data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
+    if (data.balance) {
+      data.balance = Number(Number(data.balance).toFixed(2))
+    }
+    if (data.minimum_allowed_balance) {
+      if (data.minimum_allowed_balance === Number.NEGATIVE_INFINITY) {
+        data.minimum_allowed_balance = null
+      } else {
+        data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
+      }
     }
     return data
   }
