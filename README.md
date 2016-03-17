@@ -65,6 +65,8 @@ With the following configuration options set as environment variables:
 * `LEDGER_FEATURE_CREDIT_AUTH` (default: `0`) whether or not to require credits to be authorized.
 * `LEDGER_CURRENCY_CODE` (default: none) ISO 4217 currency code
 * `LEDGER_CURRENCY_SYMBOL` (default: none) currency symbol
+* `LEDGER_AMOUNT_PRECISION` (default: `10`) the total precision allowed in amounts
+* `LEDGER_AMOUNT_SCALE` (default: `2`) the number of digits allowed in amounts to the right of the decimal place
 
 
 ## Running with Docker (Alternative Method)

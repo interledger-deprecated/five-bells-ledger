@@ -35,6 +35,11 @@ function loadConfig () {
     symbol: Config.getEnv(envPrefix, 'CURRENCY_SYMBOL') || null
   }
 
+  localConfig.amount = {
+    precision: parseInt(Config.getEnv(envPrefix, 'AMOUNT_PRECISION'), 10) || 10,
+    scale: parseInt(Config.getEnv(envPrefix, 'AMOUNT_SCALE'), 10) || 2
+  }
+
   if (isRunningTests()) {
     localConfig.keys = {
       ed25519: {
