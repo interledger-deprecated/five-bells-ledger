@@ -12,50 +12,12 @@ machine:
     AWS_ACCESS_KEY_ID: AKIAJNJCVLJLCILM2P5Q
     AWS_SECRET_ACCESS_KEY: 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
 dependencies:
-  pre:
-  # Install Oracle
-  - docker pull wnameless/oracle-xe-11g
-  - docker run -d -p 49160:22 -p 49161:1521 wnameless/oracle-xe-11g
-  # Download and unzip Oracle library
-  - aws s3 cp s3://ilp-server-ci-files/instantclient-sdk-linux.x64-12.1.0.2.0.zip .
-  - aws s3 cp s3://ilp-server-ci-files/instantclient-basic-linux.x64-12.1.0.2.0.zip .
-  - unzip instantclient-sdk-linux.x64-12.1.0.2.0.zip
-  - unzip instantclient-basic-linux.x64-12.1.0.2.0.zip
-  # Need symlinks from .so.12.1 to .so
-  - ln -s libocci.so.12.1 instantclient_12_1/libocci.so
-  - ln -s libclntsh.so.12.1 instantclient_12_1/libclntsh.so
-  - sudo mkdir -p /opt/oracle
-  - sudo cp -r instantclient_12_1 /opt/oracle/instantclient
   post:
-    - npm i strong-oracle
-    # Check for node_modules/strong-oracle explicitly because even if installation of it fails, npm doesn't catch it.
-    - if [[ ! -d node_modules/strong-oracle ]] ; then echo 'node_modules/strong-oracle is not there, return error.' ; exit 1 ; fi
-    # Build container
     - docker build -t interledger/five-bells-ledger .
 test:
   override:
-    # Run lint
-    - npm run lint
-    # Wipe databases
-    - mysql -u ubuntu -e 'DROP DATABASE circle_test;'
-    - mysql -u ubuntu -e 'CREATE DATABASE circle_test;'
-    - psql -U ubuntu -c 'DROP DATABASE circle_test;'
-    - psql -U ubuntu -c 'CREATE DATABASE circle_test;'
-    # Run unit tests on Oracle
-    - npm run test-oracle-ci
-    # Run tests (MySQL)
-    - docker run --name=ledger-test-mysql -it --net=host -e LEDGER_UNIT_DB_URI=mysql://ubuntu@localhost/circle_test interledger/five-bells-ledger npm test
-    # Run tests (Postgres)
-    - docker run --name=ledger-test-postgres -it --net=host -e LEDGER_UNIT_DB_URI=postgres://ubuntu@localhost/circle_test interledger/five-bells-ledger npm test
-    # Run tests with coverage (SQLite)
-    - mkdir coverage
-    - docker run --name=ledger-test-sqlite -it --net=host -e LEDGER_UNIT_DB_URI=sqlite:// -e XUNIT_FILE=coverage/xunit.xml -v $PWD/coverage:/usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test --coverage -- -R spec-xunit-file'
-    # Extract test results
-    - cp coverage/xunit.xml ${CIRCLE_TEST_REPORTS}/
-    # Run integration test suite
-    - npm run integration
-    # Generate API documentation
-    - npm run apidoc
+    - scripts/ci.sh "$CIRCLE_NODE_INDEX" "$CIRCLE_NODE_TOTAL":
+        parallel: true
 deployment:
   production:
     branch: master
