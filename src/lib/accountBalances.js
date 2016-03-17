@@ -6,7 +6,6 @@ const InsufficientFundsError = require('../errors/insufficient-funds-error')
 const log = require('../services/log')('account balances')
 const Account = require('../models/db/account').Account
 const Bignumber = require('bignumber.js')
-const config = require('../services/config')
 
 function AccountBalances (transaction, transfer) {
   this.transaction = transaction
@@ -28,7 +27,7 @@ function sum (numbers) {
   const numStrings = _.map(numbers, String)
   return _.reduce(_.rest(numStrings), (result, num) => {
     return result.plus(num)
-  }, new Bignumber(_.first(numStrings))).toFixed()
+  }, new Bignumber(_.first(numStrings))).toString()
 }
 
 function difference (numbers) {

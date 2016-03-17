@@ -1,5 +1,6 @@
 'use strict'
 
+const Bignumber = require('bignumber.js')
 const crypto = require('crypto')
 const _ = require('lodash')
 const diff = require('deep-diff')
@@ -210,9 +211,28 @@ function validatePositiveAmounts (adjustments) {
   }
 }
 
+function validatePrecisionAmounts (adjustments) {
+  const allowedPrecision = config.get('amount.precision')
+  const allowedScale = config.get('amount.scale')
+
+  const invalid = _.some(adjustments, (adjustment) => {
+    const amount = new Bignumber(adjustment.amount)
+    return (amount.decimalPlaces() > allowedScale) ||
+      (amount.precision() > allowedPrecision)
+  })
+
+  if (invalid) {
+    throw new UnprocessableEntityError(
+        'Amount exceeds allowed precision')
+  }
+}
+
 function validateCreditAndDebitAmounts (transfer) {
   validatePositiveAmounts(transfer.debits)
   validatePositiveAmounts(transfer.credits)
+
+  validatePrecisionAmounts(transfer.debits)
+  validatePrecisionAmounts(transfer.credits)
 
   const totalDebits = _.sum(_.map(transfer.debits, 'amount'))
   const totalCredits = _.sum(_.map(transfer.credits, 'amount'))
