@@ -12,7 +12,7 @@ module.exports = function * (config) {
 function * setupHoldAccount () {
   const holdAccount = yield models.Account.findByName('hold')
   if (!holdAccount) {
-    yield models.Account.create({name: 'hold', balance: '0'})
+    yield models.Account.create({name: 'hold', minimum_allowed_balance: '0', balance: '0'})
   }
 }
 
