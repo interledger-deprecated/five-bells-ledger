@@ -4,13 +4,6 @@ uploadCoverage() {
   # On parallel builds, only run coverage command on the container that ran the
   # SQLite tests with coverage
   if [ -d coverage ]; then
-    docker run --name=ledger-test-sqlite -it \
-      --net=host -e \
-      LEDGER_UNIT_DB_URI=sqlite:// \
-      -e XUNIT_FILE=coverage/xunit.xml \
-      -v "$PWD"/coverage:/usr/src/app/coverage \
-      interledger/five-bells-ledger sh -c 'npm test --coverage -- -R spec-xunit-file'
-
     # Extract test results
     cp coverage/xunit.xml "${CIRCLE_TEST_REPORTS}/"
 
@@ -38,9 +31,13 @@ dockerPush() {
 }
 
 uploadApiDocs() {
-  # Upload API docs to S3
-  npm install -g s3-cli
-  s3-cli sync --delete-removed apidoc-out s3://interledger-docs/five-bells-ledger/latest/apidoc
+  # On parallel builds, only run apidoc upload on the container that ran the
+  # apidoc task
+  if [ -d apidoc-out ]; then
+    # Upload API docs to S3
+    npm install -g s3-cli
+    s3-cli sync --delete-removed apidoc-out s3://interledger-docs/five-bells-ledger/latest/apidoc
+  fi
 }
 
 uploadCoverage
