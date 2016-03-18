@@ -20,9 +20,13 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('GET /transfers/:uuid', function () {
   logHelper(logger)
 
+  before(function * () {
+    yield dbHelper.init()
+  })
+
   beforeEach(function * () {
     appHelper.create(this, app)
-    yield dbHelper.init()
+    yield dbHelper.clean()
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     // Define example data
