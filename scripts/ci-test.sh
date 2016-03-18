@@ -83,7 +83,7 @@ oneNode() {
 twoNodes() {
   case "$NODE_INDEX" in
     0) lint; sqlitetest integrationtest; mysqltest;;
-    1) oracletest; postgrestest apidoc;;
+    1) oracletest; postgrestest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
 }
@@ -99,9 +99,9 @@ threeNodes() {
 
 fourNodes() {
   case "$NODE_INDEX" in
-    0) sqlitetest; integrationtest;;
-    1) apidoc; postgrestest;;
-    2) lint; mysqltest;;
+    0) integrationtest;;
+    1) sqlitetest; postgrestest;;
+    2) lint; mysqltest; apidoc;;
     3) oracletest;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
