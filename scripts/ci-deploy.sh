@@ -4,7 +4,7 @@ uploadCoverage() {
   # On parallel builds, only run coverage command on the container that ran the
   # SQLite tests with coverage
   if [ -d coverage ]; then
-    docker run --name=ledger-test-sqlitetest-it \
+    docker run --name=ledger-test-sqlite -it \
       --net=host -e \
       LEDGER_UNIT_DB_URI=sqlite:// \
       -e XUNIT_FILE=coverage/xunit.xml \

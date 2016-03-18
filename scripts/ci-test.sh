@@ -30,7 +30,7 @@ postgrestest() {
 sqlitetest() {
   # Run tests with coverage (SQLite)
   mkdir coverage
-  docker run --name=ledger-test-sqlitetest-it --net=host -e LEDGER_UNIT_DB_URI=sqlite:// -e XUNIT_FILE=coverage/xunit.xml -v "$PWD"/coverage:/usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test --coverage -- -R spec-xunit-file'
+  docker run --name=ledger-test-sqlite -it --net=host -e LEDGER_UNIT_DB_URI=sqlite:// -e XUNIT_FILE=coverage/xunit.xml -v "$PWD"/coverage:/usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test --coverage -- -R spec-xunit-file'
   # Extract test results
   cp coverage/xunit.xml "${CIRCLE_TEST_REPORTS}/"
 }
