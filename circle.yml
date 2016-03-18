@@ -22,6 +22,10 @@ deployment:
   production:
     branch: master
     commands:
+      - mkdir coverage
+      - docker run --name=ledger-test-sqlitetest-it --net=host -e LEDGER_UNIT_DB_URI=sqlite:// -e XUNIT_FILE=coverage/xunit.xml -v "$PWD"/coverage:/usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test --coverage -- -R spec-xunit-file'
+  # Extract test results
+      - cp coverage/xunit.xml "${CIRCLE_TEST_REPORTS}/"
       # Upload coverage data
       - docker run --volumes-from ledger-test-sqlite -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} interledger/five-bells-ledger npm run coveralls
       # Push NPM package if not yet published
