@@ -16,9 +16,13 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('Notifications', function () {
   logHelper(logger)
 
+  before(function * () {
+    yield dbHelper.init()
+  })
+
   beforeEach(function * () {
     appHelper.create(this, app)
-    yield dbHelper.init()
+    yield dbHelper.clean()
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))
     this.existingSubscription = _.cloneDeep(require('./data/subscription1'))

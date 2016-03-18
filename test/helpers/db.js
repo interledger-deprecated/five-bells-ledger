@@ -8,9 +8,37 @@ const Subscription = require('../../src/models/db/subscription').Subscription
 const Notification = require('../../src/models/db/notification').Notification
 const Fulfillment = require('../../src/models/db/conditionFulfillment').ConditionFulfillment
 
+const tables = [
+  'accounts',
+  'fulfillments',
+  'entries',
+  'notifications',
+  'subscriptions',
+  'transfers'
+]
+
+const migrationTables = [
+  'migrations',
+  'migrations_lock'
+]
+
+// Only run migrations once during tests
+let init = false
 exports.init = function * () {
-  yield knex.migrate.rollback(knexConfig).then()
+  if (init) return
+  for (let t of tables.concat(migrationTables)) {
+    yield knex.schema.dropTableIfExists(t).then()
+  }
+
   yield knex.migrate.latest(knexConfig).then()
+  init = true
+  return
+}
+
+exports.clean = function * () {
+  for (let t of tables) {
+    yield knex(t).truncate().then()
+  }
 }
 
 exports.addAccounts = function * (accounts) {

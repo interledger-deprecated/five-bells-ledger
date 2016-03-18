@@ -31,9 +31,13 @@ const privateKey = fs.readFileSync('./test/data/private.pem', 'utf8')
 describe('PUT /transfers/:id', function () {
   logHelper(logger)
 
+  before(function * () {
+    yield dbHelper.init()
+  })
+
   beforeEach(function * () {
     appHelper.create(this, app)
-    yield dbHelper.init()
+    yield dbHelper.clean()
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
