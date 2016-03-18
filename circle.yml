@@ -16,29 +16,13 @@ dependencies:
     - docker build -t interledger/five-bells-ledger .
 test:
   override:
-    - scripts/ci.sh "$CIRCLE_NODE_INDEX" "$CIRCLE_NODE_TOTAL":
+    - scripts/ci-test.sh "$CIRCLE_NODE_INDEX" "$CIRCLE_NODE_TOTAL":
         parallel: true
 deployment:
   production:
     branch: master
     commands:
-      - mkdir coverage
-      - docker run --name=ledger-test-sqlitetest-it --net=host -e LEDGER_UNIT_DB_URI=sqlite:// -e XUNIT_FILE=coverage/xunit.xml -v "$PWD"/coverage:/usr/src/app/coverage interledger/five-bells-ledger sh -c 'npm test --coverage -- -R spec-xunit-file'
-  # Extract test results
-      - cp coverage/xunit.xml "${CIRCLE_TEST_REPORTS}/"
-      # Upload coverage data
-      - docker run --volumes-from ledger-test-sqlite -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} interledger/five-bells-ledger npm run coveralls
-      # Push NPM package if not yet published
-      - mv npmrc-env .npmrc
-      - if [ -z "$(npm info $(npm ls --depth=-1 2>/dev/null | head -1 | cut -f 1 -d " ") 2>/dev/null)" ] ; then npm publish ; fi
-      # Push Docker image tagged latest and tagged with commit descriptor
-      - sed "s/<AUTH>/${DOCKER_TOKEN}/" < "dockercfg-template" > ~/.dockercfg
-      - docker tag interledger/five-bells-ledger:latest interledger/five-bells-ledger:$(git describe)
-      - docker push interledger/five-bells-ledger:latest
-      - docker push interledger/five-bells-ledger:$(git describe)
-      # Upload API docs to S3
-      - npm install -g s3-cli
-      - s3-cli sync --delete-removed apidoc-out s3://interledger-docs/five-bells-ledger/latest/apidoc
+      - scripts/ci-deploy.sh
 general:
   artifacts:
     - "coverage/lcov-report"
