@@ -34,7 +34,7 @@ uploadApiDocs() {
   # On parallel builds, only run apidoc upload on the container that ran the
   # apidoc task
   if [ ! -d apidoc-out ]; then
-    npm run api-doc
+    npm run apidoc
     # Upload API docs to S3
     npm install -g s3-cli
     s3-cli sync --delete-removed apidoc-out s3://interledger-docs/five-bells-ledger/latest/apidoc

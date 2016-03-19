@@ -12,6 +12,10 @@ machine:
     AWS_ACCESS_KEY_ID: AKIAJNJCVLJLCILM2P5Q
     AWS_SECRET_ACCESS_KEY: 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
 dependencies:
+  pre:
+    - mkdir -p ~/.oracle
+  cache_directories:
+    - "~/.oracle"
   post:
     - docker build -t interledger/five-bells-ledger .
 test:

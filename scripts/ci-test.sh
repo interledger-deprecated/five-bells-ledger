@@ -2,6 +2,7 @@
 
 NODE_INDEX="$1"
 TOTAL_NODES="$2"
+ORACLE_DIR="$HOME/.oracle"
 
 lint() {
   npm run lint
@@ -40,15 +41,27 @@ oracletest() {
   docker pull wnameless/oracle-xe-11g
   docker run -d -p 49160:22 -p 49161:1521 wnameless/oracle-xe-11g
   # Download and unzip Oracle library
-  aws s3 cp s3://ilp-server-ci-files/instantclient-sdk-linux.x64-12.1.0.2.0.zip .
-  aws s3 cp s3://ilp-server-ci-files/instantclient-basic-linux.x64-12.1.0.2.0.zip .
-  unzip instantclient-sdk-linux.x64-12.1.0.2.0.zip
-  unzip instantclient-basic-linux.x64-12.1.0.2.0.zip
-  # Need symlinks from .so.12.1 to .so
-  ln -s libocci.so.12.1 instantclient_12_1/libocci.so
-  ln -s libclntsh.so.12.1 instantclient_12_1/libclntsh.so
-  sudo mkdir -p /opt/oracle
-  sudo cp -r instantclient_12_1 /opt/oracle/instantclient
+  mkdir -p "$ORACLE_DIR"
+
+  local clientSDK="instantclient-sdk-linux.x64-12.1.0.2.0.zip"
+  if [ ! -f "$ORACLE_DIR/$clientSDK" ]; then
+    (
+    cd "$ORACLE_DIR" || exit 1
+
+    aws s3 cp s3://ilp-server-ci-files/"$clientSDK" .
+    aws s3 cp s3://ilp-server-ci-files/instantclient-basic-linux.x64-12.1.0.2.0.zip .
+    unzip $clientSDK
+    unzip instantclient-basic-linux.x64-12.1.0.2.0.zip
+    # Need symlinks from .so.12.1 to .so
+    ln -s libocci.so.12.1 instantclient_12_1/libocci.so
+    ln -s libclntsh.so.12.1 instantclient_12_1/libclntsh.so
+    sudo mkdir -p /opt/oracle
+    sudo cp -r instantclient_12_1 /opt/oracle/instantclient
+
+    cd -
+    )
+  fi
+
   npm i strong-oracle
   # Check for node_modules/strong-oracle explicitly because even if installation of it fails, npm doesn't catch it.
   if [[ ! -d node_modules/strong-oracle ]] ; then echo 'node_modules/strong-oracle is not there, return error.' ; exit 1 ; fi
@@ -70,7 +83,7 @@ oneNode() {
 twoNodes() {
   case "$NODE_INDEX" in
     0) lint; sqlitetest integrationtest; mysqltest;;
-    1) oracletest; postgrestest apidoc;;
+    1) oracletest; postgrestest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
 }
@@ -86,9 +99,9 @@ threeNodes() {
 
 fourNodes() {
   case "$NODE_INDEX" in
-    0) sqlitetest; integrationtest;;
-    1) apidoc; postgrestest;;
-    2) lint; mysqltest;;
+    0) integrationtest;;
+    1) sqlitetest; postgrestest;;
+    2) lint; mysqltest; apidoc;;
     3) oracletest;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
