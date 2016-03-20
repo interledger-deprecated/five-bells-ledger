@@ -35,7 +35,7 @@ function getKnexConfig () {
     oracle: {
       client: 'strong-oracle',
       useNullAsDefault: true,
-      pool: {min: 0, max: 7}
+      pool: {min: 0, max: 2}
     }
   }
   const uri = config.getIn(['db', 'uri'])
