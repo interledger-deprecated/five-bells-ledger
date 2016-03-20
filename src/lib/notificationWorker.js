@@ -119,8 +119,10 @@ class NotificationWorker {
     try {
       const result = yield utils.sendNotification(
         subscription.target, notificationBody, this.config)
-      // Success!
-      if (result.statusCode < 400) {
+      // If notification succeeded, stop retrying
+      // If notification failed with 422 (unprocessable), also stop retrying,
+      //   as trying again wouldn't help, and would generate unnecessary network traffic.
+      if (result.statusCode < 400 || result.statusCode === 422) {
         retry = false
       } else {
         this.log.debug('remote error for notification ' + result.statusCode,
