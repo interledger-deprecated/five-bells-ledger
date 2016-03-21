@@ -35,7 +35,9 @@ describe('Metadata', function () {
               account: '/accounts/:name',
               subscription: '/subscriptions/:id',
               subscription_notification: '/subscriptions/:subscription_id/notifications/:notification_id'
-            }
+            },
+            precision: 10,
+            scale: 2
           })
         })
         .end()
