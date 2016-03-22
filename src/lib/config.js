@@ -63,7 +63,7 @@ function parseKeysConfig () {
 function validateConfig () {
   // Validate precision
   const commonConfig = Config.loadConfig(envPrefix)
-  const isOracle = commonConfig.get('db.uri').match(/oracle/) !== null
+  const isOracle = commonConfig.get('db.uri').startsWith('oracle://') !== null
   const amountConfig = parseAmountConfig()
 
   // strong-oracle return native JS Numbers from Number type columns
