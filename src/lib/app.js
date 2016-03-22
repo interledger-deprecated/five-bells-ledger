@@ -63,7 +63,7 @@ class App {
     yield seedDB(this.config)
 
     if (this.config.getIn(['server', 'secure'])) {
-      const https = require('https')
+      const spdy = require('spdy')
       const tls = this.config.get('tls')
 
       const options = {
@@ -82,7 +82,7 @@ class App {
         rejectUnauthorized: false
       }
 
-      https.createServer(
+      spdy.createServer(
         options, this.koa.callback()).listen(this.config.getIn(['server', 'port']))
     } else {
       this.koa.listen(this.config.getIn(['server', 'port']))

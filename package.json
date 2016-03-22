@@ -57,6 +57,7 @@
     "passport-http": "^0.3.0",
     "passport-http-signature": "^1.0.0",
     "priorityqueuejs": "^1.0.0",
+    "spdy": "^3.2.3",
     "tweetnacl": "^0.13.1",
     "uuid4": "^1.0.0"
   },
