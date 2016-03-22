@@ -486,6 +486,26 @@ describe('Accounts', function () {
         .expect(400)
         .end()
     })
+
+    it('should allow creating account without password then setting password', function * () {
+      const account = this.exampleAccounts.bob
+
+      // create account without password or fingerprint
+      yield this.request()
+        .put(account.id)
+        .auth('admin', 'admin')
+        .send({name: account.name, balance: '50'})
+        .expect(201)
+        .end()
+
+      // now try to set a password for the account
+      yield this.request()
+        .put(account.id)
+        .auth('admin', 'admin')
+        .send({name: account.name, password: 'password'})
+        .expect(200)
+        .end()
+    })
   })
 
   describe('PUT /accounts/:uuid with public_key', function () {
