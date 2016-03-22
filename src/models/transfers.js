@@ -434,7 +434,10 @@ function * setTransfer (transfer, requestingUser) {
   }
 }
 
-function * getFulfillment (transferId) {
+function * getFulfillment (transferId, requestingUser) {
+  if (!requestingUser || !requestingUser.name) {
+    throw new UnauthorizedError('Not authorized')
+  }
   const fulfillment = yield fulfillments.getFulfillment(transferId)
   if (!fulfillment) {
     throw new NotFoundError('This transfer has no fulfillment')

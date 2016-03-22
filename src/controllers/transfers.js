@@ -327,7 +327,7 @@ function * putFulfillment () {
 function * getFulfillment () {
   const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  this.body = yield model.getFulfillment(id.toLowerCase())
+  this.body = yield model.getFulfillment(id.toLowerCase(), this.req.user)
 }
 
 module.exports = {
