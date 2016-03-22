@@ -16,8 +16,6 @@ dependencies:
     - mkdir -p ~/.oracle
   cache_directories:
     - "~/.oracle"
-  post:
-    - docker build -t interledger/five-bells-ledger .
 test:
   override:
     - scripts/ci-test.sh "$CIRCLE_NODE_INDEX" "$CIRCLE_NODE_TOTAL":

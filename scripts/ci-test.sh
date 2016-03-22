@@ -16,6 +16,10 @@ apidoc() {
   npm run apidoc
 }
 
+dockerBuild() {
+  docker build -t interledger/five-bells-ledger .
+}
+
 mysqltest() {
   mysql -u ubuntu -e 'DROP DATABASE circle_test;'
   mysql -u ubuntu -e 'CREATE DATABASE circle_test;'
@@ -66,12 +70,12 @@ oracletest() {
   # Check for node_modules/strong-oracle explicitly because even if installation of it fails, npm doesn't catch it.
   if [[ ! -d node_modules/strong-oracle ]] ; then echo 'node_modules/strong-oracle is not there, return error.' ; exit 1 ; fi
   # Build container
-  docker build -t interledger/five-bells-ledger .
-  npm run test-oracle-ci
+  LEDGER_UNIT_DB_URI='oracle://system:oracle@localhost:49161/' LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha
 }
 
 oneNode() {
   lint
+  dockerBuild
   sqlitetestest
   integrationtest
   mysqltest
@@ -82,16 +86,16 @@ oneNode() {
 
 twoNodes() {
   case "$NODE_INDEX" in
-    0) lint; sqlitetest integrationtest; mysqltest;;
-    1) oracletest; postgrestest; apidoc;;
+    0) lint; dockerBuild; sqlitetest integrationtest; mysqltest;;
+    1) dockerBuild; oracletest; postgrestest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
 }
 
 threeNodes() {
   case "$NODE_INDEX" in
-    0) lint; sqlitetest integrationtest;;
-    1) postgrestest; mysqltest;;
+    0) lint; dockerBuild; sqlitetest integrationtest;;
+    1) dockerBuild; postgrestest; mysqltest;;
     2) oracletest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
@@ -100,8 +104,8 @@ threeNodes() {
 fourNodes() {
   case "$NODE_INDEX" in
     0) integrationtest;;
-    1) sqlitetest; postgrestest;;
-    2) lint; mysqltest; apidoc;;
+    1) dockerBuild; sqlitetest; postgrestest;;
+    2) lint; dockerBuild; mysqltest; apidoc;;
     3) oracletest;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
