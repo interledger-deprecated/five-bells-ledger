@@ -4,6 +4,8 @@ const _ = require('lodash')
 const chai = require('chai')
 const expect = chai.expect
 const loadConfig = require('../src/lib/config')
+const fs = require('fs')
+const path = require('path')
 
 const originalEnv = _.cloneDeep(process.env)
 describe('loadConfig', () => {
@@ -120,6 +122,10 @@ describe('loadConfig', () => {
       ed25519: {
         secret: 'iMx6i3D3acJPc4aJlK0iT/pkJP3T+Dqte9wg6hXpXEv08CpNQSm1J5AI6n/QVBObeuQWdQVpgRQTAJzLLJJA/Q==',
         public: '9PAqTUEptSeQCOp/0FQTm3rkFnUFaYEUEwCcyyySQP0='
+      },
+      notification_sign: {
+        public: fs.readFileSync(path.join(__dirname, './data/signKeyRSAPub.pem'), 'utf8'),
+        secret: fs.readFileSync(path.join(__dirname, './data/signKeyRSAPrv.pem'), 'utf8')
       }
     }
 
@@ -128,6 +134,30 @@ describe('loadConfig', () => {
         const _config = loadConfig()
         expect(_config.keys).to.deep.equal(testDefault)
       })
+    })
+
+    it('should throw an error when the TLS and ledger signing keys are the same', () => {
+      process.env.UNIT_TEST_OVERRIDE = 'true'
+      process.env.LEDGER_DB_URI = 'oracle://foo/bar'
+      process.env.USE_HTTPS = 'true'
+      process.env.LEDGER_TLS_KEY = path.join(__dirname, './data/signKeyRSAPrv.pem')
+      process.env.LEDGER_TLS_CERTIFICATE = path.join(__dirname, './data/signKeyRSAPrv.pem')
+      process.env.LEDGER_SIGNING_PRIVATE_KEY = path.join(__dirname, './data/signKeyRSAPrv.pem')
+      process.env.LEDGER_SIGNING_PUBLIC_KEY = path.join(__dirname, './data/signKeyRSAPub.pem')
+      expect(loadConfig).to.throw(/LEDGER_SIGNING_PRIVATE_KEY must differ from LEDGER_TLS_KEY/)
+    })
+
+    it('should throw an error when no signing key is provided in production', () => {
+      process.env.UNIT_TEST_OVERRIDE = 'true'
+      process.env.NODE_ENV = 'production'
+      expect(loadConfig).to.throw(/LEDGER_SIGNING_PRIVATE_KEY and LEDGER_SIGNING_PUBLIC_KEY must be provided/)
+    })
+
+    it('should throw an error when no public signing key is provided in production', () => {
+      process.env.UNIT_TEST_OVERRIDE = 'true'
+      process.env.NODE_ENV = 'production'
+      process.env.LEDGER_SIGNING_PRIVATE_KEY = path.join(__dirname, './data/signKeyRSAPrv.pem')
+      expect(loadConfig).to.throw(/LEDGER_SIGNING_PRIVATE_KEY and LEDGER_SIGNING_PUBLIC_KEY must be provided/)
     })
   })
 

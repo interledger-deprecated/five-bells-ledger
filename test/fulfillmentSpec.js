@@ -349,7 +349,7 @@ describe('PUT /fulfillment', function () {
       .post('/notifications', (body) => {
         const idParts = body.id.split('/')
         const notificationId = idParts[idParts.length - 1]
-        expect(body).to.deep.equal({
+        expect(_.omit(body, 'signature')).to.deep.equal({
           event: 'transfer.update',
           id: subscription.id + '/notifications/' + notificationId,
           subscription: subscription.id,
@@ -385,7 +385,7 @@ describe('PUT /fulfillment', function () {
       .post('/notifications', (body) => {
         const idParts = body.id.split('/')
         const notificationId = idParts[idParts.length - 1]
-        expect(body).to.deep.equal({
+        expect(_.omit(body, 'signature')).to.deep.equal({
           event: 'transfer.update',
           id: subscription.id + '/notifications/' + notificationId,
           subscription: subscription.id,
@@ -428,7 +428,7 @@ describe('PUT /fulfillment', function () {
       .post('/notifications', (body) => {
         const idParts = body.id.split('/')
         const notificationId = idParts[idParts.length - 1]
-        expect(body).to.deep.equal({
+        expect(_.omit(body, 'signature')).to.deep.equal({
           event: 'transfer.update',
           id: subscription.id + '/notifications/' + notificationId,
           subscription: subscription.id,
@@ -465,7 +465,7 @@ describe('PUT /fulfillment', function () {
       .post('/notifications', (body) => {
         const idParts = body.id.split('/')
         const notificationId = idParts[idParts.length - 1]
-        expect(body).to.deep.equal({
+        expect(_.omit(body, 'signature')).to.deep.equal({
           event: 'transfer.update',
           id: subscription.id + '/notifications/' + notificationId,
           subscription: subscription.id,
