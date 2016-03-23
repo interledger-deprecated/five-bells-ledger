@@ -4,7 +4,8 @@ const config = require('../services/config')
 const metadata = {
   currency_code: config.getIn(['currency', 'code']),
   currency_symbol: config.getIn(['currency', 'symbol']),
-  public_key: config.getIn(['keys', 'ed25519', 'public']),
+  condition_sign_public_key: config.getIn(['keys', 'ed25519', 'public']),
+  notification_sign_public_key: config.getIn(['keys', 'notification_sign', 'public']),
   urls: {
     health: '/health',
     transfer: '/transfers/:id',

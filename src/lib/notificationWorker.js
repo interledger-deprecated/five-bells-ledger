@@ -8,6 +8,10 @@ const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const transferStates = transferDictionary.transferStates
 const knex = require('./knex').knex
 const uuid4 = require('uuid4')
+const JSONSigning = require('five-bells-shared').JSONSigning
+const config = require('../services/config')
+
+const privateKey = config.getIn(['keys', 'notification_sign', 'secret'])
 
 function * findOrCreate (Notification, data) {
   const options = {transaction: data.transaction}
@@ -115,17 +119,20 @@ class NotificationWorker {
         }
       }
     }
+    // Sign notification
+    const algorithm = 'PS256' // RSASSA-PSS signature using SHA-256 and MGF1 padding with SHA-256
+    const signedNotification = JSONSigning.sign(notificationBody, algorithm, privateKey)
     let retry = true
     try {
       const result = yield utils.sendNotification(
-        subscription.target, notificationBody, this.config)
+        subscription.target, signedNotification, this.config)
       // Success!
       if (result.statusCode < 400) {
         retry = false
       } else {
         this.log.debug('remote error for notification ' + result.statusCode,
           result.body)
-        this.log.debug(notificationBody)
+        this.log.debug(signedNotification)
       }
     } catch (err) {
       this.log.debug('notification send failed ' + err)

@@ -62,6 +62,8 @@ With the following configuration options set as environment variables:
 * `LEDGER_TLS_CERTIFICATE` (default: none) the path to the server certificate file. Required if using HTTPS.
 * `LEDGER_TLS_CRL` (default: none) the path to the server certificate revokation list file. Optional if using HTTPS.
 * `LEDGER_TLS_CA` (default: none) the path to a trusted certificate to be used in addition to using the [default list](https://github.com/nodejs/node/blob/v4.3.0/src/node_root_certs.h). Optional if using HTTPS.
+* `LEDGER_SIGNING_PRIVATE_KEY` (default: none) the path to the file containing the private key used to sign ledger notifications.
+* `LEDGER_SIGNING_PUBLIC_KEY` (default: none) the path to the file containing the public key for notification signatures.
 * `LEDGER_FEATURE_CREDIT_AUTH` (default: `0`) whether or not to require credits to be authorized.
 * `LEDGER_CURRENCY_CODE` (default: none) ISO 4217 currency code
 * `LEDGER_CURRENCY_SYMBOL` (default: none) currency symbol
