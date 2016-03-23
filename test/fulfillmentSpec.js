@@ -54,6 +54,7 @@ describe('GET /fulfillment', function () {
   it('should return 404 for fulfillment when given an invalid transfer id', function * () {
     yield this.request()
       .get(this.invalidTransfer.id + '/fulfillment')
+      .auth('admin', 'admin')
       .expect(404)
       .end()
   })
@@ -62,6 +63,7 @@ describe('GET /fulfillment', function () {
     const transfer = this.proposedTransfer
     yield this.request()
       .get(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
       .expect(404)
       .end()
   })
@@ -79,6 +81,7 @@ describe('GET /fulfillment', function () {
 
     yield this.request()
       .get(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
       .expect(200)
       .expect(this.executionConditionFulfillment)
       .expect(validator.validateFulfillment)
