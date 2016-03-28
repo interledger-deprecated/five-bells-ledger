@@ -131,7 +131,7 @@ class NotificationWorker {
         retry = false
       } else {
         this.log.debug('remote error for notification ' + result.statusCode,
-          result.body)
+          JSON.stringify(result.body))
         this.log.debug(signedNotification)
       }
     } catch (err) {
