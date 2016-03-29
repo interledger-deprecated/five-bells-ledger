@@ -131,7 +131,6 @@ class App {
       accounts.getResource)
     router.put('/accounts/:name',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      filterAdmin,
       models.Account.createBodyParser(),
       accounts.putResource)
 

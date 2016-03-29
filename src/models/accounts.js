@@ -1,4 +1,5 @@
 'use strict'
+const _ = require('lodash')
 const assert = require('assert')
 const config = require('../services/config')
 const log = require('../services/log')('accounts')
@@ -39,7 +40,13 @@ function * getAccount (name, requestingUser) {
 }
 
 function * setAccount (account, requestingUser) {
-  assert(requestingUser.is_admin)
+  assert(requestingUser)
+  const allowedKeys = ['name', 'connector', 'password_hash', 'fingerprint',
+    'public_key']
+  if (!requestingUser.is_admin && !(requestingUser.name === account.name && (
+      _.every(_.keys(account), (key) => _.includes(allowedKeys, key))))) {
+    throw new UnauthorizedError('Not authorized')
+  }
   const existed = yield db.upsertAccount(account)
   log.debug((existed ? 'updated' : 'created') + ' account name ' +
     account.name)
