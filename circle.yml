@@ -9,8 +9,10 @@ machine:
     OCI_HOME: /opt/oracle/instantclient
     OCI_LIB_DIR: $OCI_HOME
     OCI_INCLUDE_DIR: $OCI_HOME/sdk/include
-    AWS_ACCESS_KEY_ID: AKIAJNJCVLJLCILM2P5Q
-    AWS_SECRET_ACCESS_KEY: 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
+
+    # Read-only
+    AWS_SECRET_ACCESS_KEY: Q0SsTtjzt9zK3VpGpdp3VdGdYZshfdJ7IDtdr8BU
+    AWS_ACCESS_KEY_ID: AKIAIVUX7BG4NS7A2UHQ
 dependencies:
   pre:
     - mkdir -p ~/.oracle
