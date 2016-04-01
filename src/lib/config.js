@@ -93,7 +93,7 @@ function parseKeysConfig () {
 
 function validateConfig (config) {
   // Validate precision
-  const isOracle = config.getIn(['db', 'uri']).startsWith('oracle://') !== null
+  const isOracle = config.getIn(['db', 'uri'], '').startsWith('oracle://') !== null
   const tlsKey = config.getIn(['tls', 'key'])
   const notificationSigningKey = config.getIn(['keys', 'notification_sign', 'secret'])
 
