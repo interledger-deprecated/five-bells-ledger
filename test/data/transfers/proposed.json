@@ -9,15 +9,7 @@
     "account": "http://localhost/accounts/bob",
     "amount": "10"
   }],
-  "execution_condition": {
-    "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
-    "signer": "http://ledger.example",
-    "type": "ed25519-sha512",
-    "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
-  },
-  "cancellation_condition": {
-    "digest": "B5F839F2E05D875D1DF290917DED3C1AA10B906B9E9C788B521D993C2EEF44B8",
-    "type": "sha256"
-  },
+  "execution_condition": "cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7",
+  "cancellation_condition": "cc:0:3:I3TZF5S3n0-07JWH0s8ArsxPmVP6s-0d0SqxR6C3Ifk:6",
   "state": "proposed"
 }

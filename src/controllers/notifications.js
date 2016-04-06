@@ -38,20 +38,12 @@ const model = require('../models/notifications')
  *          "account": "http://usd-ledger.example/USD/accounts/bob",
  *          "amount": "50"
  *        }],
- *        "execution_condition": {
- *          "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
- *          "signer": "http://ledger.example",
- *          "type": "ed25519-sha512",
- *          "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
- *        },
+ *        "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *        "expires_at": "2015-06-16T00:00:01.000Z",
  *        "state": "executed"
  *      },
  *      "related_resources": {
- *        "execution_condition_fulfillment": {
- *          "type": "ed25519-sha512",
- *          "signature": "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
- *        }
+ *        "execution_condition_fulfillment": "cf:0:_v8"
  *      }
  *    }
  *

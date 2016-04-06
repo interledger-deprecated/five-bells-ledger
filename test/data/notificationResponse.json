@@ -21,9 +21,6 @@
     "state": "executed"
   },
   "related_resources": {
-    "execution_condition_fulfillment": {
-      "type": "ed25519-sha512",
-      "signature": "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
-    }
+    "execution_condition_fulfillment": "cf:0:ZXhlY3V0ZQ"
   }
 }

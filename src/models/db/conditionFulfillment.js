@@ -20,12 +20,10 @@ class ConditionFulfillment extends Model {
   static convertFromPersistent (data) {
     delete data.created_at
     delete data.updated_at
-    data.condition_fulfillment = JSON.parse(data.condition_fulfillment)
     return data
   }
 
   static convertToPersistent (data) {
-    data.condition_fulfillment = JSON.stringify(data.condition_fulfillment)
     return data
   }
 
@@ -34,7 +32,7 @@ class ConditionFulfillment extends Model {
   }
 
   setTransferId (transferId) {
-    super.setData({
+    this.setData({
       transfer_id: transferId
     })
   }
