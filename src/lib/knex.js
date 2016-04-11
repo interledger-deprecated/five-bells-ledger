@@ -17,8 +17,8 @@ function parseKnexConnection (uri) {
   return {
     host: parsed.hostname,
     port: parsed.port,
-    user: auth[0],
-    password: auth[1],
+    user: auth[0] || config.get('db.connection_user'),
+    password: auth[1] || config.get('db.connection_password'),
     database: parsed.pathname ? parsed.pathname.slice(1) : undefined
   }
 }
