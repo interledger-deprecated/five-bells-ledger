@@ -41,6 +41,7 @@ class NotificationWorker {
       Notification, knex, log,
       processNotification: this.processNotification.bind(this)
     })
+    this.signatureCache = {}
   }
 
   start () { this.scheduler.start() }
@@ -121,7 +122,13 @@ class NotificationWorker {
     }
     // Sign notification
     const algorithm = 'PS256' // RSASSA-PSS signature using SHA-256 and MGF1 padding with SHA-256
-    const signedNotification = JSONSigning.sign(notificationBody, algorithm, privateKey)
+    let signedNotification
+    if (this.signatureCache[notification.id]) {
+      signedNotification = _.extend(notificationBody, { signature: this.signatureCache[notification.id] })
+    } else {
+      signedNotification = JSONSigning.sign(notificationBody, algorithm, privateKey)
+      this.signatureCache[notification.id] = signedNotification.signature
+    }
     let retry = true
     try {
       const result = yield utils.sendNotification(
@@ -141,6 +148,7 @@ class NotificationWorker {
     if (retry) {
       yield this.scheduler.retryNotification(notification)
     } else {
+      delete this.signatureCache[notification.id]
       yield notification.destroy()
     }
   }
