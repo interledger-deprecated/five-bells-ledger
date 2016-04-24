@@ -26,7 +26,7 @@ describe('Metadata', function () {
           expect(res.body).to.deep.equal({
             currency_code: null,
             currency_symbol: null,
-            condition_sign_public_key: '9PAqTUEptSeQCOp/0FQTm3rkFnUFaYEUEwCcyyySQP0=',
+            condition_sign_public_key: 'YXg177AOkDlGGrBaoSET+UrMscbHGwFXHqfUMBZTtCY=',
             notification_sign_public_key: notificationPublicKey,
             urls: {
               health: '/health',
