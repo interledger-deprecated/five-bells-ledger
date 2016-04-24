@@ -29,15 +29,15 @@ describe('Metadata', function () {
             condition_sign_public_key: 'YXg177AOkDlGGrBaoSET+UrMscbHGwFXHqfUMBZTtCY=',
             notification_sign_public_key: notificationPublicKey,
             urls: {
-              health: '/health',
-              transfer: '/transfers/:id',
-              transfer_fulfillment: '/transfers/:id/fulfillment',
-              transfer_state: '/transfers/:id/state',
-              connectors: '/connectors',
-              accounts: '/accounts',
-              account: '/accounts/:name',
-              subscription: '/subscriptions/:id',
-              subscription_notification: '/subscriptions/:subscription_id/notifications/:notification_id'
+              health: 'http://localhost/health',
+              transfer: 'http://localhost/transfers/:id',
+              transfer_fulfillment: 'http://localhost/transfers/:id/fulfillment',
+              transfer_state: 'http://localhost/transfers/:id/state',
+              connectors: 'http://localhost/connectors',
+              accounts: 'http://localhost/accounts',
+              account: 'http://localhost/accounts/:name',
+              subscription: 'http://localhost/subscriptions/:id',
+              subscription_notification: 'http://localhost/subscriptions/:subscription_id/notifications/:notification_id'
             },
             precision: 10,
             scale: 2
