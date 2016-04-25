@@ -77,7 +77,7 @@
     "coveralls": "^2.11.2",
     "eslint": "^2.0.0",
     "eslint-config-standard": "^5.1.0",
-    "five-bells-integration-test": "^1.1.4",
+    "five-bells-integration-test": "^2.0.0",
     "istanbul": "0.4.0",
     "mocha": "~2.3.4",
     "nock": "^2.10.0",
