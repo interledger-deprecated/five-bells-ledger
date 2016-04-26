@@ -220,7 +220,7 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('sholuld allow an admin user to view a disabled account', function * () {
+    it('should allow an admin user to view a disabled account', function * () {
       yield this.request()
         .get(this.disabledAccount.id)
         .auth('admin', 'admin')

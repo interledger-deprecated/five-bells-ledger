@@ -7,6 +7,7 @@ const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
 const stringifyJSON = require('canonical-json')
 const db = require('./db/transfers')
+const ConditionFulfillment = require('./db/conditionFulfillment').ConditionFulfillment
 const fulfillments = require('./db/conditionFulfillments')
 const makeAccountBalances = require('../lib/accountBalances')
 const validateNoDisabledAccounts = require('../lib/disabledAccounts')
@@ -26,7 +27,7 @@ const UnprocessableEntityError =
 require('five-bells-shared/errors/unprocessable-entity-error')
 const UnauthorizedError =
 require('five-bells-shared/errors/unauthorized-error')
-const Condition = require('five-bells-condition').Condition
+const cc = require('five-bells-condition')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 
 const transferStates = transferDictionary.transferStates
@@ -35,6 +36,9 @@ const validCancellationStates = transferDictionary.validCancellationStates
 
 const RECEIPT_TYPE_ED25519 = 'ed25519-sha512'
 const RECEIPT_TYPE_SHA256 = 'sha256'
+
+const CONDITION_TYPE_EXECUTION = 'execution'
+const CONDITION_TYPE_CANCELLATION = 'cancellation'
 
 function * getTransfer (id) {
   log.debug('fetching transfer ID ' + id)
@@ -266,25 +270,27 @@ function * processImmediateExecution (transfer, accountBalances) {
   }
 }
 
-function validateConditionFulfillment (transfer, fulfillment) {
-  // We don't know if notary is executing or rejecting transfer
-  const type = _.get(fulfillment.getData(), 'condition_fulfillment.type')
+function validateConditionFulfillment (transfer, fulfillmentModel) {
+  const fulfillment = fulfillmentModel.getDataExternal()
+  const condition = cc.fulfillmentToCondition(fulfillment)
 
-  const isValidExecution = Boolean(transfer.execution_condition &&
-    transfer.execution_condition.type === type &&
-    Condition.testFulfillment(transfer.execution_condition,
-      fulfillment.getData().condition_fulfillment))
-
-  const isValidCancellation = Boolean(transfer.cancellation_condition &&
-    transfer.cancellation_condition.type === type &&
-    Condition.testFulfillment(transfer.cancellation_condition,
-      fulfillment.getData().condition_fulfillment))
-
-  if (isValidCancellation === isValidExecution) {
-    throw new UnmetConditionError('ConditionFulfillment failed')
+  try {
+    if (
+      condition === transfer.execution_condition &&
+      cc.validateFulfillment(fulfillment, condition)
+    ) {
+      return CONDITION_TYPE_EXECUTION
+    } else if (
+      condition === transfer.cancellation_condition &&
+      cc.validateFulfillment(fulfillment, condition)
+    ) {
+      return CONDITION_TYPE_CANCELLATION
+    }
+  } catch (err) {
+    throw new UnmetConditionError('Invalid fulfillment: ' + err.toString())
   }
 
-  return isValidExecution   // true for execution, false for cancellation
+  throw new UnmetConditionError('Fulfillment does not match any condition')
 }
 
 function * cancelTransfer (transaction, transfer, fulfillment) {
@@ -306,7 +312,9 @@ function * executeTransfer (transaction, transfer, fulfillment) {
     fulfillment, {transaction})
 }
 
-function * fulfillTransfer (transferId, fulfillment) {
+function * fulfillTransfer (transferId, fulfillmentUri) {
+  const fulfillment = ConditionFulfillment.fromDataExternal(fulfillmentUri)
+  fulfillment.setTransferId(transferId)
   const existingFulfillment = yield db.transaction(function * (transaction) {
     const transfer = yield db.getTransfer(transferId, {transaction})
 
@@ -314,19 +322,24 @@ function * fulfillTransfer (transferId, fulfillment) {
       throw new NotFoundError('Invalid transfer ID')
     }
 
-    const isExecution = validateConditionFulfillment(transfer, fulfillment)
+    const conditionType = validateConditionFulfillment(transfer, fulfillment)
 
-    if (isExecution && transfer.state === transferStates.TRANSFER_STATE_EXECUTED || !isExecution && transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
+    if (
+      conditionType === CONDITION_TYPE_EXECUTION &&
+      transfer.state === transferStates.TRANSFER_STATE_EXECUTED ||
+      conditionType === CONDITION_TYPE_CANCELLATION &&
+      transfer.state === transferStates.TRANSFER_STATE_REJECTED
+    ) {
       return (yield fulfillments.getFulfillment(transferId, {transaction})).getDataExternal()
     }
 
-    if (isExecution) {
+    if (conditionType === CONDITION_TYPE_EXECUTION) {
       if (!_.includes(validExecutionStates, transfer.state)) {
         throw new InvalidModificationError('Transfers in state ' +
           transfer.state + ' may not be executed')
       }
       yield executeTransfer(transaction, transfer, fulfillment)
-    } else {  // cancellation
+    } else if (conditionType === CONDITION_TYPE_CANCELLATION) {
       if (!_.includes(validCancellationStates, transfer.state)) {
         throw new InvalidModificationError('Transfers in state ' +
           transfer.state + ' may not be cancelled')
@@ -434,10 +447,7 @@ function * setTransfer (transfer, requestingUser) {
   }
 }
 
-function * getFulfillment (transferId, requestingUser) {
-  if (!requestingUser || !requestingUser.name) {
-    throw new UnauthorizedError('Not authorized')
-  }
+function * getFulfillment (transferId) {
   const fulfillment = yield fulfillments.getFulfillment(transferId)
   if (!fulfillment) {
     throw new NotFoundError('This transfer has no fulfillment')

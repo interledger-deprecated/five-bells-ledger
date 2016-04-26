@@ -20,24 +20,7 @@
       "http://localhost:3003/cases/b1f11915-1fb5-4c4d-9523-8267ecc7f15d"
     ]
   },
-  "execution_condition": {
-    "type": "and",
-    "subconditions": [
-      {
-        "digest": "C580D3FDB49553FA229B65D3D13A8B57ACEF08373E060F755A9EBBCA3FE484AC",
-        "type": "sha256"
-      },
-      {
-        "digest": "4AB4A29733B441F6ECCE1F546D33467DABB8A072CC75B49636E5C200B9E56DD1",
-        "type": "sha256"
-      }
-    ]
-  },
-  "cancellation_condition": {
-    "type": "ed25519-sha512",
-    "signer": "http://localhost:3003",
-    "public_key": "QD/UBKyptEXcu6mZThsfnE/2ZZGsrpokKqaLMUrTUqo=",
-    "message_hash": "OOq6hoJEBI5/Zn1CJ27qaWBaZB/t4Q10xfJIIxWpg8rlqDkOXIubmzVrs5kpU407y6IGBOkaa1RrV894V3YXsA=="
-  },
+  "execution_condition": "cc:2:b:fc7hVoN43o57pcqzAHLadWuQ5ldiibFL4mJq_Vrn_68:29",
+  "cancellation_condition": "cc:0:3:I3TZF5S3n0-07JWH0s8ArsxPmVP6s-0d0SqxR6C3Ifk:6",
   "state": "proposed"
 }

@@ -2,6 +2,7 @@
 'use strict'
 
 const _ = require('lodash')
+const parse = require('co-body')
 const requestUtil = require('five-bells-shared/utils/request')
 const model = require('../models/transfers')
 const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-parameter-error')
@@ -34,12 +35,7 @@ const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-p
  *        "account": "http://usd-ledger.example/USD/accounts/bob",
  *        "amount": "50"
  *      }],
- *      "execution_condition": {
- *        "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
- *        "signer": "http://ledger.example",
- *        "type": "ed25519-sha512",
- *        "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
- *      },
+ *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z",
  *      "state": "executed",
  *      "timeline": {
@@ -139,12 +135,7 @@ function * getStateResource () {
  *        "account": "http://usd-ledger.example/USD/accounts/bob",
  *        "amount": "50"
  *      }],
- *      "execution_condition": {
- *        "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
- *        "signer": "http://ledger.example",
- *        "type": "ed25519-sha512",
- *        "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
- *      },
+ *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z"
  *    }'
  *    http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
@@ -162,12 +153,7 @@ function * getStateResource () {
  *        "account": "http://usd-ledger.example/USD/accounts/bob",
  *        "amount": "50"
  *      }],
- *      "execution_condition": {
- *        "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
- *        "signer": "http://ledger.example",
- *        "type": "ed25519-sha512",
- *        "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
- *      },
+ *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z",
  *      "state": "proposed"
  *    }
@@ -186,12 +172,7 @@ function * getStateResource () {
  *        "account": "http://usd-ledger.example/USD/accounts/bob",
  *        "amount": "50"
  *      }],
- *      "execution_condition": {
- *        "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
- *        "signer": "http://ledger.example",
- *        "type": "ed25519-sha512",
- *        "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
- *      },
+ *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z"
  *    }'
  *    http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
@@ -210,12 +191,7 @@ function * getStateResource () {
  *        "account": "http://usd-ledger.example/USD/accounts/bob",
  *        "amount": "50"
  *      }],
- *      "execution_condition": {
- *        "message_hash": "claZQU7qkFz7smkAVtQp9ekUCc5LgoeN9W3RItIzykNEDbGSvzeHvOk9v/vrPpm+XWx5VFjd/sVbM2SLnCpxLw==",
- *        "signer": "http://ledger.example",
- *        "type": "ed25519-sha512",
- *        "public_key": "Lvf3YtnHLMER+VHT0aaeEJF+7WQcvp4iKZAdvMVto7c="
- *      },
+ *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z",
  *      "state": "prepared"
  *    }
@@ -262,21 +238,13 @@ function * putResource () {
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
  * @apiExample {shell} Put Transfer Fulfillment:
- *    curl -x PUT -H "Content-Type: application/json" -d
- *    '{
- *      "type": "ed25519-sha512",
- *      "signature":
- *      "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
- *    }'
+ *    curl -x PUT -H "Content-Type: text/plain" -d
+ *    'cf:0:_v8'
  *    http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment
  *
  * @apiSuccessExample {json} 201 Fulfillment Accepted Response:
  *    HTTP/1.1 200 OK
- *    {
- *      "type": "ed25519-sha512",
- *      "signature":
- *      "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
- *    }
+ *    cf:0:_v8
  *
  * @apiUse UnmetConditionError
  * @apiUse UnprocessableEntityError
@@ -289,8 +257,7 @@ function * putResource () {
 function * putFulfillment () {
   const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  const fulfillment = this.body
-  fulfillment.setTransferId(id)
+  const fulfillment = yield parse.text(this)
   const result = yield model.fulfillTransfer(id, fulfillment)
   this.body = result.fulfillment
   this.status = result.existed ? 200 : 201
@@ -313,11 +280,7 @@ function * putFulfillment () {
  *
  * @apiSuccessExample {json} 200 Fulfillment Response:
  *    HTTP/1.1 200 OK
- *    {
- *      "type": "ed25519-sha512",
- *      "signature":
- *      "sd0RahwuJJgeNfg8HvWHtYf4uqNgCOqIbseERacqs8G0kXNQQnhfV6gWAnMb+0RIlY3e0mqbrQiUwbRYJvRBAw=="
- *    }
+ *    cf:0:_v8
  *
  * @apiUse NotFoundError
  *
@@ -327,7 +290,7 @@ function * putFulfillment () {
 function * getFulfillment () {
   const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  this.body = yield model.getFulfillment(id.toLowerCase(), this.req.user)
+  this.body = yield model.getFulfillment(id.toLowerCase())
 }
 
 module.exports = {

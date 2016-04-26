@@ -40,6 +40,8 @@ describe('GET /fulfillment', function () {
 
     this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
     this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
+    this.invalidExecutionConditionFulfillment =
+      _.cloneDeep(require('./data/fulfillments/executionInvalid'))
 
     yield dbHelper.addAccounts(_.values(accounts))
     yield dbHelper.addTransfers([this.proposedTransfer, this.preparedTransfer, this.executedTransfer])
@@ -113,8 +115,7 @@ describe('GET /fulfillment', function () {
   it('should return 422 if the signature is invalid', function * () {
     const transfer = this.executedTransfer
 
-    const executionConditionFulfillment = _.cloneDeep(this.executionConditionFulfillment)
-    executionConditionFulfillment.signature = 'aW52YWxpZA=='
+    const executionConditionFulfillment = this.invalidExecutionConditionFulfillment
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
@@ -177,17 +178,14 @@ describe('PUT /fulfillment', function () {
         .end()
 
       // Invalid fulfillment
-      const invalidCancellationConditionFulfillment = {
-        'type': 'sha256',
-        'message': 'please cancel this transfer'
-      }
+      const invalidCancellationConditionFulfillment = 'cf:0:Y2FvY2Vs'
       yield this.request()
         .put(transfer.id + '/fulfillment')
         .send(invalidCancellationConditionFulfillment)
         .expect(422)
         .expect({
           id: 'UnmetConditionError',
-          message: 'ConditionFulfillment failed'
+          message: 'Fulfillment does not match any condition'
         })
         .end()
 

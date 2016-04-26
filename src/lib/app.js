@@ -106,16 +106,8 @@ class App {
       models.Transfer.createBodyParser(),
       transfers.putResource)
 
-    router.put('/transfers/:id/fulfillment',
-      passport.authenticate(['anonymous'], {
-        session: false
-      }), models.ConditionFulfillment.createBodyParser(),
-      transfers.putFulfillment)
-    router.get('/transfers/:id/fulfillment',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], {
-        session: false
-      }),
-      transfers.getFulfillment)
+    router.put('/transfers/:id/fulfillment', transfers.putFulfillment)
+    router.get('/transfers/:id/fulfillment', transfers.getFulfillment)
 
     router.get('/transfers/:id', transfers.getResource)
     router.get('/transfers/:id/state', transfers.getStateResource)

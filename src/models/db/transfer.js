@@ -71,8 +71,6 @@ class Transfer extends Model {
     delete data.updated_at
     data.credits = JSON.parse(data.credits)
     data.debits = JSON.parse(data.debits)
-    data.execution_condition = JSON.parse(data.execution_condition)
-    data.cancellation_condition = JSON.parse(data.cancellation_condition)
     data.additional_info = JSON.parse(data.additional_info)
     if (data.expires_at) {
       data.expires_at = new Date(data.expires_at)
@@ -96,8 +94,6 @@ class Transfer extends Model {
   static convertToPersistent (data) {
     data.credits = JSON.stringify(data.credits)
     data.debits = JSON.stringify(data.debits)
-    data.execution_condition = JSON.stringify(data.execution_condition)
-    data.cancellation_condition = JSON.stringify(data.cancellation_condition)
     data.additional_info = JSON.stringify(data.additional_info)
     if (data.proposed_at) {
       data.proposed_at = new Date(data.proposed_at)
