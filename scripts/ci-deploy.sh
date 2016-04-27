@@ -30,7 +30,7 @@ dockerPush() {
   docker push interledger/five-bells-ledger:"$(git describe)"
 }
 
-uploadCoverage
+# ST: Coverage reporting is broken - disable for now
+# uploadCoverage
 npmPublish
 dockerPush
-
