@@ -48,6 +48,7 @@
     "koa-passport": "^1.1.6",
     "koa-router": "^5.1.2",
     "koa-static": "^1.4.5",
+    "koa-websocket": "^1.1.0",
     "lodash": "^3.5.0",
     "mag": "^0.9.1",
     "mag-hub": "^0.1.1",

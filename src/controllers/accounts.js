@@ -119,9 +119,68 @@ function * putResource () {
   this.status = result.existed ? 200 : 201
 }
 
+/**
+ * @api {get} /accounts/:name/transfers [Websocket] Subscribe to transfers
+ * @apiName SubscribeAccountTransfers
+ * @apiGroup Account
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Subscribe to an account's transfers and receive real-time
+ *   notifications via websocket.
+ *
+ * @apiParam {String} name Account's unique identifier
+ *
+ * @apiExample {shell} Subscribe to account transfers
+ *    wscat --auth alice:alice -c ws://example.com/accounts/alice/transfers
+ *
+ * @apiSuccessExample {json} 200 Get Account Response:
+ *    HTTP/1.1 101 Switching Protocols
+ *    {
+ *      "resource":{
+ *        "debits":[
+ *          {
+ *            "account":"http://localhost/accounts/alice",
+ *            "amount":"0.01",
+ *            "authorized":true
+ *          }
+ *        ],
+ *        "credits":[
+ *          {
+ *            "account":"http://localhost/accounts/bob",
+ *            "amount":"0.01"
+ *          }
+ *        ],
+ *        "id":"http://localhost/transfers/4f122511-989d-101e-f938-573993b75e22",
+ *        "ledger":"http://localhost",
+ *        "state":"executed",
+ *        "timeline":{
+ *          "proposed_at":"2016-04-27T17:57:27.037Z",
+ *          "prepared_at":"2016-04-27T17:57:27.054Z",
+ *          "executed_at":"2016-04-27T17:57:27.060Z"
+ *        }
+ *      }
+ *    }
+ *    (... more events ...)
+ *
+ * @apiUse UnauthorizedError
+ * @apiUse InvalidUriParameterError
+ *
+ * @return {void}
+ */
+function * subscribeTransfers () {
+  const name = this.params.name
+  request.validateUriParameter('name', name, 'Identifier')
+  const close = model.subscribeTransfers(name, this.req.user, (notification) => {
+    this.websocket.send(JSON.stringify(notification))
+  })
+
+  this.websocket.on('close', close)
+}
+
 module.exports = {
   getCollection,
   getConnectors,
   getResource,
-  putResource
+  putResource,
+  subscribeTransfers
 }
