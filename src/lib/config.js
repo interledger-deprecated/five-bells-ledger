@@ -33,15 +33,15 @@ function parseCurrencyConfig () {
 }
 
 function parseAdminConfig () {
-  const admin_user = Config.getEnv(envPrefix, 'ADMIN_USER') || 'admin'
-  const admin_pass = Config.getEnv(envPrefix, 'ADMIN_PASS')
-  const admin_fingerprint = Config.getEnv(envPrefix, 'ADMIN_TLS_FINGERPRINT')
+  const adminUser = Config.getEnv(envPrefix, 'ADMIN_USER') || 'admin'
+  const adminPass = Config.getEnv(envPrefix, 'ADMIN_PASS')
+  const adminFingerprint = Config.getEnv(envPrefix, 'ADMIN_TLS_FINGERPRINT')
 
-  if (admin_pass || admin_fingerprint) {
+  if (adminPass || adminFingerprint) {
     return _.omit({
-      user: admin_user,
-      pass: admin_pass,
-      fingerprint: admin_fingerprint
+      user: adminUser,
+      pass: adminPass,
+      fingerprint: adminFingerprint
     }, _.isUndefined)
   }
 }

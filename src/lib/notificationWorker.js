@@ -81,8 +81,8 @@ class NotificationWorker {
     // Don't schedule the immediate attempt if the worker isn't active, though.
     if (!this.scheduler.isEnabled()) return
     co(function * () {
-      yield notifications.map(function (notification_and_created, i) {
-        const notification = self.Notification.fromDatabaseModel(notification_and_created[0])
+      yield notifications.map(function (notificationAndCreated, i) {
+        const notification = self.Notification.fromDatabaseModel(notificationAndCreated[0])
         return self.processNotificationWithInstances(notification, transfer, subscriptions[i], fulfillment)
       })
       // Schedule any retries.

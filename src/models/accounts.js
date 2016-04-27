@@ -20,7 +20,7 @@ function * getConnectors () {
 function * getAccount (name, requestingUser) {
   log.debug('fetching account name ' + name)
 
-  const can_examine = requestingUser &&
+  const canExamine = requestingUser &&
     (requestingUser.name === name || requestingUser.is_admin)
   const account = yield db.getAccount(name)
   if (!account) {
@@ -33,7 +33,7 @@ function * getAccount (name, requestingUser) {
   // TODO get rid of this when we start using biginteger math everywhere
   account.balance = Number(account.balance).toString()
   delete account.password_hash
-  const data = can_examine
+  const data = canExamine
     ? account.getDataExternal() : account.getDataPublic()
   data.ledger = config.getIn(['server', 'base_uri'])
   return data

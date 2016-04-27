@@ -92,13 +92,13 @@ function makeSha256Receipt (transferId, transferState, conditionState) {
   return receipt
 }
 
-function makeTransferStateMessage (transfer_id, state, receiptType) {
+function makeTransferStateMessage (transferId, state, receiptType) {
   const message = {
-    id: transfer_id,
+    id: transferId,
     state: state
   }
   if (receiptType === RECEIPT_TYPE_SHA256) {
-    message.token = sign(sha512(transfer_id + ':' + state))
+    message.token = sign(sha512(transferId + ':' + state))
   }
   return message
 }
