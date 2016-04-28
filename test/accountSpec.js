@@ -9,7 +9,11 @@ const Account = require('../src/models/db/account').Account
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
+const timingHelper = require('./helpers/timing')
 const logHelper = require('five-bells-shared/testHelpers/log')
+
+const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
+const notificationWorker = require('../src/services/notificationWorker')
 
 const validator = require('./helpers/validator')
 
@@ -35,12 +39,16 @@ describe('Accounts', function () {
     this.adminAccount = this.exampleAccounts.admin
     this.holdAccount = this.exampleAccounts.hold
     this.existingAccount = this.exampleAccounts.alice
-    this.existingAccount2 = this.exampleAccounts.candice
+    this.existingAccount2 = this.exampleAccounts.bob
     this.traderAccount = this.exampleAccounts.trader
     this.disabledAccount = this.exampleAccounts.disabledAccount
     this.infiniteMinBalance = this.exampleAccounts.infiniteMinBalance
     this.finiteMinBalance = this.exampleAccounts.finiteMinBalance
     this.unspecifiedMinBalance = this.exampleAccounts.unspecifiedMinBalance
+
+    this.transfer = _.cloneDeep(require('./data/transfers/simple'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/simpleWithExpiry'))
+    this.fulfillment = require('./data/fulfillments/execution')
 
     // Store some example data
     yield dbHelper.addAccounts([
@@ -118,7 +126,7 @@ describe('Accounts', function () {
 
     it('should return 404 when the account does not exist', function * () {
       yield this.request()
-        .get(this.exampleAccounts.bob.id)
+        .get(this.exampleAccounts.candice.id)
         .auth('admin', 'admin')
         .expect(404)
         .end()
@@ -138,7 +146,7 @@ describe('Accounts', function () {
 
     it('should return 404 when not authenticated + nonexistent target', function * () {
       yield this.request()
-        .get(this.exampleAccounts.bob.id)
+        .get(this.exampleAccounts.candice.id)
         .expect(404)
         .end()
     })
@@ -146,7 +154,7 @@ describe('Accounts', function () {
     it('should return 403 with invalid credentials', function * () {
       yield this.request()
         .get(this.existingAccount.id)
-        .auth('bob', 'bob')
+        .auth('candice', 'candice')
         .expect(403)
         .end()
     })
@@ -291,7 +299,7 @@ describe('Accounts', function () {
 
   describe('PUT /accounts/:uuid', function () {
     it('should return 201', function * () {
-      const account = this.exampleAccounts.bob
+      const account = this.exampleAccounts.candice
       const withoutPassword = _.omit(account, 'password')
       yield this.request()
         .put(account.id)
@@ -303,7 +311,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(withoutPassword)
+      expect((yield Account.findByName('candice')).getDataExternal()).to.deep.equal(withoutPassword)
     })
 
     it('should return 200 if the account already exists', function * () {
@@ -331,7 +339,7 @@ describe('Accounts', function () {
 
     it('should return a 400 if the account name in the URL does not match the account name in the JSON', function * () {
       const existingAccount = this.existingAccount
-      const newAccount = this.exampleAccounts.bob
+      const newAccount = this.exampleAccounts.candice
 
       delete existingAccount.password
 
@@ -423,7 +431,7 @@ describe('Accounts', function () {
     })
 
     it('should lowercase account name -- uppercased in url', function * () {
-      const lowerCased = this.exampleAccounts.bob
+      const lowerCased = this.exampleAccounts.candice
       const account = _.assign({}, lowerCased, {id: lowerCased.id.toUpperCase()})
       const withoutPassword = _.omit(lowerCased, 'password')
 
@@ -437,11 +445,11 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(withoutPassword)
+      expect((yield Account.findByName('candice')).getDataExternal()).to.deep.equal(withoutPassword)
     })
 
     it('should lowercase account name -- uppercased in body', function * () {
-      const lowerCased = this.exampleAccounts.bob
+      const lowerCased = this.exampleAccounts.candice
       const account = _.assign({}, lowerCased, {name: lowerCased.name.toUpperCase()})
       const withoutPassword = _.omit(lowerCased, 'password')
 
@@ -455,11 +463,11 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(withoutPassword)
+      expect((yield Account.findByName('candice')).getDataExternal()).to.deep.equal(withoutPassword)
     })
 
     it('should lowercase account name -- omit id in body', function * () {
-      const lowerCased = this.exampleAccounts.bob
+      const lowerCased = this.exampleAccounts.candice
       const account = _.assign({}, lowerCased, {name: lowerCased.name.toUpperCase()})
       const withoutPassword = _.omit(lowerCased, 'password')
 
@@ -473,11 +481,11 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('bob')).getDataExternal()).to.deep.equal(withoutPassword)
+      expect((yield Account.findByName('candice')).getDataExternal()).to.deep.equal(withoutPassword)
     })
 
     it('should return 400 if name and id are omitted in body', function * () {
-      const account = this.exampleAccounts.bob
+      const account = this.exampleAccounts.candice
 
       yield this.request()
         .put(account.id)
@@ -488,7 +496,7 @@ describe('Accounts', function () {
     })
 
     it('should allow creating account without password then setting password', function * () {
-      const account = this.exampleAccounts.bob
+      const account = this.exampleAccounts.candice
 
       // create account without password or fingerprint
       yield this.request()
@@ -508,7 +516,7 @@ describe('Accounts', function () {
     })
 
     it('should not allow user to create themself', function * () {
-      const account = this.exampleAccounts.bob
+      const account = this.exampleAccounts.candice
 
       yield this.request()
         .put(account.id)
@@ -573,6 +581,166 @@ describe('Accounts', function () {
       // Check balances
       const user = (yield Account.findByName('eve'))
       expect(user.public_key).to.equal(publicKey)
+    })
+  })
+
+  describe('GET /accounts/:id/transfers (websocket)', function () {
+    it('should send notifications about simple transfers', function * () {
+      const listener = sinon.spy()
+
+      const account = 'http://localhost/accounts/alice'
+      const ws = this.ws(account + '/transfers', {
+        headers: {
+          Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
+        }
+      })
+      ws.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transfer
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
+      yield notificationWorker.processNotificationQueue()
+
+      // Clear event loop
+      yield timingHelper.defer()
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        resource: _.assign({}, transfer, {
+          state: 'executed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            executed_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
+      ws.terminate()
+    })
+
+    it('should send notifications about executed transfers', function * () {
+      const listener = sinon.spy()
+
+      const account = 'http://localhost/accounts/alice'
+      const ws = this.ws(account + '/transfers', {
+        headers: {
+          Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
+        }
+      })
+      ws.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transferWithExpiry
+      const fulfillment = this.fulfillment
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
+      yield notificationWorker.processNotificationQueue()
+
+      // Clear event loop
+      yield timingHelper.defer()
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        resource: _.assign({}, transfer, {
+          state: 'prepared',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
+      this.clock.tick(500)
+      yield this.request()
+        .put(transfer.id + '/fulfillment')
+        .send(fulfillment)
+        .expect(201)
+        .end()
+
+      // In production this function should be triggered by the workers started in app.js
+      yield transferExpiryMonitor.processExpiredTransfers()
+
+      // Clear event loop
+      yield timingHelper.defer()
+
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        resource: _.assign({}, transfer, {
+          state: 'executed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            executed_at: '2015-06-16T00:00:00.500Z'
+          }
+        })
+      })
+      ws.terminate()
+    })
+
+    it('should send notifications about rejected transfers', function * () {
+      const listener = sinon.spy()
+
+      const account = 'http://localhost/accounts/alice'
+      const ws = this.ws(account + '/transfers', {
+        headers: {
+          Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
+        }
+      })
+      ws.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transferWithExpiry
+      delete transfer.debits[0].authorized
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
+      yield notificationWorker.processNotificationQueue()
+
+      // Clear event loop
+      yield timingHelper.defer()
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        resource: _.assign({}, transfer, {
+          state: 'proposed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
+      this.clock.tick(1000)
+
+      // In production this function should be triggered by the workers started in app.js
+      yield transferExpiryMonitor.processExpiredTransfers()
+
+      // Clear event loop
+      yield timingHelper.defer()
+
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        resource: _.assign({}, transfer, {
+          state: 'rejected',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            rejected_at: '2015-06-16T00:00:01.000Z'
+          }
+        })
+      })
+      ws.terminate()
     })
   })
 })
