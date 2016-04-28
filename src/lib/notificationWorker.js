@@ -121,7 +121,7 @@ class NotificationWorker {
       }
     }
     // Sign notification
-    const algorithm = 'CC' // RSASSA-PSS signature using SHA-256 and MGF1 padding with SHA-256
+    const algorithm = 'CC' // Crypto-condition signatures
     let signedNotification
     if (this.signatureCache[notification.id]) {
       signedNotification = _.extend(notificationBody, { signature: this.signatureCache[notification.id] })
