@@ -120,8 +120,8 @@ describe('loadConfig', () => {
   describe('config.keys', () => {
     const testDefault = {
       ed25519: {
-        secret: 'iMx6i3D3acJPc4aJlK0iT/pkJP3T+Dqte9wg6hXpXEv08CpNQSm1J5AI6n/QVBObeuQWdQVpgRQTAJzLLJJA/Q==',
-        public: '9PAqTUEptSeQCOp/0FQTm3rkFnUFaYEUEwCcyyySQP0='
+        secret: 'lu+43o/0NUeF5iJTHXQQY6eqMaY06Xx6G1ABc6q1UQk=',
+        public: 'YXg177AOkDlGGrBaoSET+UrMscbHGwFXHqfUMBZTtCY='
       },
       notification_sign: {
         public: fs.readFileSync(path.join(__dirname, './data/signKeyRSAPub.pem'), 'utf8'),

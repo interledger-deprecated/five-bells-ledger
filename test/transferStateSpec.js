@@ -34,7 +34,7 @@ describe('Transfer State', function () {
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     this.keyPair =
-      tweetnacl.sign.keyPair.fromSecretKey(
+      tweetnacl.sign.keyPair.fromSeed(
         tweetnacl.util.decodeBase64(config.getIn(['keys', 'ed25519', 'secret'])))
 
     // Define example data
