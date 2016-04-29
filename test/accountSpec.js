@@ -585,16 +585,25 @@ describe('Accounts', function () {
   })
 
   describe('GET /accounts/:id/transfers (websocket)', function () {
-    it('should send notifications about simple transfers', function * () {
-      const listener = sinon.spy()
-
+    beforeEach(function * () {
       const account = 'http://localhost/accounts/alice'
-      const ws = this.ws(account + '/transfers', {
+      this.socket = this.ws(account + '/transfers', {
         headers: {
           Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
         }
       })
-      ws.on('message', (msg) => listener(JSON.parse(msg)))
+
+      // Wait until WS connection is established
+      yield new Promise((resolve) => this.socket.on('open', resolve))
+    })
+
+    afterEach(function * () {
+      this.socket.terminate()
+    })
+
+    it('should send notifications about simple transfers', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
       const transfer = this.transfer
 
@@ -621,19 +630,11 @@ describe('Accounts', function () {
           }
         })
       })
-      ws.terminate()
     })
 
     it('should send notifications about executed transfers', function * () {
       const listener = sinon.spy()
-
-      const account = 'http://localhost/accounts/alice'
-      const ws = this.ws(account + '/transfers', {
-        headers: {
-          Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
-        }
-      })
-      ws.on('message', (msg) => listener(JSON.parse(msg)))
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
       const transfer = this.transferWithExpiry
       const fulfillment = this.fulfillment
@@ -684,19 +685,11 @@ describe('Accounts', function () {
           }
         })
       })
-      ws.terminate()
     })
 
     it('should send notifications about rejected transfers', function * () {
       const listener = sinon.spy()
-
-      const account = 'http://localhost/accounts/alice'
-      const ws = this.ws(account + '/transfers', {
-        headers: {
-          Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
-        }
-      })
-      ws.on('message', (msg) => listener(JSON.parse(msg)))
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
       const transfer = this.transferWithExpiry
       delete transfer.debits[0].authorized
@@ -740,7 +733,6 @@ describe('Accounts', function () {
           }
         })
       })
-      ws.terminate()
     })
   })
 })
