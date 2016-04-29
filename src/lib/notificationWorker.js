@@ -74,11 +74,6 @@ class NotificationWorker extends EventEmitter {
       }
     }
 
-    this.log.debug('emitting transfer-{' + affectedAccounts.join(',') + '}')
-    for (let account of affectedAccounts) {
-      this.emit('transfer-' + account, notificationBody)
-    }
-
     const affectedAccountUris = affectedAccounts.map((account) =>
       account === '*' ? account : this.uri.make('account', account))
 
@@ -104,11 +99,17 @@ class NotificationWorker extends EventEmitter {
       })
     })
 
-    // We will schedule an immediate attempt to send the notification for
-    // performance in the good case.
-    // Don't schedule the immediate attempt if the worker isn't active, though.
-    if (!this.scheduler.isEnabled()) return
     co(function * () {
+      self.log.debug('emitting transfer-{' + affectedAccounts.join(',') + '}')
+      for (let account of affectedAccounts) {
+        self.emit('transfer-' + account, notificationBody)
+      }
+
+      // We will schedule an immediate attempt to send the notification for
+      // performance in the good case.
+      // Don't schedule the immediate attempt if the worker isn't active, though.
+      if (!self.scheduler.isEnabled()) return
+
       yield notifications.map(function (notificationAndCreated, i) {
         const notification = self.Notification.fromDatabaseModel(notificationAndCreated[0])
         return self.processNotificationWithInstances(notification, transfer, subscriptions[i], fulfillment)

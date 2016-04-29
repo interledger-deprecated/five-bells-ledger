@@ -607,8 +607,8 @@ describe('Accounts', function () {
         .end()
       yield notificationWorker.processNotificationQueue()
 
-      // Clear event loop
-      yield timingHelper.defer()
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
 
       sinon.assert.calledOnce(listener)
       sinon.assert.calledWithMatch(listener.firstCall, {
@@ -647,8 +647,8 @@ describe('Accounts', function () {
         .end()
       yield notificationWorker.processNotificationQueue()
 
-      // Clear event loop
-      yield timingHelper.defer()
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
 
       sinon.assert.calledOnce(listener)
       sinon.assert.calledWithMatch(listener.firstCall, {
@@ -670,8 +670,8 @@ describe('Accounts', function () {
       // In production this function should be triggered by the workers started in app.js
       yield transferExpiryMonitor.processExpiredTransfers()
 
-      // Clear event loop
-      yield timingHelper.defer()
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
 
       sinon.assert.calledTwice(listener)
       sinon.assert.calledWithMatch(listener.secondCall, {
@@ -710,8 +710,8 @@ describe('Accounts', function () {
         .end()
       yield notificationWorker.processNotificationQueue()
 
-      // Clear event loop
-      yield timingHelper.defer()
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
 
       sinon.assert.calledOnce(listener)
       sinon.assert.calledWithMatch(listener.firstCall, {
@@ -727,8 +727,8 @@ describe('Accounts', function () {
       // In production this function should be triggered by the workers started in app.js
       yield transferExpiryMonitor.processExpiredTransfers()
 
-      // Clear event loop
-      yield timingHelper.defer()
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
 
       sinon.assert.calledTwice(listener)
       sinon.assert.calledWithMatch(listener.secondCall, {
