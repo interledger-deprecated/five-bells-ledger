@@ -3,6 +3,7 @@ const _ = require('lodash')
 const assert = require('assert')
 const config = require('../services/config')
 const log = require('../services/log')('accounts')
+const notificationWorker = require('../services/notificationWorker')
 const db = require('./db/accounts')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
@@ -56,9 +57,22 @@ function * setAccount (account, requestingUser) {
   }
 }
 
+function subscribeTransfers (account, requestingUser, listener) {
+  assert(requestingUser)
+  if (!requestingUser.is_admin && !(requestingUser.name === account)) {
+    throw new UnauthorizedError('Not authorized')
+  }
+
+  log.info('new ws subscriber for ' + account)
+  notificationWorker.addListener('transfer-' + account, listener)
+
+  return () => notificationWorker.removeListener('transfer-' + account, listener)
+}
+
 module.exports = {
   getAccounts,
   getConnectors,
   getAccount,
-  setAccount
+  setAccount,
+  subscribeTransfers
 }

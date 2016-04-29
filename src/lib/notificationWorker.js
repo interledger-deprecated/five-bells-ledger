@@ -2,6 +2,7 @@
 
 const _ = require('lodash')
 const co = require('co')
+const EventEmitter = require('events').EventEmitter
 const utils = require('./notificationUtils')
 const NotificationScheduler = require('five-bells-shared').NotificationScheduler
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
@@ -27,8 +28,10 @@ function * findOrCreate (Notification, data) {
   return yield Notification.findWhere(data.where, options)
 }
 
-class NotificationWorker {
+class NotificationWorker extends EventEmitter {
   constructor (uri, log, Notification, Transfer, Subscription, Fulfillment, config) {
+    super()
+
     this.uri = uri
     this.log = log
     this.Notification = Notification
@@ -50,17 +53,42 @@ class NotificationWorker {
 
   * queueNotifications (transfer, transaction) {
     const affectedAccounts = _([transfer.debits, transfer.credits])
-      .flatten().pluck('account').map((account) => this.uri.make('account', account)).value()
+      .flatten().pluck('account').value()
     affectedAccounts.push('*')
+
+    // Prepare notification for websocket subscribers
+    const notificationBody = {
+      resource: transfer.getDataExternal()
+    }
+
+    // If the transfer is finalized, see if it was finalized by a fulfillment
+    let fulfillment
+    if (transfer.isFinalized()) {
+      fulfillment = yield this.Fulfillment.findByTransfer(transfer.id, { transaction })
+
+      if (fulfillment) {
+        if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
+          notificationBody.related_resources = {
+            execution_condition_fulfillment: fulfillment.getDataExternal()
+          }
+        } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
+          notificationBody.related_resources = {
+            cancellation_condition_fulfillment: fulfillment.getDataExternal()
+          }
+        }
+      }
+    }
+
+    const affectedAccountUris = affectedAccounts.map((account) =>
+      account === '*' ? account : this.uri.make('account', account))
+
     let subscriptions = yield transaction.from('subscriptions')
-      .whereIn('subject', affectedAccounts)
+      .whereIn('subject', affectedAccountUris)
       .whereIn('event', ['transfer.update', 'transfer.*', '*'])
       .select().then()
     if (!subscriptions) {
       return
     }
-
-    const fulfillment = yield this.Fulfillment.findByTransfer(transfer.id, { transaction })
 
     subscriptions = _.values(subscriptions)
     // log.debug('notifying ' + subscription.owner + ' at ' +
@@ -76,11 +104,17 @@ class NotificationWorker {
       })
     })
 
-    // We will schedule an immediate attempt to send the notification for
-    // performance in the good case.
-    // Don't schedule the immediate attempt if the worker isn't active, though.
-    if (!this.scheduler.isEnabled()) return
     co(function * () {
+      self.log.debug('emitting transfer-{' + affectedAccounts.join(',') + '}')
+      for (let account of affectedAccounts) {
+        self.emit('transfer-' + account, notificationBody)
+      }
+
+      // We will schedule an immediate attempt to send the notification for
+      // performance in the good case.
+      // Don't schedule the immediate attempt if the worker isn't active, though.
+      if (!self.scheduler.isEnabled()) return
+
       yield notifications.map(function (notificationAndCreated, i) {
         const notification = self.Notification.fromDatabaseModel(notificationAndCreated[0])
         return self.processNotificationWithInstances(notification, transfer, subscriptions[i], fulfillment)

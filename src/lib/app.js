@@ -5,6 +5,7 @@ const serve = require('koa-static')
 const Router = require('koa-router')
 const cors = require('koa-cors')
 const passport = require('koa-passport')
+const websockify = require('koa-websocket')
 const koa = require('koa')
 const path = require('path')
 const logger = require('koa-mag')
@@ -31,7 +32,7 @@ class App {
     this.timerWorker = modules.timerWorker
     this.notificationWorker = modules.notificationWorker
 
-    const koaApp = this.koa = koa()
+    const koaApp = this.koa = websockify(koa())
     const router = this._makeRouter()
     koaApp.use(logger())
     koaApp.use(errorHandler({log: modules.log('error-handler')}))
@@ -42,6 +43,13 @@ class App {
     // Serve static files
     koaApp.use(serve(path.join(__dirname, 'public')))
     koaApp.use(compress())
+
+    const websocketRouter = this._makeWebsocketRouter()
+    koaApp.ws.use(logger())
+    koaApp.ws.use(errorHandler({log: modules.log('ws-error-handler')}))
+    koaApp.ws.use(passport.initialize())
+    koaApp.ws.use(websocketRouter.routes())
+    koaApp.ws.use(websocketRouter.allowedMethods())
   }
 
   start () {
@@ -140,6 +148,16 @@ class App {
     router.get('/subscriptions/:subscription_id/notifications/:notification_id',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
       notifications.getResource)
+    return router
+  }
+
+  _makeWebsocketRouter () {
+    const router = new Router()
+
+    router.get('/accounts/:name/transfers',
+      passport.authenticate(['basic', 'http-signature', 'client-cert', 'anonymous'], { session: false }),
+      accounts.subscribeTransfers)
+
     return router
   }
 }
