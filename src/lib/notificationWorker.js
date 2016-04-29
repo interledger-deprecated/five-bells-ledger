@@ -56,20 +56,25 @@ class NotificationWorker extends EventEmitter {
       .flatten().pluck('account').value()
     affectedAccounts.push('*')
 
-    const fulfillment = yield this.Fulfillment.findByTransfer(transfer.id, { transaction })
-
     // Prepare notification for websocket subscribers
     const notificationBody = {
       resource: transfer.getDataExternal()
     }
-    if (fulfillment) {
-      if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
-        notificationBody.related_resources = {
-          execution_condition_fulfillment: fulfillment.getDataExternal()
-        }
-      } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
-        notificationBody.related_resources = {
-          cancellation_condition_fulfillment: fulfillment.getDataExternal()
+
+    // If the transfer is finalized, see if it was finalized by a fulfillment
+    let fulfillment
+    if (transfer.isFinalized()) {
+      fulfillment = yield this.Fulfillment.findByTransfer(transfer.id, { transaction })
+
+      if (fulfillment) {
+        if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
+          notificationBody.related_resources = {
+            execution_condition_fulfillment: fulfillment.getDataExternal()
+          }
+        } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
+          notificationBody.related_resources = {
+            cancellation_condition_fulfillment: fulfillment.getDataExternal()
+          }
         }
       }
     }
