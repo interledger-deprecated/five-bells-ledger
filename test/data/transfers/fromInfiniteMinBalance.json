@@ -3,11 +3,11 @@
   "ledger": "http://localhost",
   "debits": [{
     "account": "http://localhost/accounts/infiniteminbal",
-    "amount": "10000000",
+    "amount": "100000",
     "authorized": true
   }],
   "credits": [{
     "account": "http://localhost/accounts/bob",
-    "amount": "10000000"
+    "amount": "100000"
   }]
 }

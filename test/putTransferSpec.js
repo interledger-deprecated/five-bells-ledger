@@ -1321,7 +1321,7 @@ describe('PUT /transfers/:id', function () {
         id: 'http://localhost/accounts/infiniteminbal',
         name: 'infiniteminbal',
         ledger: 'http://localhost',
-        balance: '-10000000',
+        balance: '-100000',
         is_disabled: false,
         minimum_allowed_balance: '-infinity'
       }))
@@ -1336,7 +1336,7 @@ describe('PUT /transfers/:id', function () {
         id: 'http://localhost/accounts/bob',
         name: 'bob',
         ledger: 'http://localhost',
-        balance: '10000000',
+        balance: '100000',
         is_disabled: false,
         minimum_allowed_balance: '0'
       }))
