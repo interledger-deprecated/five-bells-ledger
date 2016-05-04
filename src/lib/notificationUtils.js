@@ -11,12 +11,8 @@ function isHTTPS (uri) {
 function tlsOptions (target, config) {
   const tls = config.get('tls')
   const useTLS = isHTTPS(target) && tls
-  return useTLS ? _.omit({
-    cert: tls.get('cert'),
-    key: tls.get('key'),
-    ca: tls.get('ca'),
-    crl: tls.get('crl')
-  }, _.isUndefined) : {}
+  return useTLS ? _.omit(_.pick(tls, ['cert', 'key', 'ca', 'crl']), _.isUndefined)
+                : {}
 }
 
 function sendNotification (target, notificationBody, config) {
