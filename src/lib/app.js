@@ -90,8 +90,9 @@ class App {
         rejectUnauthorized: false
       }
 
-      spdy.createServer(
+      const server = spdy.createServer(
         options, this.koa.callback()).listen(this.config.getIn(['server', 'port']))
+      this.koa.ws.listen(server)
     } else {
       this.koa.listen(this.config.getIn(['server', 'port']))
     }
