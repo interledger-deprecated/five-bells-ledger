@@ -1,6 +1,5 @@
 'use strict'
 
-const bcrypt = require('bcrypt')
 const Model = require('five-bells-shared').Model
 const PersistentModelMixin = require('five-bells-shared').PersistentKnexModelMixin
 const uri = require('../../services/uriManager')
@@ -9,24 +8,6 @@ const config = require('../../services/config')
 const Entry = require('./entry').Entry
 
 const knex = require('../../lib/knex').knex
-
-function hashPassword (password) {
-  // cache hashes of passwords used in tests to speed up tests 4X
-  const cachedHashes = {
-    admin: '$2a$10$FhvkZTSER6jgntWw0uBbzue13w2BAPOxfmpDUt9515NmQv7Ixtxsm',
-    alice: '$2a$10$g07kBlVI1ltBq/RaQ8i.ruKFmj3TLgOQ0SPgQA1/3O.MX905cyi5C',
-    bob: '$2a$10$.ofu.TkYeq/cdQHLBxJd8eCdOhaxOD2rzoHSxP.IgxnNBzzokSuBe',
-    candice: '$2a$10$TgdAHqf.EKNzV/R4Ncwpf..NsxuURFIImwhx5pHfyYrKk81.Cz1f.',
-    dave: '$2a$10$REGCWsK8iHW.44fifW7cBe/p6kulK9RsxhItIYwz.ak2Sa0Mzdpj2',
-    disabled: '$2a$10$RgD4XEwDa/iHy.gosKDhounlFCzKMZRjOTPIsXNYpNant8DJaIFNm'
-  }
-  if (password in cachedHashes) {
-    return cachedHashes[password]
-  }
-  const rounds = 10
-  const salt = bcrypt.genSaltSync(rounds)
-  return bcrypt.hashSync(password, salt)
-}
 
 class Account extends Model {
   static convertFromExternal (data) {
@@ -41,9 +22,17 @@ class Account extends Model {
     if (data.balance) {
       data.balance = Number(data.balance)
     }
-    if (data.password) {
-      data.password_hash = hashPassword(data.password)
-      delete data.password
+
+    // Passing in a password hash is a potential DoS vector because the hash
+    // specifies the number of iterations needed to verify it. So a malicious
+    // client could set it to UINT32_MAX and make the server do an insane amount
+    // of hashing work.
+    //
+    // There are other places in the code that should prevent users from setting
+    // the hash directly, but it's a good idea to put an extra layer of
+    // protection and prevent setting it here.
+    if (typeof data.password_hash !== 'undefined') {
+      delete data.password_hash
     }
 
     if (data.minimum_allowed_balance) {
@@ -60,9 +49,13 @@ class Account extends Model {
   static convertToExternal (data) {
     data.id = uri.make('account', data.name.toLowerCase())
     data.balance = String(Number(data.balance))
+
+    // Never show any information about credentials
+    delete data.password
     delete data.password_hash
     delete data.public_key
     delete data.fingerprint
+
     if (data.minimum_allowed_balance === Number.NEGATIVE_INFINITY) {
       data.minimum_allowed_balance = '-infinity'
     } else if (data.minimum_allowed_balance) {
