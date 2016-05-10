@@ -53,6 +53,9 @@ function parseFeaturesConfig () {
 }
 
 function parseKeysConfig () {
+  const isProduction = process.env.NODE_ENV === 'production'
+  const mustSignNotifications = Config.castBool(
+    Config.getEnv(envPrefix, 'NOTIFICATION_SIGN'), isProduction)
   if (useTestConfig()) {
     return {
       ed25519: {
@@ -61,7 +64,8 @@ function parseKeysConfig () {
       },
       notification_sign: {
         secret: fs.readFileSync(path.join(__dirname, '../../test/data/signKeyRSAPrv.pem'), 'utf8'),
-        public: fs.readFileSync(path.join(__dirname, '../../test/data/signKeyRSAPub.pem'), 'utf8')
+        public: fs.readFileSync(path.join(__dirname, '../../test/data/signKeyRSAPub.pem'), 'utf8'),
+        must_sign: mustSignNotifications
       }
     }
   } else {
@@ -77,14 +81,16 @@ function parseKeysConfig () {
       return {
         notification_sign: {
           secret: keys.private,
-          public: keys.public
+          public: keys.public,
+          must_sign: mustSignNotifications
         }
       }
     }
     return {
       notification_sign: {
         secret: fs.readFileSync(privateKeyPath, 'utf8'),
-        public: fs.readFileSync(publicKeyPath, 'utf8')
+        public: fs.readFileSync(publicKeyPath, 'utf8'),
+        must_sign: mustSignNotifications
       }
     }
   }

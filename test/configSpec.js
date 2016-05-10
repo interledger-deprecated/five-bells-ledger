@@ -125,7 +125,8 @@ describe('loadConfig', () => {
       },
       notification_sign: {
         public: fs.readFileSync(path.join(__dirname, './data/signKeyRSAPub.pem'), 'utf8'),
-        secret: fs.readFileSync(path.join(__dirname, './data/signKeyRSAPrv.pem'), 'utf8')
+        secret: fs.readFileSync(path.join(__dirname, './data/signKeyRSAPrv.pem'), 'utf8'),
+        must_sign: false
       }
     }
 
@@ -158,6 +159,33 @@ describe('loadConfig', () => {
       process.env.NODE_ENV = 'production'
       process.env.LEDGER_SIGNING_PRIVATE_KEY = path.join(__dirname, './data/signKeyRSAPrv.pem')
       expect(loadConfig).to.throw(/LEDGER_SIGNING_PRIVATE_KEY and LEDGER_SIGNING_PUBLIC_KEY must be provided/)
+    })
+
+    it('defaults to not signing notifications in non-production environments', () => {
+      process.env.NODE_ENV = undefined
+      const config = loadConfig()
+      expect(config.get('keys.notification_sign.must_sign')).to.equal(false)
+    })
+
+    it('defaults to signing notifications in production', () => {
+      process.env.NODE_ENV = 'production'
+      process.env.UNIT_TEST_OVERRIDE = 'true'
+      process.env.LEDGER_DB_URI = 'oracle://foo/bar'
+      process.env.USE_HTTPS = 'true'
+      process.env.LEDGER_TLS_KEY = path.join(__dirname, './data/signKeyRSAPrv.pem')
+      process.env.LEDGER_TLS_CERTIFICATE = path.join(__dirname, './data/signKeyRSAPrv.pem')
+      process.env.LEDGER_SIGNING_PRIVATE_KEY = path.join(__dirname, './data/ed25519Private')
+      process.env.LEDGER_SIGNING_PUBLIC_KEY = path.join(__dirname, './data/ed25519Public')
+      process.env.LEDGER_ED25519_SECRET_KEY = 'lu+43o/0NUeF5iJTHXQQY6eqMaY06Xx6G1ABc6q1UQk='
+      const config = loadConfig()
+      expect(config.get('keys.notification_sign.must_sign')).to.equal(true)
+    })
+
+    it('uses the sign notification environment variable', () => {
+      process.env.LEDGER_NOTIFICATION_SIGN = '1'
+      process.env.UNIT_TEST_OVERRIDE = 'true'
+      const config = loadConfig()
+      expect(config.get('keys.notification_sign.must_sign')).to.equal(true)
     })
   })
 

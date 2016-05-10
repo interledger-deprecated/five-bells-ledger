@@ -154,26 +154,30 @@ class NotificationWorker extends EventEmitter {
         }
       }
     }
-    // Sign notification
-    const algorithm = 'CC' // Crypto-condition signatures
-    let signedNotification
-    if (this.signatureCache[notification.id]) {
-      signedNotification = _.extend(notificationBody, { signature: this.signatureCache[notification.id] })
+
+    let notificationRequest
+    if (this.config.get('keys.notification_sign.must_sign')) {
+      const algorithm = 'CC' // Crypto-condition signatures
+      if (this.signatureCache[notification.id]) {
+        notificationRequest = _.extend(notificationBody, { signature: this.signatureCache[notification.id] })
+      } else {
+        notificationRequest = JSONSigning.sign(notificationBody, algorithm, privateKey)
+        this.signatureCache[notification.id] = notificationRequest.signature
+      }
     } else {
-      signedNotification = JSONSigning.sign(notificationBody, algorithm, privateKey)
-      this.signatureCache[notification.id] = signedNotification.signature
+      notificationRequest = notificationBody
     }
     let retry = true
     try {
       const result = yield utils.sendNotification(
-        subscription.target, signedNotification, this.config)
+        subscription.target, notificationRequest, this.config)
       // Success!
       if (result.statusCode < 400) {
         retry = false
       } else {
         this.log.debug('remote error for notification ' + result.statusCode,
           JSON.stringify(result.body))
-        this.log.debug(signedNotification)
+        this.log.debug(notificationRequest)
       }
     } catch (err) {
       this.log.debug('notification send failed ' + err)
