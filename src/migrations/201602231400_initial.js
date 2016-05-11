@@ -4,14 +4,14 @@ function createAccountsTable (knex) {
   return knex.schema.createTableIfNotExists('accounts', (table) => {
     table.increments()
     table.string('name').unique()
-    table.decimal('balance', 10, 2)
+    table.decimal('balance', 10, 4)
     table.string('connector', 1024)
     table.string('password_hash')
     table.text('public_key')
     table.boolean('is_admin')
     table.boolean('is_disabled')
     table.string('fingerprint').index('fingerprint')
-    table.decimal('minimum_allowed_balance', 10, 2).defaultTo(0)
+    table.decimal('minimum_allowed_balance', 10, 4).defaultTo(0)
   })
 }
 
@@ -30,7 +30,7 @@ function createEntriesTable (knex) {
     // there are cases in which an entry is inserted before the corresponding transfer is inserted
     table.uuid('transfer_id')
     table.integer('account')
-    table.decimal('balance', 10, 2)
+    table.decimal('balance', 10, 4)
     table.timestamp('created_at').defaultTo(knex.fn.now())
   })
 }
