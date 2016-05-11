@@ -8,6 +8,8 @@ const Subscription = require('../../src/models/db/subscription').Subscription
 const Notification = require('../../src/models/db/notification').Notification
 const Fulfillment = require('../../src/models/db/conditionFulfillment').ConditionFulfillment
 
+const hashPassword = require('five-bells-shared/utils/hashPassword')
+
 const tables = [
   'accounts',
   'fulfillments',
@@ -45,7 +47,17 @@ exports.addAccounts = function * (accounts) {
   if (!Array.isArray(accounts)) {
     throw new Error('Requires an array of accounts, got ' + accounts)
   }
-  yield Account.bulkCreateExternal(accounts)
+
+  // Hash passwords
+  const accountModels = accounts.map(Account.fromDataExternal.bind(Account))
+  for (let account of accountModels) {
+    if (account.password) {
+      account.password_hash = (yield hashPassword(account.password)).toString('base64')
+      delete account.password
+    }
+  }
+
+  yield Account.bulkCreate(accountModels)
 }
 
 exports.addTransfers = function * (transfers) {

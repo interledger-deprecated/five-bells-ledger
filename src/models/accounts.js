@@ -5,6 +5,7 @@ const config = require('../services/config')
 const log = require('../services/log')('accounts')
 const notificationWorker = require('../services/notificationWorker')
 const db = require('./db/accounts')
+const hashPassword = require('five-bells-shared/utils/hashPassword')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 
@@ -42,6 +43,12 @@ function * getAccount (name, requestingUser) {
 
 function * setAccount (account, requestingUser) {
   assert(requestingUser)
+
+  if (account.password) {
+    account.password_hash = (yield hashPassword(account.password)).toString('base64')
+    delete account.password
+  }
+
   const allowedKeys = ['name', 'connector', 'password_hash', 'fingerprint',
     'public_key']
   if (!requestingUser.is_admin && !(requestingUser.name === account.name && (

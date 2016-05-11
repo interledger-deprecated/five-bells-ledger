@@ -6,7 +6,7 @@ function createAccountsTable (knex) {
     table.string('name').unique()
     table.decimal('balance', 10, 4)
     table.string('connector', 1024)
-    table.string('password_hash')
+    table.string('password_hash', 1024)
     table.text('public_key')
     table.boolean('is_admin')
     table.boolean('is_disabled')

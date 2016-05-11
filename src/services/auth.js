@@ -1,12 +1,12 @@
 'use strict'
 
-const bcrypt = require('bcrypt')
 const passport = require('koa-passport')
 const BasicStrategy = require('passport-http').BasicStrategy
 const ClientCertStrategy = require('passport-client-certificate').Strategy
 const HTTPSignatureStrategy = require('passport-http-signature')
 const AnonymousStrategy = require('passport-anonymous').Strategy
 const Account = require('../models/db/account').Account
+const verifyPassword = require('five-bells-shared/utils/hashPassword').verifyPassword
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const config = require('./config')
 
@@ -28,12 +28,14 @@ passport.use(new BasicStrategy(
           return done(new UnauthorizedError(
             'Unknown or invalid account / password'))
         }
-        bcrypt.compare(password, userObj.password_hash, (error, result) => {
-          if (error || !result) {
-            return done(new UnauthorizedError('Invalid password'))
-          }
-          return done(null, userObj)
-        })
+        return verifyPassword(password, new Buffer(userObj.password_hash, 'base64'))
+          .then((valid) => {
+            if (!valid) {
+              return done(new UnauthorizedError('Invalid password'))
+            }
+
+            return done(null, userObj)
+          })
       })
   }))
 

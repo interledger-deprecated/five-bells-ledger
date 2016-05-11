@@ -20,7 +20,7 @@ function * setupHoldAccount () {
 function * setupAdminAccount (adminParams) {
   const adminAccount = yield models.Account.findByName(adminParams.user)
   const passwordHash =
-    adminParams.pass ? yield hashPassword(adminParams.pass) : undefined
+    adminParams.pass ? (yield hashPassword(adminParams.pass)).toString('base64') : undefined
 
   // Update the password if the account already exists.
   if (adminAccount) {
