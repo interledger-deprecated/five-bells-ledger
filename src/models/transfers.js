@@ -414,12 +414,16 @@ function * setTransfer (transfer, requestingUser) {
       updateState(transfer, transferStates.TRANSFER_STATE_PROPOSED)
     }
 
-    const requestingUsername = requestingUser && requestingUser.name
-    validateIsAffectedAccount(requestingUsername, transfer)
-    // This method will check that any authorized:true fields added can
-    // only be added by the owner of the account
-    validateAuthorizations(requestingUsername, transfer.debits, previousDebits, 'debit')
-    validateAuthorizations(requestingUsername, transfer.credits, previousCredits, 'credit')
+    if (!(requestingUser && requestingUser.is_admin)) {
+      const requestingUsername = requestingUser && requestingUser.name
+      validateIsAffectedAccount(requestingUsername, transfer)
+      // This method will check that any authorized:true fields added can
+      // only be added by the owner of the account
+      validateAuthorizations(requestingUsername, transfer.debits,
+        previousDebits, 'debit')
+      validateAuthorizations(requestingUsername, transfer.credits,
+        previousCredits, 'credit')
+    }
 
     const accountBalances = yield makeAccountBalances(transaction, transfer)
     yield processTransitionToPreparedState(transfer, accountBalances)
