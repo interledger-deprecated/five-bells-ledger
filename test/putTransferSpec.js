@@ -772,6 +772,27 @@ describe('PUT /transfers/:id', function () {
       .end()
   })
 
+  it('should execute the transfer if it is authorized by admin and ' +
+    'there is no execution condition', function * () {
+    const transfer = this.exampleTransfer
+
+    yield this.request()
+      .put(this.exampleTransfer.id)
+      .auth('admin', 'admin')
+      .send(transfer)
+      .expect(201)
+      .expect(_.assign({}, transfer, {
+        state: transferStates.TRANSFER_STATE_EXECUTED,
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .expect(validator.validateTransfer)
+      .end()
+  })
+
   it('should return 403 if an unauthorized user attempts to ' +
     'modify the "authorized" field', function * () {
     const transfer = this.exampleTransfer
