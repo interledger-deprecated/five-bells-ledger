@@ -53,6 +53,8 @@ function createSubscriptionsTable (knex) {
     table.string('event')
     table.string('subject', 1024)
     table.string('target', 1024)
+    table.boolean('is_deleted').defaultTo(false)
+    table.index(['id', 'is_deleted'])
   })
 }
 

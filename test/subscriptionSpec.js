@@ -30,8 +30,9 @@ describe('Subscriptions', function () {
     yield dbHelper.clean()
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))
-    this.exampleSubscription = _.cloneDeep(require('./data/subscription1'))
-    this.existingSubscription = _.cloneDeep(require('./data/subscription2'))
+    this.exampleSubscription = _.cloneDeep(require('./data/subscriptions/alice'))
+    this.existingSubscription = _.cloneDeep(require('./data/subscriptions/bob'))
+    this.deletedSubscription = _.cloneDeep(require('./data/subscriptions/deleted'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
 
     // Use fake time
@@ -39,7 +40,7 @@ describe('Subscriptions', function () {
 
     // Store some example data
     yield dbHelper.addAccounts(_.values(require('./data/accounts')))
-    yield dbHelper.addSubscriptions([this.existingSubscription])
+    yield dbHelper.addSubscriptions([_.assign({}, this.existingSubscription, {is_deleted: false}), this.deletedSubscription])
   })
 
   describe('GET /subscriptions/:uuid', function () {
@@ -57,6 +58,14 @@ describe('Subscriptions', function () {
       yield this.request()
         .get(this.exampleSubscription.id)
         .auth('bob', 'bob')
+        .expect(404)
+        .end()
+    })
+
+    it('should return 404 for a deleted subscription', function * () {
+      yield this.request()
+        .get(this.deletedSubscription.id)
+        .auth('admin', 'admin')
         .expect(404)
         .end()
     })
@@ -114,6 +123,37 @@ describe('Subscriptions', function () {
         .to.deep.equal(this.existingSubscription)
     })
 
+    it('should return 400 when updating a deleted subscription', function * () {
+      yield this.request()
+        .delete(this.existingSubscription.id)
+        .auth('bob', 'bob')
+        .expect(204)
+        .end()
+
+      this.existingSubscription.target = 'http://subscriber2.example/hooks'
+      yield this.request()
+        .put(this.existingSubscription.id)
+        .send(this.existingSubscription)
+        .auth('bob', 'bob')
+        .expect(400)
+        .end()
+    })
+
+    it('should return 400 when putting a deleted subscription', function * () {
+      yield this.request()
+        .delete(this.existingSubscription.id)
+        .auth('bob', 'bob')
+        .expect(204)
+        .end()
+
+      yield this.request()
+        .put(this.existingSubscription.id)
+        .send(this.existingSubscription)
+        .auth('bob', 'bob')
+        .expect(400)
+        .end()
+    })
+
     it('should return a 422 when the event/target/subject matches an existing subscription', function * () {
       yield this.request()
         .put(this.existingSubscription.id)
@@ -162,6 +202,13 @@ describe('Subscriptions', function () {
         .auth('bob', 'bob')
         .expect(204)
         .end()
+
+      // Ensure subscription is no longer returned
+      yield this.request()
+        .get(this.existingSubscription.id)
+        .auth('bob', 'bob')
+        .expect(404)
+        .end()
     })
 
     it('should return 403 if the user tries to delete a subscription they don\'t own', function * () {
@@ -178,6 +225,17 @@ describe('Subscriptions', function () {
         .auth('admin', 'admin')
         .expect(204)
         .end()
+    })
+
+    it('should not insert a db record if the subscription does not exist', function * () {
+      const nonExistentSubscriptionId = '8c314fbe-8e07-4735-9cc7-3aea8a08193b'
+      yield this.request()
+        .delete('http://localhost/subscriptions/' + nonExistentSubscriptionId)
+        .auth('admin', 'admin')
+        .expect(404)
+        .end()
+
+      expect((yield Subscription.findById(nonExistentSubscriptionId))).to.be.null
     })
   })
 

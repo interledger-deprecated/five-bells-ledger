@@ -85,6 +85,7 @@ class NotificationWorker extends EventEmitter {
     let subscriptions = yield transaction.from('subscriptions')
       .whereIn('subject', affectedAccountUris)
       .whereIn('event', ['transfer.update', 'transfer.*', '*'])
+      .where('is_deleted', false)
       .select().then()
     if (!subscriptions) {
       return

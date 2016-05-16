@@ -25,10 +25,12 @@ describe('Notifications', function () {
     yield dbHelper.clean()
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))
-    this.existingSubscription = _.cloneDeep(require('./data/subscription1'))
-    this.exampleSubscription = _.cloneDeep(require('./data/subscription2'))
+    this.existingSubscription = _.cloneDeep(require('./data/subscriptions/alice'))
+    this.exampleSubscription = _.cloneDeep(require('./data/subscriptions/bob'))
+    this.deletedSubscription = _.cloneDeep(require('./data/subscriptions/deleted'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
     this.existingNotification = _.cloneDeep(require('./data/notificationDatabaseEntry'))
+    this.notificationDeletedSubscription = _.cloneDeep(require('./data/notificationDeletedSubscription'))
     this.notificationResponse = _.cloneDeep(require('./data/notificationResponse'))
 
     const idParts = this.exampleTransfer.id.split('/')
@@ -43,8 +45,8 @@ describe('Notifications', function () {
     // Store some example data
     yield dbHelper.addAccounts(_.values(require('./data/accounts')))
     yield dbHelper.addTransfers([this.exampleTransfer])
-    yield dbHelper.addSubscriptions([this.existingSubscription])
-    yield dbHelper.addNotifications([this.existingNotification])
+    yield dbHelper.addSubscriptions([_.assign({}, this.existingSubscription, {is_deleted: false}), this.deletedSubscription])
+    yield dbHelper.addNotifications([this.existingNotification, this.notificationDeletedSubscription])
     yield dbHelper.addFulfillments([this.existingFulfillment])
   })
 
@@ -63,6 +65,14 @@ describe('Notifications', function () {
       yield this.request()
         .get(this.exampleSubscription.id + '/notifications/' + this.existingNotification.id)
         .auth('bob', 'bob')
+        .expect(404)
+        .end()
+    })
+
+    it('should return 404 for a deleted subscription id', function * () {
+      yield this.request()
+        .get(this.deletedSubscription.id + '/notifications/' + this.notificationDeletedSubscription.id)
+        .auth('admin', 'admin')
         .expect(404)
         .end()
     })

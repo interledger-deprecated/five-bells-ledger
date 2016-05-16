@@ -7,7 +7,7 @@ const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const Notification = require('./db/notification').Notification
 const Transfer = require('./db/transfer').Transfer
 const Fulfillment = require('./db/conditionFulfillment').ConditionFulfillment
-const Subscription = require('./db/subscription').Subscription
+const subscriptions = require('./db/subscriptions')
 const subscriptionUtils = require('../lib/subscriptionUtils')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 
@@ -24,7 +24,7 @@ function * getNotification (subscriptionId, notificationId, requestingUser) {
     throw new NotFoundError('Unknown subscription ID')
   }
 
-  const subscription = yield Subscription.findById(notification.subscription_id)
+  const subscription = yield subscriptions.getSubscription(notification.subscription_id)
   if (!subscription) {
     throw new NotFoundError('Unknown subscription')
   } else if (!subscriptionUtils.isOwnerOrAdmin(requestingUser, subscription)) {

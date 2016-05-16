@@ -1,0 +1,8 @@
+{
+  "id": "http://localhost/subscriptions/a92e7294-29c5-4a49-9790-cb1fe7924e6f",
+  "owner": "http://localhost/accounts/mark",
+  "subject": "http://localhost/accounts/mark",
+  "event": "transfer.update",
+  "target": "http://subscriber.example/notifications",
+  "is_deleted": true
+}
