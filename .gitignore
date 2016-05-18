@@ -6,3 +6,4 @@ coverage/
 /integration-test/
 *.db
 *.db-journal
+*v8.log
