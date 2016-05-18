@@ -73,6 +73,8 @@ describe('GET /fulfillment', function () {
   it('should return a fulfillment', function * () {
     const transfer = this.preparedTransfer
 
+    yield dbHelper.setHoldBalance(10)
+
     yield this.request()
       .put(transfer.id + '/fulfillment')
       .send(this.executionConditionFulfillment)
