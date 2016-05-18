@@ -331,7 +331,7 @@ describe('PUT /fulfillment', function () {
   })
 
   it('should trigger subscriptions when notification is executed', function * () {
-    const subscription = require('./data/subscription1.json')
+    const subscription = require('./data/subscriptions/alice.json')
     yield Subscription.createExternal(subscription)
 
     const transfer = this.preparedTransfer
@@ -410,7 +410,7 @@ describe('PUT /fulfillment', function () {
   })
 
   it('should trigger subscriptions when notification is cancelled', function * () {
-    const subscription = require('./data/subscription1.json')
+    const subscription = require('./data/subscriptions/alice.json')
     yield Subscription.createExternal(subscription)
 
     const transfer = this.preparedTransfer

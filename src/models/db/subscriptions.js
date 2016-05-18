@@ -4,16 +4,19 @@ const assert = require('assert')
 const _ = require('lodash')
 const db = require('../../services/db')
 const Subscription = require('./subscription').Subscription
+const InvalidModificationError = require('five-bells-shared').InvalidModificationError
 
 function * getSubscription (id, options) {
-  return yield Subscription.findById(id, options)
+  const subscriptions = yield Subscription.findWhere({id, is_deleted: false}, options)
+  return Subscription.fromDatabaseModel(subscriptions[0])
 }
 
 function * getMatchingSubscription (subscription, options) {
   const results = yield Subscription.findWhere({
     event: subscription.event,
     subject: subscription.subject,
-    target: subscription.target
+    target: subscription.target,
+    is_deleted: false
   }, options)
   return results.length > 0 ? results[0] : null
 }
@@ -25,6 +28,10 @@ function * _upsertSubscription (subscription, options) {
   // correct HTTP status code we unfortunately have to do this in two steps.
   const existingSubscription = yield Subscription.findById(
     subscription.id, options)
+  const isDeleted = existingSubscription && existingSubscription.is_deleted
+  if (isDeleted) {
+    throw new InvalidModificationError('This subscription is deleted. Please use a new ID')
+  }
   if (existingSubscription) {
     existingSubscription.setData(subscription)
     yield existingSubscription.save(options)
@@ -48,7 +55,12 @@ function * upsertSubscription (subscription, options) {
 }
 
 function * deleteSubscription (id, options) {
-  yield Subscription.destroy(_.assign({}, options, {where: {id: id}}))
+  assert(options.transaction)
+  const existingSubscription = yield getSubscription(id, options)
+  if (existingSubscription) {
+    existingSubscription.setData({is_deleted: true})
+    return yield existingSubscription.save(options)
+  }
 }
 
 module.exports = {

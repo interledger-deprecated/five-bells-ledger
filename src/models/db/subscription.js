@@ -20,6 +20,7 @@ class Subscription extends Model {
     data.id = uri.make('subscription', data.id.toLowerCase())
     if (data.subject === null) delete data.subject
 
+    delete data.is_deleted
     return data
   }
 
