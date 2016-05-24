@@ -53,7 +53,6 @@ With the following configuration options set as environment variables:
 * `LEDGER_ADMIN_USER` (default: `'admin'`) The admin account's username (an admin user can create/modify accounts).
 * `LEDGER_ADMIN_PASS` (default: none) The admin account's password.
 * `LEDGER_ADMIN_FINGERPRINT` (default: none) The admin account's TLS certificate fingerprint if using TLS Client Certificate Auth.
-* `LEDGER_UNIT_DB_URI` (default `'sqlite://'`) Database to use for running unit tests. Configured separately for safety.
 * `LEDGER_AUTH_BASIC_ENABLED` (default `1`) whether or not to allow HTTP basic authentication.
 * `LEDGER_AUTH_HTTP_SIGNATURE_ENABLED` (default `1`) whether or not to allow HTTP signature authentication.
 * `LEDGER_AUTH_CLIENT_CERT_ENABLED` (default `0`) whether or not to allow TLS Client Certificate authentication (requires HTTPS).
@@ -95,3 +94,15 @@ Breaking down that command:
 * `--rm` Delete container when it's done running.
 * `--net=host` Don't isolate container into its own virtual network. This allows Five Bells Ledger to see the database that we set up above.
 * `-e LEDGER_PORT=1337` Set the ledger's port to 1337. This is just an example for how to set a config option.
+
+## Running tests
+
+To run tests using an in-memory database, run:
+
+``` sh
+npm test
+```
+If you wish to specify the database against which the tests are run, use the `LEDGER_UNIT_DB_URI` environment variable.
+``` sh
+LEDGER_DB_SYNC=1 LEDGER_UNIT_DB_URI=postgres://root:password@localhost:5432/ledger_test_db npm test
+```
