@@ -8,5 +8,6 @@ function transaction (callback) {
 }
 
 module.exports = {
-  transaction
+  transaction,
+  client: knex.client.config.client
 }

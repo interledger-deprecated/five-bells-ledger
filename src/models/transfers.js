@@ -318,6 +318,11 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
   const fulfillment = ConditionFulfillment.fromDataExternal(fulfillmentUri)
   fulfillment.setTransferId(transferId)
   const existingFulfillment = yield db.transaction(function * (transaction) {
+    // Set isolation level to avoid reading "prepared" transaction that is currently being
+    // executed by another request. This ensures the transfer can be fulfilled only once.
+    if (db.client === 'pg' || db.client === 'strong-oracle') {
+      yield transaction.raw('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+    }
     const transfer = yield db.getTransfer(transferId, {transaction})
 
     if (!transfer) {

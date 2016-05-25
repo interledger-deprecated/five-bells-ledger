@@ -40,5 +40,6 @@ function * upsertTransfer (transfer, options) {
 module.exports = {
   getTransfer,
   upsertTransfer,
-  transaction: db.transaction.bind(db)
+  transaction: db.transaction.bind(db),
+  client: db.client
 }
