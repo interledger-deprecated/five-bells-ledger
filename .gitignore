@@ -1,5 +1,6 @@
-node_modules/
-apidoc-out/
+/node_modules/
+/web/
+/apidoc-out/
 coverage/
 *.cluster
 /npm-debug.log
