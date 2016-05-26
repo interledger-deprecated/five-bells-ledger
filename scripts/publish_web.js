@@ -21,6 +21,7 @@ exec('cp -r apidoc-out/* web/apidoc/', { cwd })
 // Update apidoc-template
 console.log('\n# Updating API doc template')
 exec('wget https://github.com/interledger/apidoc-template/archive/master.tar.gz -O - | tar xzf - --strip 1 -C web/apidoc', { cwd })
+exec('rm web/apidoc/.gitignore')
 
 // Push changes
 console.log('\n# Pushing web branch')
