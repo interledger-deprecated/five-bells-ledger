@@ -49,7 +49,7 @@ h2 {
   font-weight: 300;
   font-size: 24px;
   line-height: 26px;
-  padding: 0 0 52px 0;
+  padding: 0;
   margin: 0px 0 26px 0;
 }
 
@@ -813,6 +813,12 @@ table>tbody>tr:nth-of-type(even) {
 @-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
 @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
 @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+
+@media (max-width: 992px) {
+  .sidenav {
+    width: auto !important;
+  }
+}
 
 
 /* ------------------------------------------------------------------------------------------
