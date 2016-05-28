@@ -48,13 +48,16 @@ oracletest() {
   mkdir -p "$ORACLE_DIR"
 
   local clientSDK="instantclient-sdk-linux.x64-12.1.0.2.0.zip"
+  local sqlplusZip="instantclient-sqlplus-linux.x64-12.1.0.2.0.zip"
   if [ ! -f "$ORACLE_DIR/$clientSDK" ]; then
     (
     cd "$ORACLE_DIR" || exit 1
 
     aws s3 cp s3://ilp-server-ci-files/"$clientSDK" .
+    aws s3 cp s3://ilp-server-ci-files/"$sqlplusZip" .
     aws s3 cp s3://ilp-server-ci-files/instantclient-basic-linux.x64-12.1.0.2.0.zip .
     unzip $clientSDK
+    unzip $sqlplusZip
     unzip instantclient-basic-linux.x64-12.1.0.2.0.zip
     # Need symlinks from .so.12.1 to .so
     ln -s libocci.so.12.1 instantclient_12_1/libocci.so
@@ -69,8 +72,8 @@ oracletest() {
   npm i strong-oracle
   # Check for node_modules/strong-oracle explicitly because even if installation of it fails, npm doesn't catch it.
   if [[ ! -d node_modules/strong-oracle ]] ; then echo 'node_modules/strong-oracle is not there, return error.' ; exit 1 ; fi
-  # Build container
-  LEDGER_UNIT_DB_URI='oracle://system:oracle@localhost:49161/' LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha
+  npm run setup-oracle
+  npm run test-oracle
 }
 
 oneNode() {
@@ -78,7 +81,6 @@ oneNode() {
   dockerBuild
   sqlitetestest
   integrationtest
-  mysqltest
   postgrestest
   oracletest
   apidoc
@@ -86,7 +88,7 @@ oneNode() {
 
 twoNodes() {
   case "$NODE_INDEX" in
-    0) lint; dockerBuild; sqlitetest integrationtest; mysqltest;;
+    0) lint; dockerBuild; sqlitetest; integrationtest;;
     1) dockerBuild; oracletest; postgrestest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
@@ -95,7 +97,7 @@ twoNodes() {
 threeNodes() {
   case "$NODE_INDEX" in
     0) lint; dockerBuild; sqlitetest integrationtest;;
-    1) dockerBuild; postgrestest; mysqltest;;
+    1) dockerBuild; postgrestest;;
     2) oracletest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
@@ -105,7 +107,7 @@ fourNodes() {
   case "$NODE_INDEX" in
     0) dockerBuild; sqlitetest; postgrestest;;
     1) integrationtest;;
-    2) lint; dockerBuild; mysqltest; apidoc;;
+    2) lint; dockerBuild; apidoc;;
     3) oracletest;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac

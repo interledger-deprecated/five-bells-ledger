@@ -20,6 +20,7 @@ const notifications = require('../controllers/notifications')
 const models = require('../models/db')
 const seedDB = require('./seed-db')
 const knex = require('./knex')
+const createTables = require('./db').createTables
 
 // Configure passport
 require('../services/auth')
@@ -66,7 +67,7 @@ class App {
     this.notificationWorker.start()
 
     if (this.config.getIn(['db', 'sync'])) {
-      yield knex.knex.migrate.latest(knex.config)
+      yield createTables(knex.knex, knex.config)
     }
     yield seedDB(this.config)
 

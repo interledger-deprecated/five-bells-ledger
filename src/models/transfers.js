@@ -9,7 +9,7 @@ const stringifyJSON = require('canonical-json')
 const db = require('./db/transfers')
 const ConditionFulfillment = require('./db/conditionFulfillment').ConditionFulfillment
 const fulfillments = require('./db/conditionFulfillments')
-const makeAccountBalances = require('../lib/accountBalances')
+const holds = require('../lib/holds')
 const validateNoDisabledAccounts = require('../lib/disabledAccounts')
 const config = require('../services/config')
 const uri = require('../services/uriManager')
@@ -256,17 +256,18 @@ function isAuthorized (transfer) {
   return areDebitsAuthorized
 }
 
-function * processTransitionToPreparedState (transfer, accountBalances) {
+function * processTransitionToPreparedState (transfer, transaction) {
   if (transfer.state === transferStates.TRANSFER_STATE_PROPOSED && isAuthorized(transfer)) {
-    yield accountBalances.applyDebits()  // hold sender funds
+    yield holds.holdFunds(transfer, transaction)  // hold sender funds
     updateState(transfer, transferStates.TRANSFER_STATE_PREPARED)
   }
 }
 
-function * processImmediateExecution (transfer, accountBalances) {
+function * processImmediateExecution (transfer, transaction) {
   if (transfer.state === transferStates.TRANSFER_STATE_PREPARED &&
       transfer.execution_condition === undefined) {
-    yield accountBalances.applyCredits()  // release held funds to recipient
+    // release held funds to recipient
+    yield holds.disburseFunds(transfer, transaction)
     transferExpiryMonitor.unwatch(transfer.id)
     updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED)
   }
@@ -296,22 +297,18 @@ function validateConditionFulfillment (transfer, fulfillmentModel) {
 }
 
 function * cancelTransfer (transaction, transfer, fulfillment) {
-  const accountBalances = yield makeAccountBalances(transaction, transfer)
   if (transfer.state === transferStates.TRANSFER_STATE_PREPARED) {
-    yield accountBalances.revertDebits()
+    yield holds.returnHeldFunds(transfer, transaction)
   }
-  yield fulfillments.upsertFulfillment(
-    fulfillment, {transaction})
+  yield fulfillments.upsertFulfillment(fulfillment, {transaction})
   transfer.rejection_reason = 'cancelled'
   updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
 }
 
 function * executeTransfer (transaction, transfer, fulfillment) {
-  const accountBalances = yield makeAccountBalances(transaction, transfer)
-  yield accountBalances.applyCredits()
+  yield holds.disburseFunds(transfer, transaction)
   updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED)
-  yield fulfillments.upsertFulfillment(
-    fulfillment, {transaction})
+  yield fulfillments.upsertFulfillment(fulfillment, {transaction})
 }
 
 function * fulfillTransfer (transferId, fulfillmentUri) {
@@ -430,10 +427,8 @@ function * setTransfer (transfer, requestingUser) {
         previousCredits, 'credit')
     }
 
-    const accountBalances = yield makeAccountBalances(transaction, transfer)
-    yield processTransitionToPreparedState(transfer, accountBalances)
-    yield processImmediateExecution(transfer, accountBalances)
-
+    yield processTransitionToPreparedState(transfer, transaction)
+    yield processImmediateExecution(transfer, transaction)
     yield db.upsertTransfer(transfer, {transaction})
 
     // Create persistent notification events. We're doing this within the same

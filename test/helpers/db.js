@@ -2,6 +2,7 @@
 
 const knex = require('../../src/lib/knex').knex
 const knexConfig = require('../../src/lib/knex').config
+const createTables = require('../../src/lib/db').createTables
 const Account = require('../../src/models/db/account').Account
 const Transfer = require('../../src/models/db/transfer').Transfer
 const Subscription = require('../../src/models/db/subscription').Subscription
@@ -28,11 +29,19 @@ const migrationTables = [
 let init = false
 exports.init = function * () {
   if (init) return
+
+  if (knexConfig.client === 'strong-oracle') {
+    console.log(
+      'Reminder: Oracle schemas must be loaded with "npm run setup-oracle"')
+    init = true
+    return
+  }
+
   for (let t of tables.concat(migrationTables)) {
     yield knex.schema.dropTableIfExists(t).then()
   }
 
-  yield knex.migrate.latest(knexConfig).then()
+  yield createTables(knex, knexConfig)
   init = true
   return
 }
@@ -41,6 +50,10 @@ exports.clean = function * () {
   for (let t of tables) {
     yield knex(t).truncate().then()
   }
+}
+
+exports.setHoldBalance = function * (balance) {
+  yield knex('accounts').where('name', 'hold').update({balance})
 }
 
 exports.addAccounts = function * (accounts) {
