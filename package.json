@@ -88,6 +88,6 @@
     "sinon-chai": "^2.7.0",
     "spec-xunit-file": "0.0.1-3",
     "supertest": "^1.1.0",
-    "ws": "^1.1.0"
+    "ws": "^0.8.0"
   }
 }
