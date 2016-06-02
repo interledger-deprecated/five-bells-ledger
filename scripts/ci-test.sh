@@ -43,7 +43,7 @@ sqlitetest() {
 oracletest() {
   # Install Oracle
   docker pull wnameless/oracle-xe-11g
-  docker run -d -p 49160:22 -p 49161:1521 wnameless/oracle-xe-11g
+  docker run -d -p 49160:22 -p 1521:1521 wnameless/oracle-xe-11g
   # Download and unzip Oracle library
   mkdir -p "$ORACLE_DIR"
 
@@ -72,7 +72,6 @@ oracletest() {
   npm i strong-oracle
   # Check for node_modules/strong-oracle explicitly because even if installation of it fails, npm doesn't catch it.
   if [[ ! -d node_modules/strong-oracle ]] ; then echo 'node_modules/strong-oracle is not there, return error.' ; exit 1 ; fi
-  npm run setup-oracle
   npm run test-oracle
 }
 
