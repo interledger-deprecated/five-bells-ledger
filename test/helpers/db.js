@@ -28,22 +28,15 @@ const migrationTables = [
 // Only run migrations once during tests
 let init = false
 exports.init = function * () {
-  if (init) return
-
-  if (knexConfig.client === 'strong-oracle') {
-    console.log(
-      'Reminder: Oracle schemas must be loaded with "npm run setup-oracle"')
-    init = true
+  if (init) {
     return
   }
-
-  for (let t of tables.concat(migrationTables)) {
-    yield knex.schema.dropTableIfExists(t).then()
+  for (let tableName of tables.concat(migrationTables)) {
+    yield knex.schema.dropTableIfExists(tableName).then()
   }
 
   yield createTables(knex, knexConfig)
   init = true
-  return
 }
 
 exports.clean = function * () {
