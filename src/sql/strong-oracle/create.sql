@@ -1,5 +1,5 @@
 BEGIN
-   EXECUTE IMMEDIATE 'DROP TABLE "accounts"';
+   EXECUTE IMMEDIATE 'DROP TABLE "L_ACCOUNTS"';
 EXCEPTION
    WHEN OTHERS THEN
       IF SQLCODE != -942 THEN
@@ -112,40 +112,40 @@ CREATE SEQUENCE seq_l_fulfillments_pk
   ORDER
 /
 
-CREATE TABLE "accounts"
+CREATE TABLE "L_ACCOUNTS"
 (
-  "id"                   INTEGER  NOT NULL ,
-  "name"                 VARCHAR2(255) NOT NULL ,
-  "balance"              NUMBER(32,16) NULL ,
-  "connector"            VARCHAR2(1024) NULL ,
-  "password_hash"        VARCHAR2(1024) NULL ,
-  "public_key"           VARCHAR2(4000) NULL ,
-  "is_admin"             SMALLINT NULL ,
-  "is_disabled"          SMALLINT NULL ,
-  "fingerprint"          VARCHAR2(255) ,
-  "minimum_allowed_balance" NUMBER(32,16) DEFAULT  0  NULL,
-  CONSTRAINT "min_balance_constraint" CHECK ("balance" >= "minimum_allowed_balance")
+  "ACCOUNT_ID"           INTEGER  NOT NULL ,
+  "NAME"                 VARCHAR2(255) NOT NULL ,
+  "BALANCE"              NUMBER(32,16) NULL ,
+  "CONNECTOR"            VARCHAR2(1024) NULL ,
+  "PASSWORD_HASH"        VARCHAR2(1024) NULL ,
+  "PUBLIC_KEY"           VARCHAR2(4000) NULL ,
+  "IS_ADMIN"             SMALLINT NULL ,
+  "IS_DISABLED"          SMALLINT NULL ,
+  "FINGERPRINT"          VARCHAR2(255) ,
+  "MINIMUM_ALLOWED_BALANCE" NUMBER(32,16) DEFAULT  0  NULL,
+  CONSTRAINT "MIN_BALANCE_CONSTRAINT" CHECK ("BALANCE" >= "MINIMUM_ALLOWED_BALANCE")
 )
 /
 
-CREATE INDEX XPKACCOUNTS ON "accounts"
-  ("id"   ASC)
+CREATE INDEX XPKACCOUNTS ON "L_ACCOUNTS"
+  ("ACCOUNT_ID"   ASC)
 /
 
-ALTER TABLE "accounts"
-  ADD CONSTRAINT  PK_ACCOUNTS PRIMARY KEY ("id")
+ALTER TABLE "L_ACCOUNTS"
+  ADD CONSTRAINT  PK_ACCOUNTS PRIMARY KEY ("ACCOUNT_ID")
 /
 
-CREATE UNIQUE INDEX XAK1ACCOUNTS ON "accounts"
-  ("name"   ASC)
+CREATE UNIQUE INDEX XAK1ACCOUNTS ON "L_ACCOUNTS"
+  ("NAME"   ASC)
 /
 
-ALTER TABLE "accounts"
-  ADD CONSTRAINT  XAK1_ACCOUNTS UNIQUE ("name")
+ALTER TABLE "L_ACCOUNTS"
+  ADD CONSTRAINT  XAK1_ACCOUNTS UNIQUE ("NAME")
 /
 
-CREATE INDEX XIE1_FINGERPRINTS ON "accounts"
-  ("fingerprint"   ASC)
+CREATE INDEX XIE1_FINGERPRINTS ON "L_ACCOUNTS"
+  ("FINGERPRINT"   ASC)
 /
 
 CREATE TABLE "subscriptions"
@@ -282,14 +282,14 @@ CREATE INDEX XIF2L_NOTIFICATIONS ON "notifications"
 
 CREATE OR REPLACE TRIGGER trg_ACCOUNTS_SEQ
   BEFORE INSERT
-  ON "accounts"
+  ON "L_ACCOUNTS"
   FOR EACH ROW
-  WHEN (new."id" is null)
+  WHEN (new."ACCOUNT_ID" is null)
 DECLARE
-  v_id "accounts"."id"%TYPE;
+  v_id "L_ACCOUNTS"."ACCOUNT_ID"%TYPE;
 BEGIN
   SELECT seq_l_account_pk.nextval INTO v_id FROM DUAL;
-  :new."id" := v_id;
+  :new."ACCOUNT_ID" := v_id;
 END trg_ACCOUNTS_SEQ;
 /
 

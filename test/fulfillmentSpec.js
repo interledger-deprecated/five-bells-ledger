@@ -12,10 +12,10 @@ const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const accounts = require('./data/accounts')
-const Account = require('../src/models/db/account').Account
 const Subscription = require('../src/models/db/subscription').Subscription
 const validator = require('./helpers/validator')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
+const getAccount = require('../src/models/db/accounts').getAccount
 
 const transferStates = transferDictionary.transferStates
 
@@ -192,8 +192,8 @@ describe('PUT /fulfillment', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('alice')).balance).to.equal(90)
-      expect((yield Account.findByName('bob')).balance).to.equal(0)
+      expect((yield getAccount('alice')).balance).to.equal(90)
+      expect((yield getAccount('bob')).balance).to.equal(0)
 
       yield this.request()
         .put(transfer.id + '/fulfillment')
@@ -204,8 +204,8 @@ describe('PUT /fulfillment', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('alice')).balance).to.equal(100)
-      expect((yield Account.findByName('bob')).balance).to.equal(0)
+      expect((yield getAccount('alice')).balance).to.equal(100)
+      expect((yield getAccount('bob')).balance).to.equal(0)
     })
 
   /* Execution conditions */
@@ -231,8 +231,8 @@ describe('PUT /fulfillment', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('alice')).balance).to.equal(90)
-      expect((yield Account.findByName('bob')).balance).to.equal(10)
+      expect((yield getAccount('alice')).balance).to.equal(90)
+      expect((yield getAccount('bob')).balance).to.equal(10)
     })
 
   it('should execute when the condition is type "and"',
@@ -256,8 +256,8 @@ describe('PUT /fulfillment', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('alice')).balance).to.equal(90)
-      expect((yield Account.findByName('bob')).balance).to.equal(10)
+      expect((yield getAccount('alice')).balance).to.equal(90)
+      expect((yield getAccount('bob')).balance).to.equal(10)
     })
 
   it('should not double spend when transfer is executed multiple times', function * () {
@@ -280,8 +280,8 @@ describe('PUT /fulfillment', function () {
       .end()
 
     // Check balances
-    expect((yield Account.findByName('alice')).balance).to.equal(90)
-    expect((yield Account.findByName('bob')).balance).to.equal(10)
+    expect((yield getAccount('alice')).balance).to.equal(90)
+    expect((yield getAccount('bob')).balance).to.equal(10)
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
@@ -292,8 +292,8 @@ describe('PUT /fulfillment', function () {
       .end()
 
     // Check balances
-    expect((yield Account.findByName('alice')).balance).to.equal(90)
-    expect((yield Account.findByName('bob')).balance).to.equal(10)
+    expect((yield getAccount('alice')).balance).to.equal(90)
+    expect((yield getAccount('bob')).balance).to.equal(10)
   })
 
   it('should allow a transfer to be cancelled multiple times', function * () {
@@ -316,8 +316,8 @@ describe('PUT /fulfillment', function () {
       .end()
 
     // Check balances
-    expect((yield Account.findByName('alice')).balance).to.equal(100)
-    expect((yield Account.findByName('bob')).balance).to.equal(0)
+    expect((yield getAccount('alice')).balance).to.equal(100)
+    expect((yield getAccount('bob')).balance).to.equal(0)
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
@@ -328,8 +328,8 @@ describe('PUT /fulfillment', function () {
       .end()
 
     // Check balances
-    expect((yield Account.findByName('alice')).balance).to.equal(100)
-    expect((yield Account.findByName('bob')).balance).to.equal(0)
+    expect((yield getAccount('alice')).balance).to.equal(100)
+    expect((yield getAccount('bob')).balance).to.equal(0)
   })
 
   it('should trigger subscriptions when notification is executed', function * () {

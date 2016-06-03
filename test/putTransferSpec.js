@@ -13,7 +13,8 @@ const config = require('../src/services/config')
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
-const Account = require('../src/models/db/account').Account
+const upsertAccount = require('../src/models/db/accounts').upsertAccount
+const getAccount = require('../src/models/db/accounts').getAccount
 const Subscription = require('../src/models/db/subscription').Subscription
 const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
@@ -353,9 +354,7 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     /* Disable bobs's account */
-    const bobAccount = yield Account.findByName(accounts.bob.name)
-    bobAccount.is_disabled = true
-    yield bobAccount.save()
+    yield upsertAccount({name: accounts.bob.name, is_disabled: true})
 
     transferNoAuthorization.debits[0].authorized = true
 
@@ -420,8 +419,8 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     // Check balances
-    expect((yield Account.findByName('alice')).balance).to.equal(90)
-    expect((yield Account.findByName('bob')).balance).to.equal(10)
+    expect((yield getAccount('alice')).balance).to.equal(90)
+    expect((yield getAccount('bob')).balance).to.equal(10)
   })
 
   it('should return 200 if the transfer already exists', function * () {
@@ -480,8 +479,8 @@ describe('PUT /transfers/:id', function () {
       .end()
 
     // Check balances
-    expect((yield Account.findByName('alice')).balance).to.equal(90)
-    expect((yield Account.findByName('bob')).balance).to.equal(10)
+    expect((yield getAccount('alice')).balance).to.equal(90)
+    expect((yield getAccount('bob')).balance).to.equal(10)
   })
 
   // In CI, Oracle is setup with Decimal(10,2) and SQLite doesn't care about precision
@@ -500,7 +499,7 @@ describe('PUT /transfers/:id', function () {
         .expect(201)
         .end()
     }
-    expect((yield Account.findByName('alice')).balance).to.equal(89.9798)
+    expect((yield getAccount('alice')).balance).to.equal(89.9798)
   })
 
   it('should accept a transfer with an upper case ID but convert the ID ' +

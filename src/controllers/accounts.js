@@ -112,8 +112,10 @@ function * putResource () {
   const name = this.params.name
   request.validateUriParameter('name', name, 'Identifier')
   const account = this.body
-  request.assert.strictEqual(account.name, name.toLowerCase(),
-    'Account name must match the one in the URL')
+  if (account.name) {
+    request.assert.strictEqual(account.name.toLowerCase(), name.toLowerCase(),
+      'Account name must match the one in the URL')
+  }
   const result = yield model.setAccount(account, this.req.user)
   this.body = result.account
   this.status = result.existed ? 200 : 201

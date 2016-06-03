@@ -1,4 +1,4 @@
-DROP TABLE "accounts";
+DROP TABLE "L_ACCOUNTS";
 DROP TABLE "fulfillments";
 DROP TABLE "entries";
 DROP TABLE "notifications";

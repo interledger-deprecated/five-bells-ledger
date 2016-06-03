@@ -3,16 +3,18 @@
 const knex = require('../../src/lib/knex').knex
 const knexConfig = require('../../src/lib/knex').config
 const createTables = require('../../src/lib/db').createTables
-const Account = require('../../src/models/db/account').Account
 const Transfer = require('../../src/models/db/transfer').Transfer
 const Subscription = require('../../src/models/db/subscription').Subscription
 const Notification = require('../../src/models/db/notification').Notification
 const Fulfillment = require('../../src/models/db/conditionFulfillment').ConditionFulfillment
+const convertFromExternal = require('../../src/models/accounts')
+  .convertFromExternal
+const insertAccounts = require('../../src/models/db/accounts').insertAccounts
 
 const hashPassword = require('five-bells-shared/utils/hashPassword')
 
 const tables = [
-  'accounts',
+  'L_ACCOUNTS',
   'fulfillments',
   'entries',
   'notifications',
@@ -46,7 +48,7 @@ exports.clean = function * () {
 }
 
 exports.setHoldBalance = function * (balance) {
-  yield knex('accounts').where('name', 'hold').update({balance})
+  yield knex('L_ACCOUNTS').where('NAME', 'hold').update({BALANCE: balance})
 }
 
 exports.addAccounts = function * (accounts) {
@@ -55,15 +57,14 @@ exports.addAccounts = function * (accounts) {
   }
 
   // Hash passwords
-  const accountModels = accounts.map(Account.fromDataExternal.bind(Account))
+  const accountModels = accounts.map(convertFromExternal)
   for (let account of accountModels) {
     if (account.password) {
       account.password_hash = (yield hashPassword(account.password)).toString('base64')
       delete account.password
     }
   }
-
-  yield Account.bulkCreate(accountModels)
+  yield insertAccounts(accountModels)
 }
 
 exports.addTransfers = function * (transfers) {
