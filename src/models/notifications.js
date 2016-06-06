@@ -5,11 +5,13 @@ const uri = require('../services/uriManager')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const Notification = require('./db/notification').Notification
-const Transfer = require('./db/transfer').Transfer
+const getTransfer = require('./db/transfers').getTransfer
 const Fulfillment = require('./db/conditionFulfillment').ConditionFulfillment
 const subscriptions = require('./db/subscriptions')
 const subscriptionUtils = require('../lib/subscriptionUtils')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
+const convertToExternalTransfer = require('./converters/transfers')
+  .convertToExternalTransfer
 
 const transferStates = transferDictionary.transferStates
 
@@ -30,14 +32,14 @@ function * getNotification (subscriptionId, notificationId, requestingUser) {
   } else if (!subscriptionUtils.isOwnerOrAdmin(requestingUser, subscription)) {
     throw new UnauthorizedError('You do not own this subscription')
   } else {
-    const transfer = yield Transfer.findById(notification.transfer_id)
+    const transfer = yield getTransfer(notification.transfer_id)
     const fulfillment = yield Fulfillment.findByTransfer(transfer.id)
     const subscriptionURI = uri.make('subscription', subscription.id)
     const notificationBody = {
       id: subscriptionURI + '/notifications/' + notification.id,
       subscription: subscriptionURI,
       event: 'transfer.update',
-      resource: transfer.getDataExternal()
+      resource: convertToExternalTransfer(transfer)
     }
     if (fulfillment) {
       if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {

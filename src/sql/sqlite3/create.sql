@@ -13,21 +13,21 @@ create table if not exists "L_ACCOUNTS" (
 create unique index accounts_name_unique on "L_ACCOUNTS" ("NAME");
 create index fingerprint on "L_ACCOUNTS" ("FINGERPRINT");
 
-create table if not exists "transfers" (
-"id" char(36) not null primary key,
-"ledger" varchar(1024),
-"debits" text,
-"credits" text,
-"additional_info" text,
-"state" varchar,
-"rejection_reason" varchar,
-"execution_condition" text,
-"cancellation_condition" text,
-"expires_at" datetime,
-"proposed_at" datetime,
-"prepared_at" datetime,
-"executed_at" datetime,
-"rejected_at" datetime);
+create table if not exists "L_TRANSFERS" (
+"TRANSFER_ID" char(36) not null primary key,
+"LEDGER" varchar(1024),
+"DEBITS" text,
+"CREDITS" text,
+"ADDITIONAL_INFO" text,
+"STATE" varchar,
+"REJECTION_REASON" varchar,
+"EXECUTION_CONDITION" text,
+"CANCELLATION_CONDITION" text,
+"EXPIRES_AT" datetime,
+"PROPOSED_AT" datetime,
+"PREPARED_AT" datetime,
+"EXECUTED_AT" datetime,
+"REJECTED_AT" datetime);
 
 create table if not exists "subscriptions" (
 "id" char(36),

@@ -6,8 +6,10 @@ const log = require('../services/log')('expiry monitor')
 const holds = require('./holds')
 const updateState = require('./updateState')
 const ExpiredTransferError = require('../errors/expired-transfer-error')
-const Transfer = require('../models/db/transfer').Transfer
+const getTransfer = require('../models/db/transfers').getTransfer
+const updateTransfer = require('../models/db/transfers').updateTransfer
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
+const isTransferFinalized = require('./transferUtils').isTransferFinalized
 
 const transferStates = transferDictionary.transferStates
 
@@ -29,7 +31,7 @@ class TransferExpiryMonitor {
     const _this = this
 
     yield db.transaction(function * (transaction) {
-      let transfer = yield Transfer.findById(transferId, { transaction })
+      const transfer = yield getTransfer(transferId, { transaction })
 
       if (!transfer) {
         log.error('trying to expire transfer that cannot be found ' +
@@ -37,14 +39,14 @@ class TransferExpiryMonitor {
         return
       }
 
-      if (!transfer.isFinalized()) {
+      if (!isTransferFinalized(transfer)) {
         if (transfer.state === transferStates.TRANSFER_STATE_PREPARED) {
           // Return the money to the original senders
           holds.returnHeldFunds(transfer, transaction)
         }
         updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
         transfer.rejection_reason = 'expired'
-        yield transfer.save({ transaction })
+        yield updateTransfer(transfer, {transaction})
 
         log.debug('expired transfer: ' + transferId)
 
@@ -54,7 +56,7 @@ class TransferExpiryMonitor {
   }
 
   * watch (transfer) {
-    // Star the expiry countdown if we're not already watching it
+    // Start the expiry countdown if we're not already watching it
     if (!this.queue.includes(transfer.id)) {
       const now = moment()
       const expiry = moment(transfer.expires_at)
@@ -73,7 +75,7 @@ class TransferExpiryMonitor {
   * processExpiredTransfers () {
     log.debug('checking for transfers to expire')
     const transfersToExpire = this.queue.popBeforeDate(moment())
-    for (let id of transfersToExpire) {
+    for (const id of transfersToExpire) {
       yield this.expireTransfer(id)
     }
   }

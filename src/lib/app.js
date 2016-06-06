@@ -114,7 +114,10 @@ class App {
       passport.authenticate(['basic', 'http-signature', 'client-cert'], {
         session: false
       }),
-      models.Transfer.createBodyParser(),
+      function * (next) {
+        this.body = yield parseBody(this)
+        yield next
+      },
       transfers.putResource)
 
     router.put('/transfers/:id/fulfillment', transfers.putFulfillment)

@@ -11,6 +11,10 @@ const knex = require('./knex').knex
 const uuid4 = require('uuid4')
 const JSONSigning = require('five-bells-shared').JSONSigning
 const config = require('../services/config')
+const getTransfer = require('../models/db/transfers').getTransfer
+const isTransferFinalized = require('./transferUtils').isTransferFinalized
+const convertToExternalTransfer = require('../models/converters/transfers')
+  .convertToExternalTransfer
 
 const privateKey = config.getIn(['keys', 'notification_sign', 'secret'])
 
@@ -29,13 +33,12 @@ function * findOrCreate (Notification, data) {
 }
 
 class NotificationWorker extends EventEmitter {
-  constructor (uri, log, Notification, Transfer, Subscription, Fulfillment, config) {
+  constructor (uri, log, Notification, Subscription, Fulfillment, config) {
     super()
 
     this.uri = uri
     this.log = log
     this.Notification = Notification
-    this.Transfer = Transfer
     this.Subscription = Subscription
     this.Fulfillment = Fulfillment
     this.config = config
@@ -58,12 +61,12 @@ class NotificationWorker extends EventEmitter {
 
     // Prepare notification for websocket subscribers
     const notificationBody = {
-      resource: transfer.getDataExternal()
+      resource: convertToExternalTransfer(transfer)
     }
 
     // If the transfer is finalized, see if it was finalized by a fulfillment
     let fulfillment
-    if (transfer.isFinalized()) {
+    if (isTransferFinalized(transfer)) {
       fulfillment = yield this.Fulfillment.findByTransfer(transfer.id, { transaction })
 
       if (fulfillment) {
@@ -129,7 +132,7 @@ class NotificationWorker extends EventEmitter {
 
   * processNotification (notification) {
     notification = this.Notification.fromData(notification)
-    const transfer = yield this.Transfer.findById(notification.transfer_id)
+    const transfer = yield getTransfer(notification.transfer_id)
     const subscription = yield this.Subscription.findById(notification.subscription_id)
     const fulfillment = yield this.Fulfillment.findByTransfer(transfer.id)
     yield this.processNotificationWithInstances(notification, transfer, subscription, fulfillment)
@@ -142,7 +145,7 @@ class NotificationWorker extends EventEmitter {
       id: subscriptionURI + '/notifications/' + notification.id,
       subscription: subscriptionURI,
       event: 'transfer.update',
-      resource: transfer.getDataExternal()
+      resource: convertToExternalTransfer(transfer)
     }
     if (fulfillment) {
       if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {

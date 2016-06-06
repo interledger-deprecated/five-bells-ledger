@@ -11,7 +11,8 @@ const appHelper = require('./helpers/app')
 const timingHelper = require('./helpers/timing')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const getAccount = require('../src/models/db/accounts').getAccount
-const convertToExternal = require('../src/models/accounts').convertToExternal
+const convertToExternal = require('../src/models/converters/accounts')
+  .convertToExternalAccount
 
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 const notificationWorker = require('../src/services/notificationWorker')

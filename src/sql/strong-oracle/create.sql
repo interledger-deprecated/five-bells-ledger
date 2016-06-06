@@ -29,7 +29,7 @@ END;
 /
 
 BEGIN
-   EXECUTE IMMEDIATE 'DROP TABLE "transfers"';
+   EXECUTE IMMEDIATE 'DROP TABLE "L_TRANSFERS"';
 EXCEPTION
    WHEN OTHERS THEN
       IF SQLCODE != -942 THEN
@@ -171,31 +171,31 @@ CREATE INDEX XIE1L_SUBSCRIPTIONS ON "subscriptions"
   ("is_deleted" ASC)
 /
 
-CREATE TABLE "transfers"
+CREATE TABLE "L_TRANSFERS"
 (
-  "id"                   VARCHAR2(36)  NOT NULL ,
-  "ledger"               VARCHAR2(1024) NULL ,
-  "debits"               VARCHAR2(4000) NULL ,
-  "credits"              VARCHAR2(4000) NULL ,
-  "state"                VARCHAR2(4000) NULL ,
-  "rejection_reason"     VARCHAR2(4000) NULL ,
-  "additional_info"      VARCHAR2(4000) NULL ,
-  "execution_condition"  VARCHAR2(4000) NULL ,
-  "cancellation_condition" VARCHAR2(4000) NULL ,
-  "expires_at"         TIMESTAMP NULL ,
-  "proposed_at"        TIMESTAMP NULL ,
-  "prepared_at"        TIMESTAMP NULL ,
-  "executed_at"        TIMESTAMP NULL ,
-  "rejected_at"        TIMESTAMP NULL
+  "TRANSFER_ID"          VARCHAR2(36)  NOT NULL ,
+  "LEDGER"               VARCHAR2(1024) NULL ,
+  "DEBITS"               VARCHAR2(4000) NULL ,
+  "CREDITS"              VARCHAR2(4000) NULL ,
+  "STATE"                VARCHAR2(4000) NULL ,
+  "REJECTION_REASON"     VARCHAR2(4000) NULL ,
+  "ADDITIONAL_INFO"      VARCHAR2(4000) NULL ,
+  "EXECUTION_CONDITION"  VARCHAR2(4000) NULL ,
+  "CANCELLATION_CONDITION" VARCHAR2(4000) NULL ,
+  "EXPIRES_AT"         TIMESTAMP NULL ,
+  "PROPOSED_AT"        TIMESTAMP NULL ,
+  "PREPARED_AT"        TIMESTAMP NULL ,
+  "EXECUTED_AT"        TIMESTAMP NULL ,
+  "REJECTED_AT"        TIMESTAMP NULL
 )
 /
 
-CREATE INDEX XPKL_TRANSFERS ON "transfers"
-  ("id"   ASC)
+CREATE INDEX XPKL_TRANSFERS ON "L_TRANSFERS"
+  ("TRANSFER_ID"   ASC)
 /
 
-ALTER TABLE "transfers"
-  ADD CONSTRAINT  PK_TRANSFERS PRIMARY KEY ("id")
+ALTER TABLE "L_TRANSFERS"
+  ADD CONSTRAINT  PK_TRANSFERS PRIMARY KEY ("TRANSFER_ID")
 /
 
 CREATE TABLE "entries"
