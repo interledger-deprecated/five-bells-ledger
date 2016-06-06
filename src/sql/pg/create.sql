@@ -1,14 +1,14 @@
 create table if not exists "L_ACCOUNTS" (
 "ACCOUNT_ID" serial not null primary key,
 "NAME" varchar(255),
-"BALANCE" float check ("BALANCE" >= "MINIMUM_ALLOWED_BALANCE"),
+"BALANCE" numeric(32,16) check ("BALANCE" >= "MINIMUM_ALLOWED_BALANCE"),
 "CONNECTOR" varchar(1024),
 "PASSWORD_HASH" varchar(1024),
 "PUBLIC_KEY" text,
 "IS_ADMIN" boolean,
 "IS_DISABLED" boolean,
 "FINGERPRINT" varchar(255),
-"MINIMUM_ALLOWED_BALANCE" float default 0);
+"MINIMUM_ALLOWED_BALANCE" numeric(32,16) default 0);
 
 create unique index accounts_name_unique on "L_ACCOUNTS" ("NAME");
 create index fingerprint on "L_ACCOUNTS" ("FINGERPRINT");
