@@ -1,7 +1,7 @@
 'use strict'
 
 const _ = require('lodash')
-const Account = require('../models/db/account').Account
+const getAccount = require('../models/db/accounts').getAccount
 const UnprocessableEntityError =
 require('five-bells-shared/errors/unprocessable-entity-error')
 
@@ -11,7 +11,7 @@ function * validateNoDisabledAccounts (transaction, transfer) {
   }))
 
   for (const account of accounts) {
-    const accountObj = yield Account.findByName(account, { transaction: transaction })
+    const accountObj = yield getAccount(account, { transaction: transaction })
     if (accountObj === null) {
       throw new UnprocessableEntityError('Account `' + account + '` does not exist.')
     }

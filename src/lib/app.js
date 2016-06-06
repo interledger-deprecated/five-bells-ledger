@@ -1,5 +1,6 @@
 'use strict'
 const co = require('co')
+const parseBody = require('co-body')
 const compress = require('koa-compress')
 const serve = require('koa-static')
 const Router = require('koa-router')
@@ -133,7 +134,10 @@ class App {
       accounts.getResource)
     router.put('/accounts/:name',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      models.Account.createBodyParser(),
+      function * (next) {
+        this.body = yield parseBody(this)
+        yield next
+      },
       accounts.putResource)
 
     router.get('/subscriptions/:id',

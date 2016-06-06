@@ -5,7 +5,9 @@ const BasicStrategy = require('passport-http').BasicStrategy
 const ClientCertStrategy = require('passport-client-certificate').Strategy
 const HTTPSignatureStrategy = require('passport-http-signature')
 const AnonymousStrategy = require('passport-anonymous').Strategy
-const Account = require('../models/db/account').Account
+const getAccount = require('../models/db/accounts').getAccount
+const getAccountByFingerprint = require('../models/db/accounts')
+  .getAccountByFingerprint
 const verifyPassword = require('five-bells-shared/utils/hashPassword').verifyPassword
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const config = require('./config')
@@ -22,7 +24,7 @@ passport.use(new BasicStrategy(
       return done(null, false)
     }
 
-    Account.findByName(username)
+    getAccount(username)
       .then(function (userObj) {
         if (!userObj || userObj.is_disabled || !userObj.password_hash) {
           return done(new UnauthorizedError(
@@ -45,7 +47,7 @@ passport.use(new HTTPSignatureStrategy(
       return done(new UnauthorizedError('Unsupported authentication method'))
     }
 
-    Account.findByName(username)
+    getAccount(username)
       .then(function (userObj) {
         if (!userObj || userObj.is_disabled) {
           return done(new UnauthorizedError('Unknown or invalid account'))
@@ -63,7 +65,7 @@ passport.use(new ClientCertStrategy((certificate, done) => {
   }
 
   const fingerprint = certificate.fingerprint.toUpperCase()
-  Account.findByFingerprint(fingerprint)
+  getAccountByFingerprint(fingerprint)
     .then(function (userObj) {
       if (!userObj || userObj.is_disabled || !userObj.fingerprint ||
           userObj.fingerprint !== fingerprint) {

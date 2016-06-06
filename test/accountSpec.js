@@ -5,12 +5,13 @@ const _ = require('lodash')
 const expect = require('chai').expect
 const sinon = require('sinon')
 const app = require('../src/services/app')
-const Account = require('../src/models/db/account').Account
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const timingHelper = require('./helpers/timing')
 const logHelper = require('five-bells-shared/testHelpers/log')
+const getAccount = require('../src/models/db/accounts').getAccount
+const convertToExternal = require('../src/models/accounts').convertToExternal
 
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 const notificationWorker = require('../src/services/notificationWorker')
@@ -311,7 +312,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('candice')).getDataExternal()).to.deep.equal(withoutPassword)
+      expect(convertToExternal(yield getAccount('candice'))).to.deep.equal(withoutPassword)
     })
 
     it('should return 200 if the account already exists', function * () {
@@ -333,7 +334,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      const row = yield Account.findByName('alice')
+      const row = yield getAccount('alice')
       expect(row.balance).to.equal(90)
     })
 
@@ -445,7 +446,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('candice')).getDataExternal()).to.deep.equal(withoutPassword)
+      expect(convertToExternal(yield getAccount('candice'))).to.deep.equal(withoutPassword)
     })
 
     it('should lowercase account name -- uppercased in body', function * () {
@@ -463,7 +464,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('candice')).getDataExternal()).to.deep.equal(withoutPassword)
+      expect(convertToExternal(yield getAccount('candice'))).to.deep.equal(withoutPassword)
     })
 
     it('should lowercase account name -- omit id in body', function * () {
@@ -481,7 +482,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      expect((yield Account.findByName('candice')).getDataExternal()).to.deep.equal(withoutPassword)
+      expect(convertToExternal(yield getAccount('candice'))).to.deep.equal(withoutPassword)
     })
 
     it('should return 400 if name and id are omitted in body', function * () {
@@ -579,7 +580,7 @@ describe('Accounts', function () {
         .end()
 
       // Check balances
-      const user = (yield Account.findByName('eve'))
+      const user = (yield getAccount('eve'))
       expect(user.public_key).to.equal(publicKey)
     })
   })
