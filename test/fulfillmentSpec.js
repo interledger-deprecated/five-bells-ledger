@@ -12,7 +12,8 @@ const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const accounts = require('./data/accounts')
-const Subscription = require('../src/models/db/subscription').Subscription
+const insertSubscriptions = require('../src/models/subscriptions')
+  .insertSubscriptions
 const validator = require('./helpers/validator')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const getAccount = require('../src/models/db/accounts').getAccount
@@ -334,7 +335,7 @@ describe('PUT /fulfillment', function () {
 
   it('should trigger subscriptions when notification is executed', function * () {
     const subscription = require('./data/subscriptions/alice.json')
-    yield Subscription.createExternal(subscription)
+    yield insertSubscriptions([subscription])
 
     const transfer = this.preparedTransfer
     const transferPrepared = _.assign({}, transfer, {
@@ -413,7 +414,7 @@ describe('PUT /fulfillment', function () {
 
   it('should trigger subscriptions when notification is cancelled', function * () {
     const subscription = require('./data/subscriptions/alice.json')
-    yield Subscription.createExternal(subscription)
+    yield insertSubscriptions([subscription])
 
     const transfer = this.preparedTransfer
     const transferPrepared = _.assign({}, transfer, {

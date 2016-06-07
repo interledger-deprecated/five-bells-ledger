@@ -2,6 +2,7 @@
 
 const request = require('five-bells-shared/utils/request')
 const model = require('../models/subscriptions')
+const uri = require('../services/uriManager')
 
 /**
  * @api {get} /subscriptions/:id Get RESThook subscription
@@ -69,11 +70,12 @@ function * putResource () {
 
   if (typeof subscription.id !== 'undefined') {
     request.assert.strictEqual(
-      subscription.id.toLowerCase(), id.toLowerCase(),
+      uri.parse(subscription.id, 'subscription').id.toLowerCase(),
+      id.toLowerCase(),
       'Subscription ID must match the one in the URL')
   }
 
-  subscription.id = id.toLowerCase()
+  subscription.id = uri.make('subscription', id.toLowerCase())
   const result = yield model.setSubscription(subscription, this.req.user)
   this.body = result.subscription
   this.status = result.existed ? 200 : 201

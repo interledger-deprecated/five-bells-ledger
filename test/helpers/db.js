@@ -4,17 +4,18 @@ const knex = require('../../src/lib/knex').knex
 const knexConfig = require('../../src/lib/knex').config
 const createTables = require('../../src/lib/db').createTables
 const insertTransfers = require('../../src/models/transfers').insertTransfers
-const Subscription = require('../../src/models/db/subscription').Subscription
 const Notification = require('../../src/models/db/notification').Notification
 const Fulfillment = require('../../src/models/db/conditionFulfillment').ConditionFulfillment
 const insertAccounts = require('../../src/models/accounts').insertAccounts
+const insertSubscriptions = require('../../src/models/subscriptions')
+  .insertSubscriptions
 
 const tables = [
   'L_ACCOUNTS',
   'fulfillments',
   'entries',
   'notifications',
-  'subscriptions',
+  'L_SUBSCRIPTIONS',
   'L_TRANSFERS'
 ]
 
@@ -66,7 +67,7 @@ exports.addSubscriptions = function * (subscriptions) {
   if (!Array.isArray(subscriptions)) {
     throw new Error('Requires an array of subscriptions, got ' + subscriptions)
   }
-  yield Subscription.bulkCreateExternal(subscriptions)
+  yield insertSubscriptions(subscriptions)
 }
 
 exports.addNotifications = function * (notifications) {

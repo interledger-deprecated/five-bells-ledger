@@ -30,16 +30,16 @@ create table if not exists "L_TRANSFERS" (
 "EXECUTED_AT" timestamp,
 "REJECTED_AT" timestamp);
 
-create table if not exists "subscriptions" (
-"id" char(36) not null primary key,
-"owner" varchar(1024),
-"event" varchar(255),
-"subject" varchar(1024),
-"target" varchar(1024),
-"is_deleted" boolean default FALSE);
+create table if not exists "L_SUBSCRIPTIONS" (
+"SUBSCRIPTION_ID" char(36) not null primary key,
+"OWNER" varchar(1024),
+"EVENT" varchar(255),
+"SUBJECT" varchar(1024),
+"TARGET" varchar(1024),
+"IS_DELETED" boolean default FALSE);
 
 create index subscriptions_id_is_deleted_index
-  on "subscriptions" ("id", "is_deleted");
+  on "L_SUBSCRIPTIONS" ("SUBSCRIPTION_ID", "IS_DELETED");
 
 
 create table if not exists "notifications" (

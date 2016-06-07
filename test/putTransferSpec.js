@@ -15,13 +15,14 @@ const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const upsertAccount = require('../src/models/db/accounts').upsertAccount
 const getAccount = require('../src/models/db/accounts').getAccount
-const Subscription = require('../src/models/db/subscription').Subscription
 const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const notificationWorker = require('../src/services/notificationWorker')
 const accounts = require('./data/accounts')
 const validator = require('./helpers/validator')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
+const insertSubscriptions = require('../src/models/subscriptions')
+  .insertSubscriptions
 
 const transferStates = transferDictionary.transferStates
 
@@ -1020,7 +1021,7 @@ describe('PUT /transfers/:id', function () {
   /* Subscriptions */
   it('should trigger subscriptions', function * () {
     const subscription = require('./data/subscriptions/alice.json')
-    yield Subscription.createExternal(subscription)
+    yield insertSubscriptions([subscription])
 
     const transfer = this.exampleTransfer
     const transferResult = _.assign({}, transfer, {
@@ -1063,7 +1064,7 @@ describe('PUT /transfers/:id', function () {
 
   it('should not trigger subscriptions if the subscription is deleted', function * () {
     const subscription = require('./data/subscriptions/alice.json')
-    yield Subscription.createExternal(subscription)
+    yield insertSubscriptions([subscription])
 
     // Delete subscription
     yield this.request()
