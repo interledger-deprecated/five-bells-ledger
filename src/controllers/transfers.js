@@ -2,6 +2,7 @@
 'use strict'
 
 const _ = require('lodash')
+const uri = require('../services/uriManager')
 const parse = require('co-body')
 const requestUtil = require('five-bells-shared/utils/request')
 const model = require('../models/transfers')
@@ -212,7 +213,7 @@ function * putResource () {
 
   if (typeof transfer.id !== 'undefined') {
     requestUtil.assert.strictEqual(
-      transfer.id.toLowerCase(),
+      uri.parse(transfer.id, 'transfer').id.toLowerCase(),
       id.toLowerCase(),
       'Transfer ID must match the URI'
     )

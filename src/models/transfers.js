@@ -33,6 +33,9 @@ const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const transferStates = transferDictionary.transferStates
 const validExecutionStates = transferDictionary.validExecutionStates
 const validCancellationStates = transferDictionary.validCancellationStates
+const validator = require('../services/validator')
+const converters = require('./converters/transfers')
+const isTransferFinalized = require('../lib/transferUtils').isTransferFinalized
 
 const RECEIPT_TYPE_ED25519 = 'ed25519-sha512'
 const RECEIPT_TYPE_SHA256 = 'sha256'
@@ -43,12 +46,12 @@ const CONDITION_TYPE_CANCELLATION = 'cancellation'
 function * getTransfer (id) {
   log.debug('fetching transfer ID ' + id)
 
-  let transfer = yield db.getTransfer(id)
+  const transfer = yield db.getTransfer(id)
   if (!transfer) {
     throw new NotFoundError('Unknown transfer ID')
   }
 
-  return transfer.getDataExternal()
+  return converters.convertToExternalTransfer(transfer)
 }
 
 function * getTransferStateReceipt (id, receiptType, conditionState) {
@@ -121,7 +124,7 @@ function sha512 (str) {
 }
 
 function updateTransferObject (originalTransfer, transfer) {
-  let updatedTransferData = originalTransfer.getData()
+  let updatedTransferData = _.cloneDeep(originalTransfer)
 
   // Ignore null properties
   updatedTransferData = _.omit(updatedTransferData, _.isNull)
@@ -136,7 +139,7 @@ function updateTransferObject (originalTransfer, transfer) {
   transfer.rejected_at = updatedTransferData.rejected_at
 
   // Ignore undefined properties
-  const transferData = _.omit(transfer.getData(), _.isUndefined)
+  const transferData = _.omit(transfer, _.isUndefined)
 
   // Clients can add authorizations
   // The validity of these authorizations will be checked
@@ -176,8 +179,7 @@ function updateTransferObject (originalTransfer, transfer) {
       diff(updatedTransferData, transferData))
   }
 
-  originalTransfer.setData(updatedTransferData)
-  return originalTransfer
+  return updatedTransferData
 }
 
 function isAffectedAccount (account, transfer) {
@@ -352,7 +354,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
     }
 
     transferExpiryMonitor.unwatch(transfer.id)
-    yield transfer.save({transaction})
+    yield db.updateTransfer(transfer, {transaction})
 
     // Create persistent notification events. We're doing this within the same
     // database transaction in order to maximize the reliability of the
@@ -363,7 +365,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
     // Start the expiry countdown if the transfer is not yet finalized
     // If the expires_at has passed by this time we'll consider
     // the transfer to have made it in before the deadline
-    if (!transfer.isFinalized()) {
+    if (!isTransferFinalized(transfer)) {
       yield transferExpiryMonitor.watch(transfer)
     }
   })
@@ -376,7 +378,16 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
   }
 }
 
-function * setTransfer (transfer, requestingUser) {
+function * setTransfer (externalTransfer, requestingUser) {
+  const validationResult = validator.create('Transfer')(externalTransfer)
+  if (validationResult.valid !== true) {
+    const message = validationResult.schema
+      ? 'Body did not match schema ' + validationResult.schema
+      : 'Body did not pass validation'
+    throw new InvalidBodyError(message, validationResult.errors)
+  }
+  let transfer = converters.convertToInternalTransfer(externalTransfer)
+
   // Do not allow modifications after the expires_at date
   transferExpiryMonitor.validateNotExpired(transfer)
 
@@ -404,8 +415,8 @@ function * setTransfer (transfer, requestingUser) {
     originalTransfer = yield db.getTransfer(transfer.id, {transaction})
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
-      previousDebits = originalTransfer.getData().debits
-      previousCredits = originalTransfer.getData().credits
+      previousDebits = originalTransfer.debits
+      previousCredits = originalTransfer.credits
 
       // This method will update the original transfer object using the new
       // version, but only allowing specific fields to change.
@@ -441,14 +452,14 @@ function * setTransfer (transfer, requestingUser) {
   // Start the expiry countdown if the transfer is not yet finalized
   // If the expires_at has passed by this time we'll consider
   // the transfer to have made it in before the deadline
-  if (!transfer.isFinalized()) {
+  if (!isTransferFinalized(transfer)) {
     yield transferExpiryMonitor.watch(transfer)
   }
 
   log.debug('changes written to database')
 
   return {
-    transfer: transfer.getDataExternal(),
+    transfer: converters.convertToExternalTransfer(transfer),
     existed: Boolean(originalTransfer)
   }
 }
@@ -461,10 +472,16 @@ function * getFulfillment (transferId) {
   return fulfillment.getDataExternal()
 }
 
+function * insertTransfers (externalTransfers) {
+  yield db.insertTransfers(externalTransfers.map(
+    converters.convertToInternalTransfer))
+}
+
 module.exports = {
   getTransfer,
   getTransferStateReceipt,
   setTransfer,
   fulfillTransfer,
-  getFulfillment
+  getFulfillment,
+  insertTransfers
 }

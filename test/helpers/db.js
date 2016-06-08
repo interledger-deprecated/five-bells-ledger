@@ -3,15 +3,11 @@
 const knex = require('../../src/lib/knex').knex
 const knexConfig = require('../../src/lib/knex').config
 const createTables = require('../../src/lib/db').createTables
-const Transfer = require('../../src/models/db/transfer').Transfer
+const insertTransfers = require('../../src/models/transfers').insertTransfers
 const Subscription = require('../../src/models/db/subscription').Subscription
 const Notification = require('../../src/models/db/notification').Notification
 const Fulfillment = require('../../src/models/db/conditionFulfillment').ConditionFulfillment
-const convertFromExternal = require('../../src/models/accounts')
-  .convertFromExternal
-const insertAccounts = require('../../src/models/db/accounts').insertAccounts
-
-const hashPassword = require('five-bells-shared/utils/hashPassword')
+const insertAccounts = require('../../src/models/accounts').insertAccounts
 
 const tables = [
   'L_ACCOUNTS',
@@ -19,7 +15,7 @@ const tables = [
   'entries',
   'notifications',
   'subscriptions',
-  'transfers'
+  'L_TRANSFERS'
 ]
 
 const migrationTables = [
@@ -56,22 +52,14 @@ exports.addAccounts = function * (accounts) {
     throw new Error('Requires an array of accounts, got ' + accounts)
   }
 
-  // Hash passwords
-  const accountModels = accounts.map(convertFromExternal)
-  for (let account of accountModels) {
-    if (account.password) {
-      account.password_hash = (yield hashPassword(account.password)).toString('base64')
-      delete account.password
-    }
-  }
-  yield insertAccounts(accountModels)
+  yield insertAccounts(accounts)
 }
 
 exports.addTransfers = function * (transfers) {
   if (!Array.isArray(transfers)) {
     throw new Error('Requires an array of transfers, got ' + transfers)
   }
-  yield Transfer.bulkCreateExternal(transfers)
+  yield insertTransfers(transfers)
 }
 
 exports.addSubscriptions = function * (subscriptions) {
