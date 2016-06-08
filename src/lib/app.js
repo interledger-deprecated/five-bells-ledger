@@ -18,7 +18,6 @@ const transfers = require('../controllers/transfers')
 const accounts = require('../controllers/accounts')
 const subscriptions = require('../controllers/subscriptions')
 const notifications = require('../controllers/notifications')
-const models = require('../models/db')
 const seedDB = require('./seed-db')
 const knex = require('./knex')
 const createTables = require('./db').createTables
@@ -148,7 +147,10 @@ class App {
       subscriptions.getResource)
     router.put('/subscriptions/:id',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      models.Subscription.createBodyParser(),
+      function * (next) {
+        this.body = yield parseBody(this)
+        yield next
+      },
       subscriptions.putResource)
     router.delete('/subscriptions/:id',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),

@@ -9,12 +9,16 @@ const app = require('../src/services/app')
 const logger = require('../src/services/log')
 const appHelper = require('./helpers/app')
 const dbHelper = require('./helpers/db')
-const Subscription = require('../src/models/db/subscription').Subscription
+const getSubscription = require('../src/models/db/subscriptions')
+  .getSubscription
 const uri = require('../src/services/uriManager')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 const notificationWorker = require('../src/services/notificationWorker')
 const validator = require('./helpers/validator')
+const convertToExternalSubscription =
+  require('../src/models/converters/subscriptions')
+    .convertToExternalSubscription
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -102,7 +106,7 @@ describe('Subscriptions', function () {
         .end()
 
       // Check that the subscription landed in the database
-      expect((yield Subscription.findById(id)).getDataExternal())
+      expect(convertToExternalSubscription(yield getSubscription(id)))
         .to.deep.equal(this.exampleSubscription)
     })
 
@@ -119,7 +123,7 @@ describe('Subscriptions', function () {
 
       // Check that the subscription url is changed in the database
       const id = uri.parse(this.existingSubscription.id, 'subscription').id
-      expect((yield Subscription.findById(id)).getDataExternal())
+      expect(convertToExternalSubscription(yield getSubscription(id)))
         .to.deep.equal(this.existingSubscription)
     })
 
@@ -235,7 +239,7 @@ describe('Subscriptions', function () {
         .expect(404)
         .end()
 
-      expect((yield Subscription.findById(nonExistentSubscriptionId))).to.be.null
+      expect(yield getSubscription(nonExistentSubscriptionId)).to.be.null
     })
   })
 

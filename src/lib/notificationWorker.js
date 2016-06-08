@@ -13,8 +13,11 @@ const JSONSigning = require('five-bells-shared').JSONSigning
 const config = require('../services/config')
 const getTransfer = require('../models/db/transfers').getTransfer
 const isTransferFinalized = require('./transferUtils').isTransferFinalized
+const getSubscription = require('../models/db/subscriptions').getSubscription
 const convertToExternalTransfer = require('../models/converters/transfers')
   .convertToExternalTransfer
+const getAffectedSubscriptions = require('../models/db/subscriptions')
+  .getAffectedSubscriptions
 
 const privateKey = config.getIn(['keys', 'notification_sign', 'secret'])
 
@@ -33,13 +36,12 @@ function * findOrCreate (Notification, data) {
 }
 
 class NotificationWorker extends EventEmitter {
-  constructor (uri, log, Notification, Subscription, Fulfillment, config) {
+  constructor (uri, log, Notification, Fulfillment, config) {
     super()
 
     this.uri = uri
     this.log = log
     this.Notification = Notification
-    this.Subscription = Subscription
     this.Fulfillment = Fulfillment
     this.config = config
 
@@ -85,16 +87,13 @@ class NotificationWorker extends EventEmitter {
     const affectedAccountUris = affectedAccounts.map((account) =>
       account === '*' ? account : this.uri.make('account', account))
 
-    let subscriptions = yield transaction.from('subscriptions')
-      .whereIn('subject', affectedAccountUris)
-      .whereIn('event', ['transfer.update', 'transfer.*', '*'])
-      .where('is_deleted', false)
-      .select().then()
+    let subscriptions = yield getAffectedSubscriptions(affectedAccountUris,
+      {transaction})
+
     if (!subscriptions) {
       return
     }
 
-    subscriptions = _.values(subscriptions)
     // log.debug('notifying ' + subscription.owner + ' at ' +
     //   subscription.target)
     const self = this
@@ -133,7 +132,7 @@ class NotificationWorker extends EventEmitter {
   * processNotification (notification) {
     notification = this.Notification.fromData(notification)
     const transfer = yield getTransfer(notification.transfer_id)
-    const subscription = yield this.Subscription.findById(notification.subscription_id)
+    const subscription = yield getSubscription(notification.subscription_id)
     const fulfillment = yield this.Fulfillment.findByTransfer(transfer.id)
     yield this.processNotificationWithInstances(notification, transfer, subscription, fulfillment)
   }

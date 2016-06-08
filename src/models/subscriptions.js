@@ -5,7 +5,10 @@ const log = require('../services/log')('subscriptions')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const UnprocessableEntityError = require('five-bells-shared/errors/unprocessable-entity-error')
+const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
 const subscriptionUtils = require('../lib/subscriptionUtils')
+const converters = require('./converters/subscriptions')
+const validator = require('../services/validator')
 
 function * getSubscription (id, requestingUser) {
   log.debug('fetching subscription ID ' + id)
@@ -15,11 +18,22 @@ function * getSubscription (id, requestingUser) {
   } else if (!subscriptionUtils.isOwnerOrAdmin(requestingUser, subscription)) {
     throw new UnauthorizedError('You may only view subscriptions you own')
   } else {
-    return subscription.getDataExternal()
+    return converters.convertToExternalSubscription(subscription)
   }
 }
 
-function * setSubscription (subscription, requestingUser) {
+function * setSubscription (externalSubscription, requestingUser) {
+  const validationResult = validator
+    .create('Subscription')(externalSubscription)
+  if (validationResult.valid !== true) {
+    const message = validationResult.schema
+      ? 'Body did not match schema ' + validationResult.schema
+      : 'Body did not pass validation'
+    throw new InvalidBodyError(message, validationResult.errors)
+  }
+  const subscription = converters.convertToInternalSubscription(
+    externalSubscription)
+
   if (!subscriptionUtils.isOwnerOrAdmin(requestingUser, subscription)) {
     throw new UnauthorizedError('You do not own this account')
   } else if (!subscriptionUtils.isSubjectOrAdmin(requestingUser, subscription)) {
@@ -42,7 +56,7 @@ function * setSubscription (subscription, requestingUser) {
 
   log.debug('update completed')
   return {
-    subscription: subscription.getDataExternal(),
+    subscription: converters.convertToExternalSubscription(subscription),
     existed: existed
   }
 }
@@ -61,8 +75,14 @@ function * deleteSubscription (id, requestingUser) {
   })
 }
 
+function * insertSubscriptions (externalSubscriptions) {
+  yield db.insertSubscriptions(externalSubscriptions.map(
+    converters.convertToInternalSubscription))
+}
+
 module.exports = {
   getSubscription,
   setSubscription,
-  deleteSubscription
+  deleteSubscription,
+  insertSubscriptions
 }
