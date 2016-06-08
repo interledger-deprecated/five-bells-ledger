@@ -9,8 +9,8 @@ uploadCoverage() {
 
     # Upload coverage data
     docker run --volumes-from ledger-test-sqlite \
-      -e COVERALLS_REPO_TOKEN="${COVERALLS_REPO_TOKEN}" \
-      interledger/five-bells-ledger npm run coveralls
+      -e CODECOV_TOKEN="${CODECOV_TOKEN}" \
+      interledger/five-bells-ledger npm run report-coverage
   fi
 }
 
@@ -34,8 +34,7 @@ updateWebsite() {
   node scripts/publish_web.js
 }
 
-# ST: Coverage reporting is broken - disable for now
-# uploadCoverage
+uploadCoverage
 publishNpm
 pushDocker
 updateWebsite
