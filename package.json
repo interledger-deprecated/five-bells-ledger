@@ -75,7 +75,7 @@
     "chai": "^3.2.0",
     "co-mocha": "^1.1.0",
     "co-supertest": "0.0.10",
-    "codecov.io": "^0.1.6",
+    "codecov": "^1.0.1",
     "eslint": "^2.0.0",
     "eslint-config-standard": "^5.1.0",
     "eslint-plugin-promise": "^1.1.0",
