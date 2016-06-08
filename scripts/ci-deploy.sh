@@ -10,6 +10,14 @@ uploadCoverage() {
     # Upload coverage data
     docker run --volumes-from ledger-test-sqlite \
       -e CODECOV_TOKEN="${CODECOV_TOKEN}" \
+      -e CIRCLECI="${CIRCLECI}" \
+      -e CIRCLE_BUILD_NUM="${CIRCLE_BUILD_NUM}" \
+      -e CIRCLE_NODE_INDEX="${CIRCLE_NODE_INDEX}" \
+      -e CIRCLE_SHA1="${CIRCLE_SHA1}" \
+      -e CIRCLE_BRANCH="${CIRCLE_BRANCH}" \
+      -e CIRCLE_PR_NUMBER="${CIRCLE_PR_NUMBER}" \
+      -e CIRCLE_PROJECT_USERNAME="${CIRCLE_PROJECT_USERNAME}" \
+      -e CIRCLE_PROJECT_REPONAME="${CIRCLE_PROJECT_REPONAME}" \
       interledger/five-bells-ledger npm run report-coverage
   fi
 }
