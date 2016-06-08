@@ -1,21 +1,5 @@
 #!/bin/bash -ex
 
-uploadCoverage() {
-  # On parallel builds, only run coverage command on the container that ran the
-  # SQLite tests with coverage
-  if [ -d coverage ]; then
-    # Extract test results
-    cp coverage/xunit.xml "${CIRCLE_TEST_REPORTS}/"
-
-    # Ensure the paths from inside the container are valid outside
-    mkdir -p /usr/src
-    ln -s . /usr/src/app
-
-    # Upload coverage data
-    npm run report-coverage
-  fi
-}
-
 publishNpm() {
   # Push NPM package if not yet published
   mv npmrc-env .npmrc
@@ -36,7 +20,6 @@ updateWebsite() {
   node scripts/publish_web.js
 }
 
-uploadCoverage
 publishNpm
 pushDocker
 updateWebsite
