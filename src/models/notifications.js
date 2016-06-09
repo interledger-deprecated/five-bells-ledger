@@ -4,7 +4,6 @@ const log = require('../services/log')('subscriptions')
 const uri = require('../services/uriManager')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
-const Notification = require('./db/notification').Notification
 const getTransfer = require('./db/transfers').getTransfer
 const Fulfillment = require('./db/conditionFulfillment').ConditionFulfillment
 const subscriptions = require('./db/subscriptions')
@@ -12,12 +11,13 @@ const subscriptionUtils = require('../lib/subscriptionUtils')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const convertToExternalTransfer = require('./converters/transfers')
   .convertToExternalTransfer
+const db = require('./db/notifications')
 
 const transferStates = transferDictionary.transferStates
 
 function * getNotification (subscriptionId, notificationId, requestingUser) {
   log.debug('fetching notification ID ' + notificationId)
-  const notification = yield Notification.findById(notificationId)
+  const notification = yield db.getNotification(notificationId)
   if (!notification) {
     throw new NotFoundError('Unknown notification ID')
   } else if (!notification.subscription_id) {

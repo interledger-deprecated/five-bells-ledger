@@ -7,7 +7,6 @@ const utils = require('./notificationUtils')
 const NotificationScheduler = require('five-bells-shared').NotificationScheduler
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const transferStates = transferDictionary.transferStates
-const knex = require('./knex').knex
 const uuid4 = require('uuid4')
 const JSONSigning = require('five-bells-shared').JSONSigning
 const config = require('../services/config')
@@ -18,35 +17,40 @@ const convertToExternalTransfer = require('../models/converters/transfers')
   .convertToExternalTransfer
 const getAffectedSubscriptions = require('../models/db/subscriptions')
   .getAffectedSubscriptions
+const getMatchingNotification = require('../models/db/notifications')
+  .getMatchingNotification
+const notificationDAO = require('../models/db/notifications')
 
 const privateKey = config.getIn(['keys', 'notification_sign', 'secret'])
 
-function * findOrCreate (Notification, data) {
-  const options = {transaction: data.transaction}
-  const result = yield Notification.findWhere(data.where, options)
-  if (result.length) {
+function * findOrCreate (subscriptionID, transferID, options) {
+  const result = yield getMatchingNotification(
+    subscriptionID, transferID, options)
+  if (result) {
     return result
   }
-  const values = _.assign({}, data.defaults, data.where)
+  const values = _.assign({}, options.defaults || {}, {
+    subscription_id: subscriptionID,
+    transfer_id: transferID
+  })
   if (!values.id) {
     values.id = uuid4()
   }
-  yield Notification.create(values, options)
-  return yield Notification.findWhere(data.where, options)
+  yield notificationDAO.insertNotification(values, options)
+  return yield notificationDAO.getNotification(values.id, options)
 }
 
 class NotificationWorker extends EventEmitter {
-  constructor (uri, log, Notification, Fulfillment, config) {
+  constructor (uri, log, Fulfillment, config) {
     super()
 
     this.uri = uri
     this.log = log
-    this.Notification = Notification
     this.Fulfillment = Fulfillment
     this.config = config
 
     this.scheduler = new NotificationScheduler({
-      Notification, knex, log,
+      notificationDAO, log,
       processNotification: this.processNotification.bind(this)
     })
     this.signatureCache = {}
@@ -98,13 +102,7 @@ class NotificationWorker extends EventEmitter {
     //   subscription.target)
     const self = this
     const notifications = yield subscriptions.map(function (subscription) {
-      return findOrCreate(self.Notification, {
-        where: {
-          subscription_id: subscription.id,
-          transfer_id: transfer.id
-        },
-        transaction
-      })
+      return findOrCreate(subscription.id, transfer.id, { transaction })
     })
 
     co(function * () {
@@ -118,8 +116,7 @@ class NotificationWorker extends EventEmitter {
       // Don't schedule the immediate attempt if the worker isn't active, though.
       if (!self.scheduler.isEnabled()) return
 
-      yield notifications.map(function (notificationAndCreated, i) {
-        const notification = self.Notification.fromDatabaseModel(notificationAndCreated[0])
+      yield notifications.map(function (notification, i) {
         return self.processNotificationWithInstances(notification, transfer, subscriptions[i], fulfillment)
       })
       // Schedule any retries.
@@ -130,7 +127,6 @@ class NotificationWorker extends EventEmitter {
   }
 
   * processNotification (notification) {
-    notification = this.Notification.fromData(notification)
     const transfer = yield getTransfer(notification.transfer_id)
     const subscription = yield getSubscription(notification.subscription_id)
     const fulfillment = yield this.Fulfillment.findByTransfer(transfer.id)
@@ -186,7 +182,7 @@ class NotificationWorker extends EventEmitter {
       yield this.scheduler.retryNotification(notification)
     } else {
       delete this.signatureCache[notification.id]
-      yield notification.destroy()
+      yield notificationDAO.deleteNotification(notification.id)
     }
   }
 }
