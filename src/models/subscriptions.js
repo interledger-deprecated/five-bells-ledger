@@ -44,7 +44,7 @@ function * setSubscription (externalSubscription, requestingUser) {
   log.debug('subscribed ' + subscription.owner + ' at ' + subscription.target)
 
   let existed
-  yield db.transaction(function * (transaction) {
+  yield db.withTransaction(function * (transaction) {
     const duplicate = yield db.getMatchingSubscription(
       subscription, {transaction})
     if (duplicate) {
@@ -63,7 +63,7 @@ function * setSubscription (externalSubscription, requestingUser) {
 
 function * deleteSubscription (id, requestingUser) {
   log.debug('deleting subscription ID ' + id)
-  yield db.transaction(function * (transaction) {
+  yield db.withTransaction(function * (transaction) {
     const subscription = yield db.getSubscription(id, {transaction})
     if (!subscription) {
       throw new NotFoundError('Unknown subscription ID')

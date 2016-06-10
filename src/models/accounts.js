@@ -117,11 +117,16 @@ function * insertAccounts (externalAccounts) {
   yield db.insertAccounts(accounts)
 }
 
+function setBalance (name, balance, options) {
+  return db.upsertAccount({name, balance}, options && options.transaction)
+}
+
 module.exports = {
   getAccounts,
   getConnectors,
   getAccount,
   setAccount,
+  setBalance,
   subscribeTransfers,
   insertAccounts
 }

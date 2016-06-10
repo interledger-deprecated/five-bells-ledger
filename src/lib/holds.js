@@ -1,26 +1,27 @@
 'use strict'
 
 const InsufficientFundsError = require('../errors/insufficient-funds-error')
+const accounts = require('../models/db/accounts')
+const entries = require('../models/db/entries')
 
-function adjustBalance (account, amount, transaction) {
-  const updateSQL = 'UPDATE "L_ACCOUNTS" SET "BALANCE" = "BALANCE" + ? WHERE "NAME" = ?'
+function adjustBalance (accountName, amount, transaction) {
   /* eslint-disable handle-callback-err */
-  return transaction.raw(updateSQL, [amount, account]).catch((error) => {
-    throw new InsufficientFundsError('Sender has insufficient funds.', account)
+  return accounts.adjustBalance(accountName, amount, {transaction})
+  .catch((error) => {
+    throw new InsufficientFundsError(
+      'Sender has insufficient funds.', accountName)
   })
   /* eslint-enable */
 }
 
-function insertEntry (account, transferID, transaction) {
-  return transaction.select('ACCOUNT_ID')
-    .from('L_ACCOUNTS').where('NAME', account)
-    .then((rows) => {
-      const entry = {
-        transfer_id: transferID,
-        account: rows[0].ACCOUNT_ID
-      }
-      return transaction.insert(entry).into('entries')
-    })
+function insertEntryByName (accountName, transferID, transaction) {
+  return accounts.getAccount(accountName, {transaction}).then((account) => {
+    const entry = {
+      transfer_id: transferID,
+      account: account.id
+    }
+    return entries.insertEntry(entry, {transaction})
+  })
 }
 
 function holdFunds (transfer, transaction) {
@@ -28,7 +29,7 @@ function holdFunds (transfer, transaction) {
     return Promise.all([
       adjustBalance(debit.account, -debit.amount, transaction),
       adjustBalance('hold', debit.amount, transaction),
-      insertEntry(debit.account, transfer.id, transaction)
+      insertEntryByName(debit.account, transfer.id, transaction)
     ])
   }))
 }
@@ -38,7 +39,7 @@ function disburseFunds (transfer, transaction) {
     return Promise.all([
       adjustBalance('hold', -credit.amount, transaction),
       adjustBalance(credit.account, credit.amount, transaction),
-      insertEntry(credit.account, transfer.id, transaction)
+      insertEntryByName(credit.account, transfer.id, transaction)
     ])
   }))
 }
@@ -48,7 +49,7 @@ function returnHeldFunds (transfer, transaction) {
     return Promise.all([
       adjustBalance('hold', -debit.amount, transaction),
       adjustBalance(debit.account, debit.amount, transaction),
-      insertEntry(debit.account, transfer.id, transaction)
+      insertEntryByName(debit.account, transfer.id, transaction)
     ])
   }))
 }

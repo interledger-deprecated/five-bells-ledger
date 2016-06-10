@@ -7,8 +7,11 @@ const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
 const stringifyJSON = require('canonical-json')
 const db = require('./db/transfers')
-const ConditionFulfillment = require('./db/conditionFulfillment').ConditionFulfillment
-const fulfillments = require('./db/conditionFulfillments')
+const convertToInternalFulfillment = require('./converters/fulfillments')
+  .convertToInternalFulfillment
+const convertToExternalFulfillment = require('./converters/fulfillments')
+  .convertToExternalFulfillment
+const fulfillments = require('./db/fulfillments')
 const holds = require('../lib/holds')
 const validateNoDisabledAccounts = require('../lib/disabledAccounts')
 const config = require('../services/config')
@@ -276,7 +279,7 @@ function * processImmediateExecution (transfer, transaction) {
 }
 
 function validateConditionFulfillment (transfer, fulfillmentModel) {
-  const fulfillment = fulfillmentModel.getDataExternal()
+  const fulfillment = convertToExternalFulfillment(fulfillmentModel)
   const condition = cc.fulfillmentToCondition(fulfillment)
 
   try {
@@ -314,9 +317,9 @@ function * executeTransfer (transaction, transfer, fulfillment) {
 }
 
 function * fulfillTransfer (transferId, fulfillmentUri) {
-  const fulfillment = ConditionFulfillment.fromDataExternal(fulfillmentUri)
-  fulfillment.setTransferId(transferId)
-  const existingFulfillment = yield db.transaction(function * (transaction) {
+  const fulfillment = convertToInternalFulfillment(fulfillmentUri)
+  fulfillment.transfer_id = transferId
+  const existingFulfillment = yield db.withTransaction(function * (transaction) {
     // Set isolation level to avoid reading "prepared" transaction that is currently being
     // executed by another request. This ensures the transfer can be fulfilled only once.
     if (db.client === 'pg' || db.client === 'strong-oracle') {
@@ -336,7 +339,8 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
       conditionType === CONDITION_TYPE_CANCELLATION &&
       transfer.state === transferStates.TRANSFER_STATE_REJECTED
     ) {
-      return (yield fulfillments.getFulfillment(transferId, {transaction})).getDataExternal()
+      return convertToExternalFulfillment(yield fulfillments.getFulfillment(
+        transferId, {transaction}))
     }
 
     if (conditionType === CONDITION_TYPE_EXECUTION) {
@@ -373,7 +377,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
   log.debug('changes written to database')
 
   return {
-    fulfillment: existingFulfillment || fulfillment.getDataExternal(),
+    fulfillment: existingFulfillment || convertToExternalFulfillment(fulfillment),
     existed: Boolean(existingFulfillment)
   }
 }
@@ -411,7 +415,7 @@ function * setTransfer (externalTransfer, requestingUser) {
   validateCreditAndDebitAmounts(transfer)
 
   let originalTransfer, previousDebits, previousCredits
-  yield db.transaction(function * (transaction) {
+  yield db.withTransaction(function * (transaction) {
     originalTransfer = yield db.getTransfer(transfer.id, {transaction})
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
@@ -469,7 +473,7 @@ function * getFulfillment (transferId) {
   if (!fulfillment) {
     throw new NotFoundError('This transfer has no fulfillment')
   }
-  return fulfillment.getDataExternal()
+  return convertToExternalFulfillment(fulfillment)
 }
 
 function * insertTransfers (externalTransfers) {

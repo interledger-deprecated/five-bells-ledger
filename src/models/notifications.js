@@ -5,12 +5,14 @@ const uri = require('../services/uriManager')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const getTransfer = require('./db/transfers').getTransfer
-const Fulfillment = require('./db/conditionFulfillment').ConditionFulfillment
+const getFulfillment = require('./db/fulfillments').getFulfillment
 const subscriptions = require('./db/subscriptions')
 const subscriptionUtils = require('../lib/subscriptionUtils')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const convertToExternalTransfer = require('./converters/transfers')
   .convertToExternalTransfer
+const convertToExternalFulfillment = require('./converters/fulfillments')
+  .convertToExternalFulfillment
 const db = require('./db/notifications')
 
 const transferStates = transferDictionary.transferStates
@@ -33,7 +35,7 @@ function * getNotification (subscriptionId, notificationId, requestingUser) {
     throw new UnauthorizedError('You do not own this subscription')
   } else {
     const transfer = yield getTransfer(notification.transfer_id)
-    const fulfillment = yield Fulfillment.findByTransfer(transfer.id)
+    const fulfillment = yield getFulfillment(transfer.id)
     const subscriptionURI = uri.make('subscription', subscription.id)
     const notificationBody = {
       id: subscriptionURI + '/notifications/' + notification.id,
@@ -44,11 +46,13 @@ function * getNotification (subscriptionId, notificationId, requestingUser) {
     if (fulfillment) {
       if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
         notificationBody.related_resources = {
-          execution_condition_fulfillment: fulfillment.getDataExternal()
+          execution_condition_fulfillment:
+            convertToExternalFulfillment(fulfillment)
         }
       } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
         notificationBody.related_resources = {
-          cancellation_condition_fulfillment: fulfillment.getDataExternal()
+          cancellation_condition_fulfillment:
+            convertToExternalFulfillment(fulfillment)
         }
       }
     }
