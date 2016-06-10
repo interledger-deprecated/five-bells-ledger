@@ -4,17 +4,18 @@ const knex = require('../../src/lib/knex').knex
 const knexConfig = require('../../src/lib/knex').config
 const createTables = require('../../src/lib/db').createTables
 const insertTransfers = require('../../src/models/transfers').insertTransfers
-const Notification = require('../../src/models/db/notification').Notification
 const Fulfillment = require('../../src/models/db/conditionFulfillment').ConditionFulfillment
 const insertAccounts = require('../../src/models/accounts').insertAccounts
 const insertSubscriptions = require('../../src/models/subscriptions')
   .insertSubscriptions
+const insertNotification = require('../../src/models/db/notifications')
+  .insertNotification
 
 const tables = [
   'L_ACCOUNTS',
   'fulfillments',
   'entries',
-  'notifications',
+  'L_NOTIFICATIONS',
   'L_SUBSCRIPTIONS',
   'L_TRANSFERS'
 ]
@@ -75,7 +76,7 @@ exports.addNotifications = function * (notifications) {
     throw new Error('Requires an array of notifications, got ' + notifications)
   }
   for (let i = 0; i < notifications.length; i++) {
-    yield Notification.create(notifications[i])
+    yield insertNotification(notifications[i])
   }
 }
 

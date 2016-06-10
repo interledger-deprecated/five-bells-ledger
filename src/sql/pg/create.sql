@@ -42,16 +42,16 @@ create index subscriptions_id_is_deleted_index
   on "L_SUBSCRIPTIONS" ("SUBSCRIPTION_ID", "IS_DELETED");
 
 
-create table if not exists "notifications" (
-"id" char(36) not null primary key,
-"subscription_id" char(36),
-"transfer_id" char(36),
-"retry_count" integer,
-"retry_at" timestamp);
+create table if not exists "L_NOTIFICATIONS" (
+"NOTIFICATION_ID" char(36) not null primary key,
+"SUBSCRIPTION_ID" char(36),
+"TRANSFER_ID" char(36),
+"RETRY_COUNT" integer,
+"RETRY_AT" timestamp);
 
-create index notifications_retry_at_index on "notifications" ("retry_at");
+create index notifications_retry_at_index on "L_NOTIFICATIONS" ("RETRY_AT");
 create index subscription_transfer
-  on "notifications" ("subscription_id", "transfer_id");
+  on "L_NOTIFICATIONS" ("SUBSCRIPTION_ID", "TRANSFER_ID");
 
 
 create table if not exists "entries" (
