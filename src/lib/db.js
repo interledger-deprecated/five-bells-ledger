@@ -1,16 +1,31 @@
 'use strict'
 
+const co = require('co')
 const fs = require('fs')
 const path = require('path')
 const connection = require('./knex').config.connection
 const spawn = require('child_process').spawn
+const knex = require('./knex').knex
+
+const TABLE_NAMES = [
+  'L_ACCOUNTS',
+  'L_FULFILLMENTS',
+  'L_ENTRIES',
+  'L_NOTIFICATIONS',
+  'L_SUBSCRIPTIONS',
+  'L_TRANSFERS'
+]
+
+function withTransaction (callback) {
+  return knex.transaction(co.wrap(callback))
+}
 
 function sequence (promises) {
   return promises.length === 0 ? Promise.resolve()
     : promises[0].then(() => sequence(promises.slice(1)))
 }
 
-function executeStatements (knex, sql) {
+function executeStatements (sql) {
   const separator = ';\n'
   const statements = sql.split(separator)
   return sequence(statements.map((statement) => {
@@ -41,7 +56,7 @@ function executeSQLPlus (sqlFilepath) {
   })
 }
 
-function createTables (knex, knexConfig) {
+function createTables () {
   const dbType = knex.client.config.client
   const filepath = path.resolve(
     __dirname, '..', 'sql', dbType, 'create.sql')
@@ -50,10 +65,25 @@ function createTables (knex, knexConfig) {
     return executeSQLPlus(filepath)
   } else {
     const sql = fs.readFileSync(filepath, {encoding: 'utf8'})
-    return executeStatements(knex, sql)
+    return executeStatements(sql)
+  }
+}
+
+function * dropTables () {
+  for (const tableName of TABLE_NAMES) {
+    yield knex.schema.dropTableIfExists(tableName).then()
+  }
+}
+
+function * truncateTables () {
+  for (const tableName of TABLE_NAMES) {
+    yield knex(tableName).truncate().then()
   }
 }
 
 module.exports = {
-  createTables
+  createTables,
+  dropTables,
+  truncateTables,
+  withTransaction
 }

@@ -1,12 +1,11 @@
 'use strict'
 
+const TABLE_NAME = 'L_SUBSCRIPTIONS'
 const _ = require('lodash')
 const assert = require('assert')
-const db = require('../../services/db')
-const knex = require('../../lib/knex').knex
-const InvalidModificationError = require('five-bells-shared').InvalidModificationError
-
-const TABLE_NAME = 'L_SUBSCRIPTIONS'
+const db = require('./utils')(TABLE_NAME,
+  convertToPersistent, convertFromPersistent)
+const withTransaction = require('../../lib/db').withTransaction
 
 function convertFromPersistent (data) {
   const result = _.mapKeys(_.cloneDeep(data), (value, key) => key.toLowerCase())
@@ -24,41 +23,23 @@ function convertToPersistent (data) {
   return _.mapKeys(result, (value, key) => key.toUpperCase())
 }
 
-function getTransaction (options) {
-  return !options ? knex : (!options.transaction ? knex : options.transaction)
-}
-
-function getSubscriptionWhere (where, options) {
-  return getTransaction(options)
-    .from(TABLE_NAME).select().where(where)
-    .then((results) => {
-      if (results.length === 1) {
-        return convertFromPersistent(results[0])
-      } else if (results.length === 0) {
-        return null
-      } else {
-        assert(false, 'Multiple subscriptions match ' + JSON.stringify(where))
-      }
-    })
-}
-
 function * getSubscription (id, options) {
   const where = options && options.includeDeleted ? {SUBSCRIPTION_ID: id}
     : {SUBSCRIPTION_ID: id, IS_DELETED: false}
-  return getSubscriptionWhere(where, options)
+  return db.selectOne(where, options && options.transaction)
 }
 
 function * getMatchingSubscription (subscription, options) {
-  return getSubscriptionWhere({
+  return db.selectOne({
     EVENT: subscription.event,
     SUBJECT: subscription.subject,
     TARGET: subscription.target,
     IS_DELETED: false
-  }, options)
+  }, options && options.transaction)
 }
 
 function * getAffectedSubscriptions (affectedAccountUris, options) {
-  return getTransaction(options).from(TABLE_NAME)
+  return db.getTransaction(options).from(TABLE_NAME)
     .whereIn('SUBJECT', affectedAccountUris)
     .whereIn('EVENT', ['transfer.update', 'transfer.*', '*'])
     .where('IS_DELETED', false)
@@ -66,53 +47,17 @@ function * getAffectedSubscriptions (affectedAccountUris, options) {
 }
 
 function * updateSubscription (subscription, options) {
-  return getTransaction(options)(TABLE_NAME)
-    .update(convertToPersistent(subscription))
-    .where('SUBSCRIPTION_ID', subscription.id)
-}
-
-function * insertSubscription (subscription, options) {
-  return getTransaction(options)
-    .insert(convertToPersistent(subscription))
-    .into(TABLE_NAME)
+  return db.update(subscription, {SUBSCRIPTION_ID: subscription.id},
+    options && options.transaction)
 }
 
 function * insertSubscriptions (subscriptions, options) {
-  return getTransaction(options)
-    .insert(subscriptions.map(convertToPersistent))
-    .into(TABLE_NAME)
-}
-
-function * _upsertSubscription (subscription, options) {
-  assert(options.transaction)
-  // SQLite's implementation of upsert does not tell you whether it created the
-  // row or whether it already existed. Since we need to know to return the
-  // correct HTTP status code we unfortunately have to do this in two steps.
-  const existingSubscription = yield getSubscription(subscription.id,
-    _.assign({}, options, {includeDeleted: true}))
-  const isDeleted = existingSubscription && existingSubscription.is_deleted
-  if (isDeleted) {
-    throw new InvalidModificationError('This subscription is deleted. Please use a new ID')
-  }
-  if (existingSubscription) {
-    yield updateSubscription(subscription, options)
-  } else {
-    yield insertSubscription(subscription, options)
-  }
-  return Boolean(existingSubscription)
+  return db.insertAll(subscriptions, options && options.transaction)
 }
 
 function * upsertSubscription (subscription, options) {
-  if (options && options.transaction) {
-    return yield _upsertSubscription(subscription, options)
-  } else {
-    let result
-    yield db.transaction(function * (transaction) {
-      result = yield _upsertSubscription(subscription,
-        _.assign({}, options || {}, {transaction}))
-    })
-    return result
-  }
+  return db.upsert(subscription, {SUBSCRIPTION_ID: subscription.id},
+    options && options.transaction)
 }
 
 function * deleteSubscription (id, options) {
@@ -132,5 +77,5 @@ module.exports = {
   upsertSubscription,
   deleteSubscription,
   insertSubscriptions,
-  transaction: db.transaction.bind(db)
+  withTransaction
 }

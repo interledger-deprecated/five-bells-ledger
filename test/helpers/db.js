@@ -1,29 +1,15 @@
 'use strict'
 
-const knex = require('../../src/lib/knex').knex
-const knexConfig = require('../../src/lib/knex').config
-const createTables = require('../../src/lib/db').createTables
+const db = require('../../src/lib/db')
 const insertTransfers = require('../../src/models/transfers').insertTransfers
-const Fulfillment = require('../../src/models/db/conditionFulfillment').ConditionFulfillment
 const insertAccounts = require('../../src/models/accounts').insertAccounts
+const setBalance = require('../../src/models/accounts').setBalance
 const insertSubscriptions = require('../../src/models/subscriptions')
   .insertSubscriptions
 const insertNotification = require('../../src/models/db/notifications')
   .insertNotification
-
-const tables = [
-  'L_ACCOUNTS',
-  'fulfillments',
-  'entries',
-  'L_NOTIFICATIONS',
-  'L_SUBSCRIPTIONS',
-  'L_TRANSFERS'
-]
-
-const migrationTables = [
-  'migrations',
-  'migrations_lock'
-]
+const insertFulfillments = require('../../src/models/db/fulfillments')
+  .insertFulfillments
 
 // Only run migrations once during tests
 let init = false
@@ -31,22 +17,17 @@ exports.init = function * () {
   if (init) {
     return
   }
-  for (let tableName of tables.concat(migrationTables)) {
-    yield knex.schema.dropTableIfExists(tableName).then()
-  }
-
-  yield createTables(knex, knexConfig)
+  yield db.dropTables()
+  yield db.createTables()
   init = true
 }
 
 exports.clean = function * () {
-  for (let t of tables) {
-    yield knex(t).truncate().then()
-  }
+  yield db.truncateTables()
 }
 
 exports.setHoldBalance = function * (balance) {
-  yield knex('L_ACCOUNTS').where('NAME', 'hold').update({BALANCE: balance})
+  yield setBalance('hold', balance)
 }
 
 exports.addAccounts = function * (accounts) {
@@ -84,7 +65,5 @@ exports.addFulfillments = function * (fulfillments) {
   if (!Array.isArray(fulfillments)) {
     throw new Error('Requires an array of fulfillments, got ' + fulfillments)
   }
-  for (let i = 0; i < fulfillments.length; i++) {
-    yield Fulfillment.create(fulfillments[i])
-  }
+  yield insertFulfillments(fulfillments)
 }

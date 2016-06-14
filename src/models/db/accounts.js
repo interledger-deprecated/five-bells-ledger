@@ -1,12 +1,10 @@
 'use strict'
 
-const _ = require('lodash')
-const assert = require('assert')
-const db = require('../../services/db')
-const knex = require('../../lib/knex').knex
-const config = require('../../services/config')
-
 const TABLE_NAME = 'L_ACCOUNTS'
+const _ = require('lodash')
+const db = require('./utils')(TABLE_NAME,
+  convertToPersistent, convertFromPersistent)
+const config = require('../../services/config')
 
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
@@ -45,88 +43,40 @@ function convertToPersistent (data) {
   return _.mapKeys(data, (value, key) => key.toUpperCase())
 }
 
-function getTransaction (options) {
-  return !options ? knex : (!options.transaction ? knex : options.transaction)
-}
-
 function * getAccounts (options) {
-  return getTransaction(options)
-    .from(TABLE_NAME).select()
-    .then((results) => results.map(convertFromPersistent))
+  return db.select({}, options && options.transaction)
 }
 
 function * getConnectorAccounts (options) {
-  return (yield getAccounts(options))
-    .filter((account) => account.connector)
-    .map(convertFromPersistent)
-}
-
-function getAccountByKey (key, value, options) {
-  return getTransaction(options)
-    .from(TABLE_NAME).select().where(key, value)
-    .then((results) => results.map(convertFromPersistent))
-    .then((results) => {
-      if (results.length === 1) {
-        return results[0]
-      } else if (results.length === 0) {
-        return null
-      } else {
-        assert(false, 'Multiple accounts have the same ' + key)
-      }
-    })
+  return (yield getAccounts(options)).filter((account) => account.connector)
 }
 
 function getAccount (name, options) {
-  return getAccountByKey('NAME', name, options)
+  return db.selectOne({NAME: name}, options && options.transaction)
 }
 
 function getAccountByFingerprint (fingerprint, options) {
-  return getAccountByKey('FINGERPRINT', fingerprint, options)
+  return db.selectOne({FINGERPRINT: fingerprint}, options && options.transaction)
 }
 
-function * updateAccount (account, options) {
-  return getTransaction(options)(TABLE_NAME)
-    .update(convertToPersistent(account))
-    .where('NAME', account.name)
+function adjustBalance (name, amount, options) {
+  const updateSQL =
+    'UPDATE "L_ACCOUNTS" SET "BALANCE" = "BALANCE" + ? WHERE "NAME" = ?'
+  return db.getTransaction(options).raw(updateSQL, [amount, name])
 }
 
-function * insertAccount (account, options) {
-  return getTransaction(options)
-    .insert(convertToPersistent(account))
-    .into(TABLE_NAME)
+function updateAccount (account, options) {
+  return db.update(account, {ACCOUNT_ID: account.id},
+    options && options.transaction)
 }
 
 function * insertAccounts (accounts, options) {
-  return getTransaction(options)
-    .insert(accounts.map(convertToPersistent))
-    .into(TABLE_NAME)
-}
-
-function * _upsertAccount (account, options) {
-  assert(options.transaction)
-  // SQLite's implementation of upsert does not tell you whether it created the
-  // row or whether it already existed. Since we need to know to return the
-  // correct HTTP status code we unfortunately have to do this in two steps.
-  const existingAccount = yield getAccount(account.name, options)
-  if (existingAccount) {
-    yield updateAccount(account, options)
-  } else {
-    yield insertAccount(account, options)
-  }
-  return Boolean(existingAccount)
+  return db.insertAll(accounts, options && options.transaction)
 }
 
 function * upsertAccount (account, options) {
-  if (options && options.transaction) {
-    return yield _upsertAccount(account, options)
-  } else {
-    let result
-    yield db.transaction(function * (transaction) {
-      result = yield _upsertAccount(account,
-        _.assign({}, options || {}, {transaction}))
-    })
-    return result
-  }
+  return db.upsert(account, {NAME: account.name},
+    options && options.transaction)
 }
 
 module.exports = {
@@ -134,6 +84,8 @@ module.exports = {
   getConnectorAccounts,
   getAccount,
   getAccountByFingerprint,
+  adjustBalance,
+  updateAccount,
   upsertAccount,
   insertAccounts
 }

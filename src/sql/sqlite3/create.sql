@@ -52,15 +52,15 @@ create index notifications_retry_at_index on "L_NOTIFICATIONS" ("RETRY_AT");
 create index subscription_transfer
   on "L_NOTIFICATIONS" ("SUBSCRIPTION_ID", "TRANSFER_ID");
 
-create table if not exists "entries" (
-"id" integer not null primary key,
-"transfer_id" char(36),
-"account" integer,
-"created_at" datetime default CURRENT_TIMESTAMP);
+create table if not exists "L_ENTRIES" (
+"ENTRY_ID" integer not null primary key,
+"TRANSFER_ID" char(36),
+"ACCOUNT" integer,
+"CREATED_AT" datetime default CURRENT_TIMESTAMP);
 
-create table if not exists "fulfillments" (
-"id" integer not null primary key,
-"transfer_id" char(36),
-"condition_fulfillment" text);
+create table if not exists "L_FULFILLMENTS" (
+"FULFILLMENT_ID" integer not null primary key,
+"TRANSFER_ID" char(36),
+"CONDITION_FULFILLMENT" text);
 
-create index fulfillments_transfer_id_index on "fulfillments" ("transfer_id");
+create index fulfillments_transfer_id_index on "L_FULFILLMENTS" ("TRANSFER_ID");

@@ -54,16 +54,16 @@ create index subscription_transfer
   on "L_NOTIFICATIONS" ("SUBSCRIPTION_ID", "TRANSFER_ID");
 
 
-create table if not exists "entries" (
-"id" serial not null primary key,
-"transfer_id" char(36),
-"account" integer,
-"created_at" timestamp default CURRENT_TIMESTAMP);
+create table if not exists "L_ENTRIES" (
+"ENTRY_ID" serial not null primary key,
+"TRANSFER_ID" char(36),
+"ACCOUNT" integer,
+"CREATED_AT" timestamp default CURRENT_TIMESTAMP);
 
 
-create table if not exists "fulfillments" (
-"id" serial not null primary key,
-"transfer_id" char(36),
-"condition_fulfillment" text);
+create table if not exists "L_FULFILLMENTS" (
+"FULFILLMENT_ID" serial not null primary key,
+"TRANSFER_ID" char(36),
+"CONDITION_FULFILLMENT" text);
 
-create index fulfillments_transfer_id_index on "fulfillments" ("transfer_id");
+create index fulfillments_transfer_id_index on "L_FULFILLMENTS" ("TRANSFER_ID");

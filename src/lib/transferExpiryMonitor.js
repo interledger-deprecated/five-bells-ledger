@@ -1,7 +1,7 @@
 'use strict'
 
 const moment = require('moment')
-const db = require('../services/db')
+const withTransaction = require('./db').withTransaction
 const log = require('../services/log')('expiry monitor')
 const holds = require('./holds')
 const updateState = require('./updateState')
@@ -30,7 +30,7 @@ class TransferExpiryMonitor {
   * expireTransfer (transferId) {
     const _this = this
 
-    yield db.transaction(function * (transaction) {
+    yield withTransaction(function * (transaction) {
       const transfer = yield getTransfer(transferId, { transaction })
 
       if (!transfer) {

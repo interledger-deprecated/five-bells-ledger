@@ -1,11 +1,10 @@
 'use strict'
 
-const _ = require('lodash')
-const assert = require('assert')
-const db = require('../../services/db')
-const knex = require('../../lib/knex').knex
-
 const TABLE_NAME = 'L_TRANSFERS'
+const _ = require('lodash')
+const db = require('./utils')(TABLE_NAME,
+  convertToPersistent, convertFromPersistent)
+const withTransaction = require('../../lib/db').withTransaction
 
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
@@ -58,67 +57,22 @@ function convertToPersistent (data) {
   return _.mapKeys(data, (value, key) => key.toUpperCase())
 }
 
-function getTransaction (options) {
-  return !options ? knex : (!options.transaction ? knex : options.transaction)
-}
-
 function * getTransfer (id, options) {
-  return getTransaction(options)
-    .from(TABLE_NAME).select().where('TRANSFER_ID', id)
-    .then((results) => {
-      if (results.length === 1) {
-        return convertFromPersistent(results[0])
-      } else if (results.length === 0) {
-        return null
-      } else {
-        assert(false, 'Multiple transfers have the same ID')
-      }
-    })
+  return db.selectOne({TRANSFER_ID: id}, options && options.transaction)
 }
 
 function * updateTransfer (transfer, options) {
-  return getTransaction(options)(TABLE_NAME)
-    .update(convertToPersistent(transfer))
-    .where('TRANSFER_ID', transfer.id)
-}
-
-function * insertTransfer (transfer, options) {
-  return getTransaction(options)
-    .insert(convertToPersistent(transfer))
-    .into(TABLE_NAME)
+  return db.update(transfer, {TRANSFER_ID: transfer.id},
+    options && options.transaction)
 }
 
 function * insertTransfers (transfers, options) {
-  return getTransaction(options)
-    .insert(transfers.map(convertToPersistent))
-    .into(TABLE_NAME)
-}
-
-function * _upsertTransfer (transfer, options) {
-  assert(options.transaction)
-  // SQLite's implementation of upsert does not tell you whether it created the
-  // row or whether it already existed. Since we need to know to return the
-  // correct HTTP status code we unfortunately have to do this in two steps.
-  const existingTransfer = yield getTransfer(transfer.id, options)
-  if (existingTransfer) {
-    yield updateTransfer(transfer, options)
-  } else {
-    yield insertTransfer(transfer, options)
-  }
-  return Boolean(existingTransfer)
+  return db.insertAll(transfers, options && options.transaction)
 }
 
 function * upsertTransfer (transfer, options) {
-  if (options && options.transaction) {
-    return yield _upsertTransfer(transfer, options)
-  } else {
-    let result
-    yield db.transaction(function * (transaction) {
-      result = yield _upsertTransfer(transfer,
-        _.assign({}, options || {}, {transaction}))
-    })
-    return result
-  }
+  return db.upsert(transfer, {TRANSFER_ID: transfer.id},
+    options && options.transaction)
 }
 
 module.exports = {
@@ -126,6 +80,6 @@ module.exports = {
   upsertTransfer,
   updateTransfer,
   insertTransfers,
-  transaction: db.transaction.bind(db),
+  withTransaction,
   client: db.client
 }

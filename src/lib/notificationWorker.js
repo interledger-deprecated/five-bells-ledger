@@ -20,6 +20,9 @@ const getAffectedSubscriptions = require('../models/db/subscriptions')
 const getMatchingNotification = require('../models/db/notifications')
   .getMatchingNotification
 const notificationDAO = require('../models/db/notifications')
+const getFulfillment = require('../models/db/fulfillments').getFulfillment
+const convertToExternalFulfillment = require('../models/converters/fulfillments')
+  .convertToExternalFulfillment
 
 const privateKey = config.getIn(['keys', 'notification_sign', 'secret'])
 
@@ -41,12 +44,11 @@ function * findOrCreate (subscriptionID, transferID, options) {
 }
 
 class NotificationWorker extends EventEmitter {
-  constructor (uri, log, Fulfillment, config) {
+  constructor (uri, log, config) {
     super()
 
     this.uri = uri
     this.log = log
-    this.Fulfillment = Fulfillment
     this.config = config
 
     this.scheduler = new NotificationScheduler({
@@ -73,16 +75,18 @@ class NotificationWorker extends EventEmitter {
     // If the transfer is finalized, see if it was finalized by a fulfillment
     let fulfillment
     if (isTransferFinalized(transfer)) {
-      fulfillment = yield this.Fulfillment.findByTransfer(transfer.id, { transaction })
+      fulfillment = yield getFulfillment(transfer.id, { transaction })
 
       if (fulfillment) {
         if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
           notificationBody.related_resources = {
-            execution_condition_fulfillment: fulfillment.getDataExternal()
+            execution_condition_fulfillment:
+              convertToExternalFulfillment(fulfillment)
           }
         } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
           notificationBody.related_resources = {
-            cancellation_condition_fulfillment: fulfillment.getDataExternal()
+            cancellation_condition_fulfillment:
+              convertToExternalFulfillment(fulfillment)
           }
         }
       }
@@ -129,7 +133,7 @@ class NotificationWorker extends EventEmitter {
   * processNotification (notification) {
     const transfer = yield getTransfer(notification.transfer_id)
     const subscription = yield getSubscription(notification.subscription_id)
-    const fulfillment = yield this.Fulfillment.findByTransfer(transfer.id)
+    const fulfillment = yield getFulfillment(transfer.id)
     yield this.processNotificationWithInstances(notification, transfer, subscription, fulfillment)
   }
 
@@ -145,11 +149,13 @@ class NotificationWorker extends EventEmitter {
     if (fulfillment) {
       if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
         notificationBody.related_resources = {
-          execution_condition_fulfillment: fulfillment.getDataExternal()
+          execution_condition_fulfillment:
+            convertToExternalFulfillment(fulfillment)
         }
       } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
         notificationBody.related_resources = {
-          cancellation_condition_fulfillment: fulfillment.getDataExternal()
+          cancellation_condition_fulfillment:
+            convertToExternalFulfillment(fulfillment)
         }
       }
     }
