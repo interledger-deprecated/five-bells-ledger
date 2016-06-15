@@ -93,5 +93,12 @@
     "balance": "0",
     "password": "nominbal",
     "is_disabled": false
+  },
+  "noBalance": {
+    "id": "http://localhost/accounts/nobalance",
+    "name": "nobalance",
+    "password": "nobalance",
+    "is_disabled": false,
+    "minimum_allowed_balance": "-100"
   }
 }
