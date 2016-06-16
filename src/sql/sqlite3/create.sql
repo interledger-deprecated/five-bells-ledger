@@ -1,7 +1,7 @@
 create table if not exists "accounts" (
 "id" integer not null primary key,
 "name" varchar(255),
-"balance" float check (balance >= minimum_allowed_balance),
+"balance" float default 0 check (balance >= minimum_allowed_balance),
 "connector" varchar(1024),
 "password_hash" varchar(1024),
 "public_key" text,

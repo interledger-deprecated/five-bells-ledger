@@ -30,9 +30,6 @@ function * _upsertAccount (account, options) {
     existingAccount.setData(account)
     yield existingAccount.save(options)
   } else {
-    if (!account.balance) {
-      account.balance = 0
-    }
     yield Account.create(account, options)
   }
   return Boolean(existingAccount)
