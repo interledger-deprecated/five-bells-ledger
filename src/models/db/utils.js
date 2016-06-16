@@ -58,23 +58,14 @@ function createModule (tableName, convertToPersistent, convertFromPersistent) {
   }
 
   function withTransaction (callback) {
-    return new Promise((resolve, reject) => {
-      knex.transaction(function (transaction) {
-        resolve(callback(transaction))
-      })
-    })
+    return knex.transaction((transaction) => callback(transaction))
   }
 
   function upsert (data, where, transaction) {
     if (transaction) {
       return _upsert(data, where, transaction)
     } else {
-      return withTransaction(function (transaction) {
-        return _upsert(data, where, transaction).then((existed) => {
-          transaction.commit()
-          return existed
-        }).catch(transaction.rollback)
-      })
+      return withTransaction((transaction) => _upsert(data, where, transaction))
     }
   }
 

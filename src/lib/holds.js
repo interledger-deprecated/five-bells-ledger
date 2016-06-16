@@ -18,7 +18,7 @@ function insertEntryByName (accountName, transferID, transaction) {
   return accounts.getAccount(accountName, {transaction}).then((account) => {
     const entry = {
       transfer_id: transferID,
-      account: account.id
+      account_id: account.id
     }
     return entries.insertEntry(entry, {transaction})
   })

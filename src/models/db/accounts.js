@@ -23,6 +23,8 @@ function convertFromPersistent (data) {
   } else {
     data.minimum_allowed_balance = 0
   }
+  data.is_admin = Boolean(data.is_admin)
+  data.is_disabled = Boolean(data.is_disabled)
   delete data.created_at
   delete data.updated_at
   return data
@@ -40,6 +42,8 @@ function convertToPersistent (data) {
       data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
     }
   }
+  data.is_admin = Number(data.is_admin || false)
+  data.is_disabled = Number(data.is_disabled || false)
   return _.mapKeys(data, (value, key) => key.toUpperCase())
 }
 
