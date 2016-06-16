@@ -5,6 +5,7 @@ const _ = require('lodash')
 const db = require('./utils')(TABLE_NAME,
   convertToPersistent, convertFromPersistent)
 const withTransaction = require('../../lib/db').withTransaction
+const rejectionReasons = require('./rejectionReasons')
 
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
@@ -31,6 +32,11 @@ function convertFromPersistent (data) {
   if (data.rejected_at) {
     data.rejected_at = new Date(data.rejected_at)
   }
+  if (data.rejection_reason_id !== null) {
+    data.rejection_reason = rejectionReasons.getRejectionReasonName(
+      data.rejection_reason_id)
+    delete data.rejection_reason_id
+  }
   data = _.omit(data, _.isNull)
   return data
 }
@@ -52,7 +58,12 @@ function convertToPersistent (data) {
   if (data.rejected_at) {
     data.rejected_at = new Date(data.rejected_at)
   }
-  data.TRANSFER_ID = data.id
+  if (data.rejection_reason) {
+    data.rejection_reason_id = rejectionReasons.getRejectionReasonId(
+      data.rejection_reason)
+    delete data.rejection_reason
+  }
+  data.transfer_id = data.id
   delete data.id
   return _.mapKeys(data, (value, key) => key.toUpperCase())
 }

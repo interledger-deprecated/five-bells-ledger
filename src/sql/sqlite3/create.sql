@@ -17,6 +17,16 @@ create index fingerprint on "L_ACCOUNTS"
   ("FINGERPRINT");
 
 
+create table if not exists "L_LU_REJECTION_REASON" (
+  "REJECTION_REASON_ID" integer not null primary key,
+  "NAME" varchar(10) not null,
+  "DESCRIPTION" varchar(255) null
+);
+
+create unique index rejection_reason_name on "L_LU_REJECTION_REASON"
+  ("NAME");
+
+
 create table if not exists "L_TRANSFERS" (
   "TRANSFER_ID" char(36) not null primary key,
   "LEDGER" varchar(1024),
@@ -24,14 +34,16 @@ create table if not exists "L_TRANSFERS" (
   "CREDITS" text,
   "ADDITIONAL_INFO" text,
   "STATE" varchar,
-  "REJECTION_REASON" varchar,
+  "REJECTION_REASON_ID" integer,
   "EXECUTION_CONDITION" text,
   "CANCELLATION_CONDITION" text,
   "EXPIRES_AT" datetime,
   "PROPOSED_AT" datetime,
   "PREPARED_AT" datetime,
   "EXECUTED_AT" datetime,
-  "REJECTED_AT" datetime
+  "REJECTED_AT" datetime,
+  FOREIGN KEY("REJECTION_REASON_ID") REFERENCES "L_LU_REJECTION_REASON"
+    ("REJECTION_REASON_ID")
 );
 
 
@@ -78,3 +90,9 @@ create table if not exists "L_FULFILLMENTS" (
 
 create index fulfillments_transfer_id_index on "L_FULFILLMENTS"
   ("TRANSFER_ID");
+
+
+INSERT INTO "L_LU_REJECTION_REASON" ("REJECTION_REASON_ID", "NAME", "DESCRIPTION")
+  VALUES (0, 'cancelled', 'The transfer was cancelled');
+INSERT INTO "L_LU_REJECTION_REASON" ("REJECTION_REASON_ID", "NAME", "DESCRIPTION")
+  VALUES (1, 'expired', 'The transfer expired automatically');

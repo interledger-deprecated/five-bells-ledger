@@ -20,6 +20,7 @@ const subscriptions = require('../controllers/subscriptions')
 const notifications = require('../controllers/notifications')
 const seedDB = require('./seed-db')
 const createTables = require('./db').createTables
+const readLookupTables = require('./db').readLookupTables
 
 // Configure passport
 require('../services/auth')
@@ -68,6 +69,7 @@ class App {
     if (this.config.getIn(['db', 'sync'])) {
       yield createTables()
     }
+    yield readLookupTables()
     yield seedDB(this.config)
 
     if (this.config.getIn(['server', 'secure'])) {
