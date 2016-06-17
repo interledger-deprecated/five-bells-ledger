@@ -8,6 +8,8 @@ const spawn = require('child_process').spawn
 const knex = require('./knex').knex
 const readRejectionReasons = require('../models/db/rejectionReasons')
   .readRejectionReasons
+const readTransferStatuses = require('../models/db/transferStatuses')
+  .readTransferStatuses
 
 const TABLE_NAMES = [
   'L_ACCOUNTS',
@@ -16,7 +18,8 @@ const TABLE_NAMES = [
   'L_NOTIFICATIONS',
   'L_SUBSCRIPTIONS',
   'L_TRANSFERS',
-  'L_LU_REJECTION_REASON'
+  'L_LU_REJECTION_REASON',
+  'L_LU_TRANSFER_STATUS'
 ]
 
 function withTransaction (callback) {
@@ -87,7 +90,7 @@ function * truncateTables () {
 }
 
 function readLookupTables () {
-  return Promise.all([readRejectionReasons()])
+  return Promise.all([readRejectionReasons(), readTransferStatuses()])
 }
 
 module.exports = {

@@ -27,13 +27,23 @@ create unique index rejection_reason_name on "L_LU_REJECTION_REASON"
   ("NAME");
 
 
+create table if not exists "L_LU_TRANSFER_STATUS" (
+  "STATUS_ID" integer not null primary key,
+  "NAME" varchar(20) not null,
+  "DESCRIPTION" varchar(255) null
+);
+
+create unique index transfer_status_name on "L_LU_TRANSFER_STATUS"
+  ("NAME");
+
+
 create table if not exists "L_TRANSFERS" (
   "TRANSFER_ID" char(36) not null primary key,
   "LEDGER" varchar(1024),
   "DEBITS" text,
   "CREDITS" text,
   "ADDITIONAL_INFO" text,
-  "STATE" varchar,
+  "STATUS_ID" integer not null,
   "REJECTION_REASON_ID" integer,
   "EXECUTION_CONDITION" text,
   "CANCELLATION_CONDITION" text,
@@ -43,7 +53,8 @@ create table if not exists "L_TRANSFERS" (
   "EXECUTED_AT" datetime,
   "REJECTED_AT" datetime,
   FOREIGN KEY("REJECTION_REASON_ID") REFERENCES "L_LU_REJECTION_REASON"
-    ("REJECTION_REASON_ID")
+    ("REJECTION_REASON_ID"),
+  FOREIGN KEY("STATUS_ID") REFERENCES "L_LU_TRANSFER_STATUS" ("STATUS_ID")
 );
 
 
@@ -96,3 +107,7 @@ INSERT INTO "L_LU_REJECTION_REASON" ("REJECTION_REASON_ID", "NAME", "DESCRIPTION
   VALUES (0, 'cancelled', 'The transfer was cancelled');
 INSERT INTO "L_LU_REJECTION_REASON" ("REJECTION_REASON_ID", "NAME", "DESCRIPTION")
   VALUES (1, 'expired', 'The transfer expired automatically');
+INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (0, 'proposed');
+INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (1, 'prepared');
+INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (2, 'executed');
+INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (3, 'rejected');
