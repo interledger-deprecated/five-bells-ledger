@@ -17,7 +17,7 @@
     "lint": "eslint .",
     "test": "istanbul test -- _mocha",
     "sqlplus": "LD_LIBRARY_PATH=/opt/oracle/instantclient DYLD_LIBRARY_PATH=/opt/oracle/instantclient /opt/oracle/instantclient/sqlplus system/oracle@localhost:1521/xe",
-    "test-oracle": "LEDGER_UNIT_DB_URI='oracle://system:oracle@mattphinney-lm.ripple.com:1521/xe' DYLD_LIBRARY_PATH=/opt/oracle/instantclient LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
+    "test-oracle": "LEDGER_UNIT_DB_URI='oracle://system:oracle@localhost:1521/xe' DYLD_LIBRARY_PATH=/opt/oracle/instantclient LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "apidoc": "apidoc -o apidoc-out -i src/controllers/",
     "integration": "integration all",

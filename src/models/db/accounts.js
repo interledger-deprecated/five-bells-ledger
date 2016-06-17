@@ -30,7 +30,11 @@ function * _upsertAccount (account, options) {
     existingAccount.setData(account)
     yield existingAccount.save(options)
   } else {
-    yield Account.create(account, options)
+    if (!account.balance) {
+      yield Account.create(_.merge({}, account, {balance: 0}), options)
+    } else {
+      yield Account.create(account, options)
+    }
   }
   return Boolean(existingAccount)
 }
