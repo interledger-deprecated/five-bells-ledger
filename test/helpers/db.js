@@ -19,6 +19,7 @@ exports.init = function * () {
   }
   yield db.dropTables()
   yield db.createTables()
+  yield db.readLookupTables()
   init = true
 }
 

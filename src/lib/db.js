@@ -6,6 +6,8 @@ const path = require('path')
 const connection = require('./knex').config.connection
 const spawn = require('child_process').spawn
 const knex = require('./knex').knex
+const readRejectionReasons = require('../models/db/rejectionReasons')
+  .readRejectionReasons
 
 const TABLE_NAMES = [
   'L_ACCOUNTS',
@@ -13,7 +15,8 @@ const TABLE_NAMES = [
   'L_ENTRIES',
   'L_NOTIFICATIONS',
   'L_SUBSCRIPTIONS',
-  'L_TRANSFERS'
+  'L_TRANSFERS',
+  'L_LU_REJECTION_REASON'
 ]
 
 function withTransaction (callback) {
@@ -77,13 +80,20 @@ function * dropTables () {
 
 function * truncateTables () {
   for (const tableName of TABLE_NAMES) {
-    yield knex(tableName).truncate().then()
+    if (!tableName.includes('_LU_')) {
+      yield knex(tableName).truncate().then()
+    }
   }
+}
+
+function readLookupTables () {
+  return Promise.all([readRejectionReasons()])
 }
 
 module.exports = {
   createTables,
   dropTables,
   truncateTables,
+  readLookupTables,
   withTransaction
 }
