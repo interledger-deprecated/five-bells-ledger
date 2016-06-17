@@ -116,7 +116,7 @@ CREATE TABLE "accounts"
 (
   "id"                   INTEGER  NOT NULL ,
   "name"                 VARCHAR2(255) NOT NULL ,
-  "balance"              NUMBER(32,16) DEFAULT 0 NOT NULL,
+  "balance"              NUMBER(32,16) NULL ,
   "connector"            VARCHAR2(1024) NULL ,
   "password_hash"        VARCHAR2(1024) NULL ,
   "public_key"           VARCHAR2(4000) NULL ,

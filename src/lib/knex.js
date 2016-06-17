@@ -29,14 +29,13 @@ function parseDatabaseType (uri) {
 
 function getKnexConfig () {
   const knexConfig = {
-    sqlite: {client: 'sqlite3', useNullAsDefault: true},
+    sqlite: {client: 'sqlite3'},
     mysql: {client: 'mysql'},
     postgres: {client: 'pg'},
     oracle: {
       client: 'strong-oracle',
       useNullAsDefault: true,
-      pool: {min: 0, max: 2},
-      debug: true
+      pool: {min: 0, max: 2}
     }
   }
   const uri = config.getIn(['db', 'uri'])
