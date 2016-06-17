@@ -6,6 +6,7 @@ const db = require('./utils')(TABLE_NAME,
   convertToPersistent, convertFromPersistent)
 const withTransaction = require('../../lib/db').withTransaction
 const rejectionReasons = require('./rejectionReasons')
+const transferStatuses = require('./transferStatuses')
 
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
@@ -37,6 +38,8 @@ function convertFromPersistent (data) {
       data.rejection_reason_id)
     delete data.rejection_reason_id
   }
+  data.state = transferStatuses.getTransferStatusName(data.status_id)
+  delete data.status_id
   data = _.omit(data, _.isNull)
   return data
 }
@@ -62,6 +65,10 @@ function convertToPersistent (data) {
     data.rejection_reason_id = rejectionReasons.getRejectionReasonId(
       data.rejection_reason)
     delete data.rejection_reason
+  }
+  if (data.state) {
+    data.status_id = transferStatuses.getTransferStatusId(data.state)
+    delete data.state
   }
   data.transfer_id = data.id
   delete data.id
