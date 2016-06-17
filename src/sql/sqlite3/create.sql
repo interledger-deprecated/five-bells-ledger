@@ -40,8 +40,6 @@ create unique index transfer_status_name on "L_LU_TRANSFER_STATUS"
 create table if not exists "L_TRANSFERS" (
   "TRANSFER_ID" char(36) not null primary key,
   "LEDGER" varchar(1024),
-  "DEBITS" text,
-  "CREDITS" text,
   "ADDITIONAL_INFO" text,
   "STATUS_ID" integer not null,
   "REJECTION_REASON_ID" integer,
@@ -55,6 +53,20 @@ create table if not exists "L_TRANSFERS" (
   FOREIGN KEY("REJECTION_REASON_ID") REFERENCES "L_LU_REJECTION_REASON"
     ("REJECTION_REASON_ID"),
   FOREIGN KEY("STATUS_ID") REFERENCES "L_LU_TRANSFER_STATUS" ("STATUS_ID")
+);
+
+
+create table if not exists "L_TRANSFER_ADJUSTMENTS"
+(
+  "TRANSFER_ADJUSTMENT_ID" integer not null primary key,
+  "TRANSFER_ID" varchar(36) not null,
+  "ACCOUNT_ID" integer not null,
+  "DEBIT_CREDIT" varchar(10) not null,
+  "AMOUNT" float DEFAULT 0 not null,
+  "IS_AUTHORIZED" boolean default 0 not null,
+  "MEMO" varchar(4000) null,
+  FOREIGN KEY("TRANSFER_ID") REFERENCES "L_TRANSFERS" ("TRANSFER_ID"),
+  FOREIGN KEY("ACCOUNT_ID") REFERENCES "L_ACCOUNTS" ("ACCOUNT_ID")
 );
 
 

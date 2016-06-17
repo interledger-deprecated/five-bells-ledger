@@ -5,6 +5,7 @@ const _ = require('lodash')
 const db = require('./utils')(TABLE_NAME,
   convertToPersistent, convertFromPersistent)
 const config = require('../../services/config')
+const knex = require('../../lib/knex').knex
 
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
@@ -66,6 +67,18 @@ function getAccountByFingerprint (fingerprint, options) {
   return db.selectOne({FINGERPRINT: fingerprint}, options && options.transaction)
 }
 
+function getAccountById (id, options) {
+  return db.selectOne({ACCOUNT_ID: id}, options && options.transaction)
+}
+
+function getAccountId (name, options) {
+  const transaction = options && options.transaction
+  return (transaction || knex).from(TABLE_NAME).select()
+  .where('NAME', name).then((accounts) => {
+    return accounts.length === 1 ? accounts[0].ACCOUNT_ID : null
+  })
+}
+
 function adjustBalance (name, amount, options) {
   const updateSQL =
     'UPDATE "L_ACCOUNTS" SET "BALANCE" = "BALANCE" + ? WHERE "NAME" = ?'
@@ -89,8 +102,10 @@ function * upsertAccount (account, options) {
 module.exports = {
   getAccounts,
   getConnectorAccounts,
+  getAccountId,
   getAccount,
   getAccountByFingerprint,
+  getAccountById,
   adjustBalance,
   updateAccount,
   upsertAccount,

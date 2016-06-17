@@ -1581,4 +1581,32 @@ describe('PUT /transfers/:id', function () {
         .end()
     })
   })
+
+  describe('sanity checks', function () {
+    it('should return the same transfer as was PUT', function * () {
+      const transfer = _.cloneDeep(this.multiDebitAndCreditTransfer)
+      delete transfer.debits[1].authorized
+      transfer.debits[0].memo = {message: 'TEST MEMO'}
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      const addedData = {
+        state: 'proposed',
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }
+      yield this.request()
+        .get(transfer.id)
+        .auth('alice', 'alice')
+        .expect(200)
+        .expect(_.assign(addedData, transfer))
+        .end()
+    })
+  })
 })

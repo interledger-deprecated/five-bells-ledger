@@ -9,6 +9,8 @@ function convertToInternalTransfer (data) {
   if (data.id && data.id.startsWith('http')) {
     data.id = uri.parse(data.id, 'transfer').id.toLowerCase()
   }
+  data.debits = _.sortBy(data.debits, (debit) => debit.account)
+  data.credits = _.sortBy(data.credits, (credit) => credit.account)
   for (let debit of data.debits) {
     debit.account = uri.parse(debit.account, 'account').name.toLowerCase()
   }

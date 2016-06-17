@@ -6,12 +6,14 @@ const path = require('path')
 const connection = require('./knex').config.connection
 const spawn = require('child_process').spawn
 const knex = require('./knex').knex
+const sequence = require('./utils').sequence
 const readRejectionReasons = require('../models/db/rejectionReasons')
   .readRejectionReasons
 const readTransferStatuses = require('../models/db/transferStatuses')
   .readTransferStatuses
 
 const TABLE_NAMES = [
+  'L_TRANSFER_ADJUSTMENTS',
   'L_ACCOUNTS',
   'L_FULFILLMENTS',
   'L_ENTRIES',
@@ -24,11 +26,6 @@ const TABLE_NAMES = [
 
 function withTransaction (callback) {
   return knex.transaction(co.wrap(callback))
-}
-
-function sequence (promises) {
-  return promises.length === 0 ? Promise.resolve()
-    : promises[0].then(() => sequence(promises.slice(1)))
 }
 
 function executeStatements (sql) {
@@ -84,9 +81,14 @@ function * dropTables () {
 }
 
 function * truncateTables () {
+  const dbType = knex.client.config.client
   for (const tableName of TABLE_NAMES) {
     if (!tableName.includes('_LU_')) {
-      yield knex(tableName).truncate().then()
+      if (dbType === 'pg') {
+        yield knex.raw('TRUNCATE TABLE "' + tableName + '" CASCADE;')
+      } else {
+        yield knex(tableName).truncate()
+      }
     }
   }
 }
