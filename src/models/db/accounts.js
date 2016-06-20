@@ -37,11 +37,12 @@ function convertToPersistent (data) {
   }
   if (data.minimum_allowed_balance) {
     if (data.minimum_allowed_balance === Number.NEGATIVE_INFINITY) {
+      // A null value in the db column means the balance can go negative without limit
       data.minimum_allowed_balance = null
     } else {
       data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
     }
-  }
+  } // Otherwise the db defaults minimum_allowed_balance to 0
   data.is_admin = Number(data.is_admin || false)
   data.is_disabled = Number(data.is_disabled || false)
   return _.mapKeys(data, (value, key) => key.toUpperCase())

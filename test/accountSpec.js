@@ -47,6 +47,7 @@ describe('Accounts', function () {
     this.infiniteMinBalance = this.exampleAccounts.infiniteMinBalance
     this.finiteMinBalance = this.exampleAccounts.finiteMinBalance
     this.unspecifiedMinBalance = this.exampleAccounts.unspecifiedMinBalance
+    this.noBalance = this.exampleAccounts.noBalance
 
     this.transfer = _.cloneDeep(require('./data/transfers/simple'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/simpleWithExpiry'))
@@ -81,7 +82,15 @@ describe('Accounts', function () {
       yield this.request()
         .get('/accounts')
         .auth('admin', 'admin')
-        .expect([account1, account2, account3, account4, account5, account6])
+        .expect((res) => {
+          const sortedResponse = _.sortBy(res.body, (account) => {
+            return account.name
+          })
+          const sortedAccounts = _.sortBy([account1, account2, account3, account4, account5, account6], (account) => {
+            return account.name
+          })
+          expect(sortedResponse).to.deep.equal(sortedAccounts)
+        })
         .expect(validator.validateAccounts)
         .expect(200)
         .end()
@@ -158,6 +167,29 @@ describe('Accounts', function () {
         .get(this.existingAccount.id)
         .auth('candice', 'candice')
         .expect(403)
+        .end()
+    })
+
+    it('should default the balance to 0', function * () {
+      const account = this.noBalance
+
+      yield this.request()
+        .put(account.id)
+        .auth('admin', 'admin')
+        .send(account)
+        .expect(201)
+        .end()
+
+      delete account.password
+      yield this.request()
+        .get(account.id)
+        .auth('admin', 'admin')
+        .expect(200)
+        .expect(_.assign({}, account, {
+          balance: '0',
+          ledger: 'http://localhost'
+        }))
+        .expect(validator.validateAccount)
         .end()
     })
 
