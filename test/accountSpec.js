@@ -385,6 +385,29 @@ describe('Accounts', function () {
         .end()
     })
 
+    it('should not reset the admin flag when updating an account', function * () {
+      const adminAccount = this.adminAccount
+
+      yield this.request()
+        .put(adminAccount.id)
+        .auth('admin', 'admin')
+        .send({
+          name: adminAccount.name,
+          balance: '500'
+        })
+        .expect(200)
+        .end()
+
+      yield this.request()
+        .get(adminAccount.id)
+        .auth('admin', 'admin')
+        .expect(200)
+        .expect(function (res) {
+          expect(res.body.is_admin).to.be.true
+        })
+        .end()
+    })
+
     it('should default minimum_allowed_balance to 0 when unspecified', function * () {
       const noMinBalanceAccount = this.unspecifiedMinBalance
       delete noMinBalanceAccount.password
