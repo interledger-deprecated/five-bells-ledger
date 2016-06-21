@@ -4,6 +4,7 @@ const assert = require('assert')
 const knex = require('../../lib/knex').knex
 const InvalidModificationError = require('five-bells-shared')
   .InvalidModificationError
+const _ = require('lodash')
 
 function createModule (tableName, convertToPersistent, convertFromPersistent) {
   function getTransaction (options) {
@@ -40,8 +41,10 @@ function createModule (tableName, convertToPersistent, convertFromPersistent) {
   }
 
   function insertAll (data, transaction) {
-    return (transaction || knex).insert(data.map(convertToPersistent))
+    return Promise.all(_.map(data.map(convertToPersistent), (tableRow) => {
+      return (transaction || knex).insert(tableRow)
       .into(tableName)
+    }))
   }
 
   function _upsert (data, where, transaction) {

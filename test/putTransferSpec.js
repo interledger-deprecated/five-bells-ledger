@@ -62,10 +62,12 @@ describe('PUT /transfers/:id', function () {
     this.fromZeroMinBalanceAccountTransfer = _.cloneDeep(require('./data/transfers/fromZeroMinBalance'))
     this.fromFiniteMinBalanceAccountTransfer = _.cloneDeep(require('./data/transfers/fromFiniteMinBalance'))
     this.fromInfiniteMinBalanceAccountTransfer = _.cloneDeep(require('./data/transfers/fromInfiniteMinBalance'))
+    this.fromNoBalanceAccountTransfer = _.cloneDeep(require('./data/transfers/fromNoBalanceAccount'))
+    this.noBalanceAccount = _.cloneDeep(accounts.noBalance)
 
     // Store some example data
     accounts.eve.public_key = publicKey
-    yield dbHelper.addAccounts(_.values(accounts))
+    yield dbHelper.addAccounts(_.values(_.omit(accounts, 'noBalance')))
   })
 
   afterEach(function * () {
@@ -1350,6 +1352,55 @@ describe('PUT /transfers/:id', function () {
       .expect(_.assign({}, {
         id: 'http://localhost/accounts/finiteminbal',
         name: 'finiteminbal',
+        ledger: 'http://localhost',
+        balance: '-50',
+        is_disabled: false,
+        minimum_allowed_balance: '-100'
+      }))
+      .expect(validator.validateAccount)
+      .end()
+
+    yield this.request()
+      .get(this.fromFiniteMinBalanceAccountTransfer.credits[0].account)
+      .auth('admin', 'admin')
+      .expect(200)
+      .expect(_.assign({}, {
+        id: 'http://localhost/accounts/bob',
+        name: 'bob',
+        ledger: 'http://localhost',
+        balance: '50',
+        is_disabled: false,
+        minimum_allowed_balance: '0'
+      }))
+      .expect(validator.validateAccount)
+      .end()
+  })
+
+  it('should return the correct balance, if no balance is specified on account creation', function * () {
+    const account = this.noBalanceAccount
+
+    yield this.request()
+      .put(account.id)
+      .auth('admin', 'admin')
+      .send(account)
+      .expect(201)
+      .end()
+
+    yield this.request()
+      .put(this.fromNoBalanceAccountTransfer.id)
+      .auth('nobalance', 'nobalance')
+      .send(this.fromNoBalanceAccountTransfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
+      .end()
+
+    yield this.request()
+      .get(this.fromNoBalanceAccountTransfer.debits[0].account)
+      .auth('admin', 'admin')
+      .expect(200)
+      .expect(_.assign({}, {
+        id: 'http://localhost/accounts/nobalance',
+        name: 'nobalance',
         ledger: 'http://localhost',
         balance: '-50',
         is_disabled: false,
