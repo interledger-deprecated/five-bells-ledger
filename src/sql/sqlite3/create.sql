@@ -5,8 +5,8 @@ create table if not exists "L_ACCOUNTS" (
   "CONNECTOR" varchar(1024),
   "PASSWORD_HASH" varchar(1024),
   "PUBLIC_KEY" text,
-  "IS_ADMIN" boolean,
-  "IS_DISABLED" boolean,
+  "IS_ADMIN" boolean default 0 not null,
+  "IS_DISABLED" boolean default 0 not null,
   "FINGERPRINT" varchar(255),
   "MINIMUM_ALLOWED_BALANCE" float default 0
 );
