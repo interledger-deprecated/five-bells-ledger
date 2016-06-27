@@ -47,6 +47,7 @@ function executeSQLPlus (sqlFilepath) {
     const host = connection.host
     const port = connection.port
     const database = connection.database
+    // TODO? Oracle connection string passed as configuration to ledger
     const login = user + '/' + password + '@' + host + ':' + port
     const url = login + (database ? '/' + database : '')
     const env = {
@@ -56,6 +57,8 @@ function executeSQLPlus (sqlFilepath) {
     const command = '/opt/oracle/instantclient/sqlplus'
     const args = [url, '@' + sqlFilepath]
     const process = spawn(command, args, {env})
+    process.stdout.on('data', (data) => console.log(data.toString()))
+    process.stderr.on('data', (data) => console.log(data.toString()))
     process.on('close', (code) => {
       return code === 0 ? resolve() : reject('sqlplus exited with code ' + code)
     })
