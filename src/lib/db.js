@@ -62,10 +62,10 @@ function executeSQLPlus (sqlFilepath) {
   })
 }
 
-function createTables () {
+function executeScript (filename) {
   const dbType = knex.client.config.client
   const filepath = path.resolve(
-    __dirname, '..', 'sql', dbType, 'create.sql')
+    __dirname, '..', 'sql', dbType, filename)
 
   if (dbType === 'strong-oracle') {
     return executeSQLPlus(filepath)
@@ -75,10 +75,12 @@ function createTables () {
   }
 }
 
+function createTables () {
+  return executeScript('create.sql')
+}
+
 function * dropTables () {
-  for (const tableName of TABLE_NAMES) {
-    yield knex.schema.dropTableIfExists(tableName).then()
-  }
+  return executeScript('drop.sql')
 }
 
 function * truncateTables () {
