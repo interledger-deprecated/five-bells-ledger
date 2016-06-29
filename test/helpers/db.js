@@ -4,10 +4,6 @@ const db = require('../../src/lib/db')
 const insertTransfers = require('../../src/models/transfers').insertTransfers
 const insertAccounts = require('../../src/models/accounts').insertAccounts
 const setBalance = require('../../src/models/accounts').setBalance
-const insertSubscriptions = require('../../src/models/subscriptions')
-  .insertSubscriptions
-const insertNotification = require('../../src/models/db/notifications')
-  .insertNotification
 const insertFulfillments = require('../../src/models/db/fulfillments')
   .insertFulfillments
 
@@ -44,22 +40,6 @@ exports.addTransfers = function * (transfers) {
     throw new Error('Requires an array of transfers, got ' + transfers)
   }
   yield insertTransfers(transfers)
-}
-
-exports.addSubscriptions = function * (subscriptions) {
-  if (!Array.isArray(subscriptions)) {
-    throw new Error('Requires an array of subscriptions, got ' + subscriptions)
-  }
-  yield insertSubscriptions(subscriptions)
-}
-
-exports.addNotifications = function * (notifications) {
-  if (!Array.isArray(notifications)) {
-    throw new Error('Requires an array of notifications, got ' + notifications)
-  }
-  for (let i = 0; i < notifications.length; i++) {
-    yield insertNotification(notifications[i])
-  }
 }
 
 exports.addFulfillments = function * (fulfillments) {

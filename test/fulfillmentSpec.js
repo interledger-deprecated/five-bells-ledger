@@ -6,19 +6,13 @@ nock.enableNetConnect(['localhost', '127.0.0.1'])
 const expect = require('chai').expect
 const app = require('../src/services/app')
 const logger = require('../src/services/log')
-const notificationWorker = require('../src/services/notificationWorker')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
 const accounts = require('./data/accounts')
-const insertSubscriptions = require('../src/models/subscriptions')
-  .insertSubscriptions
 const validator = require('./helpers/validator')
-const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const getAccount = require('../src/models/db/accounts').getAccount
-
-const transferStates = transferDictionary.transferStates
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
@@ -331,163 +325,5 @@ describe('PUT /fulfillment', function () {
     // Check balances
     expect((yield getAccount('alice')).balance).to.equal(100)
     expect((yield getAccount('bob')).balance).to.equal(0)
-  })
-
-  it('should trigger subscriptions when notification is executed', function * () {
-    const subscription = require('./data/subscriptions/alice.json')
-    yield insertSubscriptions([subscription])
-
-    const transfer = this.preparedTransfer
-    const transferPrepared = _.assign({}, transfer, {
-      timeline: {
-        prepared_at: '2015-06-16T00:00:00.000Z',
-        proposed_at: '2015-06-16T00:00:00.000Z'
-      }
-    })
-
-    // Expect notification that transfer was prepared
-    const notificationPrepared = nock('http://subscriber.example')
-      .post('/notifications', (body) => {
-        const idParts = body.id.split('/')
-        const notificationId = idParts[idParts.length - 1]
-        expect(_.omit(body, 'signature')).to.deep.equal({
-          event: 'transfer.update',
-          id: subscription.id + '/notifications/' + notificationId,
-          subscription: subscription.id,
-          resource: transferPrepared
-        })
-        expect(validator.validateNotification.bind(validator.validateNotification, {body: body})).to.not.throw(Error)
-        return true
-      })
-      .reply(204)
-
-    yield this.request()
-      .put(transfer.id)
-      .auth('alice', 'alice')
-      .send(transfer)
-      .expect(201)
-      .expect(transferPrepared)
-      .expect(validator.validateTransfer)
-      .end()
-    yield notificationWorker.processNotificationQueue()
-
-    notificationPrepared.done()
-
-    const transferExecuted = _.assign({}, transfer, {
-      state: transferStates.TRANSFER_STATE_EXECUTED,
-      timeline: {
-        executed_at: '2015-06-16T00:00:00.000Z',
-        prepared_at: '2015-06-16T00:00:00.000Z',
-        proposed_at: '2015-06-16T00:00:00.000Z'
-      }
-    })
-    // Expect notification that transfer was executed
-    const notificationExecuted = nock('http://subscriber.example')
-      .post('/notifications', (body) => {
-        const idParts = body.id.split('/')
-        const notificationId = idParts[idParts.length - 1]
-        expect(_.omit(body, 'signature')).to.deep.equal({
-          event: 'transfer.update',
-          id: subscription.id + '/notifications/' + notificationId,
-          subscription: subscription.id,
-          resource: transferExecuted,
-          related_resources: {
-            execution_condition_fulfillment: this.executionConditionFulfillment
-          }
-        })
-        expect(validator.validateNotification.bind(validator.validateNotification, {body: body})).to.not.throw(Error)
-        return true
-      })
-      .reply(204)
-
-    yield this.request()
-      .put(transfer.id + '/fulfillment')
-      .send(this.executionConditionFulfillment)
-      .expect(201)
-      .expect(this.executionConditionFulfillment)
-      .expect(validator.validateFulfillment)
-      .end()
-    yield notificationWorker.processNotificationQueue()
-
-    notificationExecuted.done()
-  })
-
-  it('should trigger subscriptions when notification is cancelled', function * () {
-    const subscription = require('./data/subscriptions/alice.json')
-    yield insertSubscriptions([subscription])
-
-    const transfer = this.preparedTransfer
-    const transferPrepared = _.assign({}, transfer, {
-      timeline: {
-        prepared_at: '2015-06-16T00:00:00.000Z',
-        proposed_at: '2015-06-16T00:00:00.000Z'
-      }
-    })
-
-    // Expect notification that transfer was prepared
-    const notificationPrepared = nock('http://subscriber.example')
-      .post('/notifications', (body) => {
-        const idParts = body.id.split('/')
-        const notificationId = idParts[idParts.length - 1]
-        expect(_.omit(body, 'signature')).to.deep.equal({
-          event: 'transfer.update',
-          id: subscription.id + '/notifications/' + notificationId,
-          subscription: subscription.id,
-          resource: transferPrepared
-        })
-        expect(validator.validateNotification.bind(validator.validateNotification, {body: body})).to.not.throw(Error)
-        return true
-      })
-      .reply(204)
-
-    yield this.request()
-      .put(transfer.id)
-      .auth('alice', 'alice')
-      .send(transfer)
-      .expect(201)
-      .expect(transferPrepared)
-      .expect(validator.validateTransfer)
-      .end()
-    yield notificationWorker.processNotificationQueue()
-
-    notificationPrepared.done()
-
-    const transferCancelled = _.assign({}, transfer, {
-      state: transferStates.TRANSFER_STATE_REJECTED,
-      rejection_reason: 'cancelled',
-      timeline: {
-        rejected_at: '2015-06-16T00:00:00.000Z',
-        prepared_at: '2015-06-16T00:00:00.000Z',
-        proposed_at: '2015-06-16T00:00:00.000Z'
-      }
-    })
-    // Expect notification that transfer was rejected
-    const notificationCancelled = nock('http://subscriber.example')
-      .post('/notifications', (body) => {
-        const idParts = body.id.split('/')
-        const notificationId = idParts[idParts.length - 1]
-        expect(_.omit(body, 'signature')).to.deep.equal({
-          event: 'transfer.update',
-          id: subscription.id + '/notifications/' + notificationId,
-          subscription: subscription.id,
-          resource: transferCancelled,
-          related_resources: {
-            cancellation_condition_fulfillment: this.cancellationConditionFulfillment
-          }
-        })
-        expect(validator.validateNotification.bind(validator.validateNotification, {body: body})).to.not.throw(Error)
-        return true
-      })
-      .reply(204)
-
-    yield this.request()
-      .put(transfer.id + '/fulfillment')
-      .send(this.cancellationConditionFulfillment)
-      .expect(201)
-      .expect(this.cancellationConditionFulfillment)
-      .end()
-    yield notificationWorker.processNotificationQueue()
-
-    notificationCancelled.done()
   })
 })

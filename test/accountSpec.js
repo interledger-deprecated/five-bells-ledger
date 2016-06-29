@@ -8,14 +8,10 @@ const app = require('../src/services/app')
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
-const timingHelper = require('./helpers/timing')
 const logHelper = require('five-bells-shared/testHelpers/log')
 const getAccount = require('../src/models/db/accounts').getAccount
 const convertToExternal = require('../src/models/converters/accounts')
   .convertToExternalAccount
-
-const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
-const notificationWorker = require('../src/services/notificationWorker')
 
 const validator = require('./helpers/validator')
 
@@ -638,158 +634,6 @@ describe('Accounts', function () {
       // Check balances
       const user = (yield getAccount('eve'))
       expect(user.public_key).to.equal(publicKey)
-    })
-  })
-
-  describe('GET /accounts/:id/transfers (websocket)', function () {
-    beforeEach(function * () {
-      const account = 'http://localhost/accounts/alice'
-      this.socket = this.ws(account + '/transfers', {
-        headers: {
-          Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
-        }
-      })
-
-      // Wait until WS connection is established
-      yield new Promise((resolve) => this.socket.on('open', resolve))
-    })
-
-    afterEach(function * () {
-      this.socket.terminate()
-    })
-
-    it('should send notifications about simple transfers', function * () {
-      const listener = sinon.spy()
-      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
-
-      const transfer = this.transfer
-
-      yield this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
-        .end()
-      yield notificationWorker.processNotificationQueue()
-
-      // TODO: Is there a more elegant way?
-      yield timingHelper.sleep(50)
-
-      sinon.assert.calledOnce(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, {
-        resource: _.assign({}, transfer, {
-          state: 'executed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            executed_at: '2015-06-16T00:00:00.000Z'
-          }
-        })
-      })
-    })
-
-    it('should send notifications about executed transfers', function * () {
-      const listener = sinon.spy()
-      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
-
-      const transfer = this.transferWithExpiry
-      const fulfillment = this.fulfillment
-
-      yield this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
-        .end()
-      yield notificationWorker.processNotificationQueue()
-
-      // TODO: Is there a more elegant way?
-      yield timingHelper.sleep(50)
-
-      sinon.assert.calledOnce(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, {
-        resource: _.assign({}, transfer, {
-          state: 'prepared',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z'
-          }
-        })
-      })
-      this.clock.tick(500)
-      yield this.request()
-        .put(transfer.id + '/fulfillment')
-        .send(fulfillment)
-        .expect(201)
-        .end()
-
-      // In production this function should be triggered by the workers started in app.js
-      yield transferExpiryMonitor.processExpiredTransfers()
-
-      // TODO: Is there a more elegant way?
-      yield timingHelper.sleep(50)
-
-      sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.secondCall, {
-        resource: _.assign({}, transfer, {
-          state: 'executed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            executed_at: '2015-06-16T00:00:00.500Z'
-          }
-        })
-      })
-    })
-
-    it('should send notifications about rejected transfers', function * () {
-      const listener = sinon.spy()
-      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
-
-      const transfer = this.transferWithExpiry
-      delete transfer.debits[0].authorized
-
-      yield this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
-        .end()
-      yield notificationWorker.processNotificationQueue()
-
-      // TODO: Is there a more elegant way?
-      yield timingHelper.sleep(50)
-
-      sinon.assert.calledOnce(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, {
-        resource: _.assign({}, transfer, {
-          state: 'proposed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        })
-      })
-      this.clock.tick(1000)
-
-      // In production this function should be triggered by the workers started in app.js
-      yield transferExpiryMonitor.processExpiredTransfers()
-
-      // TODO: Is there a more elegant way?
-      yield timingHelper.sleep(50)
-
-      sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.secondCall, {
-        resource: _.assign({}, transfer, {
-          state: 'rejected',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z',
-            rejected_at: '2015-06-16T00:00:01.000Z'
-          }
-        })
-      })
     })
   })
 })

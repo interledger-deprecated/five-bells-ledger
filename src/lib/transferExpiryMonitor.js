@@ -14,9 +14,9 @@ const isTransferFinalized = require('./transferUtils').isTransferFinalized
 const transferStates = transferDictionary.transferStates
 
 class TransferExpiryMonitor {
-  constructor (timeQueue, notificationWorker) {
+  constructor (timeQueue, notificationBroadcaster) {
     this.queue = timeQueue
-    this.notificationWorker = notificationWorker
+    this.notificationBroadcaster = notificationBroadcaster
   }
 
   validateNotExpired (transfer) {
@@ -50,7 +50,7 @@ class TransferExpiryMonitor {
 
         log.debug('expired transfer: ' + transferId)
 
-        yield _this.notificationWorker.queueNotifications(transfer, transaction)
+        yield _this.notificationBroadcaster.sendNotifications(transfer, transaction)
       }
     })
   }

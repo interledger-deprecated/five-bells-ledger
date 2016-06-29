@@ -1,14 +1,18 @@
+/*global describe, it*/
 'use strict'
 
 const _ = require('lodash')
-const nock = require('nock')
-nock.enableNetConnect(['localhost', '127.0.0.1'])
 const sinon = require('sinon')
 const app = require('../src/services/app')
 const logger = require('../src/services/log')
-const appHelper = require('./helpers/app')
 const dbHelper = require('./helpers/db')
+const appHelper = require('./helpers/app')
+const timingHelper = require('./helpers/timing')
 const logHelper = require('five-bells-shared/testHelpers/log')
+const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
+const transferDictionary = require('five-bells-shared').TransferStateDictionary
+const transferStates = transferDictionary.transferStates
+
 const validator = require('./helpers/validator')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
@@ -23,84 +27,326 @@ describe('Notifications', function () {
   beforeEach(function * () {
     appHelper.create(this, app)
     yield dbHelper.clean()
-    // Define example data
-    this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))
-    this.existingSubscription = _.cloneDeep(require('./data/subscriptions/alice'))
-    this.exampleSubscription = _.cloneDeep(require('./data/subscriptions/bob'))
-    this.deletedSubscription = _.cloneDeep(require('./data/subscriptions/deleted'))
-    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
-    this.existingNotification = _.cloneDeep(require('./data/notificationDatabaseEntry'))
-    this.notificationDeletedSubscription = _.cloneDeep(require('./data/notificationDeletedSubscription'))
-    this.notificationResponse = _.cloneDeep(require('./data/notificationResponse'))
 
-    const idParts = this.exampleTransfer.id.split('/')
-    this.existingFulfillment = {
-      transfer_id: idParts[idParts.length - 1],
-      condition_fulfillment: _.cloneDeep(require('./data/fulfillments/execution'))
-    }
-
-    // Use fake time
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
+    // Define example data
+    this.exampleAccounts = _.cloneDeep(require('./data/accounts'))
+    this.adminAccount = this.exampleAccounts.admin
+    this.holdAccount = this.exampleAccounts.hold
+    this.existingAccount = this.exampleAccounts.alice
+    this.existingAccount2 = this.exampleAccounts.bob
+    this.traderAccount = this.exampleAccounts.trader
+    this.disabledAccount = this.exampleAccounts.disabledAccount
+    this.infiniteMinBalance = this.exampleAccounts.infiniteMinBalance
+    this.finiteMinBalance = this.exampleAccounts.finiteMinBalance
+    this.unspecifiedMinBalance = this.exampleAccounts.unspecifiedMinBalance
+    this.noBalance = this.exampleAccounts.noBalance
+
+    this.transfer = _.cloneDeep(require('./data/transfers/simple'))
+    this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
+    this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/simpleWithExpiry'))
+    this.fulfillment = require('./data/fulfillments/execution')
+
+    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
+    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
+
     // Store some example data
-    yield dbHelper.addAccounts(_.values(require('./data/accounts')))
-    yield dbHelper.addTransfers([this.exampleTransfer])
-    yield dbHelper.addSubscriptions([_.assign({}, this.existingSubscription, {is_deleted: false}), this.deletedSubscription])
-    yield dbHelper.addNotifications([this.existingNotification, this.notificationDeletedSubscription])
-    yield dbHelper.addFulfillments([this.existingFulfillment])
+    yield dbHelper.addAccounts([
+      this.adminAccount,
+      this.holdAccount,
+      this.existingAccount,
+      this.existingAccount2,
+      this.traderAccount,
+      this.disabledAccount
+    ])
   })
 
-  describe('GET /subscriptions/:subscription_id/notifications/:notification_id', function () {
-    it('should return 200', function * () {
+  describe('GET /accounts/:id/transfers (websocket)', function () {
+    beforeEach(function * () {
+      const account = 'http://localhost/accounts/alice'
+      this.socket = this.ws(account + '/transfers', {
+        headers: {
+          Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
+        }
+      })
+
+      // Wait until WS connection is established
+      yield new Promise((resolve) => this.socket.on('open', resolve))
+    })
+
+    afterEach(function * () {
+      this.socket.terminate()
+    })
+
+    it('should send notifications about simple transfers', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transfer
+
       yield this.request()
-        .get(this.existingSubscription.id + '/notifications/' + this.existingNotification.id)
+        .put(transfer.id)
         .auth('alice', 'alice')
-        .expect(200)
-        .expect(this.notificationResponse)
-        .expect(validator.validateNotification)
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
         .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        resource: _.assign({}, transfer, {
+          state: 'executed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            executed_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
     })
 
-    it('should return 404 for a non-existent subscription id', function * () {
+    it('should not send notifications for wrong id', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transfer
+
       yield this.request()
-        .get(this.exampleSubscription.id + '/notifications/' + this.existingNotification.id)
-        .auth('bob', 'bob')
-        .expect(404)
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
         .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      const transferId = '6f5ab02c-01d2-4016-8816-df6f22b03d94' // a wrong id
+      this.socket.send(JSON.stringify({ type: 'request_notification',
+                                        id: transferId }))
+
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        resource: _.assign({}, transfer, {
+          state: 'executed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            executed_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
     })
 
-    it('should return 404 for a deleted subscription id', function * () {
+    it('should send notifications about executed transfers', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transferWithExpiry
+      const fulfillment = this.fulfillment
+
       yield this.request()
-        .get(this.deletedSubscription.id + '/notifications/' + this.notificationDeletedSubscription.id)
-        .auth('admin', 'admin')
-        .expect(404)
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
         .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        resource: _.assign({}, transfer, {
+          state: 'prepared',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
+      this.clock.tick(500)
+      yield this.request()
+        .put(transfer.id + '/fulfillment')
+        .send(fulfillment)
+        .expect(201)
+        .end()
+
+      // In production this function should be triggered by the workers started in app.js
+      yield transferExpiryMonitor.processExpiredTransfers()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        resource: _.assign({}, transfer, {
+          state: 'executed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            executed_at: '2015-06-16T00:00:00.500Z'
+          }
+        })
+      })
     })
 
-    it('should return 404 for a non-existent notification id', function * () {
+    it('should send notifications about rejected transfers', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transferWithExpiry
+      delete transfer.debits[0].authorized
+
       yield this.request()
-        .get(this.existingSubscription.id + '/notifications/ad78bd3c-68ce-488a-9dba-acd99cbff637')
-        .auth('bob', 'bob')
-        .expect(404)
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
         .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        resource: _.assign({}, transfer, {
+          state: 'proposed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
+      this.clock.tick(1000)
+
+      // In production this function should be triggered by the workers started in app.js
+      yield transferExpiryMonitor.processExpiredTransfers()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        resource: _.assign({}, transfer, {
+          state: 'rejected',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            rejected_at: '2015-06-16T00:00:01.000Z'
+          }
+        })
+      })
     })
 
-    it('should return 403 for a notification from a subscription the user doesn\'t own', function * () {
+    it('should check fulfillment condition in notification', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.preparedTransfer
+      const transferPrepared = _.assign({}, transfer, {
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z'
+        }
+      })
+
       yield this.request()
-        .get(this.existingSubscription.id + '/notifications/' + this.existingNotification.id)
-        .auth('bob', 'bob')
-        .expect(403)
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(transferPrepared)
+        .expect(validator.validateTransfer)
         .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      const transferExecuted = _.assign({}, transfer, {
+        state: transferStates.TRANSFER_STATE_EXECUTED,
+        timeline: {
+          executed_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      })
+
+      yield timingHelper.sleep(50)
+
+      yield this.request()
+        .put(transfer.id + '/fulfillment')
+        .send(this.executionConditionFulfillment)
+        .expect(201)
+        .expect(this.executionConditionFulfillment)
+        .end()
+
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, { resource: transferPrepared })
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        resource: transferExecuted,
+        related_resources: { execution_condition_fulfillment: this.executionConditionFulfillment }
+      })
     })
 
-    it('should allow an admin to view any notification', function * () {
+    it('should check cancellation condition in notification', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.preparedTransfer
+      const transferPrepared = _.assign({}, transfer, {
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z'
+        }
+      })
+
       yield this.request()
-        .get(this.existingSubscription.id + '/notifications/' + this.existingNotification.id)
-        .auth('admin', 'admin')
-        .expect(200)
-        .expect(this.notificationResponse)
-        .expect(validator.validateNotification)
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(transferPrepared)
+        .expect(validator.validateTransfer)
         .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      const transferCancelled = _.assign({}, transfer, {
+        state: transferStates.TRANSFER_STATE_REJECTED,
+        rejection_reason: 'cancelled',
+        timeline: {
+          rejected_at: '2015-06-16T00:00:00.000Z',
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      })
+
+      yield timingHelper.sleep(50)
+
+      yield this.request()
+        .put(transfer.id + '/fulfillment')
+        .send(this.cancellationConditionFulfillment)
+        .expect(201)
+        .expect(this.cancellationConditionFulfillment)
+        .end()
+
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, { resource: transferPrepared })
+      sinon.assert.calledWithMatch(listener.secondCall, { resource: transferCancelled })
     })
   })
 })
