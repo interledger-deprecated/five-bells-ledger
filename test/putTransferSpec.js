@@ -14,10 +14,8 @@ const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
 const Account = require('../src/models/db/account').Account
-const Subscription = require('../src/models/db/subscription').Subscription
 const logHelper = require('five-bells-shared/testHelpers/log')
 const sinon = require('sinon')
-const notificationWorker = require('../src/services/notificationWorker')
 const accounts = require('./data/accounts')
 const validator = require('./helpers/validator')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
@@ -1018,103 +1016,7 @@ describe('PUT /transfers/:id', function () {
         .end()
     })
 
-  /* Subscriptions */
-  it('should trigger subscriptions', function * () {
-    const subscription = require('./data/subscriptions/alice.json')
-    yield Subscription.createExternal(subscription)
-
-    const transfer = this.exampleTransfer
-    const transferResult = _.assign({}, transfer, {
-      state: transferStates.TRANSFER_STATE_EXECUTED,
-      timeline: {
-        executed_at: '2015-06-16T00:00:00.000Z',
-        prepared_at: '2015-06-16T00:00:00.000Z',
-        proposed_at: '2015-06-16T00:00:00.000Z'
-      }
-    })
-
-    const notification = nock('http://subscriber.example')
-      .post('/notifications', (body) => {
-        const idParts = body.id.split('/')
-        const notificationId = idParts[idParts.length - 1]
-        expect(_.omit(body, 'signature')).to.deep.equal({
-          event: 'transfer.update',
-          id: subscription.id + '/notifications/' + notificationId,
-          subscription: subscription.id,
-          resource: transferResult
-        })
-        expect(validator.validateNotification.bind(validator.validateNotification, {body: body})).to.not.throw(Error)
-        return true
-      })
-      .reply(204)
-
-    yield this.request()
-      .put(this.exampleTransfer.id)
-      .auth('alice', 'alice')
-      .send(transfer)
-      .expect(201)
-      .expect(transferResult)
-      .expect(validator.validateTransfer)
-      .end()
-
-    yield notificationWorker.processNotificationQueue()
-
-    notification.done()
-  })
-
-  it('should not trigger subscriptions if the subscription is deleted', function * () {
-    const subscription = require('./data/subscriptions/alice.json')
-    yield Subscription.createExternal(subscription)
-
-    // Delete subscription
-    yield this.request()
-      .delete(subscription.id)
-      .auth('alice', 'alice')
-      .expect(204)
-      .end()
-
-    const transfer = this.exampleTransfer
-    const transferResult = _.assign({}, transfer, {
-      state: transferStates.TRANSFER_STATE_EXECUTED,
-      timeline: {
-        executed_at: '2015-06-16T00:00:00.000Z',
-        prepared_at: '2015-06-16T00:00:00.000Z',
-        proposed_at: '2015-06-16T00:00:00.000Z'
-      }
-    })
-
-    const notification = nock('http://subscriber.example')
-      .post('/notifications', (body) => {
-        const idParts = body.id.split('/')
-        const notificationId = idParts[idParts.length - 1]
-        expect(_.omit(body, 'signature')).to.deep.equal({
-          event: 'transfer.update',
-          id: subscription.id + '/notifications/' + notificationId,
-          subscription: subscription.id,
-          resource: transferResult
-        })
-        expect(validator.validateNotification.bind(validator.validateNotification, {body: body})).to.not.throw(Error)
-        return true
-      })
-      .reply(204)
-
-    yield this.request()
-      .put(this.exampleTransfer.id)
-      .auth('alice', 'alice')
-      .send(transfer)
-      .expect(201)
-      .expect(transferResult)
-      .expect(validator.validateTransfer)
-      .end()
-
-    yield notificationWorker.processNotificationQueue()
-
-    // Should not send notification updates
-    expect(notification.isDone()).to.be.false
-  })
-
   /* Multiple credits and/or debits */
-
   it('should handle transfers with multiple credits', function * () {
     const transfer = this.multiCreditTransfer
 

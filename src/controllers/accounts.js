@@ -2,7 +2,9 @@
 'use strict'
 
 const request = require('five-bells-shared/utils/request')
+const co = require('co')
 const model = require('../models/accounts')
+const transferModel = require('../models/transfers')
 
 function * getCollection () {
   this.body = yield model.getAccounts()
@@ -175,6 +177,13 @@ function * subscribeTransfers () {
   })
 
   this.websocket.on('close', close)
+  // The client can request a notification for a given transfer id
+  this.websocket.on('message', (messageString) => {
+    const message = JSON.parse(messageString)
+    if (message.type && message.type === 'request_notification') {
+      co.wrap(transferModel.resendNotification)(message.id)
+    }
+  })
 }
 
 module.exports = {

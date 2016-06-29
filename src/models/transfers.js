@@ -14,7 +14,7 @@ const validateNoDisabledAccounts = require('../lib/disabledAccounts')
 const config = require('../services/config')
 const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
-const notificationWorker = require('../services/notificationWorker')
+const notificationBroadcaster = require('../services/notificationBroadcaster')
 const log = require('../services/log')('transfers')
 const updateState = require('../lib/updateState')
 const hashJSON = require('five-bells-shared/utils/hashJson')
@@ -354,11 +354,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
     transferExpiryMonitor.unwatch(transfer.id)
     yield transfer.save({transaction})
 
-    // Create persistent notification events. We're doing this within the same
-    // database transaction in order to maximize the reliability of the
-    // notification system. If the server crashes while trying to post a
-    // notification it should retry it when it comes back.
-    yield notificationWorker.queueNotifications(transfer, transaction)
+    yield notificationBroadcaster.sendNotifications(transfer, transaction)
 
     // Start the expiry countdown if the transfer is not yet finalized
     // If the expires_at has passed by this time we'll consider
@@ -431,11 +427,7 @@ function * setTransfer (transfer, requestingUser) {
     yield processImmediateExecution(transfer, transaction)
     yield db.upsertTransfer(transfer, {transaction})
 
-    // Create persistent notification events. We're doing this within the same
-    // database transaction in order to maximize the reliability of the
-    // notification system. If the server crashes while trying to post a
-    // notification it should retry it when it comes back.
-    yield notificationWorker.queueNotifications(transfer, transaction)
+    yield notificationBroadcaster.sendNotifications(transfer, transaction)
   })
 
   // Start the expiry countdown if the transfer is not yet finalized
@@ -461,10 +453,26 @@ function * getFulfillment (transferId) {
   return fulfillment.getDataExternal()
 }
 
+function * resendNotification (transferId) {
+  try {
+    yield db.transaction(function * (transaction) {
+      const transfer = yield db.getTransfer(transferId, {transaction})
+      yield notificationBroadcaster.sendNotifications(transfer, transaction)
+    })
+  } catch (err) {
+    if (err.name === 'NotFoundError') {
+      log.warn('transfer not found ' + transferId)
+    } else {
+      log.warn('error while resending transaction: ' + err.message)
+    }
+  }
+}
+
 module.exports = {
   getTransfer,
   getTransferStateReceipt,
   setTransfer,
   fulfillTransfer,
-  getFulfillment
+  getFulfillment,
+  resendNotification
 }

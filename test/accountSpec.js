@@ -13,7 +13,6 @@ const timingHelper = require('./helpers/timing')
 const logHelper = require('five-bells-shared/testHelpers/log')
 
 const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
-const notificationWorker = require('../src/services/notificationWorker')
 
 const validator = require('./helpers/validator')
 
@@ -614,9 +613,90 @@ describe('Accounts', function () {
         .expect(201)
         .expect(validator.validateTransfer)
         .end()
-      yield notificationWorker.processNotificationQueue()
 
       // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        resource: _.assign({}, transfer, {
+          state: 'executed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            executed_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
+    })
+
+    it('should resend notifications when asked to', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transfer
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      const transferId = transfer.id.match('http://localhost/transfers/(.+)')[1]
+      this.socket.send(JSON.stringify({ type: 'request_notification',
+                                        id: transferId }))
+
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        resource: _.assign({}, transfer, {
+          state: 'executed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            executed_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        resource: _.assign({}, transfer, {
+          state: 'executed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            executed_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
+    })
+
+    it('should not resend notifications for wrong id', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transfer
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      const transferId = '6f5ab02c-01d2-4016-8816-df6f22b03d94' // a wrong id
+      this.socket.send(JSON.stringify({ type: 'request_notification',
+                                        id: transferId }))
+
       yield timingHelper.sleep(50)
 
       sinon.assert.calledOnce(listener)
@@ -646,7 +726,6 @@ describe('Accounts', function () {
         .expect(201)
         .expect(validator.validateTransfer)
         .end()
-      yield notificationWorker.processNotificationQueue()
 
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
@@ -701,7 +780,6 @@ describe('Accounts', function () {
         .expect(201)
         .expect(validator.validateTransfer)
         .end()
-      yield notificationWorker.processNotificationQueue()
 
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)

@@ -35,9 +35,7 @@ describe('Metadata', function () {
               transfer_state: 'http://localhost/transfers/:id/state',
               connectors: 'http://localhost/connectors',
               accounts: 'http://localhost/accounts',
-              account: 'http://localhost/accounts/:name',
-              subscription: 'http://localhost/subscriptions/:id',
-              subscription_notification: 'http://localhost/subscriptions/:subscription_id/notifications/:notification_id'
+              account: 'http://localhost/accounts/:name'
             },
             precision: 10,
             scale: 2

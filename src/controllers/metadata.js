@@ -14,9 +14,7 @@ const metadata = {
     transfer_state: base + '/transfers/:id/state',
     connectors: base + '/connectors',
     accounts: base + '/accounts',
-    account: base + '/accounts/:name',
-    subscription: base + '/subscriptions/:id',
-    subscription_notification: base + '/subscriptions/:subscription_id/notifications/:notification_id'
+    account: base + '/accounts/:name'
   },
   precision: config.get('amount.precision'),
   scale: config.get('amount.scale')

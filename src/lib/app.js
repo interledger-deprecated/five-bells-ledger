@@ -15,8 +15,6 @@ const metadata = require('../controllers/metadata')
 const health = require('../controllers/health')
 const transfers = require('../controllers/transfers')
 const accounts = require('../controllers/accounts')
-const subscriptions = require('../controllers/subscriptions')
-const notifications = require('../controllers/notifications')
 const models = require('../models/db')
 const seedDB = require('./seed-db')
 const knex = require('./knex')
@@ -31,7 +29,7 @@ class App {
     this.config = modules.config
     this.db = modules.db
     this.timerWorker = modules.timerWorker
-    this.notificationWorker = modules.notificationWorker
+    this.notificationBroadcaster = modules.notificationBroadcaster
 
     const koaApp = this.koa = websockify(koa())
     const router = this._makeRouter()
@@ -64,7 +62,6 @@ class App {
     // Start timerWorker to trigger the transferExpiryMonitor
     // when transfers are going to expire
     yield this.timerWorker.start()
-    this.notificationWorker.start()
 
     if (this.config.getIn(['db', 'sync'])) {
       yield createTables(knex.knex, knex.config)
@@ -136,20 +133,6 @@ class App {
       models.Account.createBodyParser(),
       accounts.putResource)
 
-    router.get('/subscriptions/:id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      subscriptions.getResource)
-    router.put('/subscriptions/:id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      models.Subscription.createBodyParser(),
-      subscriptions.putResource)
-    router.delete('/subscriptions/:id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      subscriptions.deleteResource)
-
-    router.get('/subscriptions/:subscription_id/notifications/:notification_id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      notifications.getResource)
     return router
   }
 
