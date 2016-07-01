@@ -125,7 +125,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Put account",
-        "content": "curl -x PUT -H \"Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\"\nhttp://usd-ledger.example/USD/accounts/alice",
+        "content": "curl -x PUT -H \"Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\"\n-H \"Content-Type: application/json\"\n-d '{\"name\": \"alice\", \"balance\": \"100\"}'\nhttp://usd-ledger.example/USD/accounts/alice",
         "type": "shell"
       }
     ],
