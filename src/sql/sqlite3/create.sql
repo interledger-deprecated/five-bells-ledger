@@ -38,7 +38,8 @@ create unique index transfer_status_name on "L_LU_TRANSFER_STATUS"
 
 
 create table if not exists "L_TRANSFERS" (
-  "TRANSFER_ID" char(36) not null primary key,
+  "TRANSFER_ID" integer not null primary key,
+  "TRANSFER_UUID" char(36) not null unique,
   "LEDGER" varchar(1024),
   "ADDITIONAL_INFO" text,
   "STATUS_ID" integer not null,
@@ -59,7 +60,7 @@ create table if not exists "L_TRANSFERS" (
 create table if not exists "L_TRANSFER_ADJUSTMENTS"
 (
   "TRANSFER_ADJUSTMENT_ID" integer not null primary key,
-  "TRANSFER_ID" varchar(36) not null,
+  "TRANSFER_ID" integer not null,
   "ACCOUNT_ID" integer not null,
   "DEBIT_CREDIT" varchar(10) not null,
   "AMOUNT" float DEFAULT 0 not null,

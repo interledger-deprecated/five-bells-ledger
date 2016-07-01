@@ -53,9 +53,9 @@ function convertToPersistentAdjustment (transferId, type, data, options) {
 
 function convertToPersistent (data, options) {
   const debits = Promise.all(data.debits.map((debit) =>
-    convertToPersistentAdjustment(data.id, 'debit', debit, options)))
+    convertToPersistentAdjustment(data._id, 'debit', debit, options)))
   const credits = Promise.all(data.credits.map((credit) =>
-    convertToPersistentAdjustment(data.id, 'credit', credit, options)))
+    convertToPersistentAdjustment(data._id, 'credit', credit, options)))
   return Promise.all([debits, credits]).then((results) =>
     results[0].concat(results[1]))
 }
