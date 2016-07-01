@@ -7,6 +7,7 @@ const db = require('./utils')(TABLE_NAME,
 const withTransaction = require('../../lib/db').withTransaction
 const rejectionReasons = require('./rejectionReasons')
 const transferStatuses = require('./transferStatuses')
+const adjustments = require('./adjustments')
 
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
@@ -15,8 +16,6 @@ function convertFromPersistent (data) {
   delete data.transfer_id
   delete data.created_at
   delete data.updated_at
-  data.credits = JSON.parse(data.credits)
-  data.debits = JSON.parse(data.debits)
   data.additional_info = JSON.parse(data.additional_info)
   if (data.expires_at) {
     data.expires_at = new Date(data.expires_at)
@@ -46,8 +45,8 @@ function convertFromPersistent (data) {
 
 function convertToPersistent (data) {
   data = _.cloneDeep(data)
-  data.credits = JSON.stringify(data.credits)
-  data.debits = JSON.stringify(data.debits)
+  delete data.credits
+  delete data.debits
   data.additional_info = JSON.stringify(data.additional_info)
   if (data.proposed_at) {
     data.proposed_at = new Date(data.proposed_at)
@@ -77,20 +76,35 @@ function convertToPersistent (data) {
 
 function * getTransfer (id, options) {
   return db.selectOne({TRANSFER_ID: id}, options && options.transaction)
+    .then((transfer) => {
+      return adjustments.getAdjustments(id, options).then((adjustments) => {
+        const result = _.assign({}, transfer, adjustments)
+        return _.isEmpty(result) ? null : result
+      })
+    })
 }
 
 function * updateTransfer (transfer, options) {
   return db.update(transfer, {TRANSFER_ID: transfer.id},
-    options && options.transaction)
+    options && options.transaction).then((result) => {
+      return adjustments.upsertAdjustments(transfer, options).then(() => result)
+    })
 }
 
 function * insertTransfers (transfers, options) {
   return db.insertAll(transfers, options && options.transaction)
+    .then(() => {
+      return Promise.all(transfers.map((transfer) => {
+        return adjustments.insertAdjustments(transfer, options)
+      }))
+    })
 }
 
 function * upsertTransfer (transfer, options) {
   return db.upsert(transfer, {TRANSFER_ID: transfer.id},
-    options && options.transaction)
+    options && options.transaction).then((result) => {
+      return adjustments.upsertAdjustments(transfer, options).then(() => result)
+    })
 }
 
 module.exports = {
