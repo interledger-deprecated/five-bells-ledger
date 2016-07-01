@@ -91,6 +91,8 @@ function * getResource () {
  *
  * @apiExample {shell} Put account
  *    curl -x PUT -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l"
+ *    -H "Content-Type: application/json"
+ *    -d '{"name": "alice", "balance": "100"}'
  *    http://usd-ledger.example/USD/accounts/alice
  *
  * @apiSuccessExample {json} 200 Get Account Response:
