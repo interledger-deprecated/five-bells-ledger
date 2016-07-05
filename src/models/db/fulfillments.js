@@ -3,6 +3,7 @@
 const _ = require('lodash')
 const db = require('./utils')('L_FULFILLMENTS',
   convertToPersistent, convertFromPersistent)
+const getTransferId = require('./transfers').getTransferId
 
 function convertFromPersistent (data) {
   const result = _.mapKeys(_.cloneDeep(data), (value, key) => key.toLowerCase())
@@ -22,17 +23,35 @@ function convertToPersistent (data) {
   return _.mapKeys(result, (value, key) => key.toUpperCase())
 }
 
-function * insertFulfillments (fulfillments, options) {
-  return db.insertAll(fulfillments, options && options.transaction)
+function * convertToIntegerTransferId (fulfillment, options) {
+  return getTransferId(fulfillment.transfer_id, options).then((transferId) => {
+    return _.assign({}, fulfillment, {transfer_id: transferId})
+  })
 }
 
-function * getFulfillment (transferId, options) {
-  return db.selectOne({TRANSFER_ID: transferId}, options && options.transaction)
+function * insertFulfillments (fulfillments, options) {
+  for (const fulfillment of fulfillments) {
+    const row = yield convertToIntegerTransferId(fulfillment, options)
+    yield db.insert(row, options && options.transaction)
+  }
+}
+
+function * getFulfillment (transferUuid, options) {
+  return getTransferId(transferUuid, options).then((transferId) => {
+    return db.selectOne({TRANSFER_ID: transferId},
+      options && options.transaction).then((result) => {
+        if (result) {
+          result.transfer_id = transferUuid
+        }
+        return result
+      })
+  })
 }
 
 function * upsertFulfillment (fulfillment, options) {
   const where = {FULFILLMENT_ID: fulfillment.id}
-  return db.upsert(fulfillment, where, options && options.transaction)
+  const row = yield convertToIntegerTransferId(fulfillment, options)
+  return db.upsert(row, where, options && options.transaction)
 }
 
 module.exports = {

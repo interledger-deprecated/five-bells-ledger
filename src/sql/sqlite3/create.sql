@@ -46,11 +46,11 @@ create table if not exists "L_TRANSFERS" (
   "REJECTION_REASON_ID" integer,
   "EXECUTION_CONDITION" text,
   "CANCELLATION_CONDITION" text,
-  "EXPIRES_AT" datetime,
-  "PROPOSED_AT" datetime,
-  "PREPARED_AT" datetime,
-  "EXECUTED_AT" datetime,
-  "REJECTED_AT" datetime,
+  "EXPIRES_DTTM" datetime,
+  "PROPOSED_DTTM" datetime,
+  "PREPARED_DTTM" datetime,
+  "EXECUTED_DTTM" datetime,
+  "REJECTED_DTTM" datetime,
   FOREIGN KEY("REJECTION_REASON_ID") REFERENCES "L_LU_REJECTION_REASON"
     ("REJECTION_REASON_ID"),
   FOREIGN KEY("STATUS_ID") REFERENCES "L_LU_TRANSFER_STATUS" ("STATUS_ID")
@@ -71,14 +71,14 @@ create table if not exists "L_TRANSFER_ADJUSTMENTS"
 
 create table if not exists "L_ENTRIES" (
   "ENTRY_ID" integer not null primary key,
-  "TRANSFER_ID" char(36),
-  "ACCOUNT" integer,
-  "CREATED_AT" datetime default CURRENT_TIMESTAMP
+  "TRANSFER_ID" integer not null,
+  "ACCOUNT_ID" integer not null,
+  "CREATED_DTTM" datetime default CURRENT_TIMESTAMP
 );
 
 create table if not exists "L_FULFILLMENTS" (
   "FULFILLMENT_ID" integer not null primary key,
-  "TRANSFER_ID" char(36),
+  "TRANSFER_ID" integer,
   "CONDITION_FULFILLMENT" text
 );
 

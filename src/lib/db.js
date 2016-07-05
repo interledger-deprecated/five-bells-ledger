@@ -80,14 +80,22 @@ function * dropTables () {
 
 function * truncateTables () {
   const dbType = knex.client.config.client
+  if (dbType === 'strong-oracle') {
+    yield executeScript('disable.sql')
+  }
   for (const tableName of TABLE_NAMES) {
     if (!tableName.includes('_LU_')) {
       if (dbType === 'pg') {
         yield knex.raw('TRUNCATE TABLE "' + tableName + '" CASCADE;')
+      } else if (dbType === 'strong-oracle') {
+        yield knex.raw('TRUNCATE TABLE "' + tableName + '"')
       } else {
         yield knex(tableName).truncate()
       }
     }
+  }
+  if (dbType === 'strong-oracle') {
+    yield executeScript('enable.sql')
   }
 }
 

@@ -438,6 +438,9 @@ function * setTransfer (externalTransfer, requestingUser) {
         previousCredits, 'credit')
     }
 
+    // The transfer must be inserted into the database before holds can
+    // be placed because the adjustments reference the transfer's primary key
+    yield db.upsertTransfer(transfer, {transaction})
     yield processTransitionToPreparedState(transfer, transaction)
     yield processImmediateExecution(transfer, transaction)
     yield db.upsertTransfer(transfer, {transaction})

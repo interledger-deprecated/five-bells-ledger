@@ -14,11 +14,11 @@ function adjustBalance (accountName, amount, transaction) {
   /* eslint-enable */
 }
 
-function insertEntryByName (accountName, transferID, transaction) {
-  return accounts.getAccount(accountName, {transaction}).then((account) => {
+function insertEntryByName (accountName, transferId, transaction) {
+  return accounts.getAccountId(accountName, {transaction}).then((accountId) => {
     const entry = {
-      transfer_id: transferID,
-      account_id: account.id
+      transfer_id: transferId,
+      account_id: accountId
     }
     return entries.insertEntry(entry, {transaction})
   })
