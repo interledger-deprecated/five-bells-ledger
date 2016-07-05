@@ -12,8 +12,10 @@ const adjustments = require('./adjustments')
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
   data = _.mapKeys(data, (value, key) => key.toLowerCase())
-  data.id = data.transfer_id
+  data.id = data.transfer_uuid
+  data._id = data.transfer_id
   delete data.transfer_id
+  delete data.transfer_uuid
   delete data.created_at
   delete data.updated_at
   data.additional_info = JSON.parse(data.additional_info)
@@ -69,42 +71,64 @@ function convertToPersistent (data) {
     data.status_id = transferStatuses.getTransferStatusId(data.state)
     delete data.state
   }
-  data.transfer_id = data.id
+  data.transfer_uuid = data.id
   delete data.id
   return _.mapKeys(data, (value, key) => key.toUpperCase())
 }
 
-function * getTransfer (id, options) {
-  return db.selectOne({TRANSFER_ID: id}, options && options.transaction)
+function * getTransfer (uuid, options) {
+  return db.selectOne({TRANSFER_UUID: uuid}, options && options.transaction)
     .then((transfer) => {
-      return adjustments.getAdjustments(id, options).then((adjustments) => {
+      if (transfer === null) {
+        return null
+      }
+      return adjustments.getAdjustments(transfer._id, options)
+      .then((adjustments) => {
         const result = _.assign({}, transfer, adjustments)
-        return _.isEmpty(result) ? null : result
+        return _.isEmpty(result) ? null : _.omit(result, '_id')
       })
     })
 }
 
 function * updateTransfer (transfer, options) {
-  return db.update(transfer, {TRANSFER_ID: transfer.id},
-    options && options.transaction).then((result) => {
-      return adjustments.upsertAdjustments(transfer, options).then(() => result)
+  const transaction = options && options.transaction
+  return db.update(transfer, {TRANSFER_UUID: transfer.id}, transaction)
+  .then((result) => {
+    return db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
+    .then((dbTransfer) => {
+      const transferWithId = _.assign({}, transfer, {'_id': dbTransfer._id})
+      return adjustments.upsertAdjustments(transferWithId, options)
+        .then(() => result)
     })
+  })
+}
+
+function insertTransfer (transfer, options) {
+  const transaction = options && options.transaction
+  return db.insert(transfer, options).then(() => {
+    return db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
+  }).then((dbTransfer) => {
+    const transferWithId = _.assign({}, transfer, {'_id': dbTransfer._id})
+    return adjustments.insertAdjustments(transferWithId, options)
+  })
 }
 
 function * insertTransfers (transfers, options) {
-  return db.insertAll(transfers, options && options.transaction)
-    .then(() => {
-      return Promise.all(transfers.map((transfer) => {
-        return adjustments.insertAdjustments(transfer, options)
-      }))
-    })
+  return Promise.all(transfers.map(
+    (transfer) => insertTransfer(transfer, options)))
 }
 
 function * upsertTransfer (transfer, options) {
-  return db.upsert(transfer, {TRANSFER_ID: transfer.id},
-    options && options.transaction).then((result) => {
-      return adjustments.upsertAdjustments(transfer, options).then(() => result)
+  const transaction = options && options.transaction
+  return db.upsert(transfer, {TRANSFER_UUID: transfer.id}, transaction)
+  .then((result) => {
+    return db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
+    .then((dbTransfer) => {
+      const transferWithId = _.assign({}, transfer, {'_id': dbTransfer._id})
+      return adjustments.upsertAdjustments(transferWithId, options)
+        .then(() => result)
     })
+  })
 }
 
 module.exports = {
