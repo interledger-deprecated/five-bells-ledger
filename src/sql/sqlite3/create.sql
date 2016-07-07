@@ -56,7 +56,6 @@ create table if not exists "L_TRANSFERS" (
   FOREIGN KEY("STATUS_ID") REFERENCES "L_LU_TRANSFER_STATUS" ("STATUS_ID")
 );
 
-
 create table if not exists "L_TRANSFER_ADJUSTMENTS"
 (
   "TRANSFER_ADJUSTMENT_ID" integer not null primary key,
@@ -70,41 +69,12 @@ create table if not exists "L_TRANSFER_ADJUSTMENTS"
   FOREIGN KEY("ACCOUNT_ID") REFERENCES "L_ACCOUNTS" ("ACCOUNT_ID")
 );
 
-
-create table if not exists "L_SUBSCRIPTIONS" (
-  "SUBSCRIPTION_ID" char(36) not null primary key,
-  "OWNER" varchar(1024),
-  "EVENT" varchar(255),
-  "SUBJECT" varchar(1024),
-  "TARGET" varchar(1024),
-  "IS_DELETED" boolean default 0
-);
-
-create index subscriptions_id_is_deleted_index on "L_SUBSCRIPTIONS"
-  ("SUBSCRIPTION_ID", "IS_DELETED");
-
-
-create table if not exists "L_NOTIFICATIONS" (
-  "NOTIFICATION_ID" char(36) not null primary key,
-  "SUBSCRIPTION_ID" char(36),
-  "TRANSFER_ID" char(36),
-  "RETRY_COUNT" integer,
-  "RETRY_AT" datetime
-);
-
-create index notifications_retry_at_index on "L_NOTIFICATIONS"
-  ("RETRY_AT");
-create index subscription_transfer on "L_NOTIFICATIONS"
-  ("SUBSCRIPTION_ID", "TRANSFER_ID");
-
-
 create table if not exists "L_ENTRIES" (
   "ENTRY_ID" integer not null primary key,
   "TRANSFER_ID" char(36),
   "ACCOUNT" integer,
   "CREATED_AT" datetime default CURRENT_TIMESTAMP
 );
-
 
 create table if not exists "L_FULFILLMENTS" (
   "FULFILLMENT_ID" integer not null primary key,

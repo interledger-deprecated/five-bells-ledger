@@ -16,8 +16,6 @@ const metadata = require('../controllers/metadata')
 const health = require('../controllers/health')
 const transfers = require('../controllers/transfers')
 const accounts = require('../controllers/accounts')
-const subscriptions = require('../controllers/subscriptions')
-const notifications = require('../controllers/notifications')
 const seedDB = require('./seed-db')
 const createTables = require('./db').createTables
 const readLookupTables = require('./db').readLookupTables
@@ -31,7 +29,7 @@ class App {
     this.config = modules.config
     this.db = modules.db
     this.timerWorker = modules.timerWorker
-    this.notificationWorker = modules.notificationWorker
+    this.notificationBroadcaster = modules.notificationBroadcaster
 
     const koaApp = this.koa = websockify(koa())
     const router = this._makeRouter()
@@ -64,7 +62,6 @@ class App {
     // Start timerWorker to trigger the transferExpiryMonitor
     // when transfers are going to expire
     yield this.timerWorker.start()
-    this.notificationWorker.start()
 
     if (this.config.getIn(['db', 'sync'])) {
       yield createTables()
@@ -143,23 +140,6 @@ class App {
       },
       accounts.putResource)
 
-    router.get('/subscriptions/:id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      subscriptions.getResource)
-    router.put('/subscriptions/:id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      function * (next) {
-        this.body = yield parseBody(this)
-        yield next
-      },
-      subscriptions.putResource)
-    router.delete('/subscriptions/:id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      subscriptions.deleteResource)
-
-    router.get('/subscriptions/:subscription_id/notifications/:notification_id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      notifications.getResource)
     return router
   }
 

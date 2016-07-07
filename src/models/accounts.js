@@ -3,7 +3,7 @@ const _ = require('lodash')
 const assert = require('assert')
 const config = require('../services/config')
 const log = require('../services/log')('accounts')
-const notificationWorker = require('../services/notificationWorker')
+const notificationBroadcaster = require('../services/notificationBroadcaster')
 const db = require('./db/accounts')
 const hashPassword = require('five-bells-shared/utils/hashPassword')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
@@ -99,9 +99,9 @@ function subscribeTransfers (account, requestingUser, listener) {
   }
 
   log.info('new ws subscriber for ' + account)
-  notificationWorker.addListener('transfer-' + account, listener)
+  notificationBroadcaster.addListener('transfer-' + account, listener)
 
-  return () => notificationWorker.removeListener('transfer-' + account, listener)
+  return () => notificationBroadcaster.removeListener('transfer-' + account, listener)
 }
 
 function * insertAccounts (externalAccounts) {

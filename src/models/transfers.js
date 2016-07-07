@@ -17,7 +17,7 @@ const validateNoDisabledAccounts = require('../lib/disabledAccounts')
 const config = require('../services/config')
 const uri = require('../services/uriManager')
 const transferExpiryMonitor = require('../services/transferExpiryMonitor')
-const notificationWorker = require('../services/notificationWorker')
+const notificationBroadcaster = require('../services/notificationBroadcaster')
 const log = require('../services/log')('transfers')
 const updateState = require('../lib/updateState')
 const hashJSON = require('five-bells-shared/utils/hashJson')
@@ -360,11 +360,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
     transferExpiryMonitor.unwatch(transfer.id)
     yield db.updateTransfer(transfer, {transaction})
 
-    // Create persistent notification events. We're doing this within the same
-    // database transaction in order to maximize the reliability of the
-    // notification system. If the server crashes while trying to post a
-    // notification it should retry it when it comes back.
-    yield notificationWorker.queueNotifications(transfer, transaction)
+    yield notificationBroadcaster.sendNotifications(transfer, transaction)
 
     // Start the expiry countdown if the transfer is not yet finalized
     // If the expires_at has passed by this time we'll consider
@@ -446,11 +442,7 @@ function * setTransfer (externalTransfer, requestingUser) {
     yield processImmediateExecution(transfer, transaction)
     yield db.upsertTransfer(transfer, {transaction})
 
-    // Create persistent notification events. We're doing this within the same
-    // database transaction in order to maximize the reliability of the
-    // notification system. If the server crashes while trying to post a
-    // notification it should retry it when it comes back.
-    yield notificationWorker.queueNotifications(transfer, transaction)
+    yield notificationBroadcaster.sendNotifications(transfer, transaction)
   })
 
   // Start the expiry countdown if the transfer is not yet finalized
