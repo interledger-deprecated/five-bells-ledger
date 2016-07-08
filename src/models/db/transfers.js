@@ -91,16 +91,33 @@ function convertToPersistent (data) {
 
 function * getTransferWhere (where, options) {
   return db.selectOne(where, options && options.transaction)
-    .then((transfer) => {
-      if (transfer === null) {
-        return null
-      }
+  .then((transfer) => {
+    if (transfer === null) {
+      return null
+    }
+    return adjustments.getAdjustments(transfer._id, options)
+    .then((adjustments) => {
+      const result = _.assign({}, transfer, adjustments)
+      return _.isEmpty(result) ? null : _.omit(result, '_id')
+    })
+  })
+}
+
+function * getTransfersWhere (where, options) {
+  return db.select(where, options && options.transaction)
+  .then((transfers) => {
+    if (_.isEmpty(transfers)) {
+      return []
+    }
+
+    return Promise.all(transfers.map((transfer) => {
       return adjustments.getAdjustments(transfer._id, options)
       .then((adjustments) => {
         const result = _.assign({}, transfer, adjustments)
         return _.isEmpty(result) ? null : _.omit(result, '_id')
       })
-    })
+    }))
+  })
 }
 
 function * getTransfer (uuid, options) {
@@ -115,6 +132,10 @@ function getTransferId (uuid, options) {
 
 function * getTransferById (id, options) {
   return yield getTransferWhere({TRANSFER_ID: id}, options)
+}
+
+function * getTransfersByExecutionCondition (executionCondition, options) {
+  return yield getTransfersWhere({EXECUTION_CONDITION: executionCondition}, options)
 }
 
 function * updateTransfer (transfer, options) {
@@ -162,6 +183,7 @@ module.exports = {
   getTransfer,
   getTransferId,
   getTransferById,
+  getTransfersByExecutionCondition,
   upsertTransfer,
   updateTransfer,
   insertTransfers,

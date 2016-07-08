@@ -17,7 +17,7 @@
     "account": "http://localhost/accounts/dave",
     "amount": "40"
   }],
-  "execution_condition": "cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7",
+  "execution_condition": "cc:0:3:Xk14jPQJs7vrbEZ9FkeZPGBr0YqVzkpOYjFp_tIZMgs:7",
   "expires_at": "2015-06-16T00:00:01.000Z",
   "state": "prepared"
 }
