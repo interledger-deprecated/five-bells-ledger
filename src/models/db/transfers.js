@@ -19,20 +19,25 @@ function convertFromPersistent (data) {
   delete data.created_at
   delete data.updated_at
   data.additional_info = JSON.parse(data.additional_info)
-  if (data.expires_at) {
-    data.expires_at = new Date(data.expires_at)
+  if (data.expires_dttm) {
+    data.expires_at = new Date(data.expires_dttm)
+    delete data.expires_dttm
   }
-  if (data.proposed_at) {
-    data.proposed_at = new Date(data.proposed_at)
+  if (data.proposed_dttm) {
+    data.proposed_at = new Date(data.proposed_dttm)
+    delete data.proposed_dttm
   }
-  if (data.prepared_at) {
-    data.prepared_at = new Date(data.prepared_at)
+  if (data.prepared_dttm) {
+    data.prepared_at = new Date(data.prepared_dttm)
+    delete data.prepared_dttm
   }
-  if (data.executed_at) {
-    data.executed_at = new Date(data.executed_at)
+  if (data.executed_dttm) {
+    data.executed_at = new Date(data.executed_dttm)
+    delete data.executed_dttm
   }
-  if (data.rejected_at) {
-    data.rejected_at = new Date(data.rejected_at)
+  if (data.rejected_dttm) {
+    data.rejected_at = new Date(data.rejected_dttm)
+    delete data.rejected_dttm
   }
   if (data.rejection_reason_id !== null) {
     data.rejection_reason = rejectionReasons.getRejectionReasonName(
@@ -51,16 +56,24 @@ function convertToPersistent (data) {
   delete data.debits
   data.additional_info = JSON.stringify(data.additional_info)
   if (data.proposed_at) {
-    data.proposed_at = new Date(data.proposed_at)
+    data.proposed_dttm = new Date(data.proposed_at)
+    delete data.proposed_at
   }
   if (data.prepared_at) {
-    data.prepared_at = new Date(data.prepared_at)
+    data.prepared_dttm = new Date(data.prepared_at)
+    delete data.prepared_at
   }
   if (data.executed_at) {
-    data.executed_at = new Date(data.executed_at)
+    data.executed_dttm = new Date(data.executed_at)
+    delete data.executed_at
   }
   if (data.rejected_at) {
-    data.rejected_at = new Date(data.rejected_at)
+    data.rejected_dttm = new Date(data.rejected_at)
+    delete data.rejected_at
+  }
+  if (data.expires_at) {
+    data.expires_dttm = new Date(data.expires_at)
+    delete data.expires_at
   }
   if (data.rejection_reason) {
     data.rejection_reason_id = rejectionReasons.getRejectionReasonId(
@@ -76,8 +89,8 @@ function convertToPersistent (data) {
   return _.mapKeys(data, (value, key) => key.toUpperCase())
 }
 
-function * getTransfer (uuid, options) {
-  return db.selectOne({TRANSFER_UUID: uuid}, options && options.transaction)
+function * getTransferWhere (where, options) {
+  return db.selectOne(where, options && options.transaction)
     .then((transfer) => {
       if (transfer === null) {
         return null
@@ -88,6 +101,20 @@ function * getTransfer (uuid, options) {
         return _.isEmpty(result) ? null : _.omit(result, '_id')
       })
     })
+}
+
+function * getTransfer (uuid, options) {
+  return yield getTransferWhere({TRANSFER_UUID: uuid}, options)
+}
+
+function getTransferId (uuid, options) {
+  return db.selectOne({TRANSFER_UUID: uuid},
+    options && options.transaction).then(
+      (transfer) => transfer ? transfer._id : null)
+}
+
+function * getTransferById (id, options) {
+  return yield getTransferWhere({TRANSFER_ID: id}, options)
 }
 
 function * updateTransfer (transfer, options) {
@@ -133,6 +160,8 @@ function * upsertTransfer (transfer, options) {
 
 module.exports = {
   getTransfer,
+  getTransferId,
+  getTransferById,
   upsertTransfer,
   updateTransfer,
   insertTransfers,
