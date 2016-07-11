@@ -335,6 +335,76 @@
   },
   {
     "type": "get",
+    "url": "/transfers/byExecutionCondition/:execution_condition",
+    "title": "Get local transfer object",
+    "name": "GetTransferByExecutionCondition",
+    "group": "Transfer",
+    "version": "15.0.0",
+    "description": "<p>Use this to query about the details or status of a local transfer that is using atomic mode.</p>",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "execution_condition",
+            "description": ""
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Get a transfer",
+        "content": "curl -x GET http://usd-ledger.example/USD/transfers/ByExecutionCondition/cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+        "type": "shell"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "Array of Transfer responses:",
+          "content": "HTTP/1.1 200 OK\n[{\n  \"id\": \"http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example/USD\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\",\n  \"state\": \"executed\",\n  \"timeline\": {\n    \"proposed_at\": \"2015-06-16T00:00:00.000Z\",\n    \"prepared_at\": \"2015-06-16T00:00:00.500Z\",\n    \"executed_at\": \"2015-06-16T00:00:00.999Z\"\n  }\n}]",
+          "type": "Array"
+        }
+      ]
+    },
+    "filename": "src/controllers/transfers.js",
+    "groupTitle": "Transfer",
+    "error": {
+      "fields": {
+        "Error 4xx": [
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "NotFoundError",
+            "description": "<p>The requested resource could not be found.</p>"
+          },
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "InvalidUriParameterError",
+            "description": "<p>(One of) the provided URI parameter(s) was invalid.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "NotFoundError",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"id\": \"NotFoundError\",\n  \"message\": \"Error description here.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "InvalidUriParameterError",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidUriParameterError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
     "url": "/transfers/:id/fulfillment",
     "title": "Get a transfer's fulfillment",
     "name": "GetTransferFulfillment",
