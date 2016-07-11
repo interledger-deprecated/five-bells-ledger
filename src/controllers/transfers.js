@@ -58,6 +58,54 @@ function * getResource () {
 }
 
 /**
+ * @api {get} /transfers/byExecutionCondition/:execution_condition Get local transfer object
+ * @apiName GetTransferByExecutionCondition
+ * @apiGroup Transfer
+ * @apiVersion 15.0.0
+ *
+ * @apiDescription Use this to query about the details or status of a local
+ *   transfer that is using atomic mode.
+ *
+ * @apiParam {String} execution_condition
+ *
+ * @apiExample {shell} Get a transfer
+ *   curl -x GET http://usd-ledger.example/USD/transfers/ByExecutionCondition/cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2
+ *
+ * @apiSuccessExample {Array} Array of Transfer responses:
+ *    HTTP/1.1 200 OK
+ *    [{
+ *      "id": "http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+ *      "ledger": "http://usd-ledger.example/USD",
+ *      "debits": [{
+ *        "account": "http://usd-ledger.example/USD/accounts/alice",
+ *        "amount": "50"
+ *      }],
+ *      "credits": [{
+ *        "account": "http://usd-ledger.example/USD/accounts/bob",
+ *        "amount": "50"
+ *      }],
+ *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+ *      "expires_at": "2015-06-16T00:00:01.000Z",
+ *      "state": "executed",
+ *      "timeline": {
+ *        "proposed_at": "2015-06-16T00:00:00.000Z",
+ *        "prepared_at": "2015-06-16T00:00:00.500Z",
+ *        "executed_at": "2015-06-16T00:00:00.999Z"
+ *      }
+ *    }]
+ *
+ * @apiUse NotFoundError
+ * @apiUse InvalidUriParameterError
+ *
+ * @returns {void}
+ */
+function * getResourcesByExecutionCondition () {
+  const executionConditon = this.params.execution_condition
+  requestUtil.validateUriParameter('execution_condition', executionConditon, 'Condition')
+  this.body = yield model.getTransfersByExecutionCondition(executionConditon)
+}
+
+/**
  * @api {get} /transfers/:id/state Get the state of a transfer
  * @apiName GetTransferState
  * @apiGroup Transfer
@@ -296,6 +344,7 @@ function * getFulfillment () {
 
 module.exports = {
   getResource,
+  getResourcesByExecutionCondition,
   getStateResource,
   putResource,
   putFulfillment,

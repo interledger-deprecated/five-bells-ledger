@@ -13,6 +13,12 @@ function validateTransfer (res) {
   validate('Transfer', res.body)
 }
 
+function validateTransfers (res) {
+  res.body.forEach((transfer) => {
+    validateTransfer({body: transfer})
+  })
+}
+
 function validateAccount (res) {
   validate('Account', res.body)
 }
@@ -41,6 +47,7 @@ function validateTransferStateReceipt (res) {
 
 module.exports = {
   validateTransfer,
+  validateTransfers,
   validateAccount,
   validateAccounts,
   validateFulfillment,
