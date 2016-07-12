@@ -173,7 +173,9 @@ function * putResource () {
  */
 function * subscribeTransfers () {
   const name = this.params.name
-  request.validateUriParameter('name', name, 'Identifier')
+  if (!(name === '*' && this.req.user.is_admin)) {
+    request.validateUriParameter('name', name, 'Identifier')
+  }
   const close = model.subscribeTransfers(name, this.req.user, (notification) => {
     this.websocket.send(JSON.stringify(notification))
   })
