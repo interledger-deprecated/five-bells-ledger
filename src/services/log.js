@@ -1,7 +1,14 @@
 'use strict'
 
-const hub = require('mag-hub')
-const mag = require('mag')
-const log = require('five-bells-shared/lib/log')
+const bunyan = require('bunyan')
+const _ = require('lodash')
+const config = require('./config')
 
-module.exports = log(mag, hub)
+function createLogger (name) {
+  return bunyan.createLogger(_.omit({
+    name: name,
+    level: config.logLevel
+  }, _.isUndefined))
+}
+
+module.exports = createLogger
