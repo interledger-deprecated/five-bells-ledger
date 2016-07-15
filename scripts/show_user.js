@@ -1,7 +1,7 @@
 'use strict'
 
 const db = require('../services/db')
-const log = require('../services/log')('show_user')
+const log = require('../services/log').create('show_user')
 
 const argv = process.argv.slice(2)
 

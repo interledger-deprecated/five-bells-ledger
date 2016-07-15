@@ -1,7 +1,7 @@
 'use strict'
 
 const moment = require('moment')
-const log = require('../services/log')('updateState')
+const log = require('../services/log').create('updateState')
 
 function updateState (transfer, state) {
   log.debug('updating transfer state from ' + transfer.state +

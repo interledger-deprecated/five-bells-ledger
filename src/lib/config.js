@@ -6,7 +6,7 @@ const envPrefix = 'ledger'
 const fs = require('fs')
 const path = require('path')
 const keypair = require('keypair')
-const log = require('../services/log')('config')
+const log = require('../services/log').create('config')
 
 function isRunningTests () {
   return process.argv[0].endsWith('mocha') ||
