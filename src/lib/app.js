@@ -25,7 +25,7 @@ require('../services/auth')
 
 class App {
   constructor (modules) {
-    this.log = modules.log('app')
+    this.log = modules.log.create('app')
     this.config = modules.config
     this.db = modules.db
     this.timerWorker = modules.timerWorker
@@ -33,10 +33,27 @@ class App {
 
     const koaApp = this.koa = websockify(koa())
     const router = this._makeRouter()
-    koaApp.use(logger())
+    const isTrace = this.log.trace()
+    koaApp.use(logger(this.log))
     koaApp.use(logger.requestIdContext())
-    koaApp.use(logger.requestLogger())
-    koaApp.use(errorHandler({log: modules.log('error-handler')}))
+    koaApp.use(logger.requestLogger({
+      updateRequestLogFields: function (fields) {
+        return {
+          headers: this.req.headers,
+          body: isTrace ? this.body : undefined,
+          query: this.query
+        }
+      },
+      updateResponseLogFields: function (fields) {
+        return {
+          duration: fields.duration,
+          status: this.status,
+          headers: this.headers,
+          body: isTrace ? this.body : undefined
+        }
+      }
+    }))
+    koaApp.use(errorHandler({log: modules.log.create('error-handler')}))
     koaApp.use(cors({expose: ['link']}))
     koaApp.use(passport.initialize())
     koaApp.use(router.middleware())
@@ -47,7 +64,7 @@ class App {
 
     const websocketRouter = this._makeWebsocketRouter()
     koaApp.ws.use(logger())
-    koaApp.ws.use(errorHandler({log: modules.log('ws-error-handler')}))
+    koaApp.ws.use(errorHandler({log: modules.log.create('ws-error-handler')}))
     koaApp.ws.use(passport.initialize())
     koaApp.ws.use(websocketRouter.routes())
     koaApp.ws.use(websocketRouter.allowedMethods())
