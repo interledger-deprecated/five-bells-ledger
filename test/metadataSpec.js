@@ -6,7 +6,7 @@ const expect = require('chai').expect
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const app = require('../src/services/app')
 const logger = require('../src/services/log')
-const logHelper = require('five-bells-shared/testHelpers/log')
+const logHelper = require('./helpers/log')
 const config = require('../src/services/config')
 
 function request () {

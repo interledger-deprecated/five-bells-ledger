@@ -1,6 +1,6 @@
 'use strict'
 
-const log = require('../services/log')('subscriptions')
+const log = require('../services/log').create('subscriptions')
 const uri = require('../services/uriManager')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')

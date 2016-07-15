@@ -8,7 +8,7 @@ const app = require('../src/services/app')
 const logger = require('../src/services/log')
 const dbHelper = require('./helpers/db')
 const appHelper = require('./helpers/app')
-const logHelper = require('five-bells-shared/testHelpers/log')
+const logHelper = require('./helpers/log')
 const getAccount = require('../src/models/db/accounts').getAccount
 const convertToExternal = require('../src/models/converters/accounts')
   .convertToExternalAccount

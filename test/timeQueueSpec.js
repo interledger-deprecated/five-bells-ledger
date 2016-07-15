@@ -6,7 +6,7 @@ const sinon = require('sinon')
 const sinonChai = require('sinon-chai')
 chai.use(sinonChai)
 const logger = require('../src/services/log')
-const logHelper = require('five-bells-shared/testHelpers/log')
+const logHelper = require('./helpers/log')
 const TimeQueue = require('../src/lib/timeQueue').TimeQueue
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
