@@ -1,7 +1,38 @@
 'use strict'
 
-const hub = require('mag-hub')
-const mag = require('mag')
-const log = require('five-bells-shared/lib/log')
+const bunyan = require('bunyan')
+const config = require('./config')
 
-module.exports = log(mag, hub)
+function createLogger (name) {
+  return bunyan.createLogger({
+    name: name,
+    level: config.logLevel,
+    stream: process.stdout
+  })
+}
+
+const defaultLogger = createLogger('ledger')
+const loggers = [defaultLogger]
+
+function createChildLogger (module) {
+  const logger = defaultLogger.child({module: module})
+  loggers.push(logger)
+  return logger
+}
+
+function setOutputStream (buffer) {
+  loggers.forEach((logger) => {
+    logger.streams = []
+    logger.addStream({
+      type: 'stream',
+      stream: buffer,
+      closeOnExit: false,
+      level: config.logLevel
+    })
+  })
+}
+
+defaultLogger.create = createChildLogger
+defaultLogger.setOutputStream = setOutputStream
+module.exports = defaultLogger
+

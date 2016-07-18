@@ -6,7 +6,7 @@ const envPrefix = 'ledger'
 const fs = require('fs')
 const path = require('path')
 const keypair = require('keypair')
-const log = require('../services/log')('config')
+const log = require('../services/log').create('config')
 
 function isRunningTests () {
   return process.argv[0].endsWith('mocha') ||
@@ -90,6 +90,15 @@ function parseKeysConfig () {
   }
 }
 
+function parseLogLevel () {
+  if (useTestConfig()) {
+    return 'debug'
+  } else {
+    // https://github.com/trentm/node-bunyan#levels
+    return Config.getEnv(envPrefix, 'LOG_LEVEL') || 'info'
+  }
+}
+
 function validateConfig (config) {
   // Validate precision
   const isOracle = config.getIn(['db', 'uri'], '').startsWith('oracle://') !== null
@@ -114,6 +123,7 @@ function loadConfig () {
   localConfig.features = parseFeaturesConfig()
   localConfig.amount = parseAmountConfig()
   localConfig.default_admin = parseAdminConfig()
+  localConfig.logLevel = parseLogLevel()
 
   // optional
   localConfig.currency = parseCurrencyConfig()

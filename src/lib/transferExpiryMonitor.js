@@ -2,7 +2,7 @@
 
 const moment = require('moment')
 const withTransaction = require('./db').withTransaction
-const log = require('../services/log')('expiry monitor')
+const log = require('../services/log').create('expiry monitor')
 const holds = require('./holds')
 const updateState = require('./updateState')
 const ExpiredTransferError = require('../errors/expired-transfer-error')
