@@ -4,6 +4,7 @@ const _ = require('lodash')
 const db = require('./utils')('L_FULFILLMENTS',
   convertToPersistent, convertFromPersistent)
 const getTransferId = require('./transfers').getTransferId
+const removeAuditFields = require('./audit').removeAuditFields
 
 function convertFromPersistent (data) {
   const result = _.mapKeys(_.cloneDeep(data), (value, key) => key.toLowerCase())
@@ -11,7 +12,7 @@ function convertFromPersistent (data) {
   delete result.fulfillment_id
   delete result.created_at
   delete result.updated_at
-  return result
+  return removeAuditFields(result)
 }
 
 function convertToPersistent (data) {

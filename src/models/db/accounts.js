@@ -6,6 +6,7 @@ const db = require('./utils')(TABLE_NAME,
   convertToPersistent, convertFromPersistent)
 const config = require('../../services/config')
 const knex = require('../../lib/knex').knex
+const removeAuditFields = require('./audit').removeAuditFields
 
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
@@ -26,7 +27,7 @@ function convertFromPersistent (data) {
   }
   delete data.created_at
   delete data.updated_at
-  return data
+  return removeAuditFields(data)
 }
 
 function convertToPersistent (data) {
