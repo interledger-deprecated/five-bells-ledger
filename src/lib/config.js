@@ -89,7 +89,7 @@ function parseKeysConfig () {
   }
 }
 
-function parseLogLevel () {
+function getLogLevel () {
   if (useTestConfig()) {
     return 'debug'
   } else {
@@ -122,7 +122,7 @@ function loadConfig () {
   localConfig.features = parseFeaturesConfig()
   localConfig.amount = parseAmountConfig()
   localConfig.default_admin = parseAdminConfig()
-  localConfig.logLevel = parseLogLevel()
+  localConfig.logLevel = getLogLevel()
 
   // optional
   localConfig.currency = parseCurrencyConfig()
