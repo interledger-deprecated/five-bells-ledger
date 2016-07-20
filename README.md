@@ -36,6 +36,9 @@ To run it using an in-memory database (the simplest option), run:
 LEDGER_DB_SYNC=1 LEDGER_DB_URI=sqlite://:memory: npm start
 ```
 
+Note: `LEDGER_DB_SYNC` runs a SQL script to setup the database schema and
+should only be set when running for the first time on a particular database.
+
 Or run:
 
 ```sh
@@ -45,6 +48,7 @@ npm start
 With the following configuration options set as environment variables:
 
 * `LEDGER_DB_URI` (required; e.g.: `mysql://root:password@localhost/fivebells`) URI for connecting to a database. Defaults to `sqlite` if no database is set.
+* `LEDGER_DB_SYNC` (default: `0`) whether or not to run the SQL setup scripts for the database
 * `LEDGER_PORT` (default: `3000`) Port that Five Bells Ledger will listen on.
 * `LEDGER_BIND_IP` (default: `0.0.0.0`) IP that Five Bells Ledger will bind to.
 * `LEDGER_HOSTNAME` (default: *[your hostname]*) Publicly visible hostname. This is important for things like generating globally unique IDs. Make sure this is a hostname that all your clients will be able to see. The default should be fine for local testing.

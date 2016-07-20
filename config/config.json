@@ -1,5 +1,0 @@
-{
-  "development": {
-    "use_env_variable": "LEDGER_DB_URI"
-  }
-}
