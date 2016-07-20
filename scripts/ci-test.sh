@@ -29,7 +29,7 @@ mysqltest() {
 postgrestest() {
   psql -U ubuntu -c 'DROP DATABASE circle_test;'
   psql -U ubuntu -c 'CREATE DATABASE circle_test;'
-  docker run --name=ledger-test-postgres -it --net=host -e LEDGER_UNIT_DB_URI=postgres://ubuntu@localhost/circle_test interledger/five-bells-ledger npm test
+  LEDGER_UNIT_DB_URI=postgres://ubuntu@localhost/circle_test npm test
 }
 
 sqlitetest() {

@@ -50,10 +50,36 @@ function executeSQLPlus (sqlFilepath) {
     }
     const command = '/opt/oracle/instantclient/sqlplus'
     const args = [url, '@' + sqlFilepath]
-    const process = spawn(command, args, {env})
-    process.on('close', (code) => {
-      return code === 0 ? resolve() : reject('sqlplus exited with code ' + code)
+    const childProcess = spawn(command, args, {env})
+    childProcess.on('close', (code) => {
+      return code === 0 ? resolve() : reject(
+        new Error('sqlplus exited with code ' + code))
     })
+    childProcess.on('error', reject)
+  })
+}
+
+function executePSQL (sqlFilepath) {
+  return new Promise((resolve, reject) => {
+    const command = 'psql'
+    const args = [
+      '--quiet',
+      '--username=' + connection.user,
+      '--host=' + connection.host,
+      '--port=' + (connection.port || 5432),
+      '--dbname=' + connection.database,
+      '--file=' + path.resolve(sqlFilepath)
+    ]
+    const env = {
+      PATH: process.env.PATH,
+      PGPASSWORD: connection.password
+    }
+    const childProcess = spawn(command, args, {env})
+    childProcess.on('close', (code) => {
+      return code === 0 ? resolve() : reject(
+        new Error('psql exited with code ' + code))
+    })
+    childProcess.on('error', reject)
   })
 }
 
@@ -64,6 +90,8 @@ function executeScript (filename) {
 
   if (dbType === 'strong-oracle') {
     return executeSQLPlus(filepath)
+  } else if (dbType === 'pg') {
+    return executePSQL(filepath)
   } else {
     const sql = fs.readFileSync(filepath, {encoding: 'utf8'})
     return executeStatements(sql)

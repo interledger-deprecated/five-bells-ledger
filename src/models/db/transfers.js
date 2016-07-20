@@ -8,6 +8,7 @@ const withTransaction = require('../../lib/db').withTransaction
 const rejectionReasons = require('./rejectionReasons')
 const transferStatuses = require('./transferStatuses')
 const adjustments = require('./adjustments')
+const removeAuditFields = require('./audit').removeAuditFields
 
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
@@ -47,7 +48,7 @@ function convertFromPersistent (data) {
   data.state = transferStatuses.getTransferStatusName(data.status_id)
   delete data.status_id
   data = _.omit(data, _.isNull)
-  return data
+  return removeAuditFields(data)
 }
 
 function convertToPersistent (data) {

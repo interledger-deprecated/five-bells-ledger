@@ -5,6 +5,7 @@ const _ = require('lodash')
 const db = require('./utils')(TABLE_NAME,
   convertToPersistent, convertFromPersistent)
 const getTransferId = require('./transfers').getTransferId
+const removeAuditFields = require('./audit').removeAuditFields
 
 function convertToPersistent (data) {
   const result = _.cloneDeep(data)
@@ -25,7 +26,7 @@ function convertFromPersistent (data) {
   delete result.entry_id
   result.created_at = result.created_dttm
   delete result.created_dttm
-  return result
+  return removeAuditFields(result)
 }
 
 function insertEntry (entry, options) {
