@@ -55,6 +55,7 @@ function executeSQLPlus (sqlFilepath) {
       return code === 0 ? resolve() : reject(
         new Error('sqlplus exited with code ' + code))
     })
+    childProcess.on('error', reject)
   })
 }
 
@@ -78,6 +79,7 @@ function executePSQL (sqlFilepath) {
       return code === 0 ? resolve() : reject(
         new Error('psql exited with code ' + code))
     })
+    childProcess.on('error', reject)
   })
 }
 
