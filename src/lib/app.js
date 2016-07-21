@@ -54,6 +54,7 @@ class App {
       }
     }))
     koaApp.use(errorHandler({log: modules.log.create('error-handler')}))
+    koaApp.on('error', function () {})
     koaApp.use(cors({expose: ['link']}))
     koaApp.use(passport.initialize())
     koaApp.use(router.middleware())
