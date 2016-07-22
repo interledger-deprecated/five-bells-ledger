@@ -54,6 +54,7 @@ class App {
       }
     }))
     koaApp.use(errorHandler({log: modules.log.create('error-handler')}))
+    koaApp.on('error', function () {})
     koaApp.use(cors({expose: ['link']}))
     koaApp.use(passport.initialize())
     koaApp.use(router.middleware())
@@ -63,7 +64,7 @@ class App {
     koaApp.use(compress())
 
     const websocketRouter = this._makeWebsocketRouter()
-    koaApp.ws.use(logger())
+    koaApp.ws.use(logger(this.log))
     koaApp.ws.use(errorHandler({log: modules.log.create('ws-error-handler')}))
     koaApp.ws.use(passport.initialize())
     koaApp.ws.use(websocketRouter.routes())
