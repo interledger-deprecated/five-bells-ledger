@@ -68,7 +68,8 @@ function executePSQL (sqlFilepath) {
       '--host=' + connection.host,
       '--port=' + (connection.port || 5432),
       '--dbname=' + connection.database,
-      '--file=' + path.resolve(sqlFilepath)
+      '--file=' + path.resolve(sqlFilepath),
+      '--set=ON_ERROR_STOP=1'
     ]
     const env = {
       PATH: process.env.PATH,
