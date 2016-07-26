@@ -128,6 +128,18 @@ function * truncateTables () {
   }
 }
 
+function * isConnected () {
+  const query = knex.client.config.client === 'strong-oracle'
+    ? 'SELECT 1 FROM DUAL' : 'SELECT 1'
+  return knex.raw(query)
+  .then(() => {
+    return true
+  })
+  .catch(() => {
+    return false
+  })
+}
+
 function readLookupTables () {
   return Promise.all([readRejectionReasons(), readTransferStatuses()])
 }
@@ -137,5 +149,6 @@ module.exports = {
   dropTables,
   truncateTables,
   readLookupTables,
-  withTransaction
+  withTransaction,
+  isConnected
 }
