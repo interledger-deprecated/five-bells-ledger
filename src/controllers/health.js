@@ -1,5 +1,7 @@
 'use strict'
 
+const model = require('../models/health')
+
 /**
  * @api {get} /health Get server health status
  * @apiName GetHealth
@@ -14,6 +16,5 @@
  * @returns {void}
  */
 exports.getResource = function * health () {
-  // TODO: Add some checks, e.g. database status
-  this.body = {'status': 'OK'}
+  this.body = yield model.getDbHealth()
 }
