@@ -20,6 +20,11 @@ dockerBuild() {
   docker build -t interledger/five-bells-ledger .
 }
 
+mssqltest() {
+  # TODO: create a new database for each run
+  npm run test-mssql
+}
+
 mysqltest() {
   mysql -u ubuntu -e 'DROP DATABASE circle_test;'
   mysql -u ubuntu -e 'CREATE DATABASE circle_test;'
@@ -86,12 +91,13 @@ oneNode() {
   integrationtest
   postgrestest
   oracletest
+  mssqltest
   apidoc
 }
 
 twoNodes() {
   case "$NODE_INDEX" in
-    0) lint; dockerBuild; sqlitetest; integrationtest;;
+    0) lint; dockerBuild; sqlitetest; integrationtest; mssqltest;;
     1) dockerBuild; oracletest; postgrestest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
@@ -99,8 +105,8 @@ twoNodes() {
 
 threeNodes() {
   case "$NODE_INDEX" in
-    0) lint; dockerBuild; sqlitetest integrationtest;;
-    1) dockerBuild; postgrestest;;
+    0) lint; dockerBuild; sqlitetest; integrationtest;;
+    1) dockerBuild; postgrestest; mssqltest;;
     2) oracletest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
@@ -109,7 +115,7 @@ threeNodes() {
 fourNodes() {
   case "$NODE_INDEX" in
     0) dockerBuild; sqlitetest; postgrestest;;
-    1) integrationtest;;
+    1) integrationtest; mssqltest;;
     2) lint; dockerBuild; apidoc;;
     3) oracletest;;
     *) echo "ERROR: invalid usage"; exit 2;;
