@@ -77,3 +77,4 @@ function createModule (tableName, convertToPersistent, convertFromPersistent) {
 }
 
 module.exports = createModule
+module.exports.client = knex.client.config.client

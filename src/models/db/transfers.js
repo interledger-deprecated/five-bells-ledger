@@ -2,6 +2,7 @@
 
 const TABLE_NAME = 'L_TRANSFERS'
 const _ = require('lodash')
+const client = require('./utils').client
 const db = require('./utils')(TABLE_NAME,
   convertToPersistent, convertFromPersistent)
 const withTransaction = require('../../lib/db').withTransaction
@@ -189,5 +190,5 @@ module.exports = {
   updateTransfer,
   insertTransfers,
   withTransaction,
-  client: db.client
+  client
 }
