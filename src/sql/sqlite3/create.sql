@@ -82,7 +82,7 @@ create table if not exists "L_FULFILLMENTS" (
   "CONDITION_FULFILLMENT" text
 );
 
-create index fulfillments_transfer_id_index on "L_FULFILLMENTS"
+create unique index fulfillments_transfer_id_index on "L_FULFILLMENTS"
   ("TRANSFER_ID");
 
 
