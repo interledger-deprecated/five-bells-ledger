@@ -74,7 +74,7 @@ class App {
   start () {
     const log = this.log
     co(this._start.bind(this)).catch(function (err) {
-      log.critical((err && err.stack) ? err.stack : err)
+      log.fatal((err && err.stack) ? err.stack : err)
     })
   }
 
