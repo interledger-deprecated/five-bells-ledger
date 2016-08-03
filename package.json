@@ -17,7 +17,7 @@
     "lint": "eslint .",
     "test": "istanbul test -- _mocha",
     "sqlplus": "LD_LIBRARY_PATH=/opt/oracle/instantclient DYLD_LIBRARY_PATH=/opt/oracle/instantclient /opt/oracle/instantclient/sqlplus system/oracle@localhost:1521/xe",
-    "test-mssql": "LEDGER_UNIT_DB_URI='mssql://ILP:PASSWORD@chris-mssql.db.qe.ripple.com:1433/ILPLEDGER' node node_modules/.bin/istanbul test -- _mocha",
+    "test-mssql": "LEDGER_UNIT_DB_URI=mssql://$MSSQL_USERNAME:$MSSQL_PASSWORD@in-1808.cojrajw6pfyj.us-west-2.rds.amazonaws.com:1433/$MSSQL_DATABASE node node_modules/.bin/istanbul test -- _mocha",
     "test-oracle": "LEDGER_UNIT_DB_URI='oracle://system:oracle@localhost:1521/xe' DYLD_LIBRARY_PATH=/opt/oracle/instantclient LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
     "report-coverage": "codecov",
     "apidoc": "apidoc -o apidoc-out -i src/controllers/",
