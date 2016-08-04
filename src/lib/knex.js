@@ -29,9 +29,13 @@ function parseDatabaseType (uri) {
 
 function getKnexConfig () {
   const knexConfig = {
-    sqlite: {client: 'sqlite3'},
+    sqlite: {
+      client: 'sqlite3',
+      useNullAsDefault: true
+    },
     mysql: {client: 'mysql'},
     postgres: {client: 'pg'},
+    mssql: {client: 'mssql'},
     oracle: {
       client: 'strong-oracle',
       useNullAsDefault: true,

@@ -26,31 +26,34 @@ function insertEntryByName (accountName, transferId, transaction) {
 
 function holdFunds (transfer, transaction) {
   return Promise.all(transfer.debits.map((debit) => {
-    return Promise.all([
-      adjustBalance(debit.account, -debit.amount, transaction),
-      adjustBalance('hold', debit.amount, transaction),
-      insertEntryByName(debit.account, transfer.id, transaction)
-    ])
+    return adjustBalance(debit.account, -debit.amount, transaction).then(() => {
+      return Promise.all([
+        adjustBalance('hold', debit.amount, transaction),
+        insertEntryByName(debit.account, transfer.id, transaction)
+      ])
+    })
   }))
 }
 
 function disburseFunds (transfer, transaction) {
   return Promise.all(transfer.credits.map((credit) => {
-    return Promise.all([
-      adjustBalance('hold', -credit.amount, transaction),
-      adjustBalance(credit.account, credit.amount, transaction),
-      insertEntryByName(credit.account, transfer.id, transaction)
-    ])
+    return adjustBalance('hold', -credit.amount, transaction).then(() => {
+      return Promise.all([
+        adjustBalance(credit.account, credit.amount, transaction),
+        insertEntryByName(credit.account, transfer.id, transaction)
+      ])
+    })
   }))
 }
 
 function returnHeldFunds (transfer, transaction) {
   return Promise.all(transfer.debits.map((debit) => {
-    return Promise.all([
-      adjustBalance('hold', -debit.amount, transaction),
-      adjustBalance(debit.account, debit.amount, transaction),
-      insertEntryByName(debit.account, transfer.id, transaction)
-    ])
+    return adjustBalance('hold', -debit.amount, transaction).then(() => {
+      return Promise.all([
+        adjustBalance(debit.account, debit.amount, transaction),
+        insertEntryByName(debit.account, transfer.id, transaction)
+      ])
+    })
   }))
 }
 
