@@ -20,6 +20,24 @@ dockerBuild() {
   docker build -t interledger/five-bells-ledger .
 }
 
+mssqltest() {
+  : ${MSSQL_PASSWORD?"MSSQL_PASSWORD not set; note that CircleCI does not export environment variables on forks for security of secrets"}
+  MSSQL_DATABASE="CIRCLECI_$(openssl rand -base64 6)"
+  HOSTNAME="in-1808.cojrajw6pfyj.us-west-2.rds.amazonaws.com"
+  CLI="./node_modules/sql-cli/bin/mssql"
+  CREATE="CREATE DATABASE $MSSQL_DATABASE"
+  DROP="DROP DATABASE $MSSQL_DATABASE"
+  set +x    # avoid exposing password
+  set +e    # be sure to drop database even if test fails
+  $CLI -s "$HOSTNAME" -u "$MSSQL_USERNAME" -p "$MSSQL_PASSWORD" -q "$CREATE"
+  LEDGER_UNIT_DB_URI=mssql://$MSSQL_USERNAME:$MSSQL_PASSWORD@$HOSTNAME:1433/$MSSQL_DATABASE node node_modules/.bin/istanbul test -- _mocha
+  RESULT=$?
+  $CLI -s "$HOSTNAME" -u "$MSSQL_USERNAME" -p "$MSSQL_PASSWORD" -q "$DROP"
+  set -x
+  set -e
+  return $RESULT
+}
+
 mysqltest() {
   mysql -u ubuntu -e 'DROP DATABASE circle_test;'
   mysql -u ubuntu -e 'CREATE DATABASE circle_test;'
@@ -86,12 +104,13 @@ oneNode() {
   integrationtest
   postgrestest
   oracletest
+  mssqltest
   apidoc
 }
 
 twoNodes() {
   case "$NODE_INDEX" in
-    0) lint; dockerBuild; sqlitetest; integrationtest;;
+    0) lint; dockerBuild; sqlitetest; integrationtest; mssqltest;;
     1) dockerBuild; oracletest; postgrestest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
@@ -99,8 +118,8 @@ twoNodes() {
 
 threeNodes() {
   case "$NODE_INDEX" in
-    0) lint; dockerBuild; sqlitetest integrationtest;;
-    1) dockerBuild; postgrestest;;
+    0) lint; dockerBuild; sqlitetest; integrationtest;;
+    1) dockerBuild; postgrestest; mssqltest;;
     2) oracletest; apidoc;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
@@ -110,7 +129,7 @@ fourNodes() {
   case "$NODE_INDEX" in
     0) dockerBuild; sqlitetest; postgrestest;;
     1) integrationtest;;
-    2) lint; dockerBuild; apidoc;;
+    2) lint; mssqltest; dockerBuild; apidoc;;
     3) oracletest;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac

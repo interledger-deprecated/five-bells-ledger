@@ -84,6 +84,32 @@ function executePSQL (sqlFilepath) {
   })
 }
 
+function executeMSSQL (sqlFilepath) {
+  return new Promise((resolve, reject) => {
+    const command = path.join(__dirname, '../../node_modules/sql-cli/bin/mssql')
+    const args = [
+      '--user', connection.user,
+      '--pass', connection.password,
+      '--server', connection.host,
+      '--port', (connection.port || 1433),
+      '--database', connection.database,
+      '--query', '.run ' + path.resolve(sqlFilepath)
+    ]
+    const env = {
+      PATH: process.env.PATH
+    }
+    const childProcess = spawn(command, args, {env})
+    childProcess.stderr.on('data', (data) => {
+      console.error(data.toString('utf-8'))
+    })
+    childProcess.on('close', (code) => {
+      return code === 0 ? resolve() : reject(
+        new Error('mssql exited with code ' + code))
+    })
+    childProcess.on('error', reject)
+  })
+}
+
 function executeScript (filename) {
   const dbType = knex.client.config.client
   const filepath = path.resolve(
@@ -93,6 +119,8 @@ function executeScript (filename) {
     return executeSQLPlus(filepath)
   } else if (dbType === 'pg') {
     return executePSQL(filepath)
+  } else if (dbType === 'mssql') {
+    return executeMSSQL(filepath)
   } else {
     const sql = fs.readFileSync(filepath, {encoding: 'utf8'})
     return executeStatements(sql)
@@ -109,6 +137,9 @@ function * dropTables () {
 
 function * truncateTables () {
   const dbType = knex.client.config.client
+  if (dbType === 'mssql') {
+    return yield executeScript('truncate.sql')
+  }
   if (dbType === 'strong-oracle') {
     yield executeScript('disable.sql')
   }
