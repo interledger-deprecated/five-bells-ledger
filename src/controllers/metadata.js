@@ -29,7 +29,8 @@ const metadata = {
  * @apiVersion 1.0.0
  *
  * @apiDescription This endpoint will return server metadata.
- *
+ */
+/*
  * @returns {void}
  */
 exports.getResource = function * () { this.body = metadata }

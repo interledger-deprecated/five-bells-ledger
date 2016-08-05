@@ -12,5 +12,9 @@
     "PutSubscription",
     "GetSubscription",
     "Notification"
-  ]
+  ],
+  "header": {
+    "title": "Interledger Reference Ledger API",
+    "filename": "apidoc_intro.md"
+  }
 }

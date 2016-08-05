@@ -12,7 +12,8 @@ const model = require('../models/health')
  *   server is still operating correctly.
  *
  * @apiIgnore For internal use.
- *
+ */
+/**
  * @returns {void}
  */
 exports.getResource = function * health () {

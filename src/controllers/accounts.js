@@ -29,7 +29,8 @@ function * getCollection () {
  *        connector: 'http://usd-eur-connector.example'
  *      }
  *    ]
- *
+ */
+/**
  * @returns {void}
  */
 function * getConnectors () {
@@ -70,7 +71,8 @@ function * getConnectors () {
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
- *
+ */
+/**
  * @returns {void}
  */
 function * getResource () {
@@ -107,7 +109,8 @@ function * getResource () {
  * @apiUse UnauthorizedError
  * @apiUse InvalidUriParameterError
  * @apiUse InvalidBodyError
- *
+ */
+/**
  * @return {void}
  */
 function * putResource () {
@@ -168,7 +171,8 @@ function * putResource () {
  *
  * @apiUse UnauthorizedError
  * @apiUse InvalidUriParameterError
- *
+ */
+/**
  * @return {void}
  */
 function * subscribeTransfers () {
