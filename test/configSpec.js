@@ -67,6 +67,26 @@ describe('loadConfig', () => {
     })
   })
 
+  describe('config.ilp', () => {
+    const defaults = {
+      prefix: null
+    }
+
+    it('returns defaults', () => {
+      const _config = loadConfig()
+      expect(_config.ilp).to.deep.equal(defaults)
+    })
+
+    it('LEDGER_ILP_PREFIX=example.red.', () => {
+      process.env.LEDGER_ILP_ADDRESS = 'example.red.'
+      const ilp = {
+        prefix: 'example.red.'
+      }
+      const _config = loadConfig()
+      expect(_config.ilp).to.deep.equal(ilp)
+    })
+  })
+
   describe('config.features', () => {
     const defaults = {
       hasCreditAuth: false

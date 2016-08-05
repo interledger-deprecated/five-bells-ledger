@@ -30,6 +30,7 @@ describe('Metadata', function () {
           expect(res.body).to.deep.equal({
             currency_code: null,
             currency_symbol: null,
+            ilp_prefix: null,
             condition_sign_public_key: 'YXg177AOkDlGGrBaoSET+UrMscbHGwFXHqfUMBZTtCY=',
             notification_sign_public_key: notificationPublicKey,
             urls: {
@@ -55,6 +56,7 @@ describe('Metadata', function () {
 
       process.env.LEDGER_CURRENCY_CODE = 'USD'
       process.env.LEDGER_CURRENCY_SYMBOL = '$'
+      process.env.LEDGER_ILP_ADDRESS = 'example.red.'
 
       const newApp = new App({
         log: require('../src/services/log'),
@@ -71,11 +73,13 @@ describe('Metadata', function () {
         .expect(function (res) {
           expect(res.body.currency_code).to.equal('USD')
           expect(res.body.currency_symbol).to.equal('$')
+          expect(res.body.ilp_prefix).to.equal('example.red.')
         })
         .end()
-      
+
       delete process.env.LEDGER_CURRENCY_CODE
       delete process.env.LEDGER_CURRENCY_SYMBOL
+      delete process.env.LEDGER_ILP_ADDRESS
     })
   })
 })
