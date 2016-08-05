@@ -12,7 +12,7 @@ const path = require('path')
 const logger = require('koa-bunyan-logger')
 const errorHandler = require('five-bells-shared/middlewares/error-handler')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
-const metadata = require('../controllers/metadata')
+const getMetadataRoute = require('../controllers/metadata')
 const health = require('../controllers/health')
 const transfers = require('../controllers/transfers')
 const accounts = require('../controllers/accounts')
@@ -27,6 +27,7 @@ class App {
   constructor (modules) {
     this.log = modules.log.create('app')
     this.config = modules.config
+    this.metadata = getMetadataRoute(this.config)
     this.db = modules.db
     this.timerWorker = modules.timerWorker
     this.notificationBroadcaster = modules.notificationBroadcaster
@@ -124,7 +125,7 @@ class App {
 
   _makeRouter () {
     const router = new Router()
-    router.get('/', metadata.getResource)
+    router.get('/', this.metadata.getResource)
     router.get('/health', health.getResource)
 
     router.put('/transfers/:id',
