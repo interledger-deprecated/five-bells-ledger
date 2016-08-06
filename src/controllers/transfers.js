@@ -9,45 +9,9 @@ const model = require('../models/transfers')
 const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-parameter-error')
 
 /**
- * @apiGroup Test Group
- * @apiDescription lorem ipsum dolor sit amet
- */
-
-/**
- * @apiDefine Transfer_Response
- * @apiSuccess (Successful Response) {URI} id The path to this Transfer resource.
- * @apiSuccess (Successful Response) {URI} [ledger] The path to the Ledger that
- *   contains this transfer.
- * @apiSuccess (Successful Response) {Object[]} debits Array with one or more
- *   Debit objects.
- * @apiSuccess (Successful Response) {URI} debits.account The path to an
- *   Account being debited.
- * @apiSuccess (Successful Response) {Numeric_String} debits.amount The amount
- *   of currency being debited.
- * @apiSuccess (Successful Response) {Boolean} [debits.authorized] Whether the
- *   account holder has authorized this debit. The transfer cannot execute
- *   unless all debits are authorized.
- * @apiSuccess (Successful Response) {Object[]} credits Array with one or more
- *   Credit objects.
- * @apiSuccess (Successful Response) {URI} credits.account The path to an
- *   Account being credited.
- * @apiSuccess (Successful Response) {Numeric_String} credits.amount The
- *   amount of currency being credited.
- * @apiSuccess (Successful Response) {Condition} [execution_condition] A
- *   [Condition]() upon which this transfer is executed. If omitted, the
- *   transfer executes unconditionally.
- * @apiSuccess (Successful Response) {Condition} [cancellation_condition] A
- *   [Condition]() upon which this transfer is rejected.
- * @apiSuccess (Successful Response) {ISO8601_DateTime} [expires_at] This
- *   transfer expires if not yet executed at this time.
- * @apiSuccess (Successful Response) {String="proposed","prepared","executed","rejected"} [state]
- *   The state of this transfer.
- */
-
-/**
  * @api {get} /transfers/:id Get Transfer by ID
  * @apiName GetTransfer
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Use this to query about the details or status of a local
@@ -59,7 +23,8 @@ const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-p
  * @apiExample {shell} Get a transfer
  *   curl -x GET http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
  *
- * @apiUse Transfer_Response
+ * @apiSuccess (Success) {Transfer} Object The [Transfer object](#transfer_object) as saved.
+ *
  * @apiSuccessExample {json} Transfer Response:
  *    HTTP/1.1 200 OK
  *    {
@@ -96,9 +61,9 @@ function * getResource () {
 }
 
 /**
- * @api {get} /transfers/byExecutionCondition/:execution_condition Get Transfer by Condition
+ * @api {get} /transfers/byExecutionCondition/:execution_condition Get Transfers by Condition
  * @apiName GetTransferByExecutionCondition
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 15.0.0
  *
  * @apiDescription Use this to query about the details or status of a local
@@ -109,7 +74,8 @@ function * getResource () {
  * @apiExample {shell} Get a transfer
  *   curl -x GET http://usd-ledger.example/transfers/ByExecutionCondition/cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2
  *
- * @apiUse Transfer_Response
+ * @apiSuccess (Success) {Transfer[]} Array Array of [Transfer objects](#transfer_object) matching the condition.
+ *
  * @apiSuccessExample {Array} Array of Transfer responses:
  *    HTTP/1.1 200 OK
  *    [{
@@ -148,7 +114,7 @@ function * getResourcesByExecutionCondition () {
 /**
  * @api {get} /transfers/:id/state Get Signed Transfer State
  * @apiName GetTransferState
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Use this to get a signed receipt containing only the id of
@@ -198,7 +164,7 @@ function * getStateResource () {
 /**
  * @api {put} /transfers/:id Propose and prepare transfer
  * @apiName PutTransfer
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Create and/or authorize a transfer.
@@ -233,7 +199,7 @@ function * getStateResource () {
  *    }'
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
  *
- * @apiUse Transfer_Response
+ * @apiSuccess (Success) {Transfer} Object The [Transfer object](#transfer_object) as saved.
  *
  * @apiSuccessExample {json} 201 New Proposed Transfer Response
  *    HTTP/1.1 201 CREATED
@@ -323,7 +289,7 @@ function * putResource () {
 /**
  * @api {put} /transfers/:id/fulfillment Execute prepared transfer
  * @apiName PutTransferFulfillment
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Execute or cancel a transfer that has already been prepared.
@@ -363,7 +329,7 @@ function * putFulfillment () {
 /**
  * @api {get} /transfers/:id/fulfillment Get Transfer Fulfillment
  * @apiName GetTransferFulfillment
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Retrieve the fulfillment for a transfer that has been executed or cancelled. This is separate from the Transfer object because it can be very large.

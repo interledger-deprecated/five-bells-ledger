@@ -2,19 +2,12 @@
   "title": "Five Bells Ledger API",
   "url": "https://acme-ledger.example",
   "order": [
-    "Transfer",
-    "PutTransfer",
-    "PutTransferFulfillment",
-    "GetTransfer",
-    "GetTransferFulfillment",
-    "Account",
-    "Subscription",
-    "PutSubscription",
-    "GetSubscription",
-    "Notification"
+    "Transfer_Methods",
+    "Account_Methods",
+    "Metadata_Methods"
   ],
   "header": {
     "title": "Interledger Reference Ledger API",
-    "filename": "apidoc_intro.md"
+    "filename": "apidoc-out/apidoc_intro.md"
   }
 }

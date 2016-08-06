@@ -1,1 +1,0 @@
-This is a reference implementation of an ILP-compatible ledger with a RESTful API. It demonstrates one possible way that a ledger could expose conditional transfers to be used as part of the Interledger Protocol. It also has some basic functionality that any ledger might have.

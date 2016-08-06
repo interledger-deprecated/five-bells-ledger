@@ -11,7 +11,7 @@ function * getCollection () {
 /**
  * @api {get} /connectors Fetch connectors
  * @apiName GetConnectors
- * @apiGroup Account
+ * @apiGroup Account Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Get all accounts of all connectors on this ledger.
@@ -40,7 +40,7 @@ function * getConnectors () {
 /**
  * @api {get} /accounts/:name Fetch user info
  * @apiName GetAccount
- * @apiGroup Account
+ * @apiGroup Account Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Get information about a user. Only users themselves and admins
@@ -84,7 +84,7 @@ function * getResource () {
 /**
  * @api {put} /accounts/:name Create or update a user
  * @apiName PutAccount
- * @apiGroup Account
+ * @apiGroup Account Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Create or update a user. Only admins are allowed to create new accounts.
@@ -129,7 +129,7 @@ function * putResource () {
 /**
  * @api {get} /accounts/:name/transfers [Websocket] Subscribe to transfers
  * @apiName SubscribeAccountTransfers
- * @apiGroup Account
+ * @apiGroup Account Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Subscribe to an account's transfers and receive real-time

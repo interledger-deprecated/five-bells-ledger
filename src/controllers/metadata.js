@@ -25,7 +25,7 @@ const metadata = {
 /**
  * @api {get} / Get the server metadata
  * @apiName GetMetadata
- * @apiGroup Metadata
+ * @apiGroup Metadata Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription This endpoint will return server metadata.
