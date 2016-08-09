@@ -21,7 +21,7 @@ const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-p
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
  * @apiExample {shell} Get a transfer
- *   curl -x GET http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
+ *   curl -X GET http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
  *
  * @apiSuccess (Success) {Transfer} Object The [Transfer object](#transfer_object) as saved.
  *
@@ -72,7 +72,7 @@ function * getResource () {
  * @apiParam {String} execution_condition
  *
  * @apiExample {shell} Get a transfer
- *   curl -x GET http://usd-ledger.example/transfers/ByExecutionCondition/cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2
+ *   curl -X GET http://usd-ledger.example/transfers/ByExecutionCondition/cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2
  *
  * @apiSuccess (Success) {Transfer[]} Array Array of [Transfer objects](#transfer_object) matching the condition.
  *
@@ -127,7 +127,7 @@ function * getResourcesByExecutionCondition () {
  * @apiParam {String} condition_state The state to hash for preimage algorithms' conditions.
  *
  * @apiExample {shell} Get a transfer state receipt
- *   curl -x GET http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/state
+ *   curl -X GET http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/state
  *
  * @apiSuccessExample {json} Transfer State Response:
  *    HTTP/1.1 200 OK
@@ -179,10 +179,13 @@ function * getStateResource () {
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier)
  *   to identify this Transfer.
  *
- * @apiParam (Request Body) {URI} id The full proposed path to this Transfer resource.
+ * @apiParam (Request Body) {Transfer} Object A [Transfer object](#transfer_object) to
+ *    describe the transfer that should take place. For a conditional transfer, this
+ *    includes an `execution_condition`. The `authorized` field of each debit object
+ *    must be set to `true` before the transfer can occur.
  *
  * @apiExample {shell} Propose a Transfer
- *    curl -x PUT -H "Content-Type: application/json" -d
+ *    curl -X PUT -H "Content-Type: application/json" -d
  *    '{
  *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
  *      "ledger": "http://usd-ledger.example",
@@ -199,7 +202,13 @@ function * getStateResource () {
  *    }'
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
  *
- * @apiSuccess (Success) {Transfer} Object The [Transfer object](#transfer_object) as saved.
+ * @apiHeader {String} Content-Type Must be `application/json`.
+ * @apiHeader {String} [Authentication] To control the `authorized` field of a
+ *   debit, the user must be authenticated with basic auth.
+ * @apiSuccess (201 Created) {Transfer} Object The newly-created
+ *   [Transfer object](#transfer_object) as saved.
+ * @apiSuccess (200 OK) {Transfer} Object The updated
+ *   [Transfer object](#transfer_object) as saved.
  *
  * @apiSuccessExample {json} 201 New Proposed Transfer Response
  *    HTTP/1.1 201 CREATED
@@ -220,7 +229,7 @@ function * getStateResource () {
  *    }
  *
  * @apiExample {shell} Prepare a Transfer
- *    curl -x PUT -H "Content-Type: application/json Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l" -d
+ *    curl -X PUT -H "Content-Type: application/json Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l" -d
  *    '{
  *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
  *      "ledger": "http://usd-ledger.example",
@@ -293,18 +302,23 @@ function * putResource () {
  * @apiVersion 1.0.0
  *
  * @apiDescription Execute or cancel a transfer that has already been prepared.
- *    Putting the fulfillment of either the `execution_condition` or the
- *    `cancellation_condition`, if there is one, will execute or cancel the transfer, respectively.
+ *    If the prepared transfer has an `execution_condition`, you can submit the
+ *    fulfillment of that condition to execute the transfer. If the prepared
+ *    transfer has a `cancellation_condition`, you can submit the fulfillment
+ *    of that condition to cancel the transfer.
  *
- * @apiParam {String} id Transfer
+ * @apiHeader {String} Content-Type Must be `text/plain`.
+ * @apiParam (URL Parameters) {String} id Transfer
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ * @apiParam (Request Body) {String} Fulfillment A [Fulfillment](#cryptoconditions)
+ *   in string format.
  *
  * @apiExample {shell} Put Transfer Fulfillment:
- *    curl -x PUT -H "Content-Type: text/plain" -d
+ *    curl -X PUT -H "Content-Type: text/plain" -d
  *    'cf:0:_v8'
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment
  *
- * @apiSuccessExample {json} 201 Fulfillment Accepted Response:
+ * @apiSuccessExample {json} 200 Fulfillment Accepted Response:
  *    HTTP/1.1 200 OK
  *    cf:0:_v8
  *
@@ -338,7 +352,7 @@ function * putFulfillment () {
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
  * @apiExample {shell} Get Transfer Fulfillment:
- *    curl -x GET
+ *    curl -X GET
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment
  *
  * @apiSuccessExample {json} 200 Fulfillment Response:

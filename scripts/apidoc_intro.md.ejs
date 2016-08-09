@@ -11,6 +11,27 @@ A transfer object can have the following fields:
 <!-- This table sourced from five-bells-shared TransferTemplate.json schema. -->
 <%- renderSchema("TransferTemplate.json") %>
 
+## Crypto-Conditions
+<a id='cryptoconditions'></a>
+
+The [Crypto-Conditions spec](https://github.com/interledger/rfcs/tree/master/0002-crypto-conditions) defines standard formats for _conditions_ and _fulfillments_.
+
+Conditions are distributable event descriptions, and fulfillments are cryptographically verifiable messages that prove an event occurred. If you transmit a fulfillment, then everyone who has the corresponding condition can agree that the condition has been met.
+
+In the Five Bells Ledger, we use crypto-conditions to control the execution or cancellation of conditional transfers. The ledger supports conditions and fulfillments in string format.
+
+The Crypto-Conditions specification anticipates that it will need to expand to keep up with changes in the field of cryptography, so conditions always define which rules and algorithms are necessary to verify the fulfillment. Implementations can use the condition's feature list to determine if they can properly process the fulfillment, without having seen the fulfillment itself.
+
+Example condition in string format:
+
+    cc:0:3:dB-8fb14MdO75Brp_Pvh4d7ganckilrRl13RS_UmrXA:66
+
+Example fulfillment in string format:
+
+    cf:0:VGhlIG9ubHkgYmFzaXMgZm9yIGdvb2QgU29jaWV0eSBpcyB1bmxpbWl0ZWQgY3JlZGl0LuKAlE9zY2FyIFdpbGRl
+
+
+
 ## Environment Variables
 <a id='environment_variables'></a>
 

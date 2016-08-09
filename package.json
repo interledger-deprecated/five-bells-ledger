@@ -20,6 +20,7 @@
     "test-oracle": "LEDGER_UNIT_DB_URI='oracle://system:oracle@localhost:1521/xe' DYLD_LIBRARY_PATH=/opt/oracle/instantclient LD_LIBRARY_PATH=/opt/oracle/instantclient node node_modules/.bin/istanbul test -- _mocha",
     "report-coverage": "codecov",
     "apidoc": "apidoc -o apidoc-out -i src/controllers/",
+    "build-docs": "scripts/build_docs.js",
     "integration": "integration all",
     "bump": "version-bump",
     "drop-oracle-tables": "scripts/drop-oracle-tables.sh"

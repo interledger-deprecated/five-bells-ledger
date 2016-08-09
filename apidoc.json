@@ -1,8 +1,14 @@
 {
-  "title": "Five Bells Ledger API",
+  "title": "Interledger Reference Ledger API",
   "url": "https://acme-ledger.example",
   "order": [
     "Transfer_Methods",
+        "PutTransfer",
+        "PutTransferFulfillment",
+        "GetTransfer",
+        "GetTransferByExecutionCondition",
+        "GetTransferState",
+        "GetTransferFulfillment",
     "Account_Methods",
     "Metadata_Methods"
   ],
