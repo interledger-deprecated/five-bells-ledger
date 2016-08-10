@@ -34,7 +34,7 @@ npm install
 To run it using an in-memory database (the simplest option), run:
 
 ``` sh
-LEDGER_DB_SYNC=1 LEDGER_DB_URI=sqlite://:memory: npm start
+LEDGER_ADMIN_PASS=mypassword LEDGER_DB_SYNC=1 LEDGER_DB_URI=sqlite://:memory: npm start
 ```
 
 Note: `LEDGER_DB_SYNC` runs a SQL script to setup the database schema and

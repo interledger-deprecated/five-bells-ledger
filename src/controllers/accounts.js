@@ -9,7 +9,7 @@ function * getCollection () {
 }
 
 /**
- * @api {get} /connectors Fetch connectors
+ * @api {get} /connectors Fetch connectors (DEPRECATED)
  * @apiName GetConnectors
  * @apiGroup Account Methods
  * @apiVersion 1.0.0
@@ -17,14 +17,14 @@ function * getCollection () {
  * @apiDescription Get all accounts of all connectors on this ledger.
  *
  * @apiExample {shell} Get connectors
- *    curl -x GET
- *    http://usd-ledger.example/USD/connectors
+ *    curl -X GET
+ *    http://usd-ledger.example/connectors
  *
  * @apiSuccessExample {json} 200 Response:
  *    HTTP/1.1 200 OK
  *    [
  *      {
- *        id: 'http://usd-ledger.example/USD/accounts/chloe',
+ *        id: 'http://usd-ledger.example/accounts/chloe',
  *        name: 'chloe',
  *        connector: 'http://usd-eur-connector.example'
  *      }
@@ -49,13 +49,17 @@ function * getConnectors () {
  * @apiParam {String} name Account's unique identifier
  *
  * @apiExample {shell} Get account
- *    curl -x GET -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l"
- *    http://usd-ledger.example/USD/accounts/alice
+ *    curl -X GET -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l"
+ *    http://usd-ledger.example/accounts/alice
+ *
+ * @apiSuccess (200 OK) {Object} Account The requested
+ *   [Account object](#account_object). The fields returned depend on the
+ *   [authentication level](#authentication) of the request.
  *
  * @apiSuccessExample {json} 200 Authenticated Response:
  *    HTTP/1.1 200 OK
  *    {
- *      "id": "http://usd-ledger.example/USD/accounts/alice",
+ *      "id": "http://usd-ledger.example/accounts/alice",
  *      "name": "alice",
  *      "balance": "100",
  *      "is_disabled": false
@@ -64,7 +68,7 @@ function * getConnectors () {
  * @apiSuccessExample {json} 200 Unauthenticated Response:
  *    HTTP/1.1 200 OK
  *    {
- *      "id": "http://usd-ledger.example/USD/accounts/alice",
+ *      "id": "http://usd-ledger.example/accounts/alice",
  *      "name": "alice",
  *      "ledger": "http://usd-ledger.example/USD"
  *    }
@@ -92,10 +96,16 @@ function * getResource () {
  * @apiParam {String} name Account's unique identifier
  *
  * @apiExample {shell} Put account
- *    curl -x PUT -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l"
+ *    curl -X PUT -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l"
  *    -H "Content-Type: application/json"
  *    -d '{"name": "alice", "balance": "100"}'
- *    http://usd-ledger.example/USD/accounts/alice
+ *    http://usd-ledger.example/accounts/alice
+ *
+ * @apiSuccess (201 Created) {Object} Account The newly-created
+ *   [Account object](#account_object), as saved.
+ *
+ * @apiSuccess (200 OK) {Object} Account The updated
+ *   [Account object](#account_object), as saved.
  *
  * @apiSuccessExample {json} 200 Get Account Response:
  *    HTTP/1.1 200 OK
@@ -139,6 +149,12 @@ function * putResource () {
  *
  * @apiExample {shell} Subscribe to account transfers
  *    wscat --auth alice:alice -c ws://example.com/accounts/alice/transfers
+ *
+ * @apiSuccess (Initial Response) {Object} TODO TODO
+ *
+ * @apiSuccess (Additional Messages) {Object} Transfer The
+ *   [Transfer object](#transfer_object) for each new transfer that affects this
+ *   account.
  *
  * @apiSuccessExample {json} 200 Get Account Response:
  *    HTTP/1.1 101 Switching Protocols
