@@ -9,10 +9,11 @@ function * getCollection () {
 }
 
 /**
- * @api {get} /connectors Fetch connectors (DEPRECATED)
+ * @api {get} /connectors Get connectors (DEPRECATED)
  * @apiName GetConnectors
  * @apiGroup Account Methods
  * @apiVersion 1.0.0
+ * @apiIgnore Deprecated.
  *
  * @apiDescription Get all accounts of all connectors on this ledger.
  *
@@ -38,23 +39,26 @@ function * getConnectors () {
 }
 
 /**
- * @api {get} /accounts/:name Fetch user info
+ * @api {get} /accounts/:name Get Account
  * @apiName GetAccount
  * @apiGroup Account Methods
  * @apiVersion 1.0.0
  *
- * @apiDescription Get information about a user. Only users themselves and admins
- *    are allowed to see the full account details.
+ * @apiHeader {String} [Authorization] Credentials to access the account. By
+ *   default, only the account owner and admin can see details including
+ *   account balance.
+ * @apiDescription Get information about an account.
  *
- * @apiParam {String} name Account's unique identifier
+ * @apiParam {String} name The unique name for this account.
  *
  * @apiExample {shell} Get account
  *    curl -X GET -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l"
  *    http://usd-ledger.example/accounts/alice
  *
  * @apiSuccess (200 OK) {Object} Account The requested
- *   [Account object](#account_object). The fields returned depend on the
- *   [authentication level](#authentication) of the request.
+ *   [Account object](#account_object). If the request was
+ *   [authenticated](#authentication) as the account owner or an admin, the
+ *   response includes additional fields such as the account balance.
  *
  * @apiSuccessExample {json} 200 Authenticated Response:
  *    HTTP/1.1 200 OK
@@ -86,7 +90,7 @@ function * getResource () {
 }
 
 /**
- * @api {put} /accounts/:name Create or update a user
+ * @api {put} /accounts/:name Create or Update Account
  * @apiName PutAccount
  * @apiGroup Account Methods
  * @apiVersion 1.0.0
@@ -137,7 +141,7 @@ function * putResource () {
 }
 
 /**
- * @api {get} /accounts/:name/transfers [Websocket] Subscribe to transfers
+ * @api {get} /accounts/:name/transfers [Websocket] Subscribe to Account Transfers
  * @apiName SubscribeAccountTransfers
  * @apiGroup Account Methods
  * @apiVersion 1.0.0

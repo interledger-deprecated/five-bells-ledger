@@ -162,18 +162,21 @@ function * getStateResource () {
 }
 
 /**
- * @api {put} /transfers/:id Propose and prepare transfer
+ * @api {put} /transfers/:id Propose or Prepare Transfer
  * @apiName PutTransfer
  * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
- * @apiDescription Create and/or authorize a transfer.
- *    When a transfer is created without authorization from the debited accounts
- *    it is in the `"proposed"` state. To authorize the transfer, the owner of the
- *    debited accounts must put the `"authorized": true` flag on the debit referencing
- *    their account and this HTTP call must carry HTTP authorization. When all
- *    debited accounts have authorized the transfer it is `"prepared"` and funds are escrowed
- *    until the fulfillment is presented or the `expires_at` time is reached
+ * @apiDescription Creates or updates a Transfer object. The transfer is
+ *    "proposed" if it contains debits that do not have `"authorized": true`.
+ *    To set the `authorized` field, call this method
+ *    [authenticated](#authentication) as owner of the account to be debited,
+ *    or as an admin. The transfer is "prepared" when all debits have been
+ *    authorized. When a transfer becomes prepared, it executes immediately if
+ *    there is no condition. If an `execution_condition` is specified, the
+ *    funds are held until a
+ *    [matching fulfillment is submitted](#api-Transfer_Methods-PutTransferFulfillment)
+ *    or the `expires_at` time is reached.
  *
  * @apiParam (URL Params) {String} id A new
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier)
@@ -203,8 +206,8 @@ function * getStateResource () {
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
  *
  * @apiHeader {String} Content-Type Must be `application/json`.
- * @apiHeader {String} [Authentication] To control the `authorized` field of a
- *   debit, the user must be authenticated with basic auth.
+ * @apiHeader {String} [Authorization] To control the `authorized` field of a
+ *   debit, the user must be [authenticated](#authentication).
  * @apiSuccess (201 Created) {Transfer} Object The newly-created
  *   [Transfer object](#transfer_object) as saved.
  * @apiSuccess (200 OK) {Transfer} Object The updated
@@ -296,7 +299,7 @@ function * putResource () {
 }
 
 /**
- * @api {put} /transfers/:id/fulfillment Execute prepared transfer
+ * @api {put} /transfers/:id/fulfillment Execute Prepared Transfer
  * @apiName PutTransferFulfillment
  * @apiGroup Transfer Methods
  * @apiVersion 1.0.0

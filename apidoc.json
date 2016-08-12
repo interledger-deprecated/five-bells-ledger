@@ -10,10 +10,13 @@
         "GetTransferState",
         "GetTransferFulfillment",
     "Account_Methods",
+        "PutAccount",
+        "GetAccount",
+        "SubscribeAccountTransfers",
     "Metadata_Methods"
   ],
   "header": {
-    "title": "Interledger Reference Ledger API",
+    "title": "Intro and Data Types",
     "filename": "apidoc-out/apidoc_intro.md"
   }
 }

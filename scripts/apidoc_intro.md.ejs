@@ -7,12 +7,12 @@ Five Bells Ledger is a JavaScript reference implementation of an ILP-compatible 
 
 The Five Bells Ledger supports two kinds of authentication: HTTP Basic, or client-side certificates. HTTP Basic auth is good for development, but provides very limited security. Client certificates can be complex to set up, but allow many secure configurations.
 
-### HTTP Basic Authentication
+### HTTP Basic Auth
 
-[HTTP Basic Auth](https://tools.ietf.org/html/rfc2617) is enabled by default. To authorize a request, specify the `Authentication` field. Your authentication determines which permissions you have:
+[HTTP Basic Auth](https://tools.ietf.org/html/rfc2617) is enabled by default. To authorize a request, specify the `Authorization` header. Your authentication determines which permissions you have:
 
 * No authentication is necessary for some methods, such as [Get Server Metadata](#api-Metadata_Methods-GetMetadata).
-* Account-level authentication is necessary for most operations, such as getting account details or preparing transfers. Account credentials are defined in the [account objects](#account_object).
+* Account-level authentication is necessary for most operations, such as getting account details or preparing transfers. Account credentials are defined by the `name` and `password` fields of the [account object](#account_object).
 * Admin-level authentication is necessary for some operations, such as creating new accounts. Admin credentials are defined by [environment variables](#environment_variables) when the server is started. You can also flag an account as admin to give that account's credentials admin powers.
 
 
