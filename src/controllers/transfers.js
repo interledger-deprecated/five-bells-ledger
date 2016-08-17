@@ -9,9 +9,9 @@ const model = require('../models/transfers')
 const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-parameter-error')
 
 /**
- * @api {get} /transfers/:id Get local transfer object
+ * @api {get} /transfers/:id Get Transfer by ID
  * @apiName GetTransfer
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Use this to query about the details or status of a local
@@ -21,19 +21,21 @@ const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-p
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
  * @apiExample {shell} Get a transfer
- *   curl -x GET http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
+ *   curl -X GET http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
+ *
+ * @apiSuccess (Success) {Transfer} Object The [Transfer object](#transfer_object) as saved.
  *
  * @apiSuccessExample {json} Transfer Response:
  *    HTTP/1.1 200 OK
  *    {
- *      "id": "http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
- *      "ledger": "http://usd-ledger.example/USD",
+ *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+ *      "ledger": "http://usd-ledger.example",
  *      "debits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/alice",
+ *        "account": "http://usd-ledger.example/accounts/alice",
  *        "amount": "50"
  *      }],
  *      "credits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/bob",
+ *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
@@ -48,7 +50,8 @@ const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-p
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
- *
+ */
+/**
  * @returns {void}
  */
 function * getResource () {
@@ -58,9 +61,9 @@ function * getResource () {
 }
 
 /**
- * @api {get} /transfers/byExecutionCondition/:execution_condition Get local transfer object
+ * @api {get} /transfers/byExecutionCondition/:execution_condition Get Transfers by Condition
  * @apiName GetTransferByExecutionCondition
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 15.0.0
  *
  * @apiDescription Use this to query about the details or status of a local
@@ -69,19 +72,21 @@ function * getResource () {
  * @apiParam {String} execution_condition
  *
  * @apiExample {shell} Get a transfer
- *   curl -x GET http://usd-ledger.example/USD/transfers/ByExecutionCondition/cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2
+ *   curl -X GET http://usd-ledger.example/transfers/ByExecutionCondition/cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2
+ *
+ * @apiSuccess (Success) {Transfer[]} Array Array of [Transfer objects](#transfer_object) matching the condition.
  *
  * @apiSuccessExample {Array} Array of Transfer responses:
  *    HTTP/1.1 200 OK
  *    [{
- *      "id": "http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
- *      "ledger": "http://usd-ledger.example/USD",
+ *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+ *      "ledger": "http://usd-ledger.example",
  *      "debits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/alice",
+ *        "account": "http://usd-ledger.example/accounts/alice",
  *        "amount": "50"
  *      }],
  *      "credits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/bob",
+ *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
@@ -96,7 +101,8 @@ function * getResource () {
  *
  * @apiUse NotFoundError
  * @apiUse InvalidUriParameterError
- *
+ */
+/**
  * @returns {void}
  */
 function * getResourcesByExecutionCondition () {
@@ -106,9 +112,9 @@ function * getResourcesByExecutionCondition () {
 }
 
 /**
- * @api {get} /transfers/:id/state Get the state of a transfer
+ * @api {get} /transfers/:id/state Get Signed Transfer State
  * @apiName GetTransferState
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Use this to get a signed receipt containing only the id of
@@ -121,7 +127,7 @@ function * getResourcesByExecutionCondition () {
  * @apiParam {String} condition_state The state to hash for preimage algorithms' conditions.
  *
  * @apiExample {shell} Get a transfer state receipt
- *   curl -x GET http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/state
+ *   curl -X GET http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/state
  *
  * @apiSuccessExample {json} Transfer State Response:
  *    HTTP/1.1 200 OK
@@ -138,7 +144,8 @@ function * getResourcesByExecutionCondition () {
  *    }
  *
  * @apiUse InvalidUriParameterError
- *
+ */
+/**
  * @returns {void}
  */
 function * getStateResource () {
@@ -155,51 +162,68 @@ function * getStateResource () {
 }
 
 /**
- * @api {put} /transfers/:id Propose and prepare a transfer
+ * @api {put} /transfers/:id Propose or Prepare Transfer
  * @apiName PutTransfer
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
- * @apiDescription This endpoint is used to create and authorize transfers.
- *    When a transfer is created without authorization from the debited accounts
- *    it is in the `"proposed"` state. To authorize the transfer, the owner of the
- *    debited accounts must put the `"authorized": true` flag on the debit referencing
- *    their account and this HTTP call must carry HTTP authorization. When all
- *    debited accounts have authorized the transfer it is `"prepared"` and funds are escrowed
- *    until the fulfillment is presented or the `expires_at` time is reached
+ * @apiDescription Creates or updates a Transfer object. The transfer is
+ *    "proposed" if it contains debits that do not have `"authorized": true`.
+ *    To set the `authorized` field, call this method
+ *    [authenticated](#authentication) as owner of the account to be debited,
+ *    or as an admin. The transfer is "prepared" when all debits have been
+ *    authorized. When a transfer becomes prepared, it executes immediately if
+ *    there is no condition. If an `execution_condition` is specified, the
+ *    funds are held until a
+ *    [matching fulfillment is submitted](#api-Transfer_Methods-PutTransferFulfillment)
+ *    or the `expires_at` time is reached.
  *
- * @apiParam {String} id Transfer
- *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ * @apiParam (URL Params) {String} id A new
+ *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+ *   to identify this Transfer.
  *
- * @apiExample {shell} Propose a Transfer:
- *    curl -x PUT -H "Content-Type: application/json" -d
+ * @apiParam (Request Body) {Transfer} Object A [Transfer object](#transfer_object) to
+ *    describe the transfer that should take place. For a conditional transfer, this
+ *    includes an `execution_condition`. The `authorized` field of each debit object
+ *    must be set to `true` before the transfer can occur.
+ *
+ * @apiExample {shell} Propose a Transfer
+ *    curl -X PUT -H "Content-Type: application/json" -d
  *    '{
- *      "id": "http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
- *      "ledger": "http://usd-ledger.example/USD",
+ *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+ *      "ledger": "http://usd-ledger.example",
  *      "debits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/alice",
+ *        "account": "http://usd-ledger.example/accounts/alice",
  *        "amount": "50"
  *      }],
  *      "credits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/bob",
+ *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z"
  *    }'
- *    http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
+ *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
  *
- * @apiSuccessExample {json} 201 New Proposed Transfer Response:
+ * @apiHeader {String} Content-Type Must be `application/json`.
+ * @apiHeader {String} [Authorization] To control the `authorized` field of a
+ *   debit, the user must be [authenticated](#authentication).
+ * @apiSuccess (201 Created) {Transfer} Object The newly-created
+ *   [Transfer object](#transfer_object) as saved.
+ * @apiSuccess (200 OK) {Transfer} Object The updated
+ *   [Transfer object](#transfer_object) as saved.
+ *
+ * @apiSuccessExample {json} 201 New Proposed Transfer Response
  *    HTTP/1.1 201 CREATED
  *    {
- *      "id": "http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
- *      "ledger": "http://usd-ledger.example/USD",
+ *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+ *      "ledger": "http://usd-ledger.example",
  *      "debits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/alice",
+ *        "account": "http://usd-ledger.example/accounts/alice",
  *        "amount": "50"
  *      }],
  *      "credits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/bob",
+ *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
@@ -207,37 +231,37 @@ function * getStateResource () {
  *      "state": "proposed"
  *    }
  *
- * @apiExample {shell} Prepare a Transfer:
- *    curl -x PUT -H "Content-Type: application/json Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l" -d
+ * @apiExample {shell} Prepare a Transfer
+ *    curl -X PUT -H "Content-Type: application/json Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l" -d
  *    '{
- *      "id": "http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
- *      "ledger": "http://usd-ledger.example/USD",
+ *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+ *      "ledger": "http://usd-ledger.example",
  *      "debits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/alice",
+ *        "account": "http://usd-ledger.example/accounts/alice",
  *        "amount": "50",
  *        "authorized": true
  *      }],
  *      "credits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/bob",
+ *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z"
  *    }'
- *    http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
+ *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
  *
- * @apiSuccessExample {json} 200 Prepared Transfer Response:
+ * @apiSuccessExample {json} 200 Prepared Transfer Response
  *    HTTP/1.1 200 OK
  *    {
- *      "id": "http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
- *      "ledger": "http://usd-ledger.example/USD",
+ *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+ *      "ledger": "http://usd-ledger.example",
  *      "debits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/alice",
+ *        "account": "http://usd-ledger.example/accounts/alice",
  *        "amount": "50",
  *        "authorized": true
  *      }],
  *      "credits": [{
- *        "account": "http://usd-ledger.example/USD/accounts/bob",
+ *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
@@ -250,7 +274,8 @@ function * getStateResource () {
  * @apiUse AlreadyExistsError
  * @apiUse InvalidUriParameterError
  * @apiUse InvalidBodyError
- *
+ */
+/**
  * @param {String} id Transfer UUID
  * @returns {void}
  */
@@ -274,24 +299,29 @@ function * putResource () {
 }
 
 /**
- * @api {put} /transfers/:id/fulfillment Execute a prepared transfer
+ * @api {put} /transfers/:id/fulfillment Execute Prepared Transfer
  * @apiName PutTransferFulfillment
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
  * @apiDescription Execute or cancel a transfer that has already been prepared.
- *    Putting the fulfillment of either the `execution_condition` or the
- *    `cancellation_condition`, if there is one, will execute or cancel the transfer, respectively.
+ *    If the prepared transfer has an `execution_condition`, you can submit the
+ *    fulfillment of that condition to execute the transfer. If the prepared
+ *    transfer has a `cancellation_condition`, you can submit the fulfillment
+ *    of that condition to cancel the transfer.
  *
- * @apiParam {String} id Transfer
+ * @apiHeader {String} Content-Type Must be `text/plain`.
+ * @apiParam (URL Parameters) {String} id Transfer
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ * @apiParam (Request Body) {String} Fulfillment A [Fulfillment](#cryptoconditions)
+ *   in string format.
  *
  * @apiExample {shell} Put Transfer Fulfillment:
- *    curl -x PUT -H "Content-Type: text/plain" -d
+ *    curl -X PUT -H "Content-Type: text/plain" -d
  *    'cf:0:_v8'
- *    http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment
+ *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment
  *
- * @apiSuccessExample {json} 201 Fulfillment Accepted Response:
+ * @apiSuccessExample {json} 200 Fulfillment Accepted Response:
  *    HTTP/1.1 200 OK
  *    cf:0:_v8
  *
@@ -299,7 +329,8 @@ function * putResource () {
  * @apiUse UnprocessableEntityError
  * @apiUse InvalidUriParameterError
  * @apiUse InvalidBodyError
- *
+ */
+/**
  * @param {String} id Transfer UUID
  * @returns {void}
  */
@@ -313,26 +344,27 @@ function * putFulfillment () {
 }
 
 /**
- * @api {get} /transfers/:id/fulfillment Get a transfer's fulfillment
+ * @api {get} /transfers/:id/fulfillment Get Transfer Fulfillment
  * @apiName GetTransferFulfillment
- * @apiGroup Transfer
+ * @apiGroup Transfer Methods
  * @apiVersion 1.0.0
  *
- * @apiDescription Retrieve the fulfillment for a transfer that has been executed or cancelled
+ * @apiDescription Retrieve the fulfillment for a transfer that has been executed or cancelled. This is separate from the Transfer object because it can be very large.
  *
  * @apiParam {String} id Transfer
  *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
  *
  * @apiExample {shell} Get Transfer Fulfillment:
- *    curl -x GET
- *    http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment
+ *    curl -X GET
+ *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment
  *
  * @apiSuccessExample {json} 200 Fulfillment Response:
  *    HTTP/1.1 200 OK
  *    cf:0:_v8
  *
  * @apiUse NotFoundError
- *
+ */
+/**
  * @param {String} id Transfer UUID
  * @returns {void}
  */

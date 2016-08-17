@@ -9,6 +9,7 @@
 
 > A reference implementation of the Five Bells Ledger API
 
+
 ## Usage
 
 You can see the ledger in action as part of the [`five-bells-demo`](https://github.com/interledger/five-bells-demo)!
@@ -33,7 +34,7 @@ npm install
 To run it using an in-memory database (the simplest option), run:
 
 ``` sh
-LEDGER_DB_SYNC=1 LEDGER_DB_URI=sqlite://:memory: npm start
+LEDGER_ADMIN_PASS=mypassword LEDGER_DB_SYNC=1 LEDGER_DB_URI=sqlite://:memory: npm start
 ```
 
 Note: `LEDGER_DB_SYNC` runs a SQL script to setup the database schema and
@@ -45,34 +46,17 @@ Or run:
 npm start
 ```
 
-With the following configuration options set as environment variables:
+See "Environment Variables" in the generated documentation for config options.
 
-* `LEDGER_DB_URI` (required; e.g.: `mysql://root:password@localhost/fivebells`) URI for connecting to a database. Defaults to `sqlite` if no database is set.
-* `LEDGER_DB_SYNC` (default: `0`) whether or not to run the SQL setup scripts for the database
-* `LEDGER_PORT` (default: `3000`) Port that Five Bells Ledger will listen on.
-* `LEDGER_BIND_IP` (default: `0.0.0.0`) IP that Five Bells Ledger will bind to.
-* `LEDGER_HOSTNAME` (default: *[your hostname]*) Publicly visible hostname. This is important for things like generating globally unique IDs. Make sure this is a hostname that all your clients will be able to see. The default should be fine for local testing.
-* `LEDGER_PUBLIC_PORT` (default: `$PORT`) Publicly visible port. You can set this if your public port differs from the listening port, e.g. because the ledger is running behind a proxy.
-* `LEDGER_PUBLIC_HTTPS` (default: `''`) Whether or not the publicly visible instance of Five Bells Ledger is using HTTPS.
-* `LEDGER_ADMIN_USER` (default: `'admin'`) The admin account's username (an admin user can create/modify accounts).
-* `LEDGER_ADMIN_PASS` (default: none) The admin account's password.
-* `LEDGER_ADMIN_FINGERPRINT` (default: none) The admin account's TLS certificate fingerprint if using TLS Client Certificate Auth.
-* `LEDGER_AUTH_BASIC_ENABLED` (default `1`) whether or not to allow HTTP basic authentication.
-* `LEDGER_AUTH_HTTP_SIGNATURE_ENABLED` (default `1`) whether or not to allow HTTP signature authentication.
-* `LEDGER_AUTH_CLIENT_CERT_ENABLED` (default `0`) whether or not to allow TLS Client Certificate authentication (requires HTTPS).
-* `LEDGER_USE_HTTPS` (default `0`) whether or not to run the server using HTTPS.
-* `LEDGER_TLS_KEY` (default: none) the path to the server private key file. Required if using HTTPS.
-* `LEDGER_TLS_CERTIFICATE` (default: none) the path to the server certificate file. Required if using HTTPS.
-* `LEDGER_TLS_CRL` (default: none) the path to the server certificate revokation list file. Optional if using HTTPS.
-* `LEDGER_TLS_CA` (default: none) the path to a trusted certificate to be used in addition to using the [default list](https://github.com/nodejs/node/blob/v4.3.0/src/node_root_certs.h). Optional if using HTTPS.
-* `LEDGER_SIGNING_PRIVATE_KEY` (default: none) the path to the file containing the private key used to sign ledger notifications.
-* `LEDGER_SIGNING_PUBLIC_KEY` (default: none) the path to the file containing the public key for notification signatures.
-* `LEDGER_FEATURE_CREDIT_AUTH` (default: `0`) whether or not to require credits to be authorized.
-* `LEDGER_CURRENCY_CODE` (default: none) ISO 4217 currency code
-* `LEDGER_CURRENCY_SYMBOL` (default: none) currency symbol
-* `LEDGER_AMOUNT_PRECISION` (default: `10`) the total precision allowed in amounts
-* `LEDGER_AMOUNT_SCALE` (default: `2`) the number of digits allowed in amounts to the right of the decimal place
-* `LEDGER_LOG_LEVEL` (default: `info`) the allowed levels in order of verbosity are `fatal`, `error`, `warn`, `info`, `debug`, and `trace`
+## Building Docs
+
+After installation:
+
+```sh
+npm run docs
+```
+
+Open `apidocs-out/index.html` in a web browser to see the generated API documentation.
 
 
 ## Running with Docker (Alternative Method)
