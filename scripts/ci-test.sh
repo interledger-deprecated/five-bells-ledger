@@ -12,8 +12,8 @@ integrationtest() {
   npm run integration
 }
 
-apidoc() {
-  npm run apidoc
+docs() {
+  npm run docs
 }
 
 dockerBuild() {
@@ -86,13 +86,13 @@ oneNode() {
   integrationtest
   postgrestest
   oracletest
-  apidoc
+  docs
 }
 
 twoNodes() {
   case "$NODE_INDEX" in
     0) lint; dockerBuild; sqlitetest; integrationtest;;
-    1) dockerBuild; oracletest; postgrestest; apidoc;;
+    1) dockerBuild; oracletest; postgrestest; docs;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
 }
@@ -101,7 +101,7 @@ threeNodes() {
   case "$NODE_INDEX" in
     0) lint; dockerBuild; sqlitetest integrationtest;;
     1) dockerBuild; postgrestest;;
-    2) oracletest; apidoc;;
+    2) oracletest; docs;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
 }
@@ -110,7 +110,7 @@ fourNodes() {
   case "$NODE_INDEX" in
     0) dockerBuild; sqlitetest; postgrestest;;
     1) integrationtest;;
-    2) lint; dockerBuild; apidoc;;
+    2) lint; dockerBuild; docs;;
     3) oracletest;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
