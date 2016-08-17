@@ -114,7 +114,7 @@ function * getResource () {
  * @apiSuccessExample {json} 200 Get Account Response:
  *    HTTP/1.1 200 OK
  *    {
- *      "id": "http://localhost/accounts/alice",
+ *      "id": "http://usd-ledger.exmaple/accounts/alice",
  *      "name": "alice",
  *      "balance": "100",
  *      "is_disabled": false
@@ -147,37 +147,42 @@ function * putResource () {
  * @apiVersion 1.0.0
  *
  * @apiDescription Subscribe to an account's transfers and receive real-time
- *   notifications via websocket.
+ *   notifications via WebSocket.
  *
  * @apiParam {String} name Account's unique identifier
  *
  * @apiExample {shell} Subscribe to account transfers
- *    wscat --auth alice:alice -c ws://example.com/accounts/alice/transfers
+ *    wscat --auth alice:alice -c ws://usd-ledger.example/accounts/alice/transfers
  *
- * @apiSuccess (Initial Response) {Object} TODO TODO
+ * @apiSuccess (101 Switching Protocols) {None} ... This methods opens a
+ *    WebSocket connection with the server. There is no immediate response
+ *    after opening the connection.
  *
- * @apiSuccess (Additional Messages) {Object} Transfer The
- *   [Transfer object](#transfer_object) for each new transfer that affects this
- *   account.
+ * @apiSuccess (Additional Messages) {Object} Notification At most one
+ *   [notification object](#notification_object) for each change in the state
+ *   of any transfer that affects this account. This includes transfers that
+ *   debit or credit the account.
  *
- * @apiSuccessExample {json} 200 Get Account Response:
+ * @apiSuccessExample {json} Initial connection
  *    HTTP/1.1 101 Switching Protocols
+ *
+ * @apiSuccessExample {json} Push notification
  *    {
  *      "resource":{
  *        "debits":[
  *          {
- *            "account":"http://localhost/accounts/alice",
+ *            "account":"http://usd-ledger.exmaple/accounts/alice",
  *            "amount":"0.01",
  *            "authorized":true
  *          }
  *        ],
  *        "credits":[
  *          {
- *            "account":"http://localhost/accounts/bob",
+ *            "account":"http://usd-ledger.exmaple/accounts/bob",
  *            "amount":"0.01"
  *          }
  *        ],
- *        "id":"http://localhost/transfers/4f122511-989d-101e-f938-573993b75e22",
+ *        "id":"http://usd-ledger.exmaple/transfers/4f122511-989d-101e-f938-573993b75e22",
  *        "ledger":"http://localhost",
  *        "state":"executed",
  *        "timeline":{
@@ -187,7 +192,6 @@ function * putResource () {
  *        }
  *      }
  *    }
- *    (... more events ...)
  *
  * @apiUse UnauthorizedError
  * @apiUse InvalidUriParameterError

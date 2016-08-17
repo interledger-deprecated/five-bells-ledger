@@ -2,18 +2,17 @@
 
 Five Bells Ledger is a JavaScript reference implementation of an ILP-compatible ledger with a RESTful API. It demonstrates one possible way that a ledger could expose conditional transfers to be used as part of the Interledger Protocol. It also has some basic functionality that any ledger might have.
 
-## Authentication
-<a id='authentication'></a>
+### Contents
 
-The Five Bells Ledger supports two kinds of authentication: HTTP Basic, or client-side certificates. HTTP Basic auth is good for development, but provides very limited security. Client certificates can be complex to set up, but allow many secure configurations.
+* Data Structures:
+    * [Transfer Object](#transfer_object)
+    * [Account Object](#account_object)
+    * [Notification Object](#notification_object)
+* Other Concepts:
+    * [Authentication](#authentication)
+    * [Crypto-Conditions](#cryptoconditions)
+    * [Environment Variables](#environment_variables)
 
-### HTTP Basic Auth
-
-[HTTP Basic Auth](https://tools.ietf.org/html/rfc2617) is enabled by default. To authorize a request, specify the `Authorization` header. Your authentication determines which permissions you have:
-
-* No authentication is necessary for some methods, such as [Get Server Metadata](#api-Metadata_Methods-GetMetadata).
-* Account-level authentication is necessary for most operations, such as getting account details or preparing transfers. Account credentials are defined by the `name` and `password` fields of the [account object](#account_object).
-* Admin-level authentication is necessary for some operations, such as creating new accounts. Admin credentials are defined by [environment variables](#environment_variables) when the server is started. You can also flag an account as admin to give that account's credentials admin powers.
 
 
 ## Transfer Object
@@ -23,8 +22,9 @@ A transfer is the core action of the Five Bells Ledger. It can have multiple deb
 
 A transfer object can have the following fields:
 
-<!-- This table sourced from five-bells-shared TransferTemplate.json schema. -->
+<!-- This table sourced from the five-bells-shared TransferTemplate.json schema. -->
 <%- renderSchema("TransferTemplate.json") %>
+
 
 ## Account Object
 <a id='account_object'></a>
@@ -33,8 +33,20 @@ An account object represents one balance in the ledger, a means of authenticatio
 
 An account object can have the following fields:
 
-<!-- This table sourced from five-bells-shared TransferTemplate.json schema. -->
+<!-- This table sourced from the five-bells-shared Account.json schema. -->
 <%- renderSchema("Account.json") %>
+
+
+## Notification Object
+<a id='notification_object'></a>
+
+The Ledger pushes a notification object to WebSocket clients when a transfer changes state. This notification is sent _at most once_ for each state change. If a transfer advances through multiple steps as part of a single operation, the notification only describes the final state of the transfer. (For example, if an unconditional transfer is proposed, prepared, and executed by one request, there is only a notification that the transfer has reached the "executed" state.)
+
+A notification object can have the following fields:
+
+<!-- This table sourced from the five-bells-shared Notification.json schema. -->
+<%- renderSchema("Notification.json") %>
+
 
 ## Crypto-Conditions
 <a id='cryptoconditions'></a>
@@ -55,6 +67,19 @@ Example fulfillment in string format:
 
     cf:0:VGhlIG9ubHkgYmFzaXMgZm9yIGdvb2QgU29jaWV0eSBpcyB1bmxpbWl0ZWQgY3JlZGl0LuKAlE9zY2FyIFdpbGRl
 
+
+## Authentication
+<a id='authentication'></a>
+
+The Five Bells Ledger supports two kinds of authentication: HTTP Basic, or client-side certificates. HTTP Basic auth is good for development, but provides very limited security. Client certificates can be complex to set up, but allow many secure configurations.
+
+### HTTP Basic Auth
+
+[HTTP Basic Auth](https://tools.ietf.org/html/rfc2617) is enabled by default. To authorize a request, specify the `Authorization` header. Your authentication determines which permissions you have:
+
+* No authentication is necessary for some methods, such as [Get Server Metadata](#api-Metadata_Methods-GetMetadata).
+* Account-level authentication is necessary for most operations, such as getting account details or preparing transfers. Account credentials are defined by the `name` and `password` fields of the [account object](#account_object).
+* Admin-level authentication is necessary for some operations, such as creating new accounts. Admin credentials are defined by [environment variables](#environment_variables) when the server is started. You can also flag an account as admin to give that account's credentials admin powers.
 
 
 ## Environment Variables

@@ -53,7 +53,7 @@ See "Environment Variables" in the generated documentation for config options.
 After installation:
 
 ```sh
-npm run apidoc
+npm run docs
 ```
 
 Open `apidocs-out/index.html` in a web browser to see the generated API documentation.

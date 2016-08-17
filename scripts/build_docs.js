@@ -10,7 +10,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const execSync = require('child_process').execSync;
+//const execSync = require('child_process').execSync;
 const ejs = require('ejs');
 const renderFromPaths =
   require('./json-schema-to-markdown-table2.js').renderFromPaths;
@@ -56,7 +56,7 @@ function main() {
           if (e.code != 'EEXIST') throw e;
       }
       fs.writeFileSync(outputPath, output);
-      execSync('npm run apidoc', {cwd: ROOT});
+      //execSync('npm run apidoc', {cwd: ROOT});
       process.exit(0);
     }
   });
