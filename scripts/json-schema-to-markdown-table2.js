@@ -207,7 +207,8 @@ function loadSchemas (schemaDirectory) {
   const filepaths = recursivelyListDirectory(schemaDirectory)
   const schemas = {}
   filepaths.forEach(fpair => {
-    let [filename, filepath] = fpair
+    let filename = fpair[0]
+    let filepath = fpair[1]
     if (filepath.endsWith('.json')) {
       const schema = loadSchema(filepath)
       schemas[filename] = schema
