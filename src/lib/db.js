@@ -64,13 +64,17 @@ function executePSQL (sqlFilepath) {
     const command = 'psql'
     const args = [
       '--quiet',
-      '--username=' + connection.user,
       '--host=' + connection.host,
       '--port=' + (connection.port || 5432),
       '--dbname=' + connection.database,
       '--file=' + path.resolve(sqlFilepath),
       '--set=ON_ERROR_STOP=1'
     ]
+
+    if (connection.user) {
+      args.push('--username=' + connection.user)
+    }
+
     const env = {
       PATH: process.env.PATH,
       PGPASSWORD: connection.password
