@@ -31,6 +31,12 @@ function parseCurrencyConfig () {
   }
 }
 
+function parseIlpConfig () {
+  return {
+    prefix: Config.getEnv(envPrefix, 'ILP_ADDRESS') || null
+  }
+}
+
 function parseAdminConfig () {
   const adminUser = Config.getEnv(envPrefix, 'ADMIN_USER') || 'admin'
   const adminPass = Config.getEnv(envPrefix, 'ADMIN_PASS')
@@ -122,6 +128,7 @@ function loadConfig () {
   localConfig.features = parseFeaturesConfig()
   localConfig.amount = parseAmountConfig()
   localConfig.default_admin = parseAdminConfig()
+  localConfig.ilp = parseIlpConfig()
   localConfig.logLevel = getLogLevel()
 
   // optional

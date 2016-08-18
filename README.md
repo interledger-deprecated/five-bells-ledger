@@ -58,7 +58,6 @@ npm run docs
 
 Open `apidocs-out/index.html` in a web browser to see the generated API documentation.
 
-
 ## Running with Docker (Alternative Method)
 
 This project can be run in a [Docker](https://www.docker.com/) container.
