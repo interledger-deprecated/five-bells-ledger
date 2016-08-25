@@ -56,7 +56,7 @@ describe('Metadata', function () {
 
       process.env.LEDGER_CURRENCY_CODE = 'USD'
       process.env.LEDGER_CURRENCY_SYMBOL = '$'
-      process.env.LEDGER_ILP_ADDRESS = 'example.red.'
+      process.env.LEDGER_ILP_PREFIX = 'example.red.'
 
       const newApp = new App({
         log: require('../src/services/log'),
@@ -79,7 +79,7 @@ describe('Metadata', function () {
 
       delete process.env.LEDGER_CURRENCY_CODE
       delete process.env.LEDGER_CURRENCY_SYMBOL
-      delete process.env.LEDGER_ILP_ADDRESS
+      delete process.env.LEDGER_ILP_PREFIX
     })
   })
 })

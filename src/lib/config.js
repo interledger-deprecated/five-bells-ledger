@@ -33,7 +33,7 @@ function parseCurrencyConfig () {
 
 function parseIlpConfig () {
   return {
-    prefix: Config.getEnv(envPrefix, 'ILP_ADDRESS') || null
+    prefix: Config.getEnv(envPrefix, 'ILP_PREFIX') || null
   }
 }
 
