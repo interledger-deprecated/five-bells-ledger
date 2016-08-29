@@ -1,10 +1,14 @@
 'use strict'
 
 const _ = require('lodash')
+const moment = require('moment')
 const db = require('./utils')('L_FULFILLMENTS',
   convertToPersistent, convertFromPersistent)
 const getTransferId = require('./transfers').getTransferId
+const getTransferById = require('./transfers').getTransferById
 const removeAuditFields = require('./audit').removeAuditFields
+const TransferNotFoundError = require('../../errors/transfer-not-found-error')
+const FulfillmentNotFoundError = require('../../errors/fulfillment-not-found-error')
 
 function convertFromPersistent (data) {
   const result = _.mapKeys(_.cloneDeep(data), (value, key) => key.toLowerCase())
@@ -38,15 +42,30 @@ function * insertFulfillments (fulfillments, options) {
 }
 
 function * getFulfillment (transferUuid, options) {
-  return getTransferId(transferUuid, options).then((transferId) => {
-    return db.selectOne({TRANSFER_ID: transferId},
-      options && options.transaction).then((result) => {
-        if (result) {
-          result.transfer_id = transferUuid
+  const transferId = yield getTransferId(transferUuid, options)
+  if (!transferId) {
+    throw new TransferNotFoundError('This transfer does not exist')
+  }
+  const transfer = yield getTransferById(transferId, options)
+  return db.selectOne({TRANSFER_ID: transferId},
+    options && options.transaction).then((result) => {
+      if (!result) {
+        if (transfer.expires_at && moment().isAfter(transfer.expires_at)) {
+          throw new FulfillmentNotFoundError('This transfer expired before it was fulfilled')
         }
-        return result
-      })
-  })
+        throw new FulfillmentNotFoundError('This transfer has not yet been fulfilled')
+      }
+      result.transfer_id = transferUuid
+      return result
+    })
+}
+
+function * maybeGetFulfillment (transferUuid, options) {
+  try {
+    return yield getFulfillment(transferUuid, options)
+  } catch (err) {
+    return null
+  }
 }
 
 function * upsertFulfillment (fulfillment, options) {
@@ -56,6 +75,7 @@ function * upsertFulfillment (fulfillment, options) {
 }
 
 module.exports = {
+  maybeGetFulfillment,
   getFulfillment,
   insertFulfillments,
   upsertFulfillment

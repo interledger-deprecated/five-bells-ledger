@@ -53,6 +53,10 @@ describe('GET /fulfillment', function () {
       .get(this.invalidTransfer.id + '/fulfillment')
       .auth('admin', 'admin')
       .expect(404)
+      .expect({
+        id: 'TransferNotFoundError',
+        message: 'This transfer does not exist'
+      })
       .end()
   })
 
@@ -62,6 +66,27 @@ describe('GET /fulfillment', function () {
       .get(transfer.id + '/fulfillment')
       .auth('admin', 'admin')
       .expect(404)
+      .expect({
+        id: 'FulfillmentNotFoundError',
+        message: 'This transfer has not yet been fulfilled'
+      })
+      .end()
+  })
+
+  it('should return 404 if the transfer has no fulfillment and has already expired', function * () {
+    const transfer = Object.assign(this.proposedTransfer, {
+      id: 'http://localhost/transfers/25644640-d140-450e-b94b-badbe23d3380',
+      expires_at: (new Date(Date.now() - 1)).toISOString()
+    })
+    yield dbHelper.addTransfers([transfer])
+    yield this.request()
+      .get(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
+      .expect(404)
+      .expect({
+        id: 'FulfillmentNotFoundError',
+        message: 'This transfer expired before it was fulfilled'
+      })
       .end()
   })
 
