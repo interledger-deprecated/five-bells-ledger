@@ -7,7 +7,7 @@ const transferStates = transferDictionary.transferStates
 const isTransferFinalized = require('./transferUtils').isTransferFinalized
 const convertToExternalTransfer = require('../models/converters/transfers')
   .convertToExternalTransfer
-const getFulfillment = require('../models/db/fulfillments').getFulfillment
+const maybeGetFulfillment = require('../models/db/fulfillments').maybeGetFulfillment
 const convertToExternalFulfillment = require('../models/converters/fulfillments')
   .convertToExternalFulfillment
 
@@ -30,7 +30,7 @@ class NotificationBroadcaster extends EventEmitter {
     // If the transfer is finalized, see if it was finalized by a fulfillment
     let fulfillment
     if (isTransferFinalized(transfer)) {
-      fulfillment = yield getFulfillment(transfer.id, { transaction })
+      fulfillment = yield maybeGetFulfillment(transfer.id, { transaction })
 
       if (fulfillment) {
         if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {

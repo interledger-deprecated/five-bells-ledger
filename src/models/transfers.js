@@ -479,9 +479,6 @@ function * setTransfer (externalTransfer, requestingUser) {
 
 function * getFulfillment (transferId) {
   const fulfillment = yield fulfillments.getFulfillment(transferId)
-  if (!fulfillment) {
-    throw new NotFoundError('This transfer has no fulfillment')
-  }
   return convertToExternalFulfillment(fulfillment)
 }
 

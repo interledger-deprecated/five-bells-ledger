@@ -53,6 +53,10 @@ describe('GET /fulfillment', function () {
       .get(this.invalidTransfer.id + '/fulfillment')
       .auth('admin', 'admin')
       .expect(404)
+      .expect({
+        id: 'TransferNotFoundError',
+        message: 'This transfer does not exist'
+      })
       .end()
   })
 
@@ -62,6 +66,10 @@ describe('GET /fulfillment', function () {
       .get(transfer.id + '/fulfillment')
       .auth('admin', 'admin')
       .expect(404)
+      .expect({
+        id: 'FulfillmentNotFoundError',
+        message: 'This transfer has no fulfillment'
+      })
       .end()
   })
 

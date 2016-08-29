@@ -5,6 +5,8 @@ const db = require('./utils')('L_FULFILLMENTS',
   convertToPersistent, convertFromPersistent)
 const getTransferId = require('./transfers').getTransferId
 const removeAuditFields = require('./audit').removeAuditFields
+const TransferNotFoundError = require('../../errors/transfer-not-found-error')
+const FulfillmentNotFoundError = require('../../errors/fulfillment-not-found-error')
 
 function convertFromPersistent (data) {
   const result = _.mapKeys(_.cloneDeep(data), (value, key) => key.toLowerCase())
@@ -39,14 +41,26 @@ function * insertFulfillments (fulfillments, options) {
 
 function * getFulfillment (transferUuid, options) {
   return getTransferId(transferUuid, options).then((transferId) => {
+    if (!transferId) {
+      throw new TransferNotFoundError('This transfer does not exist')
+    }
     return db.selectOne({TRANSFER_ID: transferId},
       options && options.transaction).then((result) => {
-        if (result) {
-          result.transfer_id = transferUuid
+        if (!result) {
+          throw new FulfillmentNotFoundError('This transfer has no fulfillment')
         }
+        result.transfer_id = transferUuid
         return result
       })
   })
+}
+
+function * maybeGetFulfillment (transferUuid, options) {
+  try {
+    return yield getFulfillment(transferUuid, options)
+  } catch (err) {
+    return null
+  }
 }
 
 function * upsertFulfillment (fulfillment, options) {
@@ -56,6 +70,7 @@ function * upsertFulfillment (fulfillment, options) {
 }
 
 module.exports = {
+  maybeGetFulfillment,
   getFulfillment,
   insertFulfillments,
   upsertFulfillment
