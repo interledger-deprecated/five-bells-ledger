@@ -78,7 +78,7 @@ describe('loadConfig', () => {
     })
 
     it('LEDGER_ILP_PREFIX=example.red.', () => {
-      process.env.LEDGER_ILP_ADDRESS = 'example.red.'
+      process.env.LEDGER_ILP_PREFIX = 'example.red.'
       const ilp = {
         prefix: 'example.red.'
       }
