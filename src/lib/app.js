@@ -140,6 +140,9 @@ class App {
 
     router.put('/transfers/:id/fulfillment', transfers.putFulfillment)
     router.get('/transfers/:id/fulfillment', transfers.getFulfillment)
+    router.put('/transfers/:id/rejection',
+      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      transfers.putRejection)
 
     router.get('/transfers/:id', transfers.getResource)
     router.get('/transfers/byExecutionCondition/:execution_condition', transfers.getResourcesByExecutionCondition)

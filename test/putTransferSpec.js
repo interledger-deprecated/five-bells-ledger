@@ -1483,6 +1483,93 @@ describe('PUT /transfers/:id', function () {
     })
   })
 
+  describe('rejection', function () {
+    it('should return 403 if authorized:true is set for any credits that are ' +
+    'not owned by the authorized account', function * () {
+      const transfer = this.exampleTransfer
+      delete transfer.debits[0].authorized
+      transfer.credits[0].rejected = true
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(403)
+        .expect(function (res) {
+          expect(res.body.id).to.equal('UnauthorizedError')
+          expect(res.body.message).to.equal('Invalid attempt to reject credit')
+        })
+        .end()
+    })
+
+    it('should reject a proposed transfer', function * () {
+      const transfer = this.exampleTransfer
+      delete transfer.debits[0].authorized
+
+      yield this.request()
+        .put(this.exampleTransfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {
+          state: 'proposed',
+          timeline: { proposed_at: '2015-06-16T00:00:00.000Z' }
+        }))
+        .expect(validator.validateTransfer)
+        .end()
+
+      transfer.credits[0].rejected = true
+      transfer.credits[0].rejection_message = (new Buffer('error 1')).toString('base64')
+      yield this.request()
+        .put(this.exampleTransfer.id)
+        .auth('bob', 'bob')
+        .send(transfer)
+        .expect(200)
+        .expect(_.assign({}, transfer, {
+          state: 'rejected',
+          rejection_reason: 'cancelled',
+          timeline: {
+            rejected_at: '2015-06-16T00:00:00.000Z',
+            proposed_at: '2015-06-16T00:00:00.000Z'
+          }
+        }))
+        .expect(validator.validateTransfer)
+        .end()
+    })
+
+    it('should not reject an executed transfer', function * () {
+      const transfer = this.exampleTransfer
+
+      yield this.request()
+        .put(this.exampleTransfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(_.assign({}, transfer, {
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            executed_at: '2015-06-16T00:00:00.000Z'
+          }
+        }))
+        .expect(validator.validateTransfer)
+        .end()
+
+      transfer.credits[0].rejected = true
+      transfer.credits[0].rejection_message = (new Buffer('error 1')).toString('base64')
+      yield this.request()
+        .put(this.exampleTransfer.id)
+        .auth('bob', 'bob')
+        .send(transfer)
+        .expect(400)
+        .expect(function (res) {
+          expect(res.body.id).to.equal('InvalidModificationError')
+          expect(res.body.message).to.equal('Transfers in state executed may not be rejected')
+        })
+        .end()
+    })
+  })
+
   describe('sanity checks', function () {
     it('should return the same transfer as was PUT', function * () {
       const transfer = _.cloneDeep(this.multiDebitAndCreditTransfer)

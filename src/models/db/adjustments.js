@@ -17,6 +17,8 @@ function convertFromPersistentAdjustment (data, options) {
       account: account.name,
       amount: Number(data.AMOUNT).toString(),
       authorized: Boolean(data.IS_AUTHORIZED) || null,
+      rejected: Boolean(data.IS_REJECTED) || null,
+      rejection_message: data.REJECTION_MESSAGE,
       memo: data.MEMO ? JSON.parse(data.MEMO) : null
     }, (x) => isNil(x))
   })
@@ -46,6 +48,8 @@ function convertToPersistentAdjustment (transferId, type, data, options) {
       DEBIT_CREDIT: type,
       AMOUNT: data.amount,
       IS_AUTHORIZED: isNil(data.authorized) ? null : Number(data.authorized),
+      IS_REJECTED: isNil(data.rejected) ? null : Number(data.rejected),
+      REJECTION_MESSAGE: data.rejection_message,
       MEMO: data.memo ? JSON.stringify(data.memo) : null
     }, (x) => isNil(x))
   })
