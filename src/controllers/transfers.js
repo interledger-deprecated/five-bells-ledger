@@ -374,11 +374,51 @@ function * getFulfillment () {
   this.body = yield model.getFulfillment(id.toLowerCase())
 }
 
+/**
+ * @api {put} /transfers/:id/rejection Reject Transfer
+ * @apiName PutTransferRejection
+ * @apiGroup Transfer Methods
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Reject the transfer with the given message
+ *
+ * @apiHeader {String} Content-Type Must be `text/plain`.
+ * @apiParam (URL Parameters) {String} id Transfer
+ *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ * @apiParam (Request Body) {String} Rejection An error message in string format.
+ *
+ * @apiExample {shell} Put Transfer Rejection:
+ *    curl -X PUT -H "Content-Type: text/plain" -d
+ *    'an error'
+ *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection
+ *
+ * @apiSuccessExample {json} 200 Rejection Accepted Response:
+ *    HTTP/1.1 200 OK
+ *    'an error'
+ *
+ * @apiUse UnprocessableEntityError
+ * @apiUse InvalidUriParameterError
+ * @apiUse InvalidBodyError
+ */
+/**
+ * @param {String} id Transfer UUID
+ * @returns {void}
+ */
+function * putRejection () {
+  const id = this.params.id
+  requestUtil.validateUriParameter('id', id, 'Uuid')
+  const rejectionMessage = yield parse.text(this)
+  const result = yield model.rejectTransfer(id, rejectionMessage, this.req.user)
+  this.body = result.rejection
+  this.status = result.existed ? 200 : 201
+}
+
 module.exports = {
   getResource,
   getResourcesByExecutionCondition,
   getStateResource,
   putResource,
   putFulfillment,
-  getFulfillment
+  getFulfillment,
+  putRejection
 }

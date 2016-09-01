@@ -158,7 +158,7 @@ function updateTransferObject (originalTransfer, transfer) {
 
   // Clients can add authorizations
   // The validity of these authorizations will be checked
-  // in the validateAuthorizations function
+  // in the validateAuthorizationsAndRejections function
   _.forEach(updatedTransferData.debits, function (funds, i) {
     if (!funds.authorized &&
       transfer.debits[i] &&
@@ -167,6 +167,12 @@ function updateTransferObject (originalTransfer, transfer) {
     }
   })
   _.forEach(updatedTransferData.credits, function (funds, i) {
+    if (!funds.rejected &&
+      transfer.credits[i] &&
+      transfer.credits[i].rejected) {
+      funds.rejected = true
+      funds.rejection_message = transfer.credits[i].rejection_message
+    }
     if (!funds.authorized &&
       transfer.credits[i] &&
       transfer.credits[i].authorized) {
@@ -214,7 +220,7 @@ function validateIsAffectedAccount (account, transfer) {
  * @param {Funds|undefined} previousFunds
  * @param {String} fundsType "debit" or "credit"
  */
-function validateAuthorizations (authorizedAccount, fundsList, previousFunds, fundsType) {
+function validateAuthorizationsAndRejections (authorizedAccount, fundsList, previousFunds, fundsType) {
   if (previousFunds && fundsList.length !== previousFunds.length) {
     throw new UnprocessableEntityError('Invalid change in number of ' + fundsType + 's')
   }
@@ -223,6 +229,12 @@ function validateAuthorizations (authorizedAccount, fundsList, previousFunds, fu
     if (funds.authorized && funds.authorized !== previousAuthorization &&
         funds.account !== authorizedAccount) {
       throw new UnauthorizedError('Invalid attempt to authorize ' + fundsType)
+    }
+
+    const previousRejection = previousFunds && previousFunds[i].rejected
+    if (funds.rejected && funds.rejected !== previousRejection &&
+        funds.account !== authorizedAccount) {
+      throw new UnauthorizedError('Invalid attempt to reject ' + fundsType)
     }
   })
 }
@@ -288,6 +300,23 @@ function * processImmediateExecution (transfer, transaction) {
     transferExpiryMonitor.unwatch(transfer.id)
     updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED)
   }
+}
+
+function * processCreditRejection (transfer, transaction) {
+  if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) return
+  const hasRejectedCredit = _.some(transfer.credits, 'rejected')
+  if (!hasRejectedCredit) return
+
+  if (!_.includes(validCancellationStates, transfer.state)) {
+    throw new InvalidModificationError('Transfers in state ' +
+      transfer.state + ' may not be rejected')
+  }
+
+  if (transfer.state === transferStates.TRANSFER_STATE_PREPARED) {
+    yield holds.returnHeldFunds(transfer, transaction)
+  }
+  transfer.rejection_reason = 'cancelled'
+  updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
 }
 
 function validateConditionFulfillment (transfer, fulfillmentModel) {
@@ -392,6 +421,25 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
   }
 }
 
+function * rejectTransfer (transferId, rejectionMessage, requestingUser) {
+  const transfer = yield getTransfer(transferId)
+  const requestingAccount = config.server.base_uri + '/accounts/' + requestingUser.name
+  // Pick a credit that matches the requestingUser if possible.
+  // Picking credits[0] will result in a UnauthorizedError.
+  const credit = transfer.credits.find(
+    (credit) => credit.account === requestingAccount) || transfer.credits[0]
+  const alreadyRejected = credit.rejected
+
+  credit.rejected = true
+  credit.rejection_message = (new Buffer(rejectionMessage)).toString('base64')
+  delete transfer.timeline
+  yield setTransfer(transfer, requestingUser)
+  return {
+    existed: alreadyRejected,
+    rejection: rejectionMessage
+  }
+}
+
 function * setTransfer (externalTransfer, requestingUser) {
   const validationResult = validator.create('Transfer')(externalTransfer)
   if (validationResult.valid !== true) {
@@ -444,11 +492,11 @@ function * setTransfer (externalTransfer, requestingUser) {
     if (!(requestingUser && requestingUser.is_admin)) {
       const requestingUsername = requestingUser && requestingUser.name
       validateIsAffectedAccount(requestingUsername, transfer)
-      // This method will check that any authorized:true fields added can
-      // only be added by the owner of the account
-      validateAuthorizations(requestingUsername, transfer.debits,
+      // This method will check that any authorized:true or rejected:true fields
+      // added can only be added by the owner of the account
+      validateAuthorizationsAndRejections(requestingUsername, transfer.debits,
         previousDebits, 'debit')
-      validateAuthorizations(requestingUsername, transfer.credits,
+      validateAuthorizationsAndRejections(requestingUsername, transfer.credits,
         previousCredits, 'credit')
     }
 
@@ -457,6 +505,7 @@ function * setTransfer (externalTransfer, requestingUser) {
     yield db.upsertTransfer(transfer, {transaction})
     yield processTransitionToPreparedState(transfer, transaction)
     yield processImmediateExecution(transfer, transaction)
+    yield processCreditRejection(transfer, transaction)
     yield db.upsertTransfer(transfer, {transaction})
 
     yield notificationBroadcaster.sendNotifications(transfer, transaction)
@@ -493,6 +542,7 @@ module.exports = {
   getTransferStateReceipt,
   setTransfer,
   fulfillTransfer,
+  rejectTransfer,
   getFulfillment,
   insertTransfers
 }

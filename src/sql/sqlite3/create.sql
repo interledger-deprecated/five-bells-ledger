@@ -64,6 +64,8 @@ create table if not exists "L_TRANSFER_ADJUSTMENTS"
   "DEBIT_CREDIT" varchar(10) not null,
   "AMOUNT" float DEFAULT 0 not null,
   "IS_AUTHORIZED" boolean default 0 not null,
+  "IS_REJECTED" boolean default 0 not null,
+  "REJECTION_MESSAGE" text,
   "MEMO" varchar(4000) null,
   FOREIGN KEY("TRANSFER_ID") REFERENCES "L_TRANSFERS" ("TRANSFER_ID"),
   FOREIGN KEY("ACCOUNT_ID") REFERENCES "L_ACCOUNTS" ("ACCOUNT_ID")
