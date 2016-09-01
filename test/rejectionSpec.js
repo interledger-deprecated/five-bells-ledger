@@ -130,7 +130,7 @@ describe('PUT /rejection', function () {
       }))
   })
 
-  it('rejects the transfer when all credits are rejected', function * () {
+  it('rejects the transfer when a credit is rejected', function * () {
     const transfer = Object.assign(this.multiCreditTransfer,
       {execution_condition: 'cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7'})
     yield this.request()
@@ -154,7 +154,7 @@ describe('PUT /rejection', function () {
       .end()
 
     // Check balances
-    expect((yield getAccount('alice')).balance).to.equal(80)
+    expect((yield getAccount('alice')).balance).to.equal(100)
     expect((yield getAccount('bob')).balance).to.equal(0)
 
     yield this.request()
@@ -164,10 +164,6 @@ describe('PUT /rejection', function () {
       .expect(201)
       .expect('error 2')
       .end()
-
-    // Check balances
-    expect((yield getAccount('alice')).balance).to.equal(100)
-    expect((yield getAccount('bob')).balance).to.equal(0)
 
     yield this.request()
       .get(transfer.id)

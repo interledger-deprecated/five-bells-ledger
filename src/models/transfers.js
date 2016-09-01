@@ -304,8 +304,8 @@ function * processImmediateExecution (transfer, transaction) {
 
 function * processCreditRejection (transfer, transaction) {
   if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) return
-  const allCreditsAreRejected = _.every(transfer.credits, 'rejected')
-  if (!allCreditsAreRejected) return
+  const hasRejectedCredit = _.some(transfer.credits, 'rejected')
+  if (!hasRejectedCredit) return
 
   if (!_.includes(validCancellationStates, transfer.state)) {
     throw new InvalidModificationError('Transfers in state ' +

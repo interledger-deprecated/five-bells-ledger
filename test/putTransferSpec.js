@@ -1484,7 +1484,7 @@ describe('PUT /transfers/:id', function () {
   })
 
   describe('rejection', function () {
-    it('should return 403 if authorized:true is set for any credits that are ' +
+    it('should return 403 if rejected:true is set for any credits that are ' +
     'not owned by the authorized account', function * () {
       const transfer = this.exampleTransfer
       delete transfer.debits[0].authorized
