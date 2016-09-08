@@ -1,5 +1,7 @@
 'use strict'
 
+const accounts = require('../models/accounts')
+
 /**
  * @api {get} / Get Server Metadata
  * @apiName GetMetadata
@@ -37,7 +39,14 @@
  *            "subscription_notification": "http://usd-ledger.example/subscriptions/:subscription_id/notifications/:notification_id"
  *        },
  *        "precision": 10,
- *        "scale": 2
+ *        "scale": 2,
+ *        "connectors": [
+ *            {
+ *                "id": "http://usd-ledger.example/accounts/chloe",
+ *                "name": "chloe",
+ *                "connector": "http://usd-eur-connector.example"
+ *            }
+ *        ]
  *    }
  */
 /*
@@ -68,7 +77,9 @@ module.exports = (config) => {
 
   return {
     getResource: function * () {
-      this.body = metadata
+      this.body = Object.assign({
+        connectors: yield accounts.getConnectors()
+      }, metadata)
     }
   }
 }

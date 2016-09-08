@@ -28,14 +28,19 @@ function getConnectorData (data) {
   }
 }
 
-function * getAccounts () {
-  const accounts = yield db.getAccounts()
-  return accounts.map(converters.convertToExternalAccount)
+function isRecommendedConnector (data) {
+  if (!config.recommendedConnectors) return true
+  return config.recommendedConnectors.indexOf(data.name) !== -1
 }
 
 function * getConnectors () {
   const accounts = yield db.getConnectorAccounts()
-  return accounts.map(getConnectorData)
+  return accounts.filter(isRecommendedConnector).map(getConnectorData)
+}
+
+function * getAccounts () {
+  const accounts = yield db.getAccounts()
+  return accounts.map(converters.convertToExternalAccount)
 }
 
 function * getAccount (name, requestingUser) {

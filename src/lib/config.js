@@ -95,6 +95,12 @@ function parseKeysConfig () {
   }
 }
 
+function parseRecommendedConnectors () {
+  const connectorList = Config.getEnv(envPrefix, 'RECOMMENDED_CONNECTORS')
+  if (!connectorList || connectorList === '*') return null
+  return connectorList.split(',')
+}
+
 function getLogLevel () {
   if (useTestConfig()) {
     return 'debug'
@@ -129,6 +135,7 @@ function loadConfig () {
   localConfig.amount = parseAmountConfig()
   localConfig.default_admin = parseAdminConfig()
   localConfig.ilp = parseIlpConfig()
+  localConfig.recommendedConnectors = parseRecommendedConnectors()
   localConfig.logLevel = getLogLevel()
 
   // optional
