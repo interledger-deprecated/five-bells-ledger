@@ -105,22 +105,6 @@ describe('Accounts', function () {
     })
   })
 
-  describe('GET /connectors', function () {
-    it('should return 200', function * () {
-      yield this.request()
-        .get('/connectors')
-        .expect(200, [
-          {
-            id: 'http://localhost/accounts/trader',
-            name: 'trader',
-            connector: 'http://localhost:4321'
-          }
-        ])
-        .expect(validator.validateAccounts)
-        .end()
-    })
-  })
-
   describe('GET /accounts/:uuid', function () {
     it('should return 200 for an account that exists', function * () {
       yield this.request()

@@ -189,4 +189,23 @@ describe('loadConfig', () => {
       expect(loadConfig).to.throw(/Cannot support precision > 15/)
     })
   })
+
+  describe('config.recommendedConnectors', () => {
+    it('defaults to undefined', () => {
+      const _config = loadConfig()
+      expect(_config.recommendedConnectors).to.equal(undefined)
+    })
+
+    it('is undefined when recommendedConnectors is "*"', () => {
+      process.env.LEDGER_RECOMMENDED_CONNECTORS = '*'
+      const _config = loadConfig()
+      expect(_config.recommendedConnectors).to.equal(undefined)
+    })
+
+    it('is a list of connector names, otherwise', () => {
+      process.env.LEDGER_RECOMMENDED_CONNECTORS = 'alice,bob,carl'
+      const _config = loadConfig()
+      expect(_config.recommendedConnectors).to.deep.equal(['alice', 'bob', 'carl'])
+    })
+  })
 })

@@ -148,8 +148,6 @@ class App {
     router.get('/transfers/byExecutionCondition/:execution_condition', transfers.getResourcesByExecutionCondition)
     router.get('/transfers/:id/state', transfers.getStateResource)
 
-    router.get('/connectors',
-      accounts.getConnectors)
     router.get('/accounts',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
       filterAdmin,

@@ -9,36 +9,6 @@ function * getCollection () {
 }
 
 /**
- * @api {get} /connectors Get connectors (DEPRECATED)
- * @apiName GetConnectors
- * @apiGroup Account Methods
- * @apiVersion 1.0.0
- * @apiIgnore Deprecated.
- *
- * @apiDescription Get all accounts of all connectors on this ledger.
- *
- * @apiExample {shell} Get connectors
- *    curl -X GET
- *    http://usd-ledger.example/connectors
- *
- * @apiSuccessExample {json} 200 Response:
- *    HTTP/1.1 200 OK
- *    [
- *      {
- *        id: 'http://usd-ledger.example/accounts/chloe',
- *        name: 'chloe',
- *        connector: 'http://usd-eur-connector.example'
- *      }
- *    ]
- */
-/**
- * @returns {void}
- */
-function * getConnectors () {
-  this.body = yield model.getConnectors()
-}
-
-/**
  * @api {get} /accounts/:name Get Account
  * @apiName GetAccount
  * @apiGroup Account Methods
@@ -204,6 +174,7 @@ function * subscribeTransfers () {
   if (!(name === '*' && this.req.user.is_admin)) {
     request.validateUriParameter('name', name, 'Identifier')
   }
+
   const close = model.subscribeTransfers(name, this.req.user, (notification) => {
     this.websocket.send(JSON.stringify(notification))
   })
@@ -213,7 +184,6 @@ function * subscribeTransfers () {
 
 module.exports = {
   getCollection,
-  getConnectors,
   getResource,
   putResource,
   subscribeTransfers

@@ -45,7 +45,14 @@ describe('Metadata', function () {
               subscription_notification: 'http://localhost/subscriptions/:subscription_id/notifications/:notification_id'
             },
             precision: 10,
-            scale: 2
+            scale: 2,
+            connectors: [
+              {
+                id: 'http://localhost/accounts/trader',
+                name: 'trader',
+                connector: 'http://localhost:4321'
+              }
+            ]
           })
         })
         .end()
