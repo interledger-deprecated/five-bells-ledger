@@ -14,7 +14,7 @@ exec('git clone git@github.com:interledger/five-bells-ledger.git --branch gh-pag
 
 // Update apidoc
 console.log('\n# Updating API docs')
-exec('npm run apidoc', { cwd })
+exec('npm run docs', { cwd })
 exec('mkdir -p web/apidoc', { cwd })
 exec('cp -r apidoc-out/* web/apidoc/', { cwd })
 
