@@ -182,6 +182,11 @@ function * subscribeTransfers () {
     this.websocket.send(JSON.stringify(notification))
   })
 
+  // Send a message upon connection
+  this.websocket.send(JSON.stringify({
+    type: 'connect'
+  }))
+
   this.websocket.on('close', close)
 }
 
