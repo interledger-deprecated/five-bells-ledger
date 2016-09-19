@@ -67,8 +67,43 @@ describe('GET /fulfillment', function () {
       .auth('admin', 'admin')
       .expect(404)
       .expect({
-        id: 'FulfillmentNotFoundError',
+        id: 'MissingFulfillmentError',
         message: 'This transfer has not yet been fulfilled'
+      })
+      .end()
+  })
+
+  it('should return AlreadyRolledBackError if the transfer is rejected', function * () {
+    const transfer = Object.assign(this.proposedTransfer, {
+      id: 'http://localhost/transfers/25644640-d140-450e-b94b-badbe23d3382',
+      state: 'rejected'
+    })
+    yield dbHelper.addTransfers([transfer])
+    yield this.request()
+      .get(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
+      .expect(422)
+      .expect({
+        id: 'AlreadyRolledBackError',
+        message: 'This transfer has already been rejected'
+      })
+      .end()
+  })
+
+  it('should return TransferNotConditionalError for an optimistic transfer', function * () {
+    const transfer = Object.assign(this.proposedTransfer, {
+      id: 'http://localhost/transfers/25644640-d140-450e-b94b-badbe23d3381',
+      execution_condition: undefined,
+      cancellation_condition: undefined
+    })
+    yield dbHelper.addTransfers([transfer])
+    yield this.request()
+      .get(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
+      .expect(422)
+      .expect({
+        id: 'TransferNotConditionalError',
+        message: 'Transfer does not have any conditions'
       })
       .end()
   })
@@ -84,7 +119,7 @@ describe('GET /fulfillment', function () {
       .auth('admin', 'admin')
       .expect(404)
       .expect({
-        id: 'FulfillmentNotFoundError',
+        id: 'MissingFulfillmentError',
         message: 'This transfer expired before it was fulfilled'
       })
       .end()
@@ -184,6 +219,38 @@ describe('PUT /fulfillment', function () {
       .send(this.executionConditionFulfillment)
       .expect(404)
       .end()
+  })
+
+  it('should not cancel an optimistic transfer', function * () {
+    const transfer = this.preparedTransfer
+    delete transfer.execution_condition
+    delete transfer.cancellation_condition
+
+    yield this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
+      .end()
+
+    // Check balances
+    expect((yield getAccount('alice')).balance).to.equal(90)
+    expect((yield getAccount('bob')).balance).to.equal(10)
+
+    yield this.request()
+      .put(transfer.id + '/fulfillment')
+      .send(this.cancellationConditionFulfillment)
+      .expect(422)
+      .expect({
+        id: 'TransferNotConditionalError',
+        message: 'Transfer is not conditional'
+      })
+      .end()
+
+    // Check balances
+    expect((yield getAccount('alice')).balance).to.equal(90)
+    expect((yield getAccount('bob')).balance).to.equal(10)
   })
 
   it('should set the state to "rejected" if and only if the ' +
@@ -316,7 +383,7 @@ describe('PUT /fulfillment', function () {
     expect((yield getAccount('bob')).balance).to.equal(10)
   })
 
-  it('should allow a transfer to be cancelled multiple times', function * () {
+  it('should not allow a transfer to be cancelled multiple times', function * () {
     const transfer = this.preparedTransfer
 
     yield this.request()
@@ -342,9 +409,11 @@ describe('PUT /fulfillment', function () {
     yield this.request()
       .put(transfer.id + '/fulfillment')
       .send(this.cancellationConditionFulfillment)
-      .expect(200)
-      .expect(this.cancellationConditionFulfillment)
-      .expect(validator.validateFulfillment)
+      .expect(422)
+      .expect({
+        id: 'AlreadyRolledBackError',
+        message: 'This transfer has already been rejected'
+      })
       .end()
 
     // Check balances

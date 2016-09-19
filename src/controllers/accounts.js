@@ -175,6 +175,9 @@ function * subscribeTransfers () {
     request.validateUriParameter('name', name, 'Identifier')
   }
 
+  // The websocket is already closed, so don't subscribe.
+  if (this.websocket.readyState !== 1) return
+
   const close = model.subscribeTransfers(name, this.req.user, (notification) => {
     this.websocket.send(JSON.stringify(notification))
   })

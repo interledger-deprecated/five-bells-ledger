@@ -8,7 +8,11 @@ const getTransferId = require('./transfers').getTransferId
 const getTransferById = require('./transfers').getTransferById
 const removeAuditFields = require('./audit').removeAuditFields
 const TransferNotFoundError = require('../../errors/transfer-not-found-error')
-const FulfillmentNotFoundError = require('../../errors/fulfillment-not-found-error')
+const MissingFulfillmentError = require('../../errors/missing-fulfillment-error')
+const TransferNotConditionalError = require('five-bells-shared/errors/transfer-not-conditional-error')
+const AlreadyRolledBackError = require('five-bells-shared/errors/already-rolled-back-error')
+const transferDictionary = require('five-bells-shared').TransferStateDictionary
+const transferStates = transferDictionary.transferStates
 
 function convertFromPersistent (data) {
   const result = _.mapKeys(_.cloneDeep(data), (value, key) => key.toLowerCase())
@@ -47,13 +51,20 @@ function * getFulfillment (transferUuid, options) {
     throw new TransferNotFoundError('This transfer does not exist')
   }
   const transfer = yield getTransferById(transferId, options)
+  if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
+    throw new AlreadyRolledBackError('This transfer has already been rejected')
+  }
+  if (!transfer.execution_condition && !transfer.cancellation_condition) {
+    throw new TransferNotConditionalError('Transfer does not have any conditions')
+  }
+
   return db.selectOne({TRANSFER_ID: transferId},
     options && options.transaction).then((result) => {
       if (!result) {
         if (transfer.expires_at && moment().isAfter(transfer.expires_at)) {
-          throw new FulfillmentNotFoundError('This transfer expired before it was fulfilled')
+          throw new MissingFulfillmentError('This transfer expired before it was fulfilled')
         }
-        throw new FulfillmentNotFoundError('This transfer has not yet been fulfilled')
+        throw new MissingFulfillmentError('This transfer has not yet been fulfilled')
       }
       result.transfer_id = transferUuid
       return result
