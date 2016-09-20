@@ -2,11 +2,24 @@
   {
     "type": "get",
     "url": "/accounts/:name",
-    "title": "Fetch user info",
+    "title": "Get Account",
     "name": "GetAccount",
-    "group": "Account",
+    "group": "Account_Methods",
     "version": "1.0.0",
-    "description": "<p>Get information about a user. Only users themselves and admins are allowed to see the full account details.</p>",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": true,
+            "field": "Authorization",
+            "description": "<p>Credentials to access the account. By default, only the account owner and admin can see details including account balance.</p>"
+          }
+        ]
+      }
+    },
+    "description": "<p>Get information about an account.</p>",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -15,7 +28,7 @@
             "type": "String",
             "optional": false,
             "field": "name",
-            "description": "<p>Account's unique identifier</p>"
+            "description": "<p>The unique name for this account.</p>"
           }
         ]
       }
@@ -23,26 +36,37 @@
     "examples": [
       {
         "title": "Get account",
-        "content": "curl -x GET -H \"Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\"\nhttp://usd-ledger.example/USD/accounts/alice",
+        "content": "curl -X GET -H \"Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\"\nhttp://usd-ledger.example/accounts/alice",
         "type": "shell"
       }
     ],
     "success": {
+      "fields": {
+        "200 OK": [
+          {
+            "group": "200 OK",
+            "type": "Object",
+            "optional": false,
+            "field": "Account",
+            "description": "<p>The requested <a href=\"#account_object\">Account object</a>. If the request was <a href=\"#authentication\">authenticated</a> as the account owner or an admin, the response includes additional fields such as the account balance.</p>"
+          }
+        ]
+      },
       "examples": [
         {
           "title": "200 Authenticated Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.example/USD/accounts/alice\",\n  \"name\": \"alice\",\n  \"balance\": \"100\",\n  \"is_disabled\": false\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.example/accounts/alice\",\n  \"name\": \"alice\",\n  \"balance\": \"100\",\n  \"is_disabled\": false\n}",
           "type": "json"
         },
         {
           "title": "200 Unauthenticated Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.example/USD/accounts/alice\",\n  \"name\": \"alice\",\n  \"ledger\": \"http://usd-ledger.example/USD\"\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.example/accounts/alice\",\n  \"name\": \"alice\",\n  \"ledger\": \"http://usd-ledger.example/USD\"\n}",
           "type": "json"
         }
       ]
     },
     "filename": "src/controllers/accounts.js",
-    "groupTitle": "Account",
+    "groupTitle": "Account_Methods",
     "error": {
       "fields": {
         "Error 4xx": [
@@ -75,38 +99,11 @@
     }
   },
   {
-    "type": "get",
-    "url": "/connectors",
-    "title": "Fetch connectors",
-    "name": "GetConnectors",
-    "group": "Account",
-    "version": "1.0.0",
-    "description": "<p>Get all accounts of all connectors on this ledger.</p>",
-    "examples": [
-      {
-        "title": "Get connectors",
-        "content": "curl -x GET\nhttp://usd-ledger.example/USD/connectors",
-        "type": "shell"
-      }
-    ],
-    "success": {
-      "examples": [
-        {
-          "title": "200 Response:",
-          "content": "HTTP/1.1 200 OK\n[\n  {\n    id: 'http://usd-ledger.example/USD/accounts/chloe',\n    name: 'chloe',\n    connector: 'http://usd-eur-connector.example'\n  }\n]",
-          "type": "json"
-        }
-      ]
-    },
-    "filename": "src/controllers/accounts.js",
-    "groupTitle": "Account"
-  },
-  {
     "type": "put",
     "url": "/accounts/:name",
-    "title": "Create or update a user",
+    "title": "Create or Update Account",
     "name": "PutAccount",
-    "group": "Account",
+    "group": "Account_Methods",
     "version": "1.0.0",
     "description": "<p>Create or update a user. Only admins are allowed to create new accounts.</p>",
     "parameter": {
@@ -125,21 +122,41 @@
     "examples": [
       {
         "title": "Put account",
-        "content": "curl -x PUT -H \"Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\"\n-H \"Content-Type: application/json\"\n-d '{\"name\": \"alice\", \"balance\": \"100\"}'\nhttp://usd-ledger.example/USD/accounts/alice",
+        "content": "curl -X PUT -H \"Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\"\n-H \"Content-Type: application/json\"\n-d '{\"name\": \"alice\", \"balance\": \"100\"}'\nhttp://usd-ledger.example/accounts/alice",
         "type": "shell"
       }
     ],
     "success": {
+      "fields": {
+        "201 Created": [
+          {
+            "group": "201 Created",
+            "type": "Object",
+            "optional": false,
+            "field": "Account",
+            "description": "<p>The newly-created <a href=\"#account_object\">Account object</a>, as saved.</p>"
+          }
+        ],
+        "200 OK": [
+          {
+            "group": "200 OK",
+            "type": "Object",
+            "optional": false,
+            "field": "Account",
+            "description": "<p>The updated <a href=\"#account_object\">Account object</a>, as saved.</p>"
+          }
+        ]
+      },
       "examples": [
         {
           "title": "200 Get Account Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://localhost/accounts/alice\",\n  \"name\": \"alice\",\n  \"balance\": \"100\",\n  \"is_disabled\": false\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.exmaple/accounts/alice\",\n  \"name\": \"alice\",\n  \"balance\": \"100\",\n  \"is_disabled\": false\n}",
           "type": "json"
         }
       ]
     },
     "filename": "src/controllers/accounts.js",
-    "groupTitle": "Account",
+    "groupTitle": "Account_Methods",
     "error": {
       "fields": {
         "Error 4xx": [
@@ -185,11 +202,11 @@
   {
     "type": "get",
     "url": "/accounts/:name/transfers",
-    "title": "[Websocket] Subscribe to transfers",
+    "title": "[Websocket] Subscribe to Account Transfers",
     "name": "SubscribeAccountTransfers",
-    "group": "Account",
+    "group": "Account_Methods",
     "version": "1.0.0",
-    "description": "<p>Subscribe to an account's transfers and receive real-time notifications via websocket.</p>",
+    "description": "<p>Subscribe to an account's transfers and receive real-time notifications via WebSocket.</p>",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -206,21 +223,46 @@
     "examples": [
       {
         "title": "Subscribe to account transfers",
-        "content": "wscat --auth alice:alice -c ws://example.com/accounts/alice/transfers",
+        "content": "wscat --auth alice:alice -c ws://usd-ledger.example/accounts/alice/transfers",
         "type": "shell"
       }
     ],
     "success": {
+      "fields": {
+        "101 Switching Protocols": [
+          {
+            "group": "101 Switching Protocols",
+            "type": "None",
+            "optional": false,
+            "field": "...",
+            "description": "<p>This methods opens a WebSocket connection with the server. There is no immediate response after opening the connection.</p>"
+          }
+        ],
+        "Additional Messages": [
+          {
+            "group": "Additional Messages",
+            "type": "Object",
+            "optional": false,
+            "field": "Notification",
+            "description": "<p>At most one <a href=\"#notification_object\">notification object</a> for each change in the state of any transfer that affects this account. This includes transfers that debit or credit the account.</p>"
+          }
+        ]
+      },
       "examples": [
         {
-          "title": "200 Get Account Response:",
-          "content": "HTTP/1.1 101 Switching Protocols\n{\n  \"resource\":{\n    \"debits\":[\n      {\n        \"account\":\"http://localhost/accounts/alice\",\n        \"amount\":\"0.01\",\n        \"authorized\":true\n      }\n    ],\n    \"credits\":[\n      {\n        \"account\":\"http://localhost/accounts/bob\",\n        \"amount\":\"0.01\"\n      }\n    ],\n    \"id\":\"http://localhost/transfers/4f122511-989d-101e-f938-573993b75e22\",\n    \"ledger\":\"http://localhost\",\n    \"state\":\"executed\",\n    \"timeline\":{\n      \"proposed_at\":\"2016-04-27T17:57:27.037Z\",\n      \"prepared_at\":\"2016-04-27T17:57:27.054Z\",\n      \"executed_at\":\"2016-04-27T17:57:27.060Z\"\n    }\n  }\n}\n(... more events ...)",
+          "title": "Initial connection",
+          "content": "HTTP/1.1 101 Switching Protocols",
+          "type": "json"
+        },
+        {
+          "title": "Push notification",
+          "content": "{\n  \"resource\":{\n    \"debits\":[\n      {\n        \"account\":\"http://usd-ledger.exmaple/accounts/alice\",\n        \"amount\":\"0.01\",\n        \"authorized\":true\n      }\n    ],\n    \"credits\":[\n      {\n        \"account\":\"http://usd-ledger.exmaple/accounts/bob\",\n        \"amount\":\"0.01\"\n      }\n    ],\n    \"id\":\"http://usd-ledger.exmaple/transfers/4f122511-989d-101e-f938-573993b75e22\",\n    \"ledger\":\"http://localhost\",\n    \"state\":\"executed\",\n    \"timeline\":{\n      \"proposed_at\":\"2016-04-27T17:57:27.037Z\",\n      \"prepared_at\":\"2016-04-27T17:57:27.054Z\",\n      \"executed_at\":\"2016-04-27T17:57:27.060Z\"\n    }\n  }\n}",
           "type": "json"
         }
       ]
     },
     "filename": "src/controllers/accounts.js",
-    "groupTitle": "Account",
+    "groupTitle": "Account_Methods",
     "error": {
       "fields": {
         "Error 4xx": [
@@ -255,20 +297,82 @@
   {
     "type": "get",
     "url": "/",
-    "title": "Get the server metadata",
+    "title": "Get Server Metadata",
     "name": "GetMetadata",
-    "group": "Metadata",
+    "group": "Metadata_Methods",
     "version": "1.0.0",
     "description": "<p>This endpoint will return server metadata.</p>",
+    "examples": [
+      {
+        "title": "Get Metadata",
+        "content": "curl http://usd-ledger.example/",
+        "type": "shell"
+      }
+    ],
+    "success": {
+      "fields": {
+        "200 OK": [
+          {
+            "group": "200 OK",
+            "type": "String",
+            "optional": true,
+            "field": "currency_code",
+            "description": "<p>Three-letter (<a href=\"http://www.xe.com/iso4217.php\">ISO 4217</a>) code of the currency this ledger tracks.</p>"
+          },
+          {
+            "group": "200 OK",
+            "type": "String",
+            "optional": true,
+            "field": "currency_symbol",
+            "description": "<p>Currency symbol to use in user interfaces for the currency represented in this ledger. For example, &quot;$&quot;.</p>"
+          },
+          {
+            "group": "200 OK",
+            "type": "Integer",
+            "optional": false,
+            "field": "precision",
+            "description": "<p>How many total decimal digits of precision this ledger uses to represent currency amounts.</p>"
+          },
+          {
+            "group": "200 OK",
+            "type": "Integer",
+            "optional": false,
+            "field": "scale",
+            "description": "<p>How many digits after the decimal place this ledger supports in currency amounts.</p>"
+          },
+          {
+            "group": "200 OK",
+            "type": "Object",
+            "optional": false,
+            "field": "urls",
+            "description": "<p>Paths to other methods exposed by this ledger</p>"
+          },
+          {
+            "group": "200 OK",
+            "type": "(Various)",
+            "optional": false,
+            "field": "...",
+            "description": "<p>The ledger may report additional arbitrary parameters as desired.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "200 OK",
+          "content": "HTTP/1.1 200 OK\n\n{\n    \"currency_code\": null,\n    \"currency_symbol\": null,\n    \"condition_sign_public_key\": \"YNDefwo4LB+AjkCRzuCSGuAlDLvSCWUxPRX7lXLhV1I=\",\n    \"notification_sign_public_key\": \"-----BEGIN RSA PUBLIC KEY-----\\nMIIBCgKCAQEAnR0o5RIONZy8zwKNxt8ibQtuIu+VDgcZB5MFzFywEvhNFAMXJZyq2ZgER2fb\\nXJGfT0CAOMLa3TNcPHvhdHCOnkHSqs7SRLnjnGJuxv/+WyNaFuzrgUT4ymBdtK2LT5j1p7uw\\nllxUv9uAjWRz96LUQewjXl38QxE56rp5ov+O+frF2TDN+qFLqgRX1N6kbY6roQRDJ3BFKKqN\\nS3mVqMqokeQ5UmYwqAcgmdysoFZFcCkuRdZ1Han/CMDfnhL0mtQmwOhUdOZ4a6dfWNgozycI\\nyQOS59ckDp31dRjMZddaSQki/yDIAxmtZHzE4z+U4ZMxEbirwCZbA9QZed2Tu35yQwIDAQAB\\n-----END RSA PUBLIC KEY-----\\n\",\n    \"urls\": {\n        \"health\": \"http://usd-ledger.example/health\",\n        \"transfer\": \"http://usd-ledger.example/transfers/:id\",\n        \"transfer_fulfillment\": \"http://usd-ledger.example/transfers/:id/fulfillment\",\n        \"transfer_state\": \"http://usd-ledger.example/transfers/:id/state\",\n        \"connectors\": \"http://usd-ledger.example/connectors\",\n        \"accounts\": \"http://usd-ledger.example/accounts\",\n        \"account\": \"http://usd-ledger.example/accounts/:name\",\n        \"subscription\": \"http://usd-ledger.example/subscriptions/:id\",\n        \"subscription_notification\": \"http://usd-ledger.example/subscriptions/:subscription_id/notifications/:notification_id\"\n    },\n    \"precision\": 10,\n    \"scale\": 2,\n    \"connectors\": [\n        {\n            \"id\": \"http://usd-ledger.example/accounts/chloe\",\n            \"name\": \"chloe\",\n            \"connector\": \"http://usd-eur-connector.example\"\n        }\n    ]\n}",
+          "type": "json"
+        }
+      ]
+    },
     "filename": "src/controllers/metadata.js",
-    "groupTitle": "Metadata"
+    "groupTitle": "Metadata_Methods"
   },
   {
     "type": "get",
     "url": "/transfers/:id",
-    "title": "Get local transfer object",
+    "title": "Get Transfer by ID",
     "name": "GetTransfer",
-    "group": "Transfer",
+    "group": "Transfer_Methods",
     "version": "1.0.0",
     "description": "<p>Use this to query about the details or status of a local transfer.</p>",
     "parameter": {
@@ -287,21 +391,32 @@
     "examples": [
       {
         "title": "Get a transfer",
-        "content": "curl -x GET http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+        "content": "curl -X GET http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
         "type": "shell"
       }
     ],
     "success": {
+      "fields": {
+        "Success": [
+          {
+            "group": "Success",
+            "type": "Transfer",
+            "optional": false,
+            "field": "Object",
+            "description": "<p>The <a href=\"#transfer_object\">Transfer object</a> as saved.</p>"
+          }
+        ]
+      },
       "examples": [
         {
           "title": "Transfer Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example/USD\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\",\n  \"state\": \"executed\",\n  \"timeline\": {\n    \"proposed_at\": \"2015-06-16T00:00:00.000Z\",\n    \"prepared_at\": \"2015-06-16T00:00:00.500Z\",\n    \"executed_at\": \"2015-06-16T00:00:00.999Z\"\n  }\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\",\n  \"state\": \"executed\",\n  \"timeline\": {\n    \"proposed_at\": \"2015-06-16T00:00:00.000Z\",\n    \"prepared_at\": \"2015-06-16T00:00:00.500Z\",\n    \"executed_at\": \"2015-06-16T00:00:00.999Z\"\n  }\n}",
           "type": "json"
         }
       ]
     },
     "filename": "src/controllers/transfers.js",
-    "groupTitle": "Transfer",
+    "groupTitle": "Transfer_Methods",
     "error": {
       "fields": {
         "Error 4xx": [
@@ -336,9 +451,9 @@
   {
     "type": "get",
     "url": "/transfers/byExecutionCondition/:execution_condition",
-    "title": "Get local transfer object",
+    "title": "Get Transfers by Condition",
     "name": "GetTransferByExecutionCondition",
-    "group": "Transfer",
+    "group": "Transfer_Methods",
     "version": "15.0.0",
     "description": "<p>Use this to query about the details or status of a local transfer that is using atomic mode.</p>",
     "parameter": {
@@ -357,21 +472,32 @@
     "examples": [
       {
         "title": "Get a transfer",
-        "content": "curl -x GET http://usd-ledger.example/USD/transfers/ByExecutionCondition/cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+        "content": "curl -X GET http://usd-ledger.example/transfers/ByExecutionCondition/cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
         "type": "shell"
       }
     ],
     "success": {
+      "fields": {
+        "Success": [
+          {
+            "group": "Success",
+            "type": "Transfer[]",
+            "optional": false,
+            "field": "Array",
+            "description": "<p>Array of <a href=\"#transfer_object\">Transfer objects</a> matching the condition.</p>"
+          }
+        ]
+      },
       "examples": [
         {
           "title": "Array of Transfer responses:",
-          "content": "HTTP/1.1 200 OK\n[{\n  \"id\": \"http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example/USD\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\",\n  \"state\": \"executed\",\n  \"timeline\": {\n    \"proposed_at\": \"2015-06-16T00:00:00.000Z\",\n    \"prepared_at\": \"2015-06-16T00:00:00.500Z\",\n    \"executed_at\": \"2015-06-16T00:00:00.999Z\"\n  }\n}]",
+          "content": "HTTP/1.1 200 OK\n[{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\",\n  \"state\": \"executed\",\n  \"timeline\": {\n    \"proposed_at\": \"2015-06-16T00:00:00.000Z\",\n    \"prepared_at\": \"2015-06-16T00:00:00.500Z\",\n    \"executed_at\": \"2015-06-16T00:00:00.999Z\"\n  }\n}]",
           "type": "Array"
         }
       ]
     },
     "filename": "src/controllers/transfers.js",
-    "groupTitle": "Transfer",
+    "groupTitle": "Transfer_Methods",
     "error": {
       "fields": {
         "Error 4xx": [
@@ -406,11 +532,11 @@
   {
     "type": "get",
     "url": "/transfers/:id/fulfillment",
-    "title": "Get a transfer's fulfillment",
+    "title": "Get Transfer Fulfillment",
     "name": "GetTransferFulfillment",
-    "group": "Transfer",
+    "group": "Transfer_Methods",
     "version": "1.0.0",
-    "description": "<p>Retrieve the fulfillment for a transfer that has been executed or cancelled</p>",
+    "description": "<p>Retrieve the fulfillment for a transfer that has been executed or cancelled. This is separate from the Transfer object because it can be very large.</p>",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -427,7 +553,7 @@
     "examples": [
       {
         "title": "Get Transfer Fulfillment:",
-        "content": "curl -x GET\nhttp://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment",
+        "content": "curl -X GET\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment",
         "type": "shell"
       }
     ],
@@ -441,7 +567,7 @@
       ]
     },
     "filename": "src/controllers/transfers.js",
-    "groupTitle": "Transfer",
+    "groupTitle": "Transfer_Methods",
     "error": {
       "fields": {
         "Error 4xx": [
@@ -465,9 +591,9 @@
   {
     "type": "get",
     "url": "/transfers/:id/state",
-    "title": "Get the state of a transfer",
+    "title": "Get Signed Transfer State",
     "name": "GetTransferState",
-    "group": "Transfer",
+    "group": "Transfer_Methods",
     "version": "1.0.0",
     "description": "<p>Use this to get a signed receipt containing only the id of transfer and its state. It functions even if the transfer doesn't exist yet. If the transfer doesn't exist it will have the state <code>&quot;nonexistent&quot;</code>.</p>",
     "parameter": {
@@ -500,7 +626,7 @@
     "examples": [
       {
         "title": "Get a transfer state receipt",
-        "content": "curl -x GET http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/state",
+        "content": "curl -X GET http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/state",
         "type": "shell"
       }
     ],
@@ -514,7 +640,7 @@
       ]
     },
     "filename": "src/controllers/transfers.js",
-    "groupTitle": "Transfer",
+    "groupTitle": "Transfer_Methods",
     "error": {
       "fields": {
         "Error 4xx": [
@@ -538,52 +664,101 @@
   {
     "type": "put",
     "url": "/transfers/:id",
-    "title": "Propose and prepare a transfer",
+    "title": "Propose or Prepare Transfer",
     "name": "PutTransfer",
-    "group": "Transfer",
+    "group": "Transfer_Methods",
     "version": "1.0.0",
-    "description": "<p>This endpoint is used to create and authorize transfers. When a transfer is created without authorization from the debited accounts it is in the <code>&quot;proposed&quot;</code> state. To authorize the transfer, the owner of the debited accounts must put the <code>&quot;authorized&quot;: true</code> flag on the debit referencing their account and this HTTP call must carry HTTP authorization. When all debited accounts have authorized the transfer it is <code>&quot;prepared&quot;</code> and funds are escrowed until the fulfillment is presented or the <code>expires_at</code> time is reached</p>",
+    "description": "<p>Creates or updates a Transfer object. The transfer is &quot;proposed&quot; if it contains debits that do not have <code>&quot;authorized&quot;: true</code>. To set the <code>authorized</code> field, call this method <a href=\"#authentication\">authenticated</a> as owner of the account to be debited, or as an admin. The transfer is &quot;prepared&quot; when all debits have been authorized. When a transfer becomes prepared, it executes immediately if there is no condition. If an <code>execution_condition</code> is specified, the funds are held until a <a href=\"#api-Transfer_Methods-PutTransferFulfillment\">matching fulfillment is submitted</a> or the <code>expires_at</code> time is reached.</p>",
     "parameter": {
       "fields": {
-        "Parameter": [
+        "URL Params": [
           {
-            "group": "Parameter",
+            "group": "URL Params",
             "type": "String",
             "optional": false,
             "field": "id",
-            "description": "<p>Transfer <a href=\"http://en.wikipedia.org/wiki/Universally_unique_identifier\">UUID</a>.</p>"
+            "description": "<p>A new <a href=\"http://en.wikipedia.org/wiki/Universally_unique_identifier\">UUID</a> to identify this Transfer.</p>"
+          }
+        ],
+        "Request Body": [
+          {
+            "group": "Request Body",
+            "type": "Transfer",
+            "optional": false,
+            "field": "Object",
+            "description": "<p>A <a href=\"#transfer_object\">Transfer object</a> to describe the transfer that should take place. For a conditional transfer, this includes an <code>execution_condition</code>. The <code>authorized</code> field of each debit object must be set to <code>true</code> before the transfer can occur.</p>"
           }
         ]
       }
     },
     "examples": [
       {
-        "title": "Propose a Transfer:",
-        "content": "curl -x PUT -H \"Content-Type: application/json\" -d\n'{\n  \"id\": \"http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example/USD\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\"\n}'\nhttp://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+        "title": "Propose a Transfer",
+        "content": "curl -X PUT -H \"Content-Type: application/json\" -d\n'{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\"\n}'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
         "type": "shell"
       },
       {
-        "title": "Prepare a Transfer:",
-        "content": "curl -x PUT -H \"Content-Type: application/json Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\" -d\n'{\n  \"id\": \"http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example/USD\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/alice\",\n    \"amount\": \"50\",\n    \"authorized\": true\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\"\n}'\nhttp://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+        "title": "Prepare a Transfer",
+        "content": "curl -X PUT -H \"Content-Type: application/json Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\" -d\n'{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\",\n    \"authorized\": true\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\"\n}'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
         "type": "shell"
       }
     ],
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Content-Type",
+            "description": "<p>Must be <code>application/json</code>.</p>"
+          },
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": true,
+            "field": "Authorization",
+            "description": "<p>To control the <code>authorized</code> field of a debit, the user must be <a href=\"#authentication\">authenticated</a>.</p>"
+          }
+        ]
+      }
+    },
     "success": {
+      "fields": {
+        "201 Created": [
+          {
+            "group": "201 Created",
+            "type": "Transfer",
+            "optional": false,
+            "field": "Object",
+            "description": "<p>The newly-created <a href=\"#transfer_object\">Transfer object</a> as saved.</p>"
+          }
+        ],
+        "200 OK": [
+          {
+            "group": "200 OK",
+            "type": "Transfer",
+            "optional": false,
+            "field": "Object",
+            "description": "<p>The updated <a href=\"#transfer_object\">Transfer object</a> as saved.</p>"
+          }
+        ]
+      },
       "examples": [
         {
-          "title": "201 New Proposed Transfer Response:",
-          "content": "HTTP/1.1 201 CREATED\n{\n  \"id\": \"http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example/USD\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\",\n  \"state\": \"proposed\"\n}",
+          "title": "201 New Proposed Transfer Response",
+          "content": "HTTP/1.1 201 CREATED\n{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\",\n  \"state\": \"proposed\"\n}",
           "type": "json"
         },
         {
-          "title": "200 Prepared Transfer Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example/USD\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/alice\",\n    \"amount\": \"50\",\n    \"authorized\": true\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/USD/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\",\n  \"state\": \"prepared\"\n}",
+          "title": "200 Prepared Transfer Response",
+          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\",\n    \"authorized\": true\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\",\n  \"state\": \"prepared\"\n}",
           "type": "json"
         }
       ]
     },
     "filename": "src/controllers/transfers.js",
-    "groupTitle": "Transfer",
+    "groupTitle": "Transfer_Methods",
     "error": {
       "fields": {
         "Error 4xx": [
@@ -651,20 +826,42 @@
   {
     "type": "put",
     "url": "/transfers/:id/fulfillment",
-    "title": "Execute a prepared transfer",
+    "title": "Execute Prepared Transfer",
     "name": "PutTransferFulfillment",
-    "group": "Transfer",
+    "group": "Transfer_Methods",
     "version": "1.0.0",
-    "description": "<p>Execute or cancel a transfer that has already been prepared. Putting the fulfillment of either the <code>execution_condition</code> or the <code>cancellation_condition</code>, if there is one, will execute or cancel the transfer, respectively.</p>",
+    "description": "<p>Execute or cancel a transfer that has already been prepared. If the prepared transfer has an <code>execution_condition</code>, you can submit the fulfillment of that condition to execute the transfer. If the prepared transfer has a <code>cancellation_condition</code>, you can submit the fulfillment of that condition to cancel the transfer.</p>",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Content-Type",
+            "description": "<p>Must be <code>text/plain</code>.</p>"
+          }
+        ]
+      }
+    },
     "parameter": {
       "fields": {
-        "Parameter": [
+        "URL Parameters": [
           {
-            "group": "Parameter",
+            "group": "URL Parameters",
             "type": "String",
             "optional": false,
             "field": "id",
             "description": "<p>Transfer <a href=\"http://en.wikipedia.org/wiki/Universally_unique_identifier\">UUID</a>.</p>"
+          }
+        ],
+        "Request Body": [
+          {
+            "group": "Request Body",
+            "type": "String",
+            "optional": false,
+            "field": "Fulfillment",
+            "description": "<p>A <a href=\"#cryptoconditions\">Fulfillment</a> in string format.</p>"
           }
         ]
       }
@@ -672,21 +869,21 @@
     "examples": [
       {
         "title": "Put Transfer Fulfillment:",
-        "content": "curl -x PUT -H \"Content-Type: text/plain\" -d\n'cf:0:_v8'\nhttp://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment",
+        "content": "curl -X PUT -H \"Content-Type: text/plain\" -d\n'cf:0:_v8'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment",
         "type": "shell"
       }
     ],
     "success": {
       "examples": [
         {
-          "title": "201 Fulfillment Accepted Response:",
+          "title": "200 Fulfillment Accepted Response:",
           "content": "HTTP/1.1 200 OK\ncf:0:_v8",
           "type": "json"
         }
       ]
     },
     "filename": "src/controllers/transfers.js",
-    "groupTitle": "Transfer",
+    "groupTitle": "Transfer_Methods",
     "error": {
       "fields": {
         "Error 4xx": [
@@ -722,6 +919,109 @@
           "content": "HTTP/1.1 422 Unprocessable Entity\n{\n  \"id\": \"UnmetConditionError\",\n  \"message\": \"Error description here.\"\n}",
           "type": "json"
         },
+        {
+          "title": "UnprocessableEntityError",
+          "content": "HTTP/1.1 422 Unprocessable Entity\n{\n  \"id\": \"UnprocessableEntityError\",\n  \"message\": \"Error description here.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "InvalidUriParameterError",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidUriParameterError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
+          "type": "json"
+        },
+        {
+          "title": "InvalidBodyError",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidBodyError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "put",
+    "url": "/transfers/:id/rejection",
+    "title": "Reject Transfer",
+    "name": "PutTransferRejection",
+    "group": "Transfer_Methods",
+    "version": "1.0.0",
+    "description": "<p>Reject the transfer with the given message</p>",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Content-Type",
+            "description": "<p>Must be <code>text/plain</code>.</p>"
+          }
+        ]
+      }
+    },
+    "parameter": {
+      "fields": {
+        "URL Parameters": [
+          {
+            "group": "URL Parameters",
+            "type": "String",
+            "optional": false,
+            "field": "id",
+            "description": "<p>Transfer <a href=\"http://en.wikipedia.org/wiki/Universally_unique_identifier\">UUID</a>.</p>"
+          }
+        ],
+        "Request Body": [
+          {
+            "group": "Request Body",
+            "type": "String",
+            "optional": false,
+            "field": "Rejection",
+            "description": "<p>An error message in string format.</p>"
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Put Transfer Rejection:",
+        "content": "curl -X PUT -H \"Content-Type: text/plain\" -d\n'an error'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection",
+        "type": "shell"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "200 Rejection Accepted Response:",
+          "content": "HTTP/1.1 200 OK\n'an error'",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "src/controllers/transfers.js",
+    "groupTitle": "Transfer_Methods",
+    "error": {
+      "fields": {
+        "Error 4xx": [
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "UnprocessableEntityError",
+            "description": "<p>The provided entity is syntactically correct, but there is a generic semantic problem with it.</p>"
+          },
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "InvalidUriParameterError",
+            "description": "<p>(One of) the provided URI parameter(s) was invalid.</p>"
+          },
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "InvalidBodyError",
+            "description": "<p>The submitted JSON entity does not match the required schema.</p>"
+          }
+        ]
+      },
+      "examples": [
         {
           "title": "UnprocessableEntityError",
           "content": "HTTP/1.1 422 Unprocessable Entity\n{\n  \"id\": \"UnprocessableEntityError\",\n  \"message\": \"Error description here.\"\n}",
