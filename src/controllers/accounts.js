@@ -3,6 +3,7 @@
 
 const request = require('five-bells-shared/utils/request')
 const model = require('../models/accounts')
+const log = require('../services/log')
 
 function * getCollection () {
   this.body = yield model.getAccounts()
@@ -179,7 +180,9 @@ function * subscribeTransfers () {
   if (this.websocket.readyState !== 1) return
 
   const close = model.subscribeTransfers(name, this.req.user, (notification) => {
-    this.websocket.send(JSON.stringify(notification))
+    this.websocket.send(JSON.stringify(notification), (error) => {
+      log.error('failed to send notification to ' + this.req.ip, error)
+    })
   })
 
   // Send a message upon connection
