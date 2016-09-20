@@ -25,6 +25,7 @@ const hashJSON = require('five-bells-shared/utils/hashJson')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
 const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
 const UnmetConditionError = require('five-bells-shared/errors/unmet-condition-error')
+const TransferNotConditionalError = require('five-bells-shared/errors/transfer-not-conditional-error')
 const InvalidModificationError =
 require('five-bells-shared/errors/invalid-modification-error')
 const UnprocessableEntityError =
@@ -277,6 +278,20 @@ function validateCreditAndDebitAmounts (transfer) {
   }
 }
 
+/**
+ * Normalize the amounts.
+ * Because an amount of "1.0" is saved as "1", updating the transfer with "1.0"
+ * would cause an InvalidModificationError unless the amounts are normalized.
+ */
+function normalizeCreditAndDebitAmounts (transfer) {
+  transfer.debits.forEach((debit) => {
+    debit.amount = new Bignumber(debit.amount).toString()
+  })
+  transfer.credits.forEach((credit) => {
+    credit.amount = new Bignumber(credit.amount).toString()
+  })
+}
+
 function isAuthorized (transfer) {
   const areDebitsAuthorized = _.every(transfer.debits, 'authorized')
   if (config.getIn(['features', 'hasCreditAuth'])) {
@@ -320,10 +335,13 @@ function * processCreditRejection (transfer, transaction) {
 }
 
 function validateConditionFulfillment (transfer, fulfillmentModel) {
-  const fulfillment = convertToExternalFulfillment(fulfillmentModel)
-  const condition = cc.fulfillmentToCondition(fulfillment)
+  if (!transfer.execution_condition && !transfer.cancellation_condition) {
+    throw new TransferNotConditionalError('Transfer is not conditional')
+  }
 
+  const fulfillment = convertToExternalFulfillment(fulfillmentModel)
   try {
+    const condition = cc.fulfillmentToCondition(fulfillment)
     if (
       condition === transfer.execution_condition &&
       cc.validateFulfillment(fulfillment, condition)
@@ -336,7 +354,7 @@ function validateConditionFulfillment (transfer, fulfillmentModel) {
       return CONDITION_TYPE_CANCELLATION
     }
   } catch (err) {
-    throw new UnmetConditionError('Invalid fulfillment: ' + err.toString())
+    throw new InvalidBodyError('Invalid fulfillment: ' + err.toString())
   }
 
   throw new UnmetConditionError('Fulfillment does not match any condition')
@@ -423,6 +441,10 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
 
 function * rejectTransfer (transferId, rejectionMessage, requestingUser) {
   const transfer = yield getTransfer(transferId)
+  if (!transfer.execution_condition) {
+    throw new TransferNotConditionalError('Transfer is not conditional')
+  }
+
   const requestingAccount = config.server.base_uri + '/accounts/' + requestingUser.name
   // Pick a credit that matches the requestingUser if possible.
   // Picking credits[0] will result in a UnauthorizedError.
@@ -471,6 +493,7 @@ function * setTransfer (externalTransfer, requestingUser) {
     transfer.credits[0].amount)
 
   validateCreditAndDebitAmounts(transfer)
+  normalizeCreditAndDebitAmounts(transfer)
 
   let originalTransfer, previousDebits, previousCredits
   yield db.withTransaction(function * (transaction) {

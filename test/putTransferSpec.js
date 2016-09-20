@@ -216,6 +216,31 @@ describe('PUT /transfers/:id', function () {
         .end()
     })
 
+  it('should return 200 if a transfer is re-posted with the same amount in a different format',
+    function * () {
+      const transfer = _.cloneDeep(this.proposedTransfer)
+      transfer.credits[0].amount = '10'
+
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
+
+      this.clock.tick(2000)
+
+      transfer.credits[0].amount = '10.0'
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(200)
+        .expect(validator.validateTransfer)
+        .end()
+    })
+
   it('should return 422 if a transfer is modified after its ' +
     'expiry date', function * () {
     const transfer = this.transferWithExpiry
