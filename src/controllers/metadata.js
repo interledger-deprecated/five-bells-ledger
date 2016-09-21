@@ -31,12 +31,12 @@ const accounts = require('../models/accounts')
  *            "health": "http://usd-ledger.example/health",
  *            "transfer": "http://usd-ledger.example/transfers/:id",
  *            "transfer_fulfillment": "http://usd-ledger.example/transfers/:id/fulfillment",
+ *            "transfer_rejection": "http://usd-ledger.example/transfers/:id/rejection",
  *            "transfer_state": "http://usd-ledger.example/transfers/:id/state",
  *            "connectors": "http://usd-ledger.example/connectors",
  *            "accounts": "http://usd-ledger.example/accounts",
  *            "account": "http://usd-ledger.example/accounts/:name",
- *            "subscription": "http://usd-ledger.example/subscriptions/:id",
- *            "subscription_notification": "http://usd-ledger.example/subscriptions/:subscription_id/notifications/:notification_id"
+ *            "account_transfers": "ws://usd-ledger.example/accounts/:name/transfers"
  *        },
  *        "precision": 10,
  *        "scale": 2,
@@ -64,12 +64,12 @@ module.exports = (config) => {
       health: base + '/health',
       transfer: base + '/transfers/:id',
       transfer_fulfillment: base + '/transfers/:id/fulfillment',
+      transfer_rejection: base + '/transfers/:id/rejection',
       transfer_state: base + '/transfers/:id/state',
       connectors: base + '/connectors',
       accounts: base + '/accounts',
       account: base + '/accounts/:name',
-      subscription: base + '/subscriptions/:id',
-      subscription_notification: base + '/subscriptions/:subscription_id/notifications/:notification_id'
+      account_transfers: base.replace(/^http/, 'ws') + '/accounts/:name/transfers'
     },
     precision: config.get('amount.precision'),
     scale: config.get('amount.scale')
