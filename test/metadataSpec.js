@@ -39,7 +39,6 @@ describe('Metadata', function () {
               transfer_fulfillment: 'http://localhost/transfers/:id/fulfillment',
               transfer_rejection: 'http://localhost/transfers/:id/rejection',
               transfer_state: 'http://localhost/transfers/:id/state',
-              connectors: 'http://localhost/connectors',
               accounts: 'http://localhost/accounts',
               account: 'http://localhost/accounts/:name',
               account_transfers: 'ws://localhost/accounts/:name/transfers'

@@ -33,7 +33,6 @@ const accounts = require('../models/accounts')
  *            "transfer_fulfillment": "http://usd-ledger.example/transfers/:id/fulfillment",
  *            "transfer_rejection": "http://usd-ledger.example/transfers/:id/rejection",
  *            "transfer_state": "http://usd-ledger.example/transfers/:id/state",
- *            "connectors": "http://usd-ledger.example/connectors",
  *            "accounts": "http://usd-ledger.example/accounts",
  *            "account": "http://usd-ledger.example/accounts/:name",
  *            "account_transfers": "ws://usd-ledger.example/accounts/:name/transfers"
@@ -66,7 +65,6 @@ module.exports = (config) => {
       transfer_fulfillment: base + '/transfers/:id/fulfillment',
       transfer_rejection: base + '/transfers/:id/rejection',
       transfer_state: base + '/transfers/:id/state',
-      connectors: base + '/connectors',
       accounts: base + '/accounts',
       account: base + '/accounts/:name',
       account_transfers: base.replace(/^http/, 'ws') + '/accounts/:name/transfers'
