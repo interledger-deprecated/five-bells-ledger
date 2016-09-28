@@ -43,7 +43,7 @@ function main () {
     renderSchema: renderSchema
   }
 
-  const introDocPath = path.join(ROOT, 'scripts', 'apidoc_intro.md.ejs')
+  const introDocPath = path.join(ROOT, 'docs', 'apidoc_intro.ejs.md')
   ejs.renderFile(introDocPath, locals, function (error, output) {
     if (error) {
       console.error(error)
