@@ -91,10 +91,8 @@ Use the following environment variables to configure the service when run:
 * `LEDGER_DB_SYNC` (default: `0`) whether or not to run the SQL setup scripts for the database
 * `LEDGER_PORT` (default: `3000`) Port that Five Bells Ledger will listen on.
 * `LEDGER_BIND_IP` (default: `0.0.0.0`) IP that Five Bells Ledger will bind to.
-* `LEDGER_HOSTNAME` (default: *[your hostname]*) Publicly visible hostname. This is important for things like generating globally unique IDs. Make sure this is a hostname that all your clients will be able to see. The default should be fine for local testing.
+* `LEDGER_PUBLIC_URI` (default: `http://$HOSTNAME:$LEDGER_PORT`) URI prefix where the ledger will be publicly visible. All IDs and URIs that that the ledger outputs will be using this root URI.
 * `LEDGER_ILP_PREFIX` (default: none) ILP prefix for accounts on this ledger, included in the ledger's metadata. Used by plugins to set their ILP prefix.
-* `LEDGER_PUBLIC_PORT` (default: `$PORT`) Publicly visible port. You can set this if your public port differs from the listening port, e.g. because the ledger is running behind a proxy.
-* `LEDGER_PUBLIC_HTTPS` (default: `''`) Whether or not the publicly visible instance of Five Bells Ledger is using HTTPS.
 * `LEDGER_ADMIN_USER` (default: `'admin'`) The admin account's username (an admin user can create/modify accounts).
 * `LEDGER_ADMIN_PASS` (default: none) The admin account's password.
 * `LEDGER_ADMIN_FINGERPRINT` (default: none) The admin account's TLS certificate fingerprint if using TLS Client Certificate Auth.
