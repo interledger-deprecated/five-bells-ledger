@@ -17,13 +17,13 @@ docs() {
 }
 
 dockerBuild() {
-  docker build -t interledger/five-bells-ledger .
+  docker build -t interledgerjs/five-bells-ledger .
 }
 
 mysqltest() {
   mysql -u ubuntu -e 'DROP DATABASE circle_test;'
   mysql -u ubuntu -e 'CREATE DATABASE circle_test;'
-  docker run --name=ledger-test-mysql -it --net=host -e LEDGER_UNIT_DB_URI=mysql://ubuntu@localhost/circle_test interledger/five-bells-ledger npm test
+  docker run --name=ledger-test-mysql -it --net=host -e LEDGER_UNIT_DB_URI=mysql://ubuntu@localhost/circle_test interledgerjs/five-bells-ledger npm test
 }
 
 postgrestest() {

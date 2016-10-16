@@ -2,24 +2,24 @@
 
 [npm-image]: https://img.shields.io/npm/v/five-bells-ledger.svg?style=flat
 [npm-url]: https://npmjs.org/package/five-bells-ledger
-[circle-image]: https://circleci.com/gh/interledger/five-bells-ledger.svg?style=shield&circle-token=e31b3ba89c015bf7f1c6de9f5156e7daa32fd793
-[circle-url]: https://circleci.com/gh/interledger/five-bells-ledger
-[codecov-image]: https://codecov.io/gh/interledger/five-bells-ledger/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/interledger/five-bells-ledger
+[circle-image]: https://circleci.com/gh/interledgerjs/five-bells-ledger.svg?style=shield&circle-token=e31b3ba89c015bf7f1c6de9f5156e7daa32fd793
+[circle-url]: https://circleci.com/gh/interledgerjs/five-bells-ledger
+[codecov-image]: https://codecov.io/gh/interledgerjs/five-bells-ledger/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/interledgerjs/five-bells-ledger
 
 > A reference implementation of the Five Bells Ledger API
 
 
 ## Usage
 
-You can see the ledger in action as part of the [`five-bells-demo`](https://github.com/interledger/five-bells-demo)!
+You can see the ledger in action as part of the [`five-bells-demo`](https://github.com/interledgerjs/five-bells-demo)!
 
 To run the ledger as a standalone server:
 
 ### Step 1: Clone repo
 
 ``` sh
-git clone https://github.com/interledger/five-bells-ledger.git
+git clone https://github.com/interledgerjs/five-bells-ledger.git
 cd five-bells-ledger
 ```
 
