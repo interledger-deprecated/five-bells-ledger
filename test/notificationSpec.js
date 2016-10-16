@@ -97,8 +97,10 @@ describe('Notifications', function () {
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledOnce(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, {
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        type: 'notification',
         resource: _.assign({}, transfer, {
           state: 'executed',
           timeline: {
@@ -133,8 +135,10 @@ describe('Notifications', function () {
 
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledOnce(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, {
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        type: 'notification',
         resource: _.assign({}, transfer, {
           state: 'executed',
           timeline: {
@@ -164,8 +168,10 @@ describe('Notifications', function () {
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledOnce(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, {
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        type: 'notification',
         resource: _.assign({}, transfer, {
           state: 'prepared',
           timeline: {
@@ -187,8 +193,9 @@ describe('Notifications', function () {
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.secondCall, {
+      sinon.assert.calledThrice(listener)
+      sinon.assert.calledWithMatch(listener.thirdCall, {
+        type: 'notification',
         resource: _.assign({}, transfer, {
           state: 'executed',
           timeline: {
@@ -218,8 +225,9 @@ describe('Notifications', function () {
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledOnce(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, {
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        type: 'notification',
         resource: _.assign({}, transfer, {
           state: 'proposed',
           timeline: {
@@ -235,8 +243,10 @@ describe('Notifications', function () {
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.secondCall, {
+      sinon.assert.calledThrice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
+      sinon.assert.calledWithMatch(listener.thirdCall, {
+        type: 'notification',
         resource: _.assign({}, transfer, {
           state: 'rejected',
           timeline: {
@@ -291,9 +301,14 @@ describe('Notifications', function () {
 
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, { resource: transferPrepared })
+      sinon.assert.calledThrice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
       sinon.assert.calledWithMatch(listener.secondCall, {
+        type: 'notification',
+        resource: transferPrepared
+      })
+      sinon.assert.calledWithMatch(listener.thirdCall, {
+        type: 'notification',
         resource: transferExecuted,
         related_resources: { execution_condition_fulfillment: this.executionConditionFulfillment }
       })
@@ -344,9 +359,16 @@ describe('Notifications', function () {
 
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, { resource: transferPrepared })
-      sinon.assert.calledWithMatch(listener.secondCall, { resource: transferCancelled })
+      sinon.assert.calledThrice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        type: 'notification',
+        resource: transferPrepared
+      })
+      sinon.assert.calledWithMatch(listener.thirdCall, {
+        type: 'notification',
+        resource: transferCancelled
+      })
     })
   })
 })

@@ -24,6 +24,7 @@ class NotificationBroadcaster extends EventEmitter {
 
     // Prepare notification for websocket subscribers
     const notificationBody = {
+      type: 'notification',
       resource: convertToExternalTransfer(transfer)
     }
 
