@@ -35,7 +35,8 @@ const accounts = require('../models/accounts')
  *            "transfer_state": "http://usd-ledger.example/transfers/:id/state",
  *            "accounts": "http://usd-ledger.example/accounts",
  *            "account": "http://usd-ledger.example/accounts/:name",
- *            "account_transfers": "ws://usd-ledger.example/accounts/:name/transfers"
+ *            "account_transfers": "ws://usd-ledger.example/accounts/:name/transfers",
+ *            "message": "http://usd-ledger.example/messages"
  *        },
  *        "precision": 10,
  *        "scale": 2,
@@ -67,7 +68,8 @@ module.exports = (config) => {
       transfer_state: base + '/transfers/:id/state',
       accounts: base + '/accounts',
       account: base + '/accounts/:name',
-      account_transfers: base.replace(/^http/, 'ws') + '/accounts/:name/transfers'
+      account_transfers: base.replace(/^http/, 'ws') + '/accounts/:name/transfers',
+      message: base + '/messages'
     },
     precision: config.get('amount.precision'),
     scale: config.get('amount.scale')

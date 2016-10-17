@@ -24,7 +24,7 @@ class NotificationBroadcaster extends EventEmitter {
 
     // Prepare notification for websocket subscribers
     const notificationBody = {
-      type: 'notification',
+      type: 'transfer',
       resource: convertToExternalTransfer(transfer)
     }
 
@@ -48,12 +48,18 @@ class NotificationBroadcaster extends EventEmitter {
       }
     }
 
-    this.log.debug('emitting transfer-{' + affectedAccounts.join(',') + '}')
+    this.log.debug('emitting notification-{' + affectedAccounts.join(',') + '}')
     for (let account of affectedAccounts) {
-      this.emit('transfer-' + account, notificationBody)
+      this.emit('notification-' + account, notificationBody)
     }
   }
 
+  * sendMessage (destinationAccount, message) {
+    this.emit('notification-' + destinationAccount, {
+      type: 'message',
+      resource: message
+    })
+  }
 }
 
 module.exports = NotificationBroadcaster

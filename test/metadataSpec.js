@@ -41,7 +41,8 @@ describe('Metadata', function () {
               transfer_state: 'http://localhost/transfers/:id/state',
               accounts: 'http://localhost/accounts',
               account: 'http://localhost/accounts/:name',
-              account_transfers: 'ws://localhost/accounts/:name/transfers'
+              account_transfers: 'ws://localhost/accounts/:name/transfers',
+              message: 'http://localhost/messages'
             },
             precision: 10,
             scale: 2,

@@ -104,9 +104,9 @@ function subscribeTransfers (account, requestingUser, listener) {
   }
 
   log.info('new ws subscriber for ' + account)
-  notificationBroadcaster.addListener('transfer-' + account, listener)
+  notificationBroadcaster.addListener('notification-' + account, listener)
 
-  return () => notificationBroadcaster.removeListener('transfer-' + account, listener)
+  return () => notificationBroadcaster.removeListener('notification-' + account, listener)
 }
 
 function * insertAccounts (externalAccounts) {
