@@ -40,7 +40,6 @@ class App {
     koaApp.use(logger.requestLogger({
       updateRequestLogFields: function (fields) {
         return {
-          headers: this.req.headers,
           body: isTrace ? this.body : undefined,
           query: this.query
         }
@@ -49,7 +48,6 @@ class App {
         return {
           duration: fields.duration,
           status: this.status,
-          headers: this.headers,
           body: isTrace ? this.body : undefined
         }
       }
@@ -128,14 +126,14 @@ class App {
     router.get('/', this.metadata.getResource)
     router.get('/health', health.getResource)
 
+    router.post('/messages',
+      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      setupBody,
+      transfers.postMessage)
+
     router.put('/transfers/:id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], {
-        session: false
-      }),
-      function * (next) {
-        this.body = yield parseBody(this)
-        yield next
-      },
+      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      setupBody,
       transfers.putResource)
 
     router.put('/transfers/:id/fulfillment', transfers.putFulfillment)
@@ -157,10 +155,7 @@ class App {
       accounts.getResource)
     router.put('/accounts/:name',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
-      function * (next) {
-        this.body = yield parseBody(this)
-        yield next
-      },
+      setupBody,
       accounts.putResource)
 
     return router
@@ -183,6 +178,11 @@ function * filterAdmin (next) {
   } else {
     throw new UnauthorizedError('You aren\'t an admin')
   }
+}
+
+function * setupBody (next) {
+  this.body = yield parseBody(this)
+  yield next
 }
 
 module.exports = App

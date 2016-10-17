@@ -100,7 +100,7 @@ describe('Notifications', function () {
       sinon.assert.calledTwice(listener)
       sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
       sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'notification',
+        type: 'transfer',
         resource: _.assign({}, transfer, {
           state: 'executed',
           timeline: {
@@ -138,7 +138,7 @@ describe('Notifications', function () {
       sinon.assert.calledTwice(listener)
       sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
       sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'notification',
+        type: 'transfer',
         resource: _.assign({}, transfer, {
           state: 'executed',
           timeline: {
@@ -171,7 +171,7 @@ describe('Notifications', function () {
       sinon.assert.calledTwice(listener)
       sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
       sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'notification',
+        type: 'transfer',
         resource: _.assign({}, transfer, {
           state: 'prepared',
           timeline: {
@@ -195,7 +195,7 @@ describe('Notifications', function () {
 
       sinon.assert.calledThrice(listener)
       sinon.assert.calledWithMatch(listener.thirdCall, {
-        type: 'notification',
+        type: 'transfer',
         resource: _.assign({}, transfer, {
           state: 'executed',
           timeline: {
@@ -227,7 +227,7 @@ describe('Notifications', function () {
 
       sinon.assert.calledTwice(listener)
       sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'notification',
+        type: 'transfer',
         resource: _.assign({}, transfer, {
           state: 'proposed',
           timeline: {
@@ -246,7 +246,7 @@ describe('Notifications', function () {
       sinon.assert.calledThrice(listener)
       sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
       sinon.assert.calledWithMatch(listener.thirdCall, {
-        type: 'notification',
+        type: 'transfer',
         resource: _.assign({}, transfer, {
           state: 'rejected',
           timeline: {
@@ -304,11 +304,11 @@ describe('Notifications', function () {
       sinon.assert.calledThrice(listener)
       sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
       sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'notification',
+        type: 'transfer',
         resource: transferPrepared
       })
       sinon.assert.calledWithMatch(listener.thirdCall, {
-        type: 'notification',
+        type: 'transfer',
         resource: transferExecuted,
         related_resources: { execution_condition_fulfillment: this.executionConditionFulfillment }
       })
@@ -362,11 +362,11 @@ describe('Notifications', function () {
       sinon.assert.calledThrice(listener)
       sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
       sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'notification',
+        type: 'transfer',
         resource: transferPrepared
       })
       sinon.assert.calledWithMatch(listener.thirdCall, {
-        type: 'notification',
+        type: 'transfer',
         resource: transferCancelled
       })
     })

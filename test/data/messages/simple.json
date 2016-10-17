@@ -1,0 +1,5 @@
+{
+  "ledger": "http://localhost",
+  "account": "http://localhost/accounts/bob",
+  "data": {"foo": "bar"}
+}
