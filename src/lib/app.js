@@ -15,6 +15,7 @@ const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const getMetadataRoute = require('../controllers/metadata')
 const health = require('../controllers/health')
 const transfers = require('../controllers/transfers')
+const messages = require('../controllers/messages')
 const accounts = require('../controllers/accounts')
 const seedDB = require('./seed-db')
 const createTables = require('./db').createTables
@@ -129,7 +130,7 @@ class App {
     router.post('/messages',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
       setupBody,
-      transfers.postMessage)
+      messages.postMessage)
 
     router.put('/transfers/:id',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),

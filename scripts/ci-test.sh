@@ -9,7 +9,7 @@ lint() {
 }
 
 integrationtest() {
-  npm run integration
+  if git log -1 --pretty=%B | grep -qF "[skip tests]"; then true; else npm run integration; fi
 }
 
 docs() {
