@@ -378,6 +378,7 @@ function * executeTransfer (transaction, transfer, fulfillment) {
 function * fulfillTransfer (transferId, fulfillmentUri) {
   const fulfillment = convertToInternalFulfillment(fulfillmentUri)
   fulfillment.transfer_id = transferId
+  let transfer = null
   const existingFulfillment = yield db.withTransaction(function * (transaction) {
     // Set isolation level to avoid reading "prepared" transaction that is currently being
     // executed by another request. This ensures the transfer can be fulfilled only once.
@@ -386,7 +387,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
     if (db.client === 'pg' || db.client === 'strong-oracle') {
       yield transaction.raw('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
     }
-    const transfer = yield db.getTransfer(transferId, {transaction})
+    transfer = yield db.getTransfer(transferId, {transaction})
 
     if (!transfer) {
       throw new NotFoundError('Invalid transfer ID')
@@ -421,8 +422,6 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
     transferExpiryMonitor.unwatch(transfer.id)
     yield db.updateTransfer(transfer, {transaction})
 
-    yield notificationBroadcaster.sendNotifications(transfer, transaction)
-
     // Start the expiry countdown if the transfer is not yet finalized
     // If the expires_at has passed by this time we'll consider
     // the transfer to have made it in before the deadline
@@ -432,6 +431,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
   })
 
   log.debug('changes written to database')
+  yield notificationBroadcaster.sendNotifications(transfer, null)
 
   return {
     fulfillment: existingFulfillment || convertToExternalFulfillment(fulfillment),
@@ -530,9 +530,9 @@ function * setTransfer (externalTransfer, requestingUser) {
     yield processImmediateExecution(transfer, transaction)
     yield processCreditRejection(transfer, transaction)
     yield db.upsertTransfer(transfer, {transaction})
-
-    yield notificationBroadcaster.sendNotifications(transfer, transaction)
   })
+
+  yield notificationBroadcaster.sendNotifications(transfer, null)
 
   // Start the expiry countdown if the transfer is not yet finalized
   // If the expires_at has passed by this time we'll consider
