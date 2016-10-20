@@ -26,7 +26,6 @@ const accounts = require('../models/accounts')
  *        "currency_code": null,
  *        "currency_symbol": null,
  *        "condition_sign_public_key": "YNDefwo4LB+AjkCRzuCSGuAlDLvSCWUxPRX7lXLhV1I=",
- *        "notification_sign_public_key": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAnR0o5RIONZy8zwKNxt8ibQtuIu+VDgcZB5MFzFywEvhNFAMXJZyq2ZgER2fb\nXJGfT0CAOMLa3TNcPHvhdHCOnkHSqs7SRLnjnGJuxv/+WyNaFuzrgUT4ymBdtK2LT5j1p7uw\nllxUv9uAjWRz96LUQewjXl38QxE56rp5ov+O+frF2TDN+qFLqgRX1N6kbY6roQRDJ3BFKKqN\nS3mVqMqokeQ5UmYwqAcgmdysoFZFcCkuRdZ1Han/CMDfnhL0mtQmwOhUdOZ4a6dfWNgozycI\nyQOS59ckDp31dRjMZddaSQki/yDIAxmtZHzE4z+U4ZMxEbirwCZbA9QZed2Tu35yQwIDAQAB\n-----END RSA PUBLIC KEY-----\n",
  *        "urls": {
  *            "health": "http://usd-ledger.example/health",
  *            "transfer": "http://usd-ledger.example/transfers/:id",
@@ -59,7 +58,6 @@ module.exports = (config) => {
     currency_symbol: config.getIn(['currency', 'symbol']),
     ilp_prefix: config.getIn(['ilp', 'prefix']),
     condition_sign_public_key: config.getIn(['keys', 'ed25519', 'public']),
-    notification_sign_public_key: config.getIn(['keys', 'notification_sign', 'public']),
     urls: {
       health: base + '/health',
       transfer: base + '/transfers/:id',

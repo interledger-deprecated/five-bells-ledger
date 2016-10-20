@@ -8,7 +8,6 @@ const App = require('../src/lib/app')
 const app = require('../src/services/app')
 const logger = require('../src/services/log')
 const logHelper = require('./helpers/log')
-const config = require('../src/services/config')
 
 function request () {
   return superagent(app.koa.listen())
@@ -22,7 +21,6 @@ describe('Metadata', function () {
 
   describe('GET /', function () {
     it('should return metadata', function * () {
-      const notificationPublicKey = config.getIn(['keys', 'notification_sign', 'public'])
       yield request()
         .get('/')
         .expect(200)
@@ -32,7 +30,6 @@ describe('Metadata', function () {
             currency_symbol: null,
             ilp_prefix: null,
             condition_sign_public_key: 'YXg177AOkDlGGrBaoSET+UrMscbHGwFXHqfUMBZTtCY=',
-            notification_sign_public_key: notificationPublicKey,
             urls: {
               health: 'http://localhost/health',
               transfer: 'http://localhost/transfers/:id',
