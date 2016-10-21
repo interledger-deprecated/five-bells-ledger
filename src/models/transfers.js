@@ -259,7 +259,7 @@ function validatePrecisionAmounts (adjustments) {
 
   if (invalid) {
     throw new UnprocessableEntityError(
-        'Amount exceeds allowed precision')
+        'Amount exceeds allowed precision scale=' + allowedScale + ' precision=' + allowedPrecision)
   }
 }
 
@@ -382,9 +382,9 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
   const existingFulfillment = yield db.withTransaction(function * (transaction) {
     // Set isolation level to avoid reading "prepared" transaction that is currently being
     // executed by another request. This ensures the transfer can be fulfilled only once.
-    assert(_.includes(['sqlite3', 'pg', 'mysql', 'strong-oracle'], db.client),
+    assert(_.includes(['sqlite3', 'pg', 'mysql'], db.client),
       'A valid client must be specified on the db object')
-    if (db.client === 'pg' || db.client === 'strong-oracle') {
+    if (db.client === 'pg') {
       yield transaction.raw('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
     }
     transfer = yield db.getTransfer(transferId, {transaction})

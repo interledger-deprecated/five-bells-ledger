@@ -151,15 +151,6 @@ describe('loadConfig', () => {
     })
   })
 
-  describe('oracledb, amount.precision > 15, not running unit tests', () => {
-    it('throws an exception', () => {
-      process.env.UNIT_TEST_OVERRIDE = 'true'
-      process.env.LEDGER_DB_URI = 'oracle://foo/bar'
-      process.env.LEDGER_AMOUNT_PRECISION = 16
-      expect(loadConfig).to.throw(/Cannot support precision > 15/)
-    })
-  })
-
   describe('config.recommendedConnectors', () => {
     it('defaults to undefined', () => {
       const _config = loadConfig()

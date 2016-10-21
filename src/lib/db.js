@@ -35,30 +35,6 @@ function executeStatements (sql) {
   }))
 }
 
-function executeSQLPlus (sqlFilepath) {
-  return new Promise((resolve, reject) => {
-    const user = connection.user
-    const password = connection.password
-    const host = connection.host
-    const port = connection.port
-    const database = connection.database
-    const login = user + '/' + password + '@' + host + ':' + port
-    const url = login + (database ? '/' + database : '')
-    const env = {
-      LD_LIBRARY_PATH: '/opt/oracle/instantclient',
-      DYLD_LIBRARY_PATH: '/opt/oracle/instantclient'
-    }
-    const command = '/opt/oracle/instantclient/sqlplus'
-    const args = [url, '@' + sqlFilepath]
-    const childProcess = spawn(command, args, {env})
-    childProcess.on('close', (code) => {
-      return code === 0 ? resolve() : reject(
-        new Error('sqlplus exited with code ' + code))
-    })
-    childProcess.on('error', reject)
-  })
-}
-
 function executePSQL (sqlFilepath) {
   return new Promise((resolve, reject) => {
     const command = 'psql'
@@ -93,9 +69,7 @@ function executeScript (filename) {
   const filepath = path.resolve(
     __dirname, '..', 'sql', dbType, filename)
 
-  if (dbType === 'strong-oracle') {
-    return executeSQLPlus(filepath)
-  } else if (dbType === 'pg') {
+  if (dbType === 'pg') {
     return executePSQL(filepath)
   } else {
     const sql = fs.readFileSync(filepath, {encoding: 'utf8'})
@@ -113,29 +87,19 @@ function * dropTables () {
 
 function * truncateTables () {
   const dbType = knex.client.config.client
-  if (dbType === 'strong-oracle') {
-    yield executeScript('disable.sql')
-  }
   for (const tableName of TABLE_NAMES) {
     if (!tableName.includes('_LU_')) {
       if (dbType === 'pg') {
         yield knex.raw('TRUNCATE TABLE "' + tableName + '" CASCADE;')
-      } else if (dbType === 'strong-oracle') {
-        yield knex.raw('TRUNCATE TABLE "' + tableName + '"')
       } else {
         yield knex(tableName).truncate()
       }
     }
   }
-  if (dbType === 'strong-oracle') {
-    yield executeScript('enable.sql')
-  }
 }
 
 function * isConnected () {
-  const query = knex.client.config.client === 'strong-oracle'
-    ? 'SELECT 1 FROM DUAL' : 'SELECT 1'
-  return knex.raw(query)
+  return knex.raw('SELECT 1')
   .then(() => {
     return true
   })

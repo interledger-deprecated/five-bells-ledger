@@ -508,13 +508,10 @@ describe('PUT /transfers/:id', function () {
     expect((yield getAccount('bob')).balance).to.equal(10)
   })
 
-  // In CI, Oracle is setup with Decimal(10,2) and SQLite doesn't care about precision
-  // So this test will pass for SQLite and fail for Oracle
-  // TODO: Configuration for specifiyng amount precision for the ledger
-  it.skip('should maintain correct precision', function * () {
+  it('should maintain correct precision', function * () {
     const transferWithoutId = _.cloneDeep(this.exampleTransfer)
     delete transferWithoutId.id
-    transferWithoutId.debits[0].amount = transferWithoutId.credits[0].amount = '5.0101'
+    transferWithoutId.debits[0].amount = transferWithoutId.credits[0].amount = '5.01'
     for (let i = 0; i < 2; i++) {
       const transferID = this.exampleTransfer.id.slice(0, -1) + i
       yield this.request()
@@ -524,7 +521,7 @@ describe('PUT /transfers/:id', function () {
         .expect(201)
         .end()
     }
-    expect((yield getAccount('alice')).balance).to.equal(89.9798)
+    expect((yield getAccount('alice')).balance).to.equal(89.98)
   })
 
   it('should accept a transfer with an upper case ID but convert the ID ' +

@@ -6,18 +6,9 @@ machine:
   node:
     version: 4.0.0
   environment:
-    OCI_HOME: /opt/oracle/instantclient
-    OCI_LIB_DIR: $OCI_HOME
-    OCI_INCLUDE_DIR: $OCI_HOME/sdk/include
-
     # Read-only
     AWS_SECRET_ACCESS_KEY: Q0SsTtjzt9zK3VpGpdp3VdGdYZshfdJ7IDtdr8BU
     AWS_ACCESS_KEY_ID: AKIAIVUX7BG4NS7A2UHQ
-dependencies:
-  pre:
-    - mkdir -p ~/.oracle
-  cache_directories:
-    - "~/.oracle"
 test:
   override:
     - scripts/ci-test.sh "$CIRCLE_NODE_INDEX" "$CIRCLE_NODE_TOTAL":
