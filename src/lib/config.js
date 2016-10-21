@@ -82,17 +82,6 @@ function getLogLevel () {
   }
 }
 
-function validateConfig (config) {
-  // Validate precision
-  const isOracle = config.getIn(['db', 'uri'], '').startsWith('oracle://') !== null
-
-  // strong-oracle return native JS Numbers from Number type columns
-  // Cannot support precision greater than 15
-  if (!useTestConfig() && isOracle && config.getIn(['amount', 'precision']) > 15) {
-    throw new Error('Cannot support precision > 15 with OracleDB')
-  }
-}
-
 function loadConfig () {
   const localConfig = {}
 
@@ -108,7 +97,6 @@ function loadConfig () {
   localConfig.keys = parseKeysConfig()
 
   const config = Config.loadConfig(envPrefix, _.omit(localConfig, _.isEmpty))
-  validateConfig(config)
   return config
 }
 
