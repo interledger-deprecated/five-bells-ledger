@@ -9,7 +9,7 @@ const passport = require('koa-passport')
 const websockify = require('koa-websocket')
 const koa = require('koa')
 const path = require('path')
-const logger = require('koa-bunyan-logger')
+const makeLogger = require('koa-riverpig')
 const errorHandler = require('five-bells-shared/middlewares/error-handler')
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const getMetadataRoute = require('../controllers/metadata')
@@ -35,24 +35,8 @@ class App {
 
     const koaApp = this.koa = websockify(koa())
     const router = this._makeRouter()
-    const isTrace = this.log.trace()
-    koaApp.use(logger(this.log))
-    koaApp.use(logger.requestIdContext())
-    koaApp.use(logger.requestLogger({
-      updateRequestLogFields: function (fields) {
-        return {
-          body: isTrace ? this.body : undefined,
-          query: this.query
-        }
-      },
-      updateResponseLogFields: function (fields) {
-        return {
-          duration: fields.duration,
-          status: this.status,
-          body: isTrace ? this.body : undefined
-        }
-      }
-    }))
+    const logger = makeLogger({logger: require('riverpig')('koa')})
+    koaApp.use(logger)
     koaApp.use(errorHandler({log: modules.log.create('error-handler')}))
     koaApp.on('error', function () {})
     koaApp.use(cors({expose: ['link']}))
@@ -64,7 +48,7 @@ class App {
     koaApp.use(compress())
 
     const websocketRouter = this._makeWebsocketRouter()
-    koaApp.ws.use(logger(this.log))
+    koaApp.ws.use(logger)
     koaApp.ws.use(errorHandler({log: modules.log.create('ws-error-handler')}))
     koaApp.ws.use(passport.initialize())
     koaApp.ws.use(websocketRouter.routes())

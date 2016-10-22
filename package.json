@@ -12,7 +12,7 @@
     "url": "git@github.com:interledgerjs/five-bells-ledger.git"
   },
   "scripts": {
-    "start": "node src/app.js | bunyan",
+    "start": "node src/app.js",
     "start-prof": "node --prof --logfile=${LEDGER_V8_LOGFILE:-v8.log} src/app.js",
     "lint": "eslint .",
     "test": "istanbul test -- _mocha",
@@ -29,7 +29,6 @@
   },
   "dependencies": {
     "bignumber.js": "^2.3.0",
-    "bunyan": "^1.8.1",
     "canonical-json": "0.0.4",
     "co": "^4.1.0",
     "co-body": "^4.0.0",
@@ -47,6 +46,7 @@
     "koa-cors": "0.0.16",
     "koa-mag": "^1.0.4",
     "koa-passport": "^1.1.6",
+    "koa-riverpig": "^1.0.0",
     "koa-router": "^5.1.2",
     "koa-static": "^1.4.5",
     "koa-websocket": "^2.0.0",
@@ -58,6 +58,7 @@
     "passport-http": "^0.3.0",
     "passport-http-signature": "^1.0.0",
     "priorityqueuejs": "^1.0.0",
+    "riverpig": "^1.0.0",
     "spdy": "^3.2.3",
     "tweetnacl": "^0.13.1",
     "uuid4": "^1.0.0"
