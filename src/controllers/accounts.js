@@ -3,7 +3,7 @@
 
 const request = require('five-bells-shared/utils/request')
 const model = require('../models/accounts')
-const log = require('../services/log')
+const log = require('../services/log').create('accounts')
 
 function * getCollection () {
   this.body = yield model.getAccounts()
