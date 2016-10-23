@@ -2,9 +2,23 @@
 
 const riverpig = require('riverpig')
 
-const defaultLogger = riverpig('ledger')
+const logStream = require('through2')()
+logStream.pipe(process.stdout)
 
-defaultLogger.create = riverpig
+const create = (namespace) => {
+  return riverpig(namespace, {
+    stream: logStream
+  })
+}
 
-module.exports = defaultLogger
+let outputStream = process.stdout
+const setOutputStream = (newOutputStream) => {
+  logStream.unpipe(outputStream)
+  logStream.pipe(newOutputStream)
+  outputStream = newOutputStream
+}
 
+module.exports = {
+  create,
+  setOutputStream
+}

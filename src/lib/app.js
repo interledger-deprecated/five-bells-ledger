@@ -35,7 +35,7 @@ class App {
 
     const koaApp = this.koa = websockify(koa())
     const router = this._makeRouter()
-    const logger = makeLogger({logger: require('riverpig')('koa')})
+    const logger = makeLogger({logger: modules.log.create('koa')})
     koaApp.use(logger)
     koaApp.use(errorHandler({log: modules.log.create('error-handler')}))
     koaApp.on('error', function () {})
