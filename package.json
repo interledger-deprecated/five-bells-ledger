@@ -24,8 +24,7 @@
     "bump": "version-bump"
   },
   "engines": {
-    "node": ">=0.12",
-    "iojs": ">=1.5"
+    "node": ">=6.0.0"
   },
   "dependencies": {
     "bignumber.js": "^2.3.0",
