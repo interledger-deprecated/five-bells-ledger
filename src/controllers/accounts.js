@@ -181,7 +181,9 @@ function * subscribeTransfers () {
 
   const close = model.subscribeTransfers(name, this.req.user, (notification) => {
     this.websocket.send(JSON.stringify(notification), (error) => {
-      log.error('failed to send notification to ' + this.req.ip, error)
+      if (error) {
+        log.error('failed to send notification to ' + this.req.ip, error)
+      }
     })
   })
 
