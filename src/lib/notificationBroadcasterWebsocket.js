@@ -19,7 +19,7 @@ class NotificationBroadcaster extends EventEmitter {
 
   * sendNotifications (transfer, transaction) {
     const affectedAccounts = _([transfer.debits, transfer.credits])
-      .flatten().pluck('account').value()
+      .flatten().map('account').value()
     affectedAccounts.push('*')
 
     // Prepare notification for websocket subscribers

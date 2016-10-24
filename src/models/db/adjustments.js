@@ -13,14 +13,14 @@ function isNil (x) {
 
 function convertFromPersistentAdjustment (data, options) {
   return getAccountById(data.ACCOUNT_ID, options).then((account) => {
-    return _.omit({
+    return _.omitBy({
       account: account.name,
       amount: Number(data.AMOUNT).toString(),
       authorized: Boolean(data.IS_AUTHORIZED) || null,
       rejected: Boolean(data.IS_REJECTED) || null,
       rejection_message: data.REJECTION_MESSAGE,
       memo: data.MEMO ? JSON.parse(data.MEMO) : null
-    }, (x) => isNil(x))
+    }, isNil)
   })
 }
 
@@ -42,7 +42,7 @@ function convertFromPersistent (rows, options) {
 
 function convertToPersistentAdjustment (transferId, type, data, options) {
   return getAccountId(data.account, options).then((accountId) => {
-    return _.omit({
+    return _.omitBy({
       TRANSFER_ID: transferId,
       ACCOUNT_ID: accountId,
       DEBIT_CREDIT: type,

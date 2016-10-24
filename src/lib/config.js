@@ -40,7 +40,7 @@ function parseAdminConfig () {
   const adminFingerprint = Config.getEnv(envPrefix, 'ADMIN_TLS_FINGERPRINT')
 
   if (adminPass || adminFingerprint) {
-    return _.omit({
+    return _.omitBy({
       user: adminUser,
       pass: adminPass,
       fingerprint: adminFingerprint
@@ -96,7 +96,7 @@ function loadConfig () {
   localConfig.currency = parseCurrencyConfig()
   localConfig.keys = parseKeysConfig()
 
-  const config = Config.loadConfig(envPrefix, _.omit(localConfig, _.isEmpty))
+  const config = Config.loadConfig(envPrefix, _.omitBy(localConfig, _.isEmpty))
   return config
 }
 
