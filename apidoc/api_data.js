@@ -359,7 +359,7 @@ define({ "api": [
       "examples": [
         {
           "title": "200 OK",
-          "content": "HTTP/1.1 200 OK\n\n{\n    \"currency_code\": null,\n    \"currency_symbol\": null,\n    \"condition_sign_public_key\": \"YNDefwo4LB+AjkCRzuCSGuAlDLvSCWUxPRX7lXLhV1I=\",\n    \"notification_sign_public_key\": \"-----BEGIN RSA PUBLIC KEY-----\\nMIIBCgKCAQEAnR0o5RIONZy8zwKNxt8ibQtuIu+VDgcZB5MFzFywEvhNFAMXJZyq2ZgER2fb\\nXJGfT0CAOMLa3TNcPHvhdHCOnkHSqs7SRLnjnGJuxv/+WyNaFuzrgUT4ymBdtK2LT5j1p7uw\\nllxUv9uAjWRz96LUQewjXl38QxE56rp5ov+O+frF2TDN+qFLqgRX1N6kbY6roQRDJ3BFKKqN\\nS3mVqMqokeQ5UmYwqAcgmdysoFZFcCkuRdZ1Han/CMDfnhL0mtQmwOhUdOZ4a6dfWNgozycI\\nyQOS59ckDp31dRjMZddaSQki/yDIAxmtZHzE4z+U4ZMxEbirwCZbA9QZed2Tu35yQwIDAQAB\\n-----END RSA PUBLIC KEY-----\\n\",\n    \"urls\": {\n        \"health\": \"http://usd-ledger.example/health\",\n        \"transfer\": \"http://usd-ledger.example/transfers/:id\",\n        \"transfer_fulfillment\": \"http://usd-ledger.example/transfers/:id/fulfillment\",\n        \"transfer_rejection\": \"http://usd-ledger.example/transfers/:id/rejection\",\n        \"transfer_state\": \"http://usd-ledger.example/transfers/:id/state\",\n        \"accounts\": \"http://usd-ledger.example/accounts\",\n        \"account\": \"http://usd-ledger.example/accounts/:name\",\n        \"account_transfers\": \"ws://usd-ledger.example/accounts/:name/transfers\"\n    },\n    \"precision\": 10,\n    \"scale\": 2,\n    \"connectors\": [\n        {\n            \"id\": \"http://usd-ledger.example/accounts/chloe\",\n            \"name\": \"chloe\",\n            \"connector\": \"http://usd-eur-connector.example\"\n        }\n    ]\n}",
+          "content": "HTTP/1.1 200 OK\n\n{\n    \"currency_code\": null,\n    \"currency_symbol\": null,\n    \"condition_sign_public_key\": \"YNDefwo4LB+AjkCRzuCSGuAlDLvSCWUxPRX7lXLhV1I=\",\n    \"urls\": {\n        \"health\": \"http://usd-ledger.example/health\",\n        \"transfer\": \"http://usd-ledger.example/transfers/:id\",\n        \"transfer_fulfillment\": \"http://usd-ledger.example/transfers/:id/fulfillment\",\n        \"transfer_rejection\": \"http://usd-ledger.example/transfers/:id/rejection\",\n        \"transfer_state\": \"http://usd-ledger.example/transfers/:id/state\",\n        \"accounts\": \"http://usd-ledger.example/accounts\",\n        \"account\": \"http://usd-ledger.example/accounts/:name\",\n        \"account_transfers\": \"ws://usd-ledger.example/accounts/:name/transfers\",\n        \"message\": \"http://usd-ledger.example/messages\"\n    },\n    \"precision\": 10,\n    \"scale\": 2,\n    \"connectors\": [\n        {\n            \"id\": \"http://usd-ledger.example/accounts/chloe\",\n            \"name\": \"chloe\",\n            \"connector\": \"http://usd-eur-connector.example\"\n        }\n    ]\n}",
           "type": "json"
         }
       ]
@@ -1032,6 +1032,72 @@ define({ "api": [
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidUriParameterError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
           "type": "json"
         },
+        {
+          "title": "InvalidBodyError",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidBodyError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "post",
+    "url": "/messages",
+    "title": "Send Message",
+    "name": "SendMessage",
+    "group": "Transfer_Methods",
+    "version": "1.0.0",
+    "description": "<p>Send a message to another account. This is not a reliable delivery mechanism.</p>",
+    "parameter": {
+      "fields": {
+        "Request Body": [
+          {
+            "group": "Request Body",
+            "type": "String",
+            "optional": false,
+            "field": "Rejection",
+            "description": "<p>An error message in string format.</p>"
+          },
+          {
+            "group": "Request Body",
+            "type": "Message",
+            "optional": false,
+            "field": "Object",
+            "description": "<p>A Message object to be forwarded to the recipient.</p>"
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Send a Message",
+        "content": "curl -X POST -H \"Content-Type: application/json\" -d\n'{\n  \"ledger\": \"http://usd-ledger.example\",\n  \"account\": \"http://usd-ledger.example/accounts/bob\",\n  \"data\": { \"foo\": \"bar\" }\n}'\nhttp://usd-ledger.example/messages",
+        "type": "shell"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "201 Message Accepted Response:",
+          "content": "HTTP/1.1 201 CREATED",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "src/controllers/messages.js",
+    "groupTitle": "Transfer_Methods",
+    "error": {
+      "fields": {
+        "Error 4xx": [
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "InvalidBodyError",
+            "description": "<p>The submitted JSON entity does not match the required schema.</p>"
+          }
+        ]
+      },
+      "examples": [
         {
           "title": "InvalidBodyError",
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidBodyError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",

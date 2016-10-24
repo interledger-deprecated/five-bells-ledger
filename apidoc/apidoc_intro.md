@@ -96,8 +96,11 @@ A notification object can have the following fields:
 Name | Type | Description
 ---- | ---- | -----------
 id | uri string | Unique identifier for this notification
-event | string | Event identifier for the type of event
-resource | object | Transfer that is the subject of the notification
+type | string | Event identifier for the type of event
+resource | object | The subject of the notification
+*resource.* ledger | uri string | The ledger where the message is to be delivered
+*resource.* account | uri string | The message recipient
+*resource.* data | object | The message payload
 related_resources | object | *Optional* Additional resources relevant to the event
 *related_resources.* cancellation_condition_fulfillment | string | *Optional* Proof of condition completion
 *related_resources.* execution_condition_fulfillment | string | *Optional* Proof of condition completion
