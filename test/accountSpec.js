@@ -1,5 +1,5 @@
-/*global describe, it*/
 'use strict'
+
 const fs = require('fs')
 const _ = require('lodash')
 const expect = require('chai').expect

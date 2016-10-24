@@ -1,5 +1,5 @@
-/*global describe, it*/
 'use strict'
+
 const fs = require('fs')
 const assert = require('assert')
 const crypto = require('crypto')

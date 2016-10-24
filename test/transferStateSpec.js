@@ -1,5 +1,5 @@
-/*global describe, it*/
 'use strict'
+
 const crypto = require('crypto')
 const _ = require('lodash')
 const stringifyJSON = require('canonical-json')
