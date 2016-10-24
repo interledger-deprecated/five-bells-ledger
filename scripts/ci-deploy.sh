@@ -11,9 +11,9 @@ publishNpm() {
 pushDocker() {
   # Push Docker image tagged latest and tagged with commit descriptor
   sed "s/<AUTH>/${DOCKER_TOKEN}/" < "dockercfg-template" > ~/.dockercfg
-  docker tag interledgerjs/five-bells-ledger:latest interledgerjs/five-bells-ledger:"$(git describe)"
-  docker push interledgerjs/five-bells-ledger:latest
-  docker push interledgerjs/five-bells-ledger:"$(git describe)"
+  docker tag interledger/five-bells-ledger:latest interledger/five-bells-ledger:"$(git describe)"
+  docker push interledger/five-bells-ledger:latest
+  docker push interledger/five-bells-ledger:"$(git describe)"
 }
 
 updateWebsite() {

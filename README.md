@@ -73,7 +73,7 @@ npm run migrate
 Then run the following (with the same environment variables) as described above:
 
 ``` sh
-docker run -it --rm --net=host -e LEDGER_PORT=1337 -e LEDGER_DB_URI=$LEDGER_DB_URI interleder/five-bells-ledger
+docker run -it --rm --net=host -e LEDGER_PORT=1337 -e LEDGER_DB_URI=$LEDGER_DB_URI interledger/five-bells-ledger
 ```
 
 Breaking down that command:
