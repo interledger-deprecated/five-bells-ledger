@@ -80,8 +80,8 @@ function * maybeGetFulfillment (transferUuid, options) {
 }
 
 function * upsertFulfillment (fulfillment, options) {
-  const where = {FULFILLMENT_ID: fulfillment.id}
   const row = yield convertToIntegerTransferId(fulfillment, options)
+  const where = {TRANSFER_ID: row.transfer_id}
   return db.upsert(row, where, options && options.transaction)
 }
 
