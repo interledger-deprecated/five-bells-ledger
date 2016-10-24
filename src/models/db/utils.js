@@ -72,8 +72,16 @@ function createModule (tableName, convertToPersistent, convertFromPersistent) {
     }
   }
 
-  return {getTransaction, select, selectOne, update, insert, insertAll, upsert,
-    withTransaction}
+  return {
+    getTransaction,
+    select,
+    selectOne,
+    update,
+    insert,
+    insertAll,
+    upsert,
+    withTransaction
+  }
 }
 
 module.exports = createModule

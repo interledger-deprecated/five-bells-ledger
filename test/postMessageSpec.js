@@ -1,5 +1,5 @@
-/*global describe, it*/
 'use strict'
+
 const _ = require('lodash')
 const sinon = require('sinon')
 const app = require('../src/services/app')
