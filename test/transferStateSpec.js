@@ -33,9 +33,9 @@ describe('Transfer State', function () {
     yield dbHelper.clean()
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
-    this.keyPair =
-      tweetnacl.sign.keyPair.fromSeed(
-        tweetnacl.util.decodeBase64(config.getIn(['keys', 'ed25519', 'secret'])))
+    this.keyPair = tweetnacl.sign.keyPair.fromSeed(
+      new Buffer(config.getIn(['keys', 'ed25519', 'secret']), 'base64')
+    )
 
     // Define example data
     this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
@@ -56,10 +56,12 @@ describe('Transfer State', function () {
         state: transferStates.TRANSFER_STATE_NONEXISTENT
       }
       const stateReceiptHash = hashJSON(stateReceipt)
-      const signature = tweetnacl.util.encodeBase64(
+      const signature = new Buffer(
         tweetnacl.sign.detached(
-          tweetnacl.util.decodeBase64(stateReceiptHash),
-          this.keyPair.secretKey))
+          new Buffer(stateReceiptHash, 'base64'),
+          this.keyPair.secretKey
+        )
+      ).toString('base64')
 
       yield this.request()
         .get('/transfers/03b7c787-e104-4390-934e-693072c6eda2/state')
@@ -87,10 +89,13 @@ describe('Transfer State', function () {
         .expect(validator.validateTransfer)
         .end()
 
-      const currentToken = tweetnacl.util.encodeBase64(
+      const currentToken = new Buffer(
         tweetnacl.sign.detached(
-          tweetnacl.util.decodeBase64(sha512(transfer.id + ':' + transfer.state)),
-          this.keyPair.secretKey))
+          new Buffer(sha512(transfer.id + ':' + transfer.state), 'base64'),
+          this.keyPair.secretKey
+        )
+      ).toString('base64')
+
       const stateReceipt = {
         id: transfer.id,
         state: transfer.state,
@@ -122,14 +127,20 @@ describe('Transfer State', function () {
         .expect(validator.validateTransfer)
         .end()
 
-      const currentToken = tweetnacl.util.encodeBase64(
+      const currentToken = new Buffer(
         tweetnacl.sign.detached(
-          tweetnacl.util.decodeBase64(sha512(transfer.id + ':' + transfer.state)),
-          this.keyPair.secretKey))
-      const conditionToken = tweetnacl.util.encodeBase64(
+          new Buffer(sha512(transfer.id + ':' + transfer.state), 'base64'),
+          this.keyPair.secretKey
+        )
+      ).toString('base64')
+
+      const conditionToken = new Buffer(
         tweetnacl.sign.detached(
-          tweetnacl.util.decodeBase64(sha512(transfer.id + ':executed')),
-          this.keyPair.secretKey))
+          new Buffer(sha512(transfer.id + ':executed'), 'base64'),
+          this.keyPair.secretKey
+        )
+      ).toString('base64')
+
       const stateReceipt = {
         id: transfer.id,
         state: transfer.state,
@@ -173,10 +184,12 @@ describe('Transfer State', function () {
         state: this.executedTransfer.state
       }
       const stateReceiptHash = hashJSON(stateReceipt)
-      const signature = tweetnacl.util.encodeBase64(
+      const signature = new Buffer(
         tweetnacl.sign.detached(
-          tweetnacl.util.decodeBase64(stateReceiptHash),
-          this.keyPair.secretKey))
+          new Buffer(stateReceiptHash, 'base64'),
+          this.keyPair.secretKey
+        )
+      ).toString('base64')
 
       yield this.request()
         .get(this.executedTransfer.id + '/state')
@@ -203,10 +216,12 @@ describe('Transfer State', function () {
           state: transfer.state
         }
         const stateReceiptHash = hashJSON(stateReceipt)
-        const signature = tweetnacl.util.encodeBase64(
+        const signature = new Buffer(
           tweetnacl.sign.detached(
-            tweetnacl.util.decodeBase64(stateReceiptHash),
-            this.keyPair.secretKey))
+            new Buffer(stateReceiptHash, 'base64'),
+            this.keyPair.secretKey
+          )
+        ).toString('base64')
 
         yield this.request()
           .get(transfer.id + '/state')
@@ -257,10 +272,12 @@ describe('Transfer State', function () {
         state: transferStates.TRANSFER_STATE_REJECTED
       }
       const stateReceiptHash = hashJSON(stateReceipt)
-      const signature = tweetnacl.util.encodeBase64(
+      const signature = new Buffer(
         tweetnacl.sign.detached(
-          tweetnacl.util.decodeBase64(stateReceiptHash),
-          this.keyPair.secretKey))
+          new Buffer(stateReceiptHash, 'base64'),
+          this.keyPair.secretKey
+        )
+      ).toString('base64')
 
       // In production this function should be triggered by the worker started in app.js
       this.clock.tick(1000)

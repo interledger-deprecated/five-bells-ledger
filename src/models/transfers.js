@@ -125,10 +125,12 @@ function makeTransferStateMessage (transferId, state, receiptType) {
 function sign (base64Str) {
   const seed = new Buffer(config.getIn(['keys', 'ed25519', 'secret']), 'base64')
   const keyPair = tweetnacl.sign.keyPair.fromSeed(seed)
-  return tweetnacl.util.encodeBase64(
+  return new Buffer(
     tweetnacl.sign.detached(
-      tweetnacl.util.decodeBase64(base64Str),
-      keyPair.secretKey))
+      new Buffer(base64Str, 'base64'),
+      keyPair.secretKey
+    )
+  ).toString('base64')
 }
 
 function sha256 (str) {
