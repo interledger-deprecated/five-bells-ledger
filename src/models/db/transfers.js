@@ -48,7 +48,7 @@ function convertFromPersistent (data) {
   }
   data.state = transferStatuses.getTransferStatusName(data.status_id)
   delete data.status_id
-  data = _.omit(data, _.isNull)
+  data = _.omitBy(data, _.isNull)
   return removeAuditFields(data)
 }
 

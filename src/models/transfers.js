@@ -143,7 +143,7 @@ function updateTransferObject (originalTransfer, transfer) {
   let updatedTransferData = _.cloneDeep(originalTransfer)
 
   // Ignore null properties
-  updatedTransferData = _.omit(updatedTransferData, _.isNull)
+  updatedTransferData = _.omitBy(updatedTransferData, _.isNull)
 
   // Ignore internally managed properties
   transfer.state = updatedTransferData.state
@@ -155,7 +155,7 @@ function updateTransferObject (originalTransfer, transfer) {
   transfer.rejected_at = updatedTransferData.rejected_at
 
   // Ignore undefined properties
-  const transferData = _.omit(transfer, _.isUndefined)
+  const transferData = _.omitBy(transfer, _.isUndefined)
 
   // Clients can add authorizations
   // The validity of these authorizations will be checked
@@ -205,8 +205,8 @@ function updateTransferObject (originalTransfer, transfer) {
 }
 
 function isAffectedAccount (account, transfer) {
-  return _.includes(_.pluck(transfer.debits, 'account'), account) ||
-      _.includes(_.pluck(transfer.credits, 'account'), account)
+  return _.includes(_.map(transfer.debits, 'account'), account) ||
+      _.includes(_.map(transfer.credits, 'account'), account)
 }
 
 function validateIsAffectedAccount (account, transfer) {
@@ -270,8 +270,15 @@ function validateCreditAndDebitAmounts (transfer) {
   validatePrecisionAmounts(transfer.debits)
   validatePrecisionAmounts(transfer.credits)
 
-  const totalDebits = _.sum(_.map(transfer.debits, 'amount'))
-  const totalCredits = _.sum(_.map(transfer.credits, 'amount'))
+  const sumAmounts = (crebits) => {
+    return crebits
+      .map(crebit => new Bignumber(crebit.amount))
+      .reduce((a, b) => a.add(b), new Bignumber(0))
+      .toString()
+  }
+
+  const totalDebits = sumAmounts(transfer.debits)
+  const totalCredits = sumAmounts(transfer.credits)
 
   if (totalCredits !== totalDebits) {
     throw new UnprocessableEntityError('Total credits must equal total debits')
