@@ -371,4 +371,51 @@ describe('Notifications', function () {
       })
     })
   })
+
+  describe('GET /accounts/*/transfers (websocket)', function () {
+    beforeEach(function * () {
+      this.socket = this.ws('http://localhost/accounts/*/transfers', {
+        headers: {
+          Authorization: 'Basic ' + new Buffer('admin:admin', 'utf8').toString('base64')
+        }
+      })
+
+      // Wait until WS connection is established
+      yield new Promise((resolve) => this.socket.on('open', resolve))
+    })
+
+    afterEach(function * () {
+      this.socket.terminate()
+    })
+
+    it('should send notifications about a transfer', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transfer
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        type: 'transfer',
+        resource: _.assign({}, transfer, {
+          state: 'executed',
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            executed_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+      })
+    })
+  })
 })
