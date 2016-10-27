@@ -55,10 +55,13 @@ class NotificationBroadcaster extends EventEmitter {
   }
 
   * sendMessage (destinationAccount, message) {
-    this.emit('notification-' + destinationAccount, {
-      type: 'message',
-      resource: message
-    })
+    const affectedAccounts = [destinationAccount, '*']
+    for (let account of affectedAccounts) {
+      this.emit('notification-' + account, {
+        type: 'message',
+        resource: message
+      })
+    }
   }
 }
 
