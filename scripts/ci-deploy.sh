@@ -3,7 +3,7 @@
 publishNpm() {
   # Push NPM package if not yet published
   mv npmrc-env .npmrc
-  if [ -z "$(npm info $(npm ls --depth=-1 2>/dev/null | head -1 | cut -f 1 -d " ") 2>/dev/null)" ]; then
+  if [ "$(npm show five-bells-ledger version)" != "$(npm ls --depth=-1 2>/dev/null | head -1 | cut -f 1 -d " " | cut -f 2 -d @)" ] ; then npm publish ; fi
     npm publish
   fi
 }
