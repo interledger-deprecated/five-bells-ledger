@@ -99,8 +99,10 @@ id | uri string | Unique identifier for this notification
 type | string | Event identifier for the type of event
 resource | object | The subject of the notification
 *resource.* ledger | uri string | The ledger where the message is to be delivered
-*resource.* account | uri string | The message recipient
 *resource.* data | object | The message payload
+*resource.* from | uri string | The message sender
+*resource.* to | uri string | The message recipient
+*resource.* account | uri string | The message sender/recipient (depending on whether the message is incoming or outgoing)
 related_resources | object | *Optional* Additional resources relevant to the event
 *related_resources.* cancellation_condition_fulfillment | string | *Optional* Proof of condition completion
 *related_resources.* execution_condition_fulfillment | string | *Optional* Proof of condition completion
