@@ -21,6 +21,7 @@ describe('POST /messages', function () {
     appHelper.create(this, app)
     yield dbHelper.clean()
     this.exampleMessage = _.cloneDeep(require('./data/messages/simple'))
+    this.fromToMessage = _.cloneDeep(require('./data/messages/fromto'))
     // Store some example data
     yield dbHelper.addAccounts(_.values(_.omit(accounts, 'noBalance')))
 
@@ -72,6 +73,42 @@ describe('POST /messages', function () {
       .end()
   })
 
+  it('returns 400 if the message has "from" but no "to"', function * () {
+    const message = this.fromToMessage
+    delete message.to
+
+    yield this.request()
+      .post('/messages')
+      .auth('alice', 'alice')
+      .send(message)
+      .expect(400)
+      .end()
+  })
+
+  it('returns 400 if the message has "to" but no "from"', function * () {
+    const message = this.fromToMessage
+    delete message.from
+
+    yield this.request()
+      .post('/messages')
+      .auth('alice', 'alice')
+      .send(message)
+      .expect(400)
+      .end()
+  })
+
+  it('returns 400 if the message has "from", "to", and "account', function * () {
+    const message = this.fromToMessage
+    message.account = message.from
+
+    yield this.request()
+      .post('/messages')
+      .auth('alice', 'alice')
+      .send(message)
+      .expect(400)
+      .end()
+  })
+
   it('returns 400 if the message is missing "data"', function * () {
     const message = this.exampleMessage
     delete message.data
@@ -84,7 +121,23 @@ describe('POST /messages', function () {
       .end()
   })
 
-  it('relays a message', function * () {
+  it('returns 400 if "from" doesn\'t match the sender (when the sender isn\'t admin)', function * () {
+    const message = this.fromToMessage
+    message.from = 'http://localhost/accounts/carl'
+
+    yield this.request()
+      .post('/messages')
+      .auth('alice', 'alice')
+      .send(message)
+      .expect(400)
+      .expect({
+        id: 'InvalidBodyError',
+        message: 'You do not have permission to impersonate this user'
+      })
+      .end()
+  })
+
+  it('relays a message with "account"', function * () {
     const message = this.exampleMessage
     const listener = sinon.spy()
     this.socket.on('message', (msg) => listener(JSON.parse(msg)))
@@ -93,6 +146,58 @@ describe('POST /messages', function () {
     yield this.request()
       .post('/messages')
       .auth('alice', 'alice')
+      .send(message)
+      .expect(201)
+      .end()
+    yield timingHelper.sleep(50)
+
+    sinon.assert.calledTwice(listener)
+    sinon.assert.calledWith(listener.firstCall, { type: 'connect' })
+    sinon.assert.calledWith(listener.secondCall, {
+      type: 'message',
+      resource: {
+        ledger: 'http://localhost',
+        account: 'http://localhost/accounts/alice',
+        data: {foo: 'bar'}
+      }
+    })
+  })
+
+  it('relays a message with "from"/"to"', function * () {
+    const message = this.fromToMessage
+    const listener = sinon.spy()
+    this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+    yield timingHelper.sleep(50)
+    yield this.request()
+      .post('/messages')
+      .auth('alice', 'alice')
+      .send(message)
+      .expect(201)
+      .end()
+    yield timingHelper.sleep(50)
+
+    sinon.assert.calledTwice(listener)
+    sinon.assert.calledWith(listener.firstCall, { type: 'connect' })
+    sinon.assert.calledWith(listener.secondCall, {
+      type: 'message',
+      resource: {
+        ledger: 'http://localhost',
+        account: 'http://localhost/accounts/alice',
+        data: {foo: 'bar'}
+      }
+    })
+  })
+
+  it('relays a message when the admin is impersonating another user', function * () {
+    const message = this.fromToMessage
+    const listener = sinon.spy()
+    this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+    yield timingHelper.sleep(50)
+    yield this.request()
+      .post('/messages')
+      .auth('admin', 'admin')
       .send(message)
       .expect(201)
       .end()
