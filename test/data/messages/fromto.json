@@ -1,0 +1,6 @@
+{
+  "ledger": "http://localhost",
+  "from": "http://localhost/accounts/alice",
+  "to": "http://localhost/accounts/bob",
+  "data": {"foo": "bar"}
+}
