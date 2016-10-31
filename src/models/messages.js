@@ -14,15 +14,16 @@ function * sendMessage (message, requestingUser) {
     throw new InvalidBodyError(error, validationResult.errors)
   }
 
-  const mode1 = !!message.account
-  const mode2 = !!(message.from && message.to)
-  if ((mode1 && mode2) || (!mode1 && !mode2)) {
-    throw new InvalidBodyError('Expected either message.account OR message.from/to')
+  // For backwards compatibility.
+  if (message.account) {
+    message.to = message.account
+    message.from = uri.make('account', requestingUser.name)
+    delete message.account
   }
 
-  const senderAccount = message.from || uri.make('account', requestingUser.name)
+  const senderAccount = message.from
   const senderName = uri.parse(senderAccount, 'account').name.toLowerCase()
-  const recipientName = uri.parse(message.to || message.account, 'account').name.toLowerCase()
+  const recipientName = uri.parse(message.to, 'account').name.toLowerCase()
 
   // Only admin can impersonate users.
   if (!requestingUser.is_admin && senderName !== requestingUser.name) {
