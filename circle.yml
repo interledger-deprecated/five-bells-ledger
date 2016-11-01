@@ -9,6 +9,9 @@ machine:
     # Read-only
     AWS_SECRET_ACCESS_KEY: Q0SsTtjzt9zK3VpGpdp3VdGdYZshfdJ7IDtdr8BU
     AWS_ACCESS_KEY_ID: AKIAIVUX7BG4NS7A2UHQ
+dependencies:
+  cache_directories:
+    - "integration-test/node_modules"
 test:
   override:
     - scripts/ci-test.sh "$CIRCLE_NODE_INDEX" "$CIRCLE_NODE_TOTAL":
