@@ -15,10 +15,9 @@ function * sendMessage (message, requestingUser) {
   }
 
   // For backwards compatibility.
-  if (message.account) {
+  if (message.account && !message.from && !message.to) {
     message.to = message.account
     message.from = uri.make('account', requestingUser.name)
-    delete message.account
   }
 
   const senderAccount = message.from
@@ -30,11 +29,8 @@ function * sendMessage (message, requestingUser) {
     throw new InvalidBodyError('You do not have permission to impersonate this user')
   }
 
-  yield notificationBroadcaster.sendMessage(recipientName, {
-    ledger: message.ledger,
-    account: senderAccount,
-    data: message.data
-  })
+  yield notificationBroadcaster.sendMessage(recipientName,
+    Object.assign({}, message, {account: senderAccount}))
 }
 
 module.exports = { sendMessage }
