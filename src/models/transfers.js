@@ -151,47 +151,12 @@ function updateTransferObject (originalTransfer, transfer) {
   transfer.state = updatedTransferData.state
   transfer.created_at = updatedTransferData.created_at
   transfer.updated_at = updatedTransferData.updated_at
-  transfer.proposed_at = updatedTransferData.proposed_at
   transfer.prepared_at = updatedTransferData.prepared_at
   transfer.executed_at = updatedTransferData.executed_at
   transfer.rejected_at = updatedTransferData.rejected_at
 
-  // Ignore undefined properties
-  const transferData = _.omitBy(transfer, _.isUndefined)
-
-  // Clients can add authorizations
-  // The validity of these authorizations will be checked
-  // in the validateAuthorizationsAndRejections function
-  _.forEach(updatedTransferData.debits, function (funds, i) {
-    if (!funds.authorized &&
-      transfer.debits[i] &&
-      transfer.debits[i].authorized) {
-      funds.authorized = true
-    }
-  })
-  _.forEach(updatedTransferData.credits, function (funds, i) {
-    if (!funds.rejected &&
-      transfer.credits[i] &&
-      transfer.credits[i].rejected) {
-      funds.rejected = true
-      funds.rejection_message = transfer.credits[i].rejection_message
-    }
-    if (!funds.authorized &&
-      transfer.credits[i] &&
-      transfer.credits[i].authorized) {
-      funds.authorized = true
-    }
-  })
-
-  // Clients may fulfill the execution/cancellation conditions
-  if (transfer.execution_condition_fulfillment) {
-    updatedTransferData.execution_condition_fulfillment =
-      transfer.execution_condition_fulfillment
-  }
-  if (transfer.cancellation_condition_fulfillment) {
-    updatedTransferData.cancellation_condition_fulfillment =
-      transfer.cancellation_condition_fulfillment
-  }
+  // Ignore undefined and null properties
+  const transferData = _.omitBy(transfer, _.isNil)
 
   // The old and new objects should now be exactly equal
   if (!_.isEqual(updatedTransferData, transferData)) {
@@ -206,84 +171,19 @@ function updateTransferObject (originalTransfer, transfer) {
   return updatedTransferData
 }
 
-function isAffectedAccount (account, transfer) {
-  return _.includes(_.map(transfer.debits, 'account'), account) ||
-      _.includes(_.map(transfer.credits, 'account'), account)
-}
-
-function validateIsAffectedAccount (account, transfer) {
-  if (account && !isAffectedAccount(account, transfer)) {
-    throw new UnauthorizedError('Invalid attempt to authorize debit')
+function validateAmount (amount) {
+  // Check non-negative
+  if (parseFloat(amount) <= 0) {
+    throw new UnprocessableEntityError('Amount must be a positive number excluding zero.')
   }
-}
 
-/**
- * @param {Account} authorizedAccount
- * @param {Funds} fundsList
- * @param {Funds|undefined} previousFunds
- * @param {String} fundsType "debit" or "credit"
- */
-function validateAuthorizationsAndRejections (authorizedAccount, fundsList, previousFunds, fundsType) {
-  if (previousFunds && fundsList.length !== previousFunds.length) {
-    throw new UnprocessableEntityError('Invalid change in number of ' + fundsType + 's')
-  }
-  fundsList.forEach((funds, i) => {
-    const previousAuthorization = previousFunds && previousFunds[i].authorized
-    if (funds.authorized && funds.authorized !== previousAuthorization &&
-        funds.account !== authorizedAccount) {
-      throw new UnauthorizedError('Invalid attempt to authorize ' + fundsType)
-    }
-
-    const previousRejection = previousFunds && previousFunds[i].rejected
-    if (funds.rejected && funds.rejected !== previousRejection &&
-        funds.account !== authorizedAccount) {
-      throw new UnauthorizedError('Invalid attempt to reject ' + fundsType)
-    }
-  })
-}
-
-function validatePositiveAmounts (adjustments) {
-  if (_.some(adjustments, (adjustment) => parseFloat(adjustment.amount) <= 0)) {
-    throw new UnprocessableEntityError(
-        'Amount must be a positive number excluding zero.')
-  }
-}
-
-function validatePrecisionAmounts (adjustments) {
+  // Check precision
   const allowedPrecision = config.get('amount.precision')
   const allowedScale = config.get('amount.scale')
 
-  const invalid = _.some(adjustments, (adjustment) => {
-    const amount = new Bignumber(adjustment.amount)
-    return (amount.decimalPlaces() > allowedScale) ||
-      (amount.precision() > allowedPrecision)
-  })
-
-  if (invalid) {
-    throw new UnprocessableEntityError(
-        'Amount exceeds allowed precision scale=' + allowedScale + ' precision=' + allowedPrecision)
-  }
-}
-
-function validateCreditAndDebitAmounts (transfer) {
-  validatePositiveAmounts(transfer.debits)
-  validatePositiveAmounts(transfer.credits)
-
-  validatePrecisionAmounts(transfer.debits)
-  validatePrecisionAmounts(transfer.credits)
-
-  const sumAmounts = (crebits) => {
-    return crebits
-      .map(crebit => new Bignumber(crebit.amount))
-      .reduce((a, b) => a.add(b), new Bignumber(0))
-      .toString()
-  }
-
-  const totalDebits = sumAmounts(transfer.debits)
-  const totalCredits = sumAmounts(transfer.credits)
-
-  if (totalCredits !== totalDebits) {
-    throw new UnprocessableEntityError('Total credits must equal total debits')
+  const amountBignum = new Bignumber(amount)
+  if (amountBignum.decimalPlaces() > allowedScale || amountBignum.precision() > allowedPrecision) {
+    throw new UnprocessableEntityError('Amount exceeds allowed precision scale=' + allowedScale + ' precision=' + allowedPrecision)
   }
 }
 
@@ -292,13 +192,8 @@ function validateCreditAndDebitAmounts (transfer) {
  * Because an amount of "1.0" is saved as "1", updating the transfer with "1.0"
  * would cause an InvalidModificationError unless the amounts are normalized.
  */
-function normalizeCreditAndDebitAmounts (transfer) {
-  transfer.debits.forEach((debit) => {
-    debit.amount = new Bignumber(debit.amount).toString()
-  })
-  transfer.credits.forEach((credit) => {
-    credit.amount = new Bignumber(credit.amount).toString()
-  })
+function normalizeAmount (amount) {
+  return (new Bignumber(amount)).toString()
 }
 
 function isAuthorized (transfer) {
@@ -497,44 +392,34 @@ function * setTransfer (externalTransfer, requestingUser) {
   transfer.ledger = config.getIn(['server', 'base_uri'])
 
   log.debug('putting transfer ID ' + transfer.id)
-  log.debug('' + transfer.debits[0].account + ' -> ' +
-    transfer.credits[0].account + ' : ' +
-    transfer.credits[0].amount)
+  log.debug('' + transfer.debit_account + ' -> ' +
+    transfer.credit_account + ' : ' +
+    transfer.amount)
 
-  validateCreditAndDebitAmounts(transfer)
-  normalizeCreditAndDebitAmounts(transfer)
+  validateAmount(transfer.amount)
+  transfer.amount = normalizeAmount(transfer.amount)
 
-  let originalTransfer, previousDebits, previousCredits
+  let originalTransfer
   yield db.withTransaction(function * (transaction) {
     originalTransfer = yield db.getTransfer(transfer.id, {transaction})
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
-      previousDebits = originalTransfer.debits
-      previousCredits = originalTransfer.credits
 
       // This method will update the original transfer object using the new
       // version, but only allowing specific fields to change.
       transfer = updateTransferObject(originalTransfer, transfer)
-    } else {
-      yield validateNoDisabledAccounts(transaction, transfer)
-      // A brand-new transfer will start out as proposed
-      updateState(transfer, transferStates.TRANSFER_STATE_PROPOSED)
     }
 
-    if (!(requestingUser && requestingUser.is_admin)) {
-      const requestingUsername = requestingUser && requestingUser.name
-      validateIsAffectedAccount(requestingUsername, transfer)
-      // This method will check that any authorized:true or rejected:true fields
-      // added can only be added by the owner of the account
-      validateAuthorizationsAndRejections(requestingUsername, transfer.debits,
-        previousDebits, 'debit')
-      validateAuthorizationsAndRejections(requestingUsername, transfer.credits,
-        previousCredits, 'credit')
+    // Disabled accounts should not be able to send or receive money
+    yield validateNoDisabledAccounts(transaction, transfer)
+
+    // Validate user (or admin) authorization
+    if (!(requestingUser && requestingUser.is_admin)
+        && requestingUser.name !== transfer.debit_account) {
+          log.warn('Unauthorized transfer attempt by: ' + requestingUser.name)
+          throw new UnauthorizedError('Invalid attempt to authorize transfer')
     }
 
-    // The transfer must be inserted into the database before holds can
-    // be placed because the adjustments reference the transfer's primary key
-    yield db.upsertTransfer(transfer, {transaction})
     yield processTransitionToPreparedState(transfer, transaction)
     yield processImmediateExecution(transfer, transaction)
     yield processCreditRejection(transfer, transaction)

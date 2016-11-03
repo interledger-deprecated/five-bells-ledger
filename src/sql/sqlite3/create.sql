@@ -41,6 +41,10 @@ create table if not exists "L_TRANSFERS" (
   "TRANSFER_ID" integer not null primary key,
   "TRANSFER_UUID" char(36) not null unique,
   "LEDGER" varchar(1024),
+  "CREDIT_ACCOUNT_ID" integer not null,
+  "DEBIT_ACCOUNT_ID" integer not null,
+  "AMOUNT" float DEFAULT 0 not null,
+  "MEMO" varchar(4000) null,
   "ADDITIONAL_INFO" text,
   "STATUS_ID" integer not null,
   "REJECTION_REASON_ID" integer,
@@ -54,21 +58,6 @@ create table if not exists "L_TRANSFERS" (
   FOREIGN KEY("REJECTION_REASON_ID") REFERENCES "L_LU_REJECTION_REASON"
     ("REJECTION_REASON_ID"),
   FOREIGN KEY("STATUS_ID") REFERENCES "L_LU_TRANSFER_STATUS" ("STATUS_ID")
-);
-
-create table if not exists "L_TRANSFER_ADJUSTMENTS"
-(
-  "TRANSFER_ADJUSTMENT_ID" integer not null primary key,
-  "TRANSFER_ID" integer not null,
-  "ACCOUNT_ID" integer not null,
-  "DEBIT_CREDIT" varchar(10) not null,
-  "AMOUNT" float DEFAULT 0 not null,
-  "IS_AUTHORIZED" boolean default 0 not null,
-  "IS_REJECTED" boolean default 0 not null,
-  "REJECTION_MESSAGE" text,
-  "MEMO" varchar(4000) null,
-  FOREIGN KEY("TRANSFER_ID") REFERENCES "L_TRANSFERS" ("TRANSFER_ID"),
-  FOREIGN KEY("ACCOUNT_ID") REFERENCES "L_ACCOUNTS" ("ACCOUNT_ID")
 );
 
 create table if not exists "L_ENTRIES" (
@@ -92,7 +81,6 @@ INSERT INTO "L_LU_REJECTION_REASON" ("REJECTION_REASON_ID", "NAME", "DESCRIPTION
   VALUES (0, 'cancelled', 'The transfer was cancelled');
 INSERT INTO "L_LU_REJECTION_REASON" ("REJECTION_REASON_ID", "NAME", "DESCRIPTION")
   VALUES (1, 'expired', 'The transfer expired automatically');
-INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (0, 'proposed');
 INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (1, 'prepared');
 INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (2, 'executed');
 INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (3, 'rejected');

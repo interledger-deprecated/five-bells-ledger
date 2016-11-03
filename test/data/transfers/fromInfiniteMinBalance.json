@@ -1,13 +1,7 @@
 {
   "id": "http://localhost/transfers/4e961931-c822-4fc4-8691-abb6a4a0b920",
   "ledger": "http://localhost",
-  "debits": [{
-    "account": "http://localhost/accounts/infiniteminbal",
-    "amount": "100000",
-    "authorized": true
-  }],
-  "credits": [{
-    "account": "http://localhost/accounts/bob",
-    "amount": "100000"
-  }]
+  "debit_account": "http://localhost/accounts/infiniteminbal",
+  "credit_account": "http://localhost/accounts/bob",
+  "amount": "100000"
 }

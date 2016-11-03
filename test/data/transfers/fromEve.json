@@ -1,13 +1,7 @@
 {
   "id": "http://localhost/transfers/255dff3f-4915-44df-a707-acc4b527bcbf",
   "ledger": "http://localhost",
-  "debits": [{
-    "account": "http://localhost/accounts/eve",
-    "amount": "10",
-    "authorized": true
-  }],
-  "credits": [{
-    "account": "http://localhost/accounts/bob",
-    "amount": "10"
-  }]
+  "debit_account": "http://localhost/accounts/eve",
+  "credit_account": "http://localhost/accounts/bob",
+  "amount": "10"
 }

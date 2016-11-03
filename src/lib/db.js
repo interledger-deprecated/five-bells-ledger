@@ -13,7 +13,6 @@ const readTransferStatuses = require('../models/db/transferStatuses')
   .readTransferStatuses
 
 const TABLE_NAMES = [
-  'L_TRANSFER_ADJUSTMENTS',
   'L_ACCOUNTS',
   'L_FULFILLMENTS',
   'L_ENTRIES',

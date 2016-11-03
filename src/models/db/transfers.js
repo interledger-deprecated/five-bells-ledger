@@ -10,6 +10,9 @@ const rejectionReasons = require('./rejectionReasons')
 const transferStatuses = require('./transferStatuses')
 const adjustments = require('./adjustments')
 const removeAuditFields = require('./audit').removeAuditFields
+const getAccountById = require('./accounts').getAccountById
+const getAccountId = require('./accounts').getAccountId
+const log = require('../../services/log').create('db_transfers')
 
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
@@ -49,13 +52,13 @@ function convertFromPersistent (data) {
   data.state = transferStatuses.getTransferStatusName(data.status_id)
   delete data.status_id
   data = _.omitBy(data, _.isNull)
-  return removeAuditFields(data)
+  const converted =  removeAuditFields(data)
+  log.debug('convertFromPersistent', converted)
+  return converted
 }
 
 function convertToPersistent (data) {
   data = _.cloneDeep(data)
-  delete data.credits
-  delete data.debits
   data.additional_info = JSON.stringify(data.additional_info)
   if (data.proposed_at) {
     data.proposed_dttm = new Date(data.proposed_at)
@@ -88,21 +91,13 @@ function convertToPersistent (data) {
   }
   data.transfer_uuid = data.id
   delete data.id
-  return _.mapKeys(data, (value, key) => key.toUpperCase())
+  const persistent = _.mapKeys(data, (value, key) => key.toUpperCase())
+  log.debug('convertToPersistent', persistent)
+  return persistent
 }
 
 function * getTransferWhere (where, options) {
   return db.selectOne(where, options && options.transaction)
-  .then((transfer) => {
-    if (transfer === null) {
-      return null
-    }
-    return adjustments.getAdjustments(transfer._id, options)
-    .then((adjustments) => {
-      const result = _.assign({}, transfer, adjustments)
-      return _.isEmpty(result) ? null : _.omit(result, '_id')
-    })
-  })
 }
 
 function * getTransfersWhere (where, options) {
@@ -111,14 +106,6 @@ function * getTransfersWhere (where, options) {
     if (_.isEmpty(transfers)) {
       return []
     }
-
-    return Promise.all(transfers.map((transfer) => {
-      return adjustments.getAdjustments(transfer._id, options)
-      .then((adjustments) => {
-        const result = _.assign({}, transfer, adjustments)
-        return _.isEmpty(result) ? null : _.omit(result, '_id')
-      })
-    }))
   })
 }
 
@@ -140,45 +127,37 @@ function * getTransfersByExecutionCondition (executionCondition, options) {
   return yield getTransfersWhere({EXECUTION_CONDITION: executionCondition}, options)
 }
 
-function * updateTransfer (transfer, options) {
-  const transaction = options && options.transaction
-  return db.update(transfer, {TRANSFER_UUID: transfer.id}, transaction)
-  .then((result) => {
-    return db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
-    .then((dbTransfer) => {
-      const transferWithId = _.assign({}, transfer, {'_id': dbTransfer._id})
-      return adjustments.upsertAdjustments(transferWithId, options)
-        .then(() => result)
-    })
-  })
+function * replaceAccountNameWithId (transfer, options) {
+  transfer.debit_account_id = yield getAccountId(transfer.debit_account, options)
+  transfer.credit_account_id = yield getAccountId(transfer.credit_account, options)
+  delete transfer.debit_account
+  delete transfer.credit_account
 }
 
-function insertTransfer (transfer, options) {
+function * updateTransfer (transfer, options) {
   const transaction = options && options.transaction
-  return db.insert(transfer, options).then(() => {
-    return db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
-  }).then((dbTransfer) => {
-    const transferWithId = _.assign({}, transfer, {'_id': dbTransfer._id})
-    return adjustments.insertAdjustments(transferWithId, options)
-  })
+  yield replaceAccountNameWithId(transfer, options)
+  return db.update(transfer, {TRANSFER_UUID: transfer.id}, transaction)
+}
+
+function * insertTransfer (transfer, options) {
+  const transaction = options && options.transaction
+  yield replaceAccountNameWithId(transfer, options)
+  return db.insert(transfer, options)
 }
 
 function * insertTransfers (transfers, options) {
-  return Promise.all(transfers.map(
-    (transfer) => insertTransfer(transfer, options)))
+  const results = []
+  for (let transfer of transfers) {
+    results.push(yield insertTransfer(transfer, options))
+  }
+  return results
 }
 
 function * upsertTransfer (transfer, options) {
   const transaction = options && options.transaction
+  yield replaceAccountNameWithId(transfer, options)
   return db.upsert(transfer, {TRANSFER_UUID: transfer.id}, transaction)
-  .then((result) => {
-    return db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
-    .then((dbTransfer) => {
-      const transferWithId = _.assign({}, transfer, {'_id': dbTransfer._id})
-      return adjustments.upsertAdjustments(transferWithId, options)
-        .then(() => result)
-    })
-  })
 }
 
 module.exports = {

@@ -1,13 +1,7 @@
 {
   "id": "http://localhost/transfers/d5ffa750-cf02-4a6f-9e85-5f6ab0b0f151",
   "ledger": "http://localhost",
-  "debits": [{
-    "account": "http://localhost/accounts/nobalance",
-    "amount": "50",
-    "authorized": true
-  }],
-  "credits": [{
-    "account": "http://localhost/accounts/bob",
-    "amount": "50"
-  }]
+  "debit_account": "http://localhost/accounts/nobalance",
+  "credit_account": "http://localhost/accounts/bob",
+  "amount": "50"
 }

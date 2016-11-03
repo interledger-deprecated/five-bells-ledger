@@ -1,19 +1,9 @@
 {
-  "ledger": "http://localhost",
-  "debits": [
-    {
-      "amount": "10",
-      "account": "http://localhost/accounts/alice",
-      "authorized": true
-    }
-  ],
-  "credits": [
-    {
-      "account": "http://localhost/accounts/bob",
-      "amount": "10"
-    }
-  ],
   "id": "http://localhost/transfers/9e97a403-f604-44de-9223-4ec36aa466d9",
+  "ledger": "http://localhost",
+  "debit_account": "http://localhost/accounts/alice",
+  "credit_account": "http://localhost/accounts/bob",
+  "amount": "10",
   "additional_info": {
     "part_of_payment": "http://localhost:3002/payments/14abab3b-c13c-4567-b21f-0094348e9ba7",
     "cases": [
@@ -22,5 +12,5 @@
   },
   "execution_condition": "cc:2:b:fc7hVoN43o57pcqzAHLadWuQ5ldiibFL4mJq_Vrn_68:29",
   "cancellation_condition": "cc:0:3:I3TZF5S3n0-07JWH0s8ArsxPmVP6s-0d0SqxR6C3Ifk:6",
-  "state": "proposed"
+  "state": "prepared"
 }

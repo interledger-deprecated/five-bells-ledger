@@ -30,19 +30,16 @@ const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-p
  *    {
  *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
  *      "ledger": "http://usd-ledger.example",
- *      "debits": [{
- *        "account": "http://usd-ledger.example/accounts/alice",
- *        "amount": "50"
- *      }],
- *      "credits": [{
- *        "account": "http://usd-ledger.example/accounts/bob",
- *        "amount": "50"
- *      }],
+ *      "debit_account": "http://usd-ledger.example/accounts/alice",
+ *      "credit_account": "http://usd-ledger.example/accounts/bob",
+ *      "amount": "50"
+ *      "memo": {
+ *        "foo": "bar"
+ *      },
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z",
  *      "state": "executed",
  *      "timeline": {
- *        "proposed_at": "2015-06-16T00:00:00.000Z",
  *        "prepared_at": "2015-06-16T00:00:00.500Z",
  *        "executed_at": "2015-06-16T00:00:00.999Z"
  *      }
@@ -81,19 +78,13 @@ function * getResource () {
  *    [{
  *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
  *      "ledger": "http://usd-ledger.example",
- *      "debits": [{
- *        "account": "http://usd-ledger.example/accounts/alice",
- *        "amount": "50"
- *      }],
- *      "credits": [{
- *        "account": "http://usd-ledger.example/accounts/bob",
- *        "amount": "50"
- *      }],
+ *      "debit_account": "http://usd-ledger.example/accounts/alice",
+ *      "credit_account": "http://usd-ledger.example/accounts/bob",
+ *      "amount": "50"
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z",
  *      "state": "executed",
  *      "timeline": {
- *        "proposed_at": "2015-06-16T00:00:00.000Z",
  *        "prepared_at": "2015-06-16T00:00:00.500Z",
  *        "executed_at": "2015-06-16T00:00:00.999Z"
  *      }
@@ -255,15 +246,12 @@ function * getStateResource () {
  *    {
  *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
  *      "ledger": "http://usd-ledger.example",
- *      "debits": [{
- *        "account": "http://usd-ledger.example/accounts/alice",
- *        "amount": "50",
- *        "authorized": true
- *      }],
- *      "credits": [{
- *        "account": "http://usd-ledger.example/accounts/bob",
- *        "amount": "50"
- *      }],
+ *      "debit_account": "http://usd-ledger.example/accounts/alice",
+ *      "credit_account": "http://usd-ledger.example/accounts/bob",
+ *      "amount": "50"
+ *      "memo": {
+ *        "foo": "bar"
+ *      },
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z",
  *      "state": "prepared"
