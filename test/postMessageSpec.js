@@ -49,6 +49,18 @@ describe('POST /messages', function () {
       .end()
   })
 
+  it('returns 201 if the message has "from", "to", and "account', function * () {
+    const message = this.fromToMessage
+    message.account = message.from
+
+    yield this.request()
+      .post('/messages')
+      .auth('alice', 'alice')
+      .send(message)
+      .expect(201)
+      .end()
+  })
+
   it('returns 400 if the message is missing "ledger"', function * () {
     const message = this.exampleMessage
     delete message.ledger
@@ -88,18 +100,6 @@ describe('POST /messages', function () {
   it('returns 400 if the message has "to" but no "from"', function * () {
     const message = this.fromToMessage
     delete message.from
-
-    yield this.request()
-      .post('/messages')
-      .auth('alice', 'alice')
-      .send(message)
-      .expect(400)
-      .end()
-  })
-
-  it('returns 400 if the message has "from", "to", and "account', function * () {
-    const message = this.fromToMessage
-    message.account = message.from
 
     yield this.request()
       .post('/messages')
@@ -157,6 +157,8 @@ describe('POST /messages', function () {
       type: 'message',
       resource: {
         ledger: 'http://localhost',
+        from: 'http://localhost/accounts/alice',
+        to: 'http://localhost/accounts/bob',
         account: 'http://localhost/accounts/alice',
         data: {foo: 'bar'}
       }
@@ -183,6 +185,8 @@ describe('POST /messages', function () {
       type: 'message',
       resource: {
         ledger: 'http://localhost',
+        from: 'http://localhost/accounts/alice',
+        to: 'http://localhost/accounts/bob',
         account: 'http://localhost/accounts/alice',
         data: {foo: 'bar'}
       }
@@ -209,6 +213,8 @@ describe('POST /messages', function () {
       type: 'message',
       resource: {
         ledger: 'http://localhost',
+        from: 'http://localhost/accounts/alice',
+        to: 'http://localhost/accounts/bob',
         account: 'http://localhost/accounts/alice',
         data: {foo: 'bar'}
       }
