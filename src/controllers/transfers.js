@@ -232,7 +232,7 @@ function * getStateResource () {
  *    }
  *
  * @apiExample {shell} Prepare a Transfer
- *    curl -X PUT -H "Content-Type: application/json Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l" -d
+ *    curl -X PUT -H "Content-Type: application/json Authorization: Basic YWxpY2U6YWxpY2U=" -d
  *    '{
  *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
  *      "ledger": "http://usd-ledger.example",
