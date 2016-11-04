@@ -188,7 +188,7 @@ function * getStateResource () {
  *    must be set to `true` before the transfer can occur.
  *
  * @apiExample {shell} Propose a Transfer
- *    curl -X PUT -H "Content-Type: application/json" -d
+ *    curl -X PUT -H "Content-Type: application/json" -d \
  *    '{
  *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
  *      "ledger": "http://usd-ledger.example",
@@ -202,7 +202,7 @@ function * getStateResource () {
  *      }],
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z"
- *    }'
+ *    }' \
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
  *
  * @apiHeader {String} Content-Type Must be `application/json`.
@@ -232,7 +232,7 @@ function * getStateResource () {
  *    }
  *
  * @apiExample {shell} Prepare a Transfer
- *    curl -X PUT -H "Content-Type: application/json Authorization: Basic YWxpY2U6YWxpY2U=" -d
+ *    curl -X PUT -H "Content-Type: application/json" -H "Authorization: Basic YWxpY2U6YWxpY2U=" -d \
  *    '{
  *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
  *      "ledger": "http://usd-ledger.example",
@@ -247,7 +247,7 @@ function * getStateResource () {
  *      }],
  *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
  *      "expires_at": "2015-06-16T00:00:01.000Z"
- *    }'
+ *    }' \
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
  *
  * @apiSuccessExample {json} 200 Prepared Transfer Response
@@ -317,8 +317,8 @@ function * putResource () {
  *   in string format.
  *
  * @apiExample {shell} Put Transfer Fulfillment:
- *    curl -X PUT -H "Content-Type: text/plain" -d
- *    'cf:0:_v8'
+ *    curl -X PUT -H "Content-Type: text/plain" -d \
+ *    'cf:0:_v8' \
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment
  *
  * @apiSuccessExample {json} 200 Fulfillment Accepted Response:
@@ -388,7 +388,7 @@ function * getFulfillment () {
  * @apiParam (Request Body) {String} Rejection An error message in string format.
  *
  * @apiExample {shell} Put Transfer Rejection:
- *    curl -X PUT -H "Content-Type: text/plain" -d
+ *    curl -X PUT -H "Content-Type: text/plain" -d \
  *    'an error'
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection
  *

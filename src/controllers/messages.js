@@ -14,12 +14,12 @@ const model = require('../models/messages')
  * @apiParam (Request Body) {Message} Object A Message object to be forwarded to the recipient.
  *
  * @apiExample {shell} Send a Message
- *    curl -X POST -H "Content-Type: application/json" -d
+ *    curl -X POST -H "Content-Type: application/json" -d \
  *    '{
  *      "ledger": "http://usd-ledger.example",
  *      "account": "http://usd-ledger.example/accounts/bob",
  *      "data": { "foo": "bar" }
- *    }'
+ *    }' \
  *    http://usd-ledger.example/messages
  *
  * @apiSuccessExample {json} 201 Message Accepted Response:
