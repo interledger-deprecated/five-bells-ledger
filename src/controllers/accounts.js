@@ -23,7 +23,7 @@ function * getCollection () {
  * @apiParam {String} name The unique name for this account.
  *
  * @apiExample {shell} Get account
- *    curl -X GET -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l"
+ *    curl -X GET -H "Authorization: Basic YWxpY2U6YWxpY2U="
  *    http://usd-ledger.example/accounts/alice
  *
  * @apiSuccess (200 OK) {Object} Account The requested
@@ -71,7 +71,7 @@ function * getResource () {
  * @apiParam {String} name Account's unique identifier
  *
  * @apiExample {shell} Put account
- *    curl -X PUT -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l"
+ *    curl -X PUT -H "Authorization: Basic YWxpY2U6YWxpY2U="
  *    -H "Content-Type: application/json"
  *    -d '{"name": "alice", "balance": "100"}'
  *    http://usd-ledger.example/accounts/alice
