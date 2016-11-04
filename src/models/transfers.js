@@ -196,16 +196,8 @@ function normalizeAmount (amount) {
   return (new Bignumber(amount)).toString()
 }
 
-function isAuthorized (transfer) {
-  const areDebitsAuthorized = _.every(transfer.debits, 'authorized')
-  if (config.getIn(['features', 'hasCreditAuth'])) {
-    return areDebitsAuthorized && _.every(transfer.credits, 'authorized')
-  }
-  return areDebitsAuthorized
-}
-
 function * processTransitionToPreparedState (transfer, transaction) {
-  if (transfer.state === transferStates.TRANSFER_STATE_PROPOSED && isAuthorized(transfer)) {
+  if (!transfer.state) {
     yield holds.holdFunds(transfer, transaction)  // hold sender funds
     updateState(transfer, transferStates.TRANSFER_STATE_PREPARED)
   }
@@ -219,23 +211,6 @@ function * processImmediateExecution (transfer, transaction) {
     transferExpiryMonitor.unwatch(transfer.id)
     updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED)
   }
-}
-
-function * processCreditRejection (transfer, transaction) {
-  if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) return
-  const hasRejectedCredit = _.some(transfer.credits, 'rejected')
-  if (!hasRejectedCredit) return
-
-  if (!_.includes(validCancellationStates, transfer.state)) {
-    throw new InvalidModificationError('Transfers in state ' +
-      transfer.state + ' may not be rejected')
-  }
-
-  if (transfer.state === transferStates.TRANSFER_STATE_PREPARED) {
-    yield holds.returnHeldFunds(transfer, transaction)
-  }
-  transfer.rejection_reason = 'cancelled'
-  updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
 }
 
 function validateConditionFulfillment (transfer, fulfillmentModel) {
@@ -385,10 +360,6 @@ function * setTransfer (externalTransfer, requestingUser) {
     }
   }
 
-  if (transfer.type !== undefined) {
-    throw new InvalidBodyError('Transfer contains incorrect type')
-  }
-
   transfer.ledger = config.getIn(['server', 'base_uri'])
 
   log.debug('putting transfer ID ' + transfer.id)
@@ -420,9 +391,11 @@ function * setTransfer (externalTransfer, requestingUser) {
           throw new UnauthorizedError('Invalid attempt to authorize transfer')
     }
 
+    // The transfer must be inserted into the database before holds can
+    // be placed because the "entires" reference the transfer's primary key
+    yield db.upsertTransfer(transfer, {transaction})
     yield processTransitionToPreparedState(transfer, transaction)
     yield processImmediateExecution(transfer, transaction)
-    yield processCreditRejection(transfer, transaction)
     yield db.upsertTransfer(transfer, {transaction})
   })
 

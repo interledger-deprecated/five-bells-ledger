@@ -229,7 +229,7 @@ describe('PUT /transfers/:id', function () {
 
   /* Idempotency */
 
-  it.only('should return 201 for a newly created transfer', function * () {
+  it('should return 201 for a newly created transfer', function * () {
     const transfer = this.exampleTransfer
     yield this.request()
       .put(transfer.id)

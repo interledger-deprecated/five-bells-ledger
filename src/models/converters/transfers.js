@@ -33,6 +33,10 @@ function convertToExternalTransfer (data) {
   data.debit_account = uri.make('account', data.debit_account)
   data.credit_account = uri.make('account', data.credit_account)
 
+  // TODO this should probably be removed somewhere in models/db/transfers.js
+  delete data.debit_account_id
+  delete data.credit_account_id
+
   const timelineProperties = [
     'prepared_at',
     'executed_at',

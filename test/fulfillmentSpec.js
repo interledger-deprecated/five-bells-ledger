@@ -28,7 +28,6 @@ describe('GET /fulfillment', function () {
     yield dbHelper.clean()
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
-    this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
     this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
     this.invalidTransfer = _.cloneDeep(require('./data/transfers/simple'))
@@ -39,7 +38,7 @@ describe('GET /fulfillment', function () {
       _.cloneDeep(require('./data/fulfillments/executionInvalid'))
 
     yield dbHelper.addAccounts(_.values(accounts))
-    yield dbHelper.addTransfers([this.proposedTransfer, this.preparedTransfer, this.executedTransfer])
+    yield dbHelper.addTransfers([this.preparedTransfer, this.executedTransfer])
   })
 
   afterEach(function * () {
@@ -61,7 +60,7 @@ describe('GET /fulfillment', function () {
   })
 
   it('should return 404 if the transfer has no fulfillment', function * () {
-    const transfer = this.proposedTransfer
+    const transfer = this.preparedTransfer
     yield this.request()
       .get(transfer.id + '/fulfillment')
       .auth('admin', 'admin')
@@ -74,7 +73,7 @@ describe('GET /fulfillment', function () {
   })
 
   it('should return AlreadyRolledBackError if the transfer is rejected', function * () {
-    const transfer = Object.assign(this.proposedTransfer, {
+    const transfer = Object.assign(this.preparedTransfer, {
       id: 'http://localhost/transfers/25644640-d140-450e-b94b-badbe23d3382',
       state: 'rejected'
     })
@@ -91,7 +90,7 @@ describe('GET /fulfillment', function () {
   })
 
   it('should return TransferNotConditionalError for an optimistic transfer', function * () {
-    const transfer = Object.assign(this.proposedTransfer, {
+    const transfer = Object.assign(this.preparedTransfer, {
       id: 'http://localhost/transfers/25644640-d140-450e-b94b-badbe23d3381',
       execution_condition: undefined,
       cancellation_condition: undefined
@@ -109,7 +108,7 @@ describe('GET /fulfillment', function () {
   })
 
   it('should return 404 if the transfer has no fulfillment and has already expired', function * () {
-    const transfer = Object.assign(this.proposedTransfer, {
+    const transfer = Object.assign(this.preparedTransfer, {
       id: 'http://localhost/transfers/25644640-d140-450e-b94b-badbe23d3380',
       expires_at: (new Date(Date.now() - 1)).toISOString()
     })
@@ -125,7 +124,7 @@ describe('GET /fulfillment', function () {
       .end()
   })
 
-  it('should return a fulfillment', function * () {
+  it.only('should return a fulfillment', function * () {
     const transfer = this.preparedTransfer
 
     yield dbHelper.setHoldBalance(10)
@@ -194,7 +193,6 @@ describe('PUT /fulfillment', function () {
     yield dbHelper.clean()
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
-    this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
     this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
     this.invalidTransfer = _.cloneDeep(require('./data/transfers/simple'))

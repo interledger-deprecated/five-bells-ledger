@@ -46,7 +46,7 @@ create table if not exists "L_TRANSFERS" (
   "AMOUNT" float DEFAULT 0 not null,
   "MEMO" varchar(4000) null,
   "ADDITIONAL_INFO" text,
-  "STATUS_ID" integer not null,
+  "STATUS_ID" integer DEFAULT 0 not null,
   "REJECTION_REASON_ID" integer,
   "EXECUTION_CONDITION" text,
   "CANCELLATION_CONDITION" text,
@@ -81,6 +81,7 @@ INSERT INTO "L_LU_REJECTION_REASON" ("REJECTION_REASON_ID", "NAME", "DESCRIPTION
   VALUES (0, 'cancelled', 'The transfer was cancelled');
 INSERT INTO "L_LU_REJECTION_REASON" ("REJECTION_REASON_ID", "NAME", "DESCRIPTION")
   VALUES (1, 'expired', 'The transfer expired automatically');
+INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (0, 'proposed');
 INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (1, 'prepared');
 INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (2, 'executed');
 INSERT INTO "L_LU_TRANSFER_STATUS" ("STATUS_ID", "NAME") VALUES (3, 'rejected');

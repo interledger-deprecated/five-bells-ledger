@@ -12,7 +12,7 @@ function adjustBalance (accountName, amount, transaction) {
   return accounts.adjustBalance(accountName, amount, {transaction})
   .catch((error) => {
     throw new InsufficientFundsError(
-      'Sender has insufficient funds.', accountName)
+      'Account has insufficient funds:' + accountName)
   })
   /* eslint-enable */
 }

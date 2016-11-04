@@ -8,10 +8,9 @@ const db = require('./utils')(TABLE_NAME,
 const withTransaction = require('../../lib/db').withTransaction
 const rejectionReasons = require('./rejectionReasons')
 const transferStatuses = require('./transferStatuses')
-const adjustments = require('./adjustments')
 const removeAuditFields = require('./audit').removeAuditFields
-const getAccountById = require('./accounts').getAccountById
 const getAccountId = require('./accounts').getAccountId
+const getAccountById = require('./accounts').getAccountById
 const log = require('../../services/log').create('db_transfers')
 
 function convertFromPersistent (data) {
@@ -19,6 +18,8 @@ function convertFromPersistent (data) {
   data = _.mapKeys(data, (value, key) => key.toLowerCase())
   data.id = data.transfer_uuid
   data._id = data.transfer_id
+  delete data.debit_account_id
+  delete data.credit_account_id
   delete data.transfer_id
   delete data.transfer_uuid
   delete data.created_at
@@ -59,6 +60,8 @@ function convertFromPersistent (data) {
 
 function convertToPersistent (data) {
   data = _.cloneDeep(data)
+  delete data.debit_account
+  delete data.credit_account
   data.additional_info = JSON.stringify(data.additional_info)
   if (data.proposed_at) {
     data.proposed_dttm = new Date(data.proposed_at)
@@ -96,17 +99,38 @@ function convertToPersistent (data) {
   return persistent
 }
 
+function * attachAccountIds (transfer, options) {
+  transfer.debit_account_id = yield getAccountId(transfer.debit_account, options)
+  transfer.credit_account_id = yield getAccountId(transfer.credit_account, options)
+  return transfer
+}
+
+function * attachAccountNames (transfer, options) {
+  // TODO it would probably be more efficient to do this with a SQL join instead
+  if (!transfer.debit_account && transfer.debit_account_id) {
+    transfer.debit_account = yield getAccountById(transfer.debit_account_id, options)
+  }
+  if (!transfer.credit_account && transfer.credit_account_id) {
+    transfer.credit_account = yield getAccountById(transfer.credit_account_id, options)
+  }
+  return transfer
+}
+
 function * getTransferWhere (where, options) {
-  return db.selectOne(where, options && options.transaction)
+  const transfer = yield db.selectOne(where, options && options.transaction)
+  yield attachAccountNames(transfer, options)
+  return transfer
 }
 
 function * getTransfersWhere (where, options) {
-  return db.select(where, options && options.transaction)
-  .then((transfers) => {
-    if (_.isEmpty(transfers)) {
-      return []
-    }
-  })
+  const transfers = yield db.select(where, options && options.transaction)
+  if (_.isEmpty(transfers)) {
+    return []
+  }
+  for (let transfer of transfers) {
+    yield attachAccountNames(transfer, options)
+  }
+  return transfers
 }
 
 function * getTransfer (uuid, options) {
@@ -127,22 +151,15 @@ function * getTransfersByExecutionCondition (executionCondition, options) {
   return yield getTransfersWhere({EXECUTION_CONDITION: executionCondition}, options)
 }
 
-function * replaceAccountNameWithId (transfer, options) {
-  transfer.debit_account_id = yield getAccountId(transfer.debit_account, options)
-  transfer.credit_account_id = yield getAccountId(transfer.credit_account, options)
-  delete transfer.debit_account
-  delete transfer.credit_account
-}
-
 function * updateTransfer (transfer, options) {
   const transaction = options && options.transaction
-  yield replaceAccountNameWithId(transfer, options)
+  yield attachAccountIds(transfer, options)
   return db.update(transfer, {TRANSFER_UUID: transfer.id}, transaction)
 }
 
 function * insertTransfer (transfer, options) {
   const transaction = options && options.transaction
-  yield replaceAccountNameWithId(transfer, options)
+  yield attachAccountIds(transfer, options)
   return db.insert(transfer, options)
 }
 
@@ -156,7 +173,7 @@ function * insertTransfers (transfers, options) {
 
 function * upsertTransfer (transfer, options) {
   const transaction = options && options.transaction
-  yield replaceAccountNameWithId(transfer, options)
+  yield attachAccountIds(transfer, options)
   return db.upsert(transfer, {TRANSFER_UUID: transfer.id}, transaction)
 }
 
