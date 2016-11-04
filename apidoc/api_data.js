@@ -699,7 +699,7 @@ define({ "api": [
       },
       {
         "title": "Prepare a Transfer",
-        "content": "curl -X PUT -H \"Content-Type: application/json Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\" -d\n'{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\",\n    \"authorized\": true\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\"\n}'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+        "content": "curl -X PUT -H \"Content-Type: application/json Authorization: Basic YWxpY2U6YWxpY2U=\" -d\n'{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\",\n    \"authorized\": true\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\"\n}'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
         "type": "shell"
       }
     ],
