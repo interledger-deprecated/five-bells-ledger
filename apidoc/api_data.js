@@ -36,7 +36,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Get account",
-        "content": "curl -X GET -H \"Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\"\nhttp://usd-ledger.example/accounts/alice",
+        "content": "curl -X GET -H \"Authorization: Basic YWxpY2U6YWxpY2U=\" http://usd-ledger.example/accounts/alice",
         "type": "shell"
       }
     ],
@@ -122,7 +122,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Put account",
-        "content": "curl -X PUT -H \"Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\"\n-H \"Content-Type: application/json\"\n-d '{\"name\": \"alice\", \"balance\": \"100\"}'\nhttp://usd-ledger.example/accounts/alice",
+        "content": "curl -X PUT -H \"Authorization: Basic YWxpY2U6YWxpY2U=\" \\\n-H \"Content-Type: application/json\" \\\n-d '{\"name\": \"alice\", \"balance\": \"100\"}' \\\nhttp://usd-ledger.example/accounts/alice",
         "type": "shell"
       }
     ],
@@ -694,12 +694,12 @@ define({ "api": [
     "examples": [
       {
         "title": "Propose a Transfer",
-        "content": "curl -X PUT -H \"Content-Type: application/json\" -d\n'{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\"\n}'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+        "content": "curl -X PUT -H \"Content-Type: application/json\" -d \\\n'{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\"\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\"\n}' \\\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
         "type": "shell"
       },
       {
         "title": "Prepare a Transfer",
-        "content": "curl -X PUT -H \"Content-Type: application/json Authorization: Basic YWxpY2U6YWxpY2U=\" -d\n'{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\",\n    \"authorized\": true\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\"\n}'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
+        "content": "curl -X PUT -H \"Content-Type: application/json\" -H \"Authorization: Basic YWxpY2U6YWxpY2U=\" -d \\\n'{\n  \"id\": \"http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204\",\n  \"ledger\": \"http://usd-ledger.example\",\n  \"debits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/alice\",\n    \"amount\": \"50\",\n    \"authorized\": true\n  }],\n  \"credits\": [{\n    \"account\": \"http://usd-ledger.example/accounts/bob\",\n    \"amount\": \"50\"\n  }],\n  \"execution_condition\": \"cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2\",\n  \"expires_at\": \"2015-06-16T00:00:01.000Z\"\n}' \\\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
         "type": "shell"
       }
     ],
@@ -869,7 +869,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Put Transfer Fulfillment:",
-        "content": "curl -X PUT -H \"Content-Type: text/plain\" -d\n'cf:0:_v8'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment",
+        "content": "curl -X PUT -H \"Content-Type: text/plain\" -d \\\n'cf:0:_v8' \\\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment",
         "type": "shell"
       }
     ],
@@ -983,7 +983,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Put Transfer Rejection:",
-        "content": "curl -X PUT -H \"Content-Type: text/plain\" -d\n'an error'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection",
+        "content": "curl -X PUT -H \"Content-Type: text/plain\" -d \\\n'an error'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection",
         "type": "shell"
       }
     ],
@@ -1071,7 +1071,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Send a Message",
-        "content": "curl -X POST -H \"Content-Type: application/json\" -d\n'{\n  \"ledger\": \"http://usd-ledger.example\",\n  \"account\": \"http://usd-ledger.example/accounts/bob\",\n  \"data\": { \"foo\": \"bar\" }\n}'\nhttp://usd-ledger.example/messages",
+        "content": "curl -X POST -H \"Content-Type: application/json\" -d \\\n'{\n  \"ledger\": \"http://usd-ledger.example\",\n  \"account\": \"http://usd-ledger.example/accounts/bob\",\n  \"data\": { \"foo\": \"bar\" }\n}' \\\nhttp://usd-ledger.example/messages",
         "type": "shell"
       }
     ],
