@@ -67,9 +67,13 @@ class App {
     // when transfers are going to expire
     yield this.timerWorker.start()
 
-    if (this.config.getIn(['db', 'sync'])) {
+    try {
+      this.log.info('syncing database')
       yield createTables()
+    } catch (e) {
+      this.log.info('database sync aborted')
     }
+
     yield readLookupTables()
     yield seedDB(this.config)
 

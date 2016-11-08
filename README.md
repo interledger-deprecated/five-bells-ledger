@@ -34,11 +34,8 @@ npm install
 To run it using an in-memory database (the simplest option), run:
 
 ``` sh
-LEDGER_ADMIN_PASS=mypassword LEDGER_DB_SYNC=1 LEDGER_DB_URI=sqlite://:memory: npm start
+LEDGER_ADMIN_PASS=mypassword LEDGER_DB_URI=sqlite://:memory: npm start
 ```
-
-Note: `LEDGER_DB_SYNC` runs a SQL script to setup the database schema and
-should only be set when running for the first time on a particular database.
 
 Or run:
 
@@ -92,5 +89,5 @@ npm test
 ```
 If you wish to specify the database against which the tests are run, use the `LEDGER_UNIT_DB_URI` environment variable.
 ``` sh
-LEDGER_DB_SYNC=1 LEDGER_UNIT_DB_URI=postgres://root:password@localhost:5432/ledger_test_db npm test
+LEDGER_UNIT_DB_URI=postgres://root:password@localhost:5432/ledger_test_db npm test
 ```
