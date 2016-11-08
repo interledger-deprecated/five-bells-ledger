@@ -88,7 +88,6 @@ The Five Bells Ledger supports two kinds of authentication: HTTP Basic, or clien
 Use the following environment variables to configure the service when run:
 
 * `LEDGER_DB_URI` (required; e.g.: `mysql://root:password@localhost/fivebells`) URI for connecting to a database. Defaults to `sqlite` if no database is set.
-* `LEDGER_DB_SYNC` (default: `0`) whether or not to run the SQL setup scripts for the database
 * `LEDGER_PORT` (default: `3000`) Port that Five Bells Ledger will listen on.
 * `LEDGER_BIND_IP` (default: `0.0.0.0`) IP that Five Bells Ledger will bind to.
 * `LEDGER_PUBLIC_URI` (default: `http://$HOSTNAME:$LEDGER_PORT`) URI prefix where the ledger will be publicly visible. All IDs and URIs that that the ledger outputs will be using this root URI.
