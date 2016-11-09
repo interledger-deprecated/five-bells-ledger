@@ -4,9 +4,13 @@ const _ = require('lodash')
 const chai = require('chai')
 const expect = chai.expect
 const loadConfig = require('../src/lib/config')
+const logger = require('../src/services/log')
+const logHelper = require('./helpers/log')
 
 const originalEnv = _.cloneDeep(process.env)
 describe('loadConfig', () => {
+  logHelper(logger)
+
   beforeEach(() => {
     process.env = _.cloneDeep(originalEnv)
   })

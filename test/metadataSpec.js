@@ -43,13 +43,7 @@ describe('Metadata', function () {
             },
             precision: 10,
             scale: 2,
-            connectors: [
-              {
-                id: 'http://localhost/accounts/trader',
-                name: 'trader',
-                connector: 'http://localhost:4321'
-              }
-            ]
+            connectors: []
           })
         })
         .end()
@@ -61,6 +55,7 @@ describe('Metadata', function () {
       process.env.LEDGER_CURRENCY_CODE = 'USD'
       process.env.LEDGER_CURRENCY_SYMBOL = '$'
       process.env.LEDGER_ILP_PREFIX = 'example.red.'
+      process.env.LEDGER_RECOMMENDED_CONNECTORS = 'trader'
 
       const newApp = new App({
         log: require('../src/services/log'),
@@ -75,9 +70,31 @@ describe('Metadata', function () {
         .get('/')
         .expect(200)
         .expect(function (res) {
-          expect(res.body.currency_code).to.equal('USD')
-          expect(res.body.currency_symbol).to.equal('$')
-          expect(res.body.ilp_prefix).to.equal('example.red.')
+          expect(res.body).to.deep.equal({
+            currency_code: 'USD',
+            currency_symbol: '$',
+            ilp_prefix: 'example.red.',
+            condition_sign_public_key: 'YXg177AOkDlGGrBaoSET+UrMscbHGwFXHqfUMBZTtCY=',
+            urls: {
+              health: 'http://localhost/health',
+              transfer: 'http://localhost/transfers/:id',
+              transfer_fulfillment: 'http://localhost/transfers/:id/fulfillment',
+              transfer_rejection: 'http://localhost/transfers/:id/rejection',
+              transfer_state: 'http://localhost/transfers/:id/state',
+              accounts: 'http://localhost/accounts',
+              account: 'http://localhost/accounts/:name',
+              account_transfers: 'ws://localhost/accounts/:name/transfers',
+              message: 'http://localhost/messages'
+            },
+            precision: 10,
+            scale: 2,
+            connectors: [
+              {
+                id: 'http://localhost/accounts/trader',
+                name: 'trader'
+              }
+            ]
+          })
         })
         .end()
 

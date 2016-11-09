@@ -54,10 +54,6 @@ function * getAccounts (options) {
   return db.select({}, options && options.transaction)
 }
 
-function * getConnectorAccounts (options) {
-  return (yield getAccounts(options)).filter((account) => account.connector)
-}
-
 function getAccount (name, options) {
   return db.selectOne({NAME: name}, options && options.transaction)
 }
@@ -100,7 +96,6 @@ function * upsertAccount (account, options) {
 
 module.exports = {
   getAccounts,
-  getConnectorAccounts,
   getAccountId,
   getAccount,
   getAccountByFingerprint,

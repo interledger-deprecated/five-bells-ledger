@@ -3,6 +3,7 @@
 const _ = require('lodash')
 const Config = require('five-bells-shared').Config
 const envPrefix = 'ledger'
+const log = require('../services/log').create('config')
 
 function isRunningTests () {
   return process.argv[0].endsWith('mocha') ||
@@ -69,7 +70,11 @@ function parseKeysConfig () {
 
 function parseRecommendedConnectors () {
   const connectorList = Config.getEnv(envPrefix, 'RECOMMENDED_CONNECTORS')
-  if (!connectorList || connectorList === '*') return null
+  if (!connectorList) return []
+  if (connectorList === '*') {
+    log.warn('DEPRECATED: Ledger no longer supports autodetecting recommended connectors')
+    return []
+  }
   return connectorList.split(',')
 }
 
