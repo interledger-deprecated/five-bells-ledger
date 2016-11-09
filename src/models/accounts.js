@@ -3,7 +3,6 @@ const _ = require('lodash')
 const assert = require('assert')
 const config = require('../services/config')
 const log = require('../services/log').create('accounts')
-const notificationBroadcaster = require('../services/notificationBroadcaster')
 const db = require('./db/accounts')
 const hashPassword = require('five-bells-shared/utils/hashPassword')
 const NotFoundError = require('five-bells-shared/errors/not-found-error')
@@ -85,18 +84,6 @@ function * setAccount (externalAccount, requestingUser) {
   }
 }
 
-function subscribeTransfers (account, requestingUser, listener) {
-  assert(requestingUser)
-  if (!requestingUser.is_admin && !(requestingUser.name === account)) {
-    throw new UnauthorizedError('Not authorized')
-  }
-
-  log.info('new ws subscriber for ' + account)
-  notificationBroadcaster.addListener('notification-' + account, listener)
-
-  return () => notificationBroadcaster.removeListener('notification-' + account, listener)
-}
-
 function * insertAccounts (externalAccounts) {
   const accounts = externalAccounts.map(converters.convertToInternalAccount)
   // Hash passwords
@@ -120,6 +107,5 @@ module.exports = {
   getAccount,
   setAccount,
   setBalance,
-  subscribeTransfers,
   insertAccounts
 }

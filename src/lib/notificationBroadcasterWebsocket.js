@@ -22,25 +22,19 @@ class NotificationBroadcaster extends EventEmitter {
       .flatten().map('account').value()
     affectedAccounts.push('*')
 
-    // Prepare notification for websocket subscribers
-    const notificationBody = {
-      type: 'transfer',
-      resource: convertToExternalTransfer(transfer)
-    }
-
+    let relatedResources
     // If the transfer is finalized, see if it was finalized by a fulfillment
-    let fulfillment
     if (isTransferFinalized(transfer)) {
-      fulfillment = yield maybeGetFulfillment(transfer.id, { transaction })
+      const fulfillment = yield maybeGetFulfillment(transfer.id, { transaction })
 
       if (fulfillment) {
         if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
-          notificationBody.related_resources = {
+          relatedResources = {
             execution_condition_fulfillment:
               convertToExternalFulfillment(fulfillment)
           }
         } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
-          notificationBody.related_resources = {
+          relatedResources = {
             cancellation_condition_fulfillment:
               convertToExternalFulfillment(fulfillment)
           }
@@ -48,19 +42,31 @@ class NotificationBroadcaster extends EventEmitter {
       }
     }
 
-    this.log.debug('emitting notification-{' + affectedAccounts.join(',') + '}')
-    for (let account of affectedAccounts) {
-      this.emit('notification-' + account, notificationBody)
-    }
+    const eventName = transfer.state === transferStates.TRANSFER_STATE_PREPARED
+      ? 'transfer.create' : 'transfer.update'
+    yield this.emitNotification(affectedAccounts, eventName,
+      convertToExternalTransfer(transfer), relatedResources)
   }
 
   * sendMessage (destinationAccount, message) {
-    const affectedAccounts = [destinationAccount, '*']
-    for (let account of affectedAccounts) {
-      this.emit('notification-' + account, {
-        type: 'message',
-        resource: message
-      })
+    yield this.emitNotification([destinationAccount, '*'], 'message.send', message)
+  }
+
+  * emitNotification (affectedAccounts, eventType, resource, relatedResources) {
+    const eventTypes = ['*', eventType]
+    const eventParts = eventType.split('.')
+    for (let i = 1; i < eventParts.length; i++) {
+      eventTypes.push(eventParts.slice(0, i).join('.') + '.*')
+    }
+
+    const notification = { event: eventType, resource }
+    if (relatedResources) notification.related_resources = relatedResources
+
+    this.log.debug('emitting notification:{' + affectedAccounts.join(',') + '}:' + eventType)
+    for (const account of affectedAccounts) {
+      for (const event of eventTypes) {
+        this.emit('notification:' + account + ':' + event, notification)
+      }
     }
   }
 }
