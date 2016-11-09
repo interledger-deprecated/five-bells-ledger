@@ -69,6 +69,19 @@ describe('loadConfig', () => {
     })
   })
 
+  describe('config.authTokenSecret', () => {
+    it('returns defaults', () => {
+      const _config = loadConfig()
+      expect(new Buffer(_config.authTokenSecret, 'base64').length).to.equal(32)
+    })
+
+    it('LEDGER_AUTH_TOKEN_SECRET=foo', () => {
+      process.env.LEDGER_AUTH_TOKEN_SECRET = 'foo'
+      const _config = loadConfig()
+      expect(_config.authTokenSecret).to.equal('foo')
+    })
+  })
+
   describe('config.ilp', () => {
     const defaults = {
       prefix: null

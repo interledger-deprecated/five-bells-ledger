@@ -1,6 +1,7 @@
 'use strict'
 
 const _ = require('lodash')
+const assert = require('assert')
 const sinon = require('sinon')
 const app = require('../src/services/app')
 const logger = require('../src/services/log')
@@ -25,13 +26,33 @@ describe('POST /messages', function () {
     // Store some example data
     yield dbHelper.addAccounts(_.values(_.omit(accounts, 'noBalance')))
 
-    this.socket = this.ws('http://localhost/accounts/bob/transfers', {
+    this.socket = this.ws('http://localhost/websocket', {
       headers: {
         Authorization: 'Basic ' + new Buffer('bob:bob', 'utf8').toString('base64')
       }
     })
+
     // Wait until WS connection is established
-    yield new Promise((resolve) => this.socket.on('open', resolve))
+    yield new Promise((resolve) => {
+      this.socket.once('message', (msg) => {
+        assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: null, method: 'connect' })
+        resolve()
+      })
+    })
+
+    this.socket.send(JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'subscribe_account',
+      params: { eventType: 'message.send', accounts: ['http://localhost/accounts/bob'] }
+    }))
+
+    yield new Promise((resolve) => {
+      this.socket.once('message', (msg) => {
+        assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: 1, result: 1 })
+        resolve()
+      })
+    })
   })
 
   afterEach(function * () {
@@ -151,16 +172,20 @@ describe('POST /messages', function () {
       .end()
     yield timingHelper.sleep(50)
 
-    sinon.assert.calledTwice(listener)
-    sinon.assert.calledWith(listener.firstCall, { type: 'connect' })
-    sinon.assert.calledWith(listener.secondCall, {
-      type: 'message',
-      resource: {
-        ledger: 'http://localhost',
-        from: 'http://localhost/accounts/alice',
-        to: 'http://localhost/accounts/bob',
-        account: 'http://localhost/accounts/alice',
-        data: {foo: 'bar'}
+    sinon.assert.calledOnce(listener)
+    sinon.assert.calledWith(listener.firstCall, {
+      jsonrpc: '2.0',
+      id: null,
+      method: 'notify',
+      params: {
+        event: 'message.send',
+        resource: {
+          ledger: 'http://localhost',
+          from: 'http://localhost/accounts/alice',
+          to: 'http://localhost/accounts/bob',
+          account: 'http://localhost/accounts/alice',
+          data: {foo: 'bar'}
+        }
       }
     })
   })
@@ -179,16 +204,20 @@ describe('POST /messages', function () {
       .end()
     yield timingHelper.sleep(50)
 
-    sinon.assert.calledTwice(listener)
-    sinon.assert.calledWith(listener.firstCall, { type: 'connect' })
-    sinon.assert.calledWith(listener.secondCall, {
-      type: 'message',
-      resource: {
-        ledger: 'http://localhost',
-        from: 'http://localhost/accounts/alice',
-        to: 'http://localhost/accounts/bob',
-        account: 'http://localhost/accounts/alice',
-        data: {foo: 'bar'}
+    sinon.assert.calledOnce(listener)
+    sinon.assert.calledWith(listener.firstCall, {
+      jsonrpc: '2.0',
+      id: null,
+      method: 'notify',
+      params: {
+        event: 'message.send',
+        resource: {
+          ledger: 'http://localhost',
+          from: 'http://localhost/accounts/alice',
+          to: 'http://localhost/accounts/bob',
+          account: 'http://localhost/accounts/alice',
+          data: {foo: 'bar'}
+        }
       }
     })
   })
@@ -207,16 +236,20 @@ describe('POST /messages', function () {
       .end()
     yield timingHelper.sleep(50)
 
-    sinon.assert.calledTwice(listener)
-    sinon.assert.calledWith(listener.firstCall, { type: 'connect' })
-    sinon.assert.calledWith(listener.secondCall, {
-      type: 'message',
-      resource: {
-        ledger: 'http://localhost',
-        from: 'http://localhost/accounts/alice',
-        to: 'http://localhost/accounts/bob',
-        account: 'http://localhost/accounts/alice',
-        data: {foo: 'bar'}
+    sinon.assert.calledOnce(listener)
+    sinon.assert.calledWith(listener.firstCall, {
+      jsonrpc: '2.0',
+      id: null,
+      method: 'notify',
+      params: {
+        event: 'message.send',
+        resource: {
+          ledger: 'http://localhost',
+          from: 'http://localhost/accounts/alice',
+          to: 'http://localhost/accounts/bob',
+          account: 'http://localhost/accounts/alice',
+          data: {foo: 'bar'}
+        }
       }
     })
   })

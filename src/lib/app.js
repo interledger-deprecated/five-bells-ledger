@@ -17,6 +17,7 @@ const health = require('../controllers/health')
 const transfers = require('../controllers/transfers')
 const messages = require('../controllers/messages')
 const accounts = require('../controllers/accounts')
+const authTokens = require('../controllers/authTokens')
 const seedDB = require('./seed-db')
 const createTables = require('./db').createTables
 const readLookupTables = require('./db').readLookupTables
@@ -119,6 +120,9 @@ class App {
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
       setupBody,
       messages.postMessage)
+    router.get('/auth_token',
+      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      authTokens.getAuthToken)
 
     router.put('/transfers/:id',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
@@ -151,11 +155,23 @@ class App {
   }
 
   _makeWebsocketRouter () {
+    const log = this.log
     const router = new Router()
 
-    router.get('/accounts/:name/transfers',
-      passport.authenticate(['basic', 'http-signature', 'client-cert', 'anonymous'], { session: false }),
-      accounts.subscribeTransfers)
+    // Passport errors don't play nice with the koa-websocket context, so use a custom handler.
+    router.get('/websocket', function * () {
+      yield passport.authenticate(['basic', 'http-signature', 'client-cert', 'token'], {
+        session: false
+      }, function * (err, user, info) {
+        if (user) {
+          this.req.user = user
+          yield accounts.subscribeTransfers.call(this)
+        } else {
+          log.warn('websocket authentication error: ' + (err && err.message) + ' info: ' + JSON.stringify(info))
+          this.websocket.close()
+        }
+      }.bind(this))
+    })
 
     return router
   }

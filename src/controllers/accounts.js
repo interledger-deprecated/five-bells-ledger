@@ -3,7 +3,7 @@
 
 const request = require('five-bells-shared/utils/request')
 const model = require('../models/accounts')
-const log = require('../services/log').create('accounts')
+const makeRpcHandler = require('../services/makeRpcHandler')
 
 function * getCollection () {
   this.body = yield model.getAccounts()
@@ -84,7 +84,7 @@ function * getResource () {
  * @apiSuccessExample {json} 200 Get Account Response:
  *    HTTP/1.1 200 OK
  *    {
- *      "id": "http://usd-ledger.exmaple/accounts/alice",
+ *      "id": "http://usd-ledger.example/accounts/alice",
  *      "name": "alice",
  *      "balance": "100",
  *      "is_disabled": false
@@ -111,87 +111,67 @@ function * putResource () {
 }
 
 /**
- * @api {get} /accounts/:name/transfers [Websocket] Subscribe to Account Transfers
- * @apiName SubscribeAccountTransfers
+ * @api {get} /websocket [Websocket] Subscribe to Account Notifications
+ * @apiName SubscribeAccountNotifications
  * @apiGroup Account Methods
  * @apiVersion 1.0.0
  *
- * @apiDescription Subscribe to an account's transfers and receive real-time
- *   notifications via WebSocket.
- *
- * @apiParam {String} name Account's unique identifier
+ * @apiDescription Subscribe to an account's real-time notifications via WebSocket.
  *
  * @apiExample {shell} Subscribe to account transfers
- *    wscat --auth alice:alice -c ws://usd-ledger.example/accounts/alice/transfers
+ *    wscat --auth alice:alice -c ws://usd-ledger.example/websocket
  *
  * @apiSuccess (101 Switching Protocols) {None} ... This methods opens a
  *    WebSocket connection with the server. There is no immediate response
  *    after opening the connection.
  *
- * @apiSuccess (Additional Messages) {Object} Notification At most one
- *   [notification object](#notification_object) for each change in the state
- *   of any transfer that affects this account. This includes transfers that
- *   debit or credit the account.
+ * @apiSuccess (Additional Messages) {RpcRequest|RpcResponse}
  *
  * @apiSuccessExample {json} Initial connection
  *    HTTP/1.1 101 Switching Protocols
  *
  * @apiSuccessExample {json} Push notification
  *    {
- *      "resource":{
- *        "debits":[
- *          {
- *            "account":"http://usd-ledger.exmaple/accounts/alice",
- *            "amount":"0.01",
- *            "authorized":true
+ *      "jsonrpc": "2.0",
+ *      "id": null,
+ *      "method": "notify",
+ *      "params": {
+ *        "resource":{
+ *          "debits":[
+ *            {
+ *              "account":"http://usd-ledger.example/accounts/alice",
+ *              "amount":"0.01",
+ *              "authorized":true
+ *            }
+ *          ],
+ *          "credits":[
+ *            {
+ *              "account":"http://usd-ledger.example/accounts/bob",
+ *              "amount":"0.01"
+ *            }
+ *          ],
+ *          "id":"http://usd-ledger.example/transfers/4f122511-989d-101e-f938-573993b75e22",
+ *          "ledger":"http://usd-localhost.example",
+ *          "state":"executed",
+ *          "timeline":{
+ *            "proposed_at":"2016-04-27T17:57:27.037Z",
+ *            "prepared_at":"2016-04-27T17:57:27.054Z",
+ *            "executed_at":"2016-04-27T17:57:27.060Z"
  *          }
- *        ],
- *        "credits":[
- *          {
- *            "account":"http://usd-ledger.exmaple/accounts/bob",
- *            "amount":"0.01"
- *          }
- *        ],
- *        "id":"http://usd-ledger.exmaple/transfers/4f122511-989d-101e-f938-573993b75e22",
- *        "ledger":"http://localhost",
- *        "state":"executed",
- *        "timeline":{
- *          "proposed_at":"2016-04-27T17:57:27.037Z",
- *          "prepared_at":"2016-04-27T17:57:27.054Z",
- *          "executed_at":"2016-04-27T17:57:27.060Z"
  *        }
  *      }
  *    }
  *
  * @apiUse UnauthorizedError
- * @apiUse InvalidUriParameterError
+ * @apiUse InvalidBodyError
  */
 /**
  * @return {void}
  */
 function * subscribeTransfers () {
-  const name = this.params.name
-  if (!(name === '*' && this.req.user.is_admin)) {
-    request.validateUriParameter('name', name, 'Identifier')
-  }
-
   // The websocket is already closed, so don't subscribe.
   if (this.websocket.readyState !== 1) return
-
-  const close = model.subscribeTransfers(name, this.req.user, (notification) => {
-    this.websocket.send(JSON.stringify(notification), (error) => {
-      if (error) {
-        log.error('failed to send notification to ' + this.req.ip, error)
-      }
-    })
-  })
-
-  // Send a message upon connection
-  this.websocket.send(JSON.stringify({
-    type: 'connect'
-  }))
-
-  this.websocket.on('close', close)
+  makeRpcHandler(this.websocket, this.req.user)
 }
 
 module.exports = {

@@ -1,16 +1,19 @@
 'use strict'
 
+const jwt = require('jsonwebtoken')
 const passport = require('koa-passport')
 const BasicStrategy = require('passport-http').BasicStrategy
 const ClientCertStrategy = require('passport-client-certificate').Strategy
 const HTTPSignatureStrategy = require('passport-http-signature')
 const AnonymousStrategy = require('passport-anonymous').Strategy
+const TokenStrategy = require('../lib/tokenStrategy')
 const getAccount = require('../models/db/accounts').getAccount
 const getAccountByFingerprint = require('../models/db/accounts')
   .getAccountByFingerprint
 const verifyPassword = require('five-bells-shared/utils/hashPassword').verifyPassword
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const config = require('./config')
+const uri = require('./uriManager')
 
 passport.use(new BasicStrategy(
   function (username, password, done) {
@@ -74,6 +77,27 @@ passport.use(new ClientCertStrategy((certificate, done) => {
       done(null, userObj)
     })
 }))
+
+passport.use(new TokenStrategy(
+  function (tokenString, done) {
+    jwt.verify(tokenString, config.authTokenSecret, {
+      algorithms: ['HS256'],
+      issuer: config.server.base_uri
+    }, function (err, token) {
+      if (err) {
+        return done(new UnauthorizedError(
+          err.name === 'TokenExpiredError' ? 'Token has expired' : 'Invalid token'))
+      }
+      const username = uri.parse(token.sub, 'account').name.toLowerCase()
+      getAccount(username)
+        .then(function (userObj) {
+          if (!userObj || userObj.is_disabled) {
+            return done(new UnauthorizedError('Unknown or invalid account'))
+          }
+          done(null, userObj)
+        })
+    })
+  }))
 
 // Allow unauthenticated requests (transfers will just
 // be in the proposed state)

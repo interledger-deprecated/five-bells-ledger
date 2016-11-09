@@ -1,6 +1,7 @@
 'use strict'
 
 const _ = require('lodash')
+const assert = require('assert')
 const sinon = require('sinon')
 const app = require('../src/services/app')
 const logger = require('../src/services/log')
@@ -62,17 +63,38 @@ describe('Notifications', function () {
     ])
   })
 
-  describe('GET /accounts/:id/transfers (websocket)', function () {
+  describe('GET /websocket method:subscribe_account', function () {
     beforeEach(function * () {
-      const account = 'http://localhost/accounts/alice'
-      this.socket = this.ws(account + '/transfers', {
+      this.socket = this.ws('http://localhost/websocket', {
         headers: {
           Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
         }
       })
 
       // Wait until WS connection is established
-      yield new Promise((resolve) => this.socket.on('open', resolve))
+      yield new Promise((resolve) => {
+        this.socket.once('message', (msg) => {
+          assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: null, method: 'connect' })
+          resolve()
+        })
+      })
+
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'subscribe_account',
+        params: {
+          eventType: '*',
+          accounts: ['http://localhost/accounts/alice']
+        }
+      }))
+
+      yield new Promise((resolve) => {
+        this.socket.once('message', (msg) => {
+          assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: 1, result: 1 })
+          resolve()
+        })
+      })
     })
 
     afterEach(function * () {
@@ -84,7 +106,6 @@ describe('Notifications', function () {
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
       const transfer = this.transfer
-
       yield this.request()
         .put(transfer.id)
         .auth('alice', 'alice')
@@ -96,56 +117,22 @@ describe('Notifications', function () {
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
-      sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'transfer',
-        resource: _.assign({}, transfer, {
-          state: 'executed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            executed_at: '2015-06-16T00:00:00.000Z'
-          }
-        })
-      })
-    })
-
-    it('should not send notifications for wrong id', function * () {
-      const listener = sinon.spy()
-      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
-
-      const transfer = this.transfer
-
-      yield this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
-        .end()
-
-      // TODO: Is there a more elegant way?
-      yield timingHelper.sleep(50)
-
-      const transferId = '6f5ab02c-01d2-4016-8816-df6f22b03d94' // a wrong id
-      this.socket.send(JSON.stringify({ type: 'request_notification',
-                                        id: transferId }))
-
-      yield timingHelper.sleep(50)
-
-      sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
-      sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'transfer',
-        resource: _.assign({}, transfer, {
-          state: 'executed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            executed_at: '2015-06-16T00:00:00.000Z'
-          }
-        })
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: _.assign({}, transfer, {
+            state: 'executed',
+            timeline: {
+              proposed_at: '2015-06-16T00:00:00.000Z',
+              prepared_at: '2015-06-16T00:00:00.000Z',
+              executed_at: '2015-06-16T00:00:00.000Z'
+            }
+          })
+        }
       })
     })
 
@@ -167,17 +154,21 @@ describe('Notifications', function () {
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
-      sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'transfer',
-        resource: _.assign({}, transfer, {
-          state: 'prepared',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z'
-          }
-        })
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.create',
+          resource: _.assign({}, transfer, {
+            state: 'prepared',
+            timeline: {
+              proposed_at: '2015-06-16T00:00:00.000Z',
+              prepared_at: '2015-06-16T00:00:00.000Z'
+            }
+          })
+        }
       })
       this.clock.tick(500)
       yield this.request()
@@ -192,17 +183,22 @@ describe('Notifications', function () {
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledThrice(listener)
-      sinon.assert.calledWithMatch(listener.thirdCall, {
-        type: 'transfer',
-        resource: _.assign({}, transfer, {
-          state: 'executed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            executed_at: '2015-06-16T00:00:00.500Z'
-          }
-        })
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: _.assign({}, transfer, {
+            state: 'executed',
+            timeline: {
+              proposed_at: '2015-06-16T00:00:00.000Z',
+              prepared_at: '2015-06-16T00:00:00.000Z',
+              executed_at: '2015-06-16T00:00:00.500Z'
+            }
+          })
+        }
       })
     })
 
@@ -224,15 +220,20 @@ describe('Notifications', function () {
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'transfer',
-        resource: _.assign({}, transfer, {
-          state: 'proposed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        })
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: _.assign({}, transfer, {
+            state: 'proposed',
+            timeline: {
+              proposed_at: '2015-06-16T00:00:00.000Z'
+            }
+          })
+        }
       })
       this.clock.tick(1000)
 
@@ -242,17 +243,21 @@ describe('Notifications', function () {
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledThrice(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
-      sinon.assert.calledWithMatch(listener.thirdCall, {
-        type: 'transfer',
-        resource: _.assign({}, transfer, {
-          state: 'rejected',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z',
-            rejected_at: '2015-06-16T00:00:01.000Z'
-          }
-        })
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: _.assign({}, transfer, {
+            state: 'rejected',
+            timeline: {
+              proposed_at: '2015-06-16T00:00:00.000Z',
+              rejected_at: '2015-06-16T00:00:01.000Z'
+            }
+          })
+        }
       })
     })
 
@@ -300,16 +305,25 @@ describe('Notifications', function () {
 
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledThrice(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
-      sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'transfer',
-        resource: transferPrepared
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.create',
+          resource: transferPrepared
+        }
       })
-      sinon.assert.calledWithMatch(listener.thirdCall, {
-        type: 'transfer',
-        resource: transferExecuted,
-        related_resources: { execution_condition_fulfillment: this.executionConditionFulfillment }
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: transferExecuted,
+          related_resources: { execution_condition_fulfillment: this.executionConditionFulfillment }
+        }
       })
     })
 
@@ -358,38 +372,37 @@ describe('Notifications', function () {
 
       yield timingHelper.sleep(50)
 
-      sinon.assert.calledThrice(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
-      sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'transfer',
-        resource: transferPrepared
-      })
-      sinon.assert.calledWithMatch(listener.thirdCall, {
-        type: 'transfer',
-        resource: transferCancelled
-      })
-    })
-  })
-
-  describe('GET /accounts/*/transfers (websocket)', function () {
-    beforeEach(function * () {
-      this.socket = this.ws('http://localhost/accounts/*/transfers', {
-        headers: {
-          Authorization: 'Basic ' + new Buffer('admin:admin', 'utf8').toString('base64')
+      sinon.assert.calledTwice(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.create',
+          resource: transferPrepared
         }
       })
-
-      // Wait until WS connection is established
-      yield new Promise((resolve) => this.socket.on('open', resolve))
+      sinon.assert.calledWithMatch(listener.secondCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: transferCancelled
+        }
+      })
     })
 
-    afterEach(function * () {
-      this.socket.terminate()
-    })
-
-    it('should send notifications about a transfer', function * () {
+    it('unsubscribes when passed an empty array of accounts', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'subscribe_account',
+        params: { eventType: '*', accounts: [] }
+      }))
 
       const transfer = this.transfer
       yield this.request()
@@ -397,23 +410,203 @@ describe('Notifications', function () {
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
+        .expect(validator.validateTransfer)
         .end()
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
 
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {jsonrpc: '2.0', id: 2, result: 0})
+    })
+
+    it('supports transfer.*', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'subscribe_account',
+        params: { eventType: 'transfer.*', accounts: ['http://localhost/accounts/alice'] }
+      }))
+      yield new Promise((resolve) => {
+        this.socket.once('message', (msg) => { resolve() })
+      })
+
+      const transfer = this.transfer
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
 
       sinon.assert.calledTwice(listener)
-      sinon.assert.calledWithMatch(listener.firstCall, { type: 'connect' })
+      sinon.assert.calledWithMatch(listener.firstCall, {jsonrpc: '2.0', id: 2, result: 1})
       sinon.assert.calledWithMatch(listener.secondCall, {
-        type: 'transfer',
-        resource: _.assign({}, transfer, {
-          state: 'executed',
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z',
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            executed_at: '2015-06-16T00:00:00.000Z'
-          }
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: transfer
+        }
+      })
+    })
+
+    it('gets a 400 when subscribing without an id', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: null,
+        method: 'subscribe_account',
+        params: { eventType: '*', accounts: ['http://localhost/accounts/alice'] }
+      }))
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+      assert.equal(listener.called, false)
+    })
+
+    it('gets a 400 when subscribing to an invalid account', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'subscribe_account',
+        params: { eventType: '*', accounts: ['foo'] }
+      }))
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: 2,
+        error: { code: 400, message: 'Invalid account: foo' }
+      })
+    })
+
+    it('gets a 400 when subscribing with invalid parameters', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'subscribe_account',
+        params: { eventType: '*', accounts: 'foo' }
+      }))
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: 2,
+        error: { code: 400, message: 'Invalid params' }
+      })
+    })
+
+    it('gets a 403 when subscribing to an account without permission', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 2,
+        method: 'subscribe_account',
+        params: { eventType: '*', accounts: ['http://localhost/accounts/bob'] }
+      }))
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: 2,
+        error: { code: 403, message: 'Not authorized' }
+      })
+    })
+  })
+
+  describe('GET /websocket?token=...', function () {
+    beforeEach(function * () {
+      const tokenRes = yield this.request()
+        .get('/auth_token')
+        .auth('alice', 'alice')
+        .expect(200)
+        .end()
+      this.token = tokenRes.body.token
+    })
+
+    it('connects the websocket if a valid token is passed', function * () {
+      this.socket = this.ws('http://localhost/websocket?token=' + encodeURIComponent(this.token), {})
+
+      // Wait until WS connection is established
+      yield new Promise((resolve) => {
+        this.socket.once('message', (msg) => {
+          assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: null, method: 'connect' })
+          resolve()
         })
+      })
+    })
+
+    it('closes the websocket if an invalid token is passed', function (done) {
+      this.socket = this.ws('http://localhost/websocket?token=foo', {})
+      this.socket.on('close', () => done())
+    })
+  })
+
+  describe('GET /websocket method:invalid', function () {
+    beforeEach(function * () {
+      this.socket = this.ws('http://localhost/websocket', {
+        headers: {
+          Authorization: 'Basic ' + new Buffer('admin:admin', 'utf8').toString('base64')
+        }
+      })
+
+      // Wait until WS connection is established
+      yield new Promise((resolve) => {
+        this.socket.once('message', (msg) => {
+          assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: null, method: 'connect' })
+          resolve()
+        })
+      })
+    })
+
+    afterEach(function * () {
+      this.socket.terminate()
+    })
+
+    it('gets a 400 when using an invalid method', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'foo'
+      }))
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: 1,
+        error: { code: 400, message: 'Unknown method: foo' }
       })
     })
   })
