@@ -1,6 +1,6 @@
 define({
   "name": "five-bells-ledger",
-  "version": "17.2.1",
+  "version": "17.2.2",
   "description": "Five Bells ledger reference implementation",
   "title": "Interledger Reference Ledger API",
   "url": "https://acme-ledger.example",
@@ -26,7 +26,7 @@ define({
   "apidoc": "0.2.0",
   "generator": {
     "name": "apidoc",
-    "time": "2016-11-08T00:45:41.177Z",
+    "time": "2016-11-09T19:00:50.721Z",
     "url": "http://apidocjs.com",
     "version": "0.16.1"
   }
