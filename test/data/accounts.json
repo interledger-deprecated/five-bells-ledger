@@ -57,8 +57,6 @@
   "trader": {
     "id": "http://localhost/accounts/trader",
     "name": "trader",
-    "balance": "10",
-    "connector": "http://localhost:4321",
     "balance": "0",
     "is_disabled": false,
     "minimum_allowed_balance": "0"

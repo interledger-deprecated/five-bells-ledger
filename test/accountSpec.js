@@ -584,17 +584,6 @@ describe('Accounts', function () {
         .expect(200)
         .end()
     })
-
-    it('should allow user to set themselves to a connector', function * () {
-      const account = this.exampleAccounts.alice
-
-      yield this.request()
-        .put(account.id)
-        .auth(account.name, account.name)
-        .send({name: account.name, connector: 'https://localhost'})
-        .expect(200)
-        .end()
-    })
   })
 
   describe('PUT /accounts/:uuid with public_key', function () {

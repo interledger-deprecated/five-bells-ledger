@@ -17,6 +17,9 @@ function convertToInternalAccount (data) {
     data.balance = Number(data.balance)
   }
 
+  // DEPRECATED: The connector field is deprecated and ignored if provided
+  delete data.connector
+
   // Passing in a password hash is a potential DoS vector because the hash
   // specifies the number of iterations needed to verify it. So a malicious
   // client could set it to UINT32_MAX and make the server do an insane amount
@@ -58,8 +61,11 @@ function convertToExternalAccount (data) {
   } else {
     data.minimum_allowed_balance = '0'
   }
-  if (!data.connector) delete data.connector
   if (!data.is_admin) delete data.is_admin
+
+  // DEPRECATED: The connector field is no longer supported
+  delete data.connector
+
   return data
 }
 
