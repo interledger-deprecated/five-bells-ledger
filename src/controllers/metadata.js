@@ -42,8 +42,7 @@ const accounts = require('../models/accounts')
  *        "connectors": [
  *            {
  *                "id": "http://usd-ledger.example/accounts/chloe",
- *                "name": "chloe",
- *                "connector": "http://usd-eur-connector.example"
+ *                "name": "chloe"
  *            }
  *        ]
  *    }
@@ -76,7 +75,7 @@ module.exports = (config) => {
   return {
     getResource: function * () {
       this.body = Object.assign({
-        connectors: yield accounts.getConnectors()
+        connectors: yield accounts.getConnectors(config)
       }, metadata)
     }
   }

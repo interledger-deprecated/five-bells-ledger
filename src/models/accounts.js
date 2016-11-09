@@ -20,22 +20,10 @@ function getPublicData (data) {
   }
 }
 
-function getConnectorData (data) {
-  return {
-    id: uri.make('account', data.name.toLowerCase()),
-    name: data.name,
-    connector: data.connector
-  }
-}
+function * getConnectors (config) {
+  if (!config.recommendedConnectors) return []
 
-function isRecommendedConnector (data) {
-  if (!config.recommendedConnectors) return true
-  return config.recommendedConnectors.indexOf(data.name) !== -1
-}
-
-function * getConnectors () {
-  const accounts = yield db.getConnectorAccounts()
-  return accounts.filter(isRecommendedConnector).map(getConnectorData)
+  return config.recommendedConnectors.map(name => ({ name })).map(getPublicData)
 }
 
 function * getAccounts () {
