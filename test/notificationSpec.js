@@ -491,7 +491,7 @@ describe('Notifications', function () {
       sinon.assert.calledWithMatch(listener.firstCall, {
         jsonrpc: '2.0',
         id: 2,
-        error: { code: 400, message: 'Invalid account: foo' }
+        error: { code: 400, message: 'InvalidBodyError', data: 'Invalid account: foo' }
       })
     })
 
@@ -513,7 +513,7 @@ describe('Notifications', function () {
       sinon.assert.calledWithMatch(listener.firstCall, {
         jsonrpc: '2.0',
         id: 2,
-        error: { code: 400, message: 'Invalid params' }
+        error: { code: 400, message: 'InvalidBodyError', data: 'Invalid params' }
       })
     })
 
@@ -535,7 +535,7 @@ describe('Notifications', function () {
       sinon.assert.calledWithMatch(listener.firstCall, {
         jsonrpc: '2.0',
         id: 2,
-        error: { code: 403, message: 'Not authorized' }
+        error: { code: 403, message: 'UnauthorizedError', data: 'Not authorized' }
       })
     })
   })
@@ -606,7 +606,7 @@ describe('Notifications', function () {
       sinon.assert.calledWithMatch(listener.firstCall, {
         jsonrpc: '2.0',
         id: 1,
-        error: { code: 400, message: 'Unknown method: foo' }
+        error: { code: 400, message: 'InvalidBodyError', data: 'Unknown method: foo' }
       })
     })
   })

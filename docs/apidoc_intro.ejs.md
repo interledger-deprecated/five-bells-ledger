@@ -112,4 +112,4 @@ Use the following environment variables to configure the service when run:
 * `LEDGER_AMOUNT_SCALE` (default: `2`) the number of digits allowed in amounts to the right of the decimal place
 * `LEDGER_LOG_LEVEL` (default: `info`) the allowed levels in order of verbosity are `fatal`, `error`, `warn`, `info`, `debug`, and `trace`
 * `LEDGER_RECOMMENDED_CONNECTORS` (default: `'*'`) a comma-delimited list of connector usernames
-* `LEDGER_AUTH_TOKEN_SECRET` (default: random bytes) a secret used to sign `/auth_token` tokens.
+* `LEDGER_SECRET` (default: random bytes) a secret used to sign `/auth_token` tokens. Any length.

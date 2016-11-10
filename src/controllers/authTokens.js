@@ -10,7 +10,7 @@ const model = require('../models/authTokens')
  *
  * @apiDescription Get a token that can be used to authenticate future requests.
  *
- * @apiExample {shell} Send a Message
+ * @apiExample {shell} Get Auth Token
  *    curl -X GET -H "Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l"
  *    http://usd-ledger.example/auth_token
  *

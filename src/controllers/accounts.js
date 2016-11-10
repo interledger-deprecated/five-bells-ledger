@@ -130,12 +130,20 @@ function * putResource () {
  * @apiSuccessExample {json} Initial connection
  *    HTTP/1.1 101 Switching Protocols
  *
- * @apiSuccessExample {json} Push notification
+ * @apiSuccessExample {json} On connect
+ *    {
+ *      "jsonrpc": "2.0",
+ *      "id": null,
+ *      "method": "connect"
+ *    }
+ *
+ * @apiSuccessExample {json} Push transfer notification
  *    {
  *      "jsonrpc": "2.0",
  *      "id": null,
  *      "method": "notify",
  *      "params": {
+ *        "event": "transfer.update",
  *        "resource":{
  *          "debits":[
  *            {
@@ -162,8 +170,50 @@ function * putResource () {
  *      }
  *    }
  *
- * @apiUse UnauthorizedError
- * @apiUse InvalidBodyError
+ * @apiSuccessExample {json} Push message notification
+ *    {
+ *      "jsonrpc": "2.0",
+ *      "id": null,
+ *      "method": "notify",
+ *      "params": {
+ *        "event": "message.send",
+ *        "resource":{
+ *          "ledger": "http://usd-localhost.example",
+ *          "from": "http://usd-localhost.example/accounts/alice",
+ *          "to": "http://usd-localhost.example/accounts/bob",
+ *          "data": { "foo": "bar" }
+ *        }
+ *      }
+ *    }
+ *
+ * @apiExample {json} Subscribe account (request)
+ *    {
+ *      "jsonrpc": "2.0",
+ *      "id": 1,
+ *      "method": "subscribe_account",
+ *      "params": {
+ *        "eventType": "*",
+ *        "accounts": ["http://usd-ledger.example/accounts/alice"]
+ *      }
+ *    }
+ *
+ * @apiSuccessExample {json} Subscribe account (response)
+ *    {
+ *      "jsonrpc": "2.0",
+ *      "id": 1,
+ *      "result": 1
+ *    }
+ *
+ * @apiErrorExample {json} Subscribe account (response)
+ *    {
+ *      "jsonrpc": "2.0",
+ *      "id": 1,
+ *      "error": {
+ *        "code": 400,
+ *        "message": "InvalidBodyError",
+ *        "data": "Invalid params"
+ *      }
+ *    }
  */
 /**
  * @return {void}

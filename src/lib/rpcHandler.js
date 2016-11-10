@@ -41,7 +41,11 @@ class RpcHandler {
     } catch (err) {
       const statusCode = err instanceof InvalidBodyError ? 400
                        : err instanceof UnauthorizedError ? 403 : 500
-      resMessage.error = { code: statusCode, message: err.message }
+      resMessage.error = {
+        code: statusCode,
+        message: err.name,
+        data: err.message
+      }
     }
 
     if (resMessage.result === undefined && !resMessage.error) return
