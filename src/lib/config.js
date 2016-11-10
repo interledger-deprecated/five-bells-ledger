@@ -1,6 +1,5 @@
 'use strict'
 
-const crypto = require('crypto')
 const _ = require('lodash')
 const Config = require('five-bells-shared').Config
 const envPrefix = 'ledger'
@@ -69,16 +68,6 @@ function parseKeysConfig () {
   }
 }
 
-function parseAuthTokenSecret () {
-  const authSecret = Config.getEnv(envPrefix, 'AUTH_TOKEN_SECRET')
-  if (authSecret) return authSecret
-
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('No ' + envPrefix.toUpperCase() + '_AUTH_TOKEN_SECRET provided.')
-  }
-  return crypto.randomBytes(32).toString('base64')
-}
-
 function parseRecommendedConnectors () {
   const connectorList = Config.getEnv(envPrefix, 'RECOMMENDED_CONNECTORS')
   if (!connectorList) return []
@@ -107,11 +96,11 @@ function loadConfig () {
   localConfig.ilp = parseIlpConfig()
   localConfig.recommendedConnectors = parseRecommendedConnectors()
   localConfig.logLevel = getLogLevel()
+  localConfig.authTokenSecret = Config.generateSecret(envPrefix, 'authToken')
 
   // optional
   localConfig.currency = parseCurrencyConfig()
   localConfig.keys = parseKeysConfig()
-  localConfig.authTokenSecret = parseAuthTokenSecret()
 
   const config = Config.loadConfig(envPrefix, _.omitBy(localConfig, _.isEmpty))
   return config

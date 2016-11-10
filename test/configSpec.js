@@ -72,13 +72,8 @@ describe('loadConfig', () => {
   describe('config.authTokenSecret', () => {
     it('returns defaults', () => {
       const _config = loadConfig()
-      expect(new Buffer(_config.authTokenSecret, 'base64').length).to.equal(32)
-    })
-
-    it('LEDGER_AUTH_TOKEN_SECRET=foo', () => {
-      process.env.LEDGER_AUTH_TOKEN_SECRET = 'foo'
-      const _config = loadConfig()
-      expect(_config.authTokenSecret).to.equal('foo')
+      expect(_config.authTokenSecret).to.be.an.instanceof(Buffer)
+      expect(_config.authTokenSecret.length).to.equal(32)
     })
   })
 
