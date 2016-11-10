@@ -20,7 +20,7 @@
     "docs": "npm run docs:prep-intro && npm run docs:apidoc",
     "docs:prep-intro": "scripts/build_docs.js",
     "docs:apidoc": "apidoc -o apidoc-out -i src/controllers/",
-    "integration": "integration all",
+    "integration": "integration-loader && integration all",
     "bump": "version-bump"
   },
   "engines": {
@@ -79,7 +79,7 @@
     "eslint": "^2.0.0",
     "eslint-config-standard": "^5.1.0",
     "eslint-plugin-promise": "^1.1.0",
-    "five-bells-integration-test": "^5.0.0",
+    "five-bells-integration-test-loader": "^1.0.0",
     "istanbul": "0.4.0",
     "mocha": "~2.3.4",
     "nock": "^2.10.0",
@@ -89,5 +89,11 @@
     "supertest": "^2.0.1",
     "through2": "^2.0.1",
     "ws": "^1.1.0"
+  },
+  "config": {
+    "five-bells-integration-test-loader": {
+      "module": "five-bells-integration-test",
+      "repo": "interledgerjs/five-bells-integration-test"
+    }
   }
 }
