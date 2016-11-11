@@ -1,8 +1,10 @@
 'use strict'
 
+const _ = require('lodash')
 const co = require('co')
 const fs = require('fs')
 const path = require('path')
+const assert = require('assert')
 const connection = require('./knex').config.connection
 const spawn = require('child_process').spawn
 const knex = require('./knex').knex
@@ -24,6 +26,21 @@ const TABLE_NAMES = [
 
 function withTransaction (callback) {
   return knex.transaction(co.wrap(callback))
+}
+
+function withSerializableTransaction (callback) {
+  const dbType = knex.client.config.client
+  return withTransaction(function * (transaction) {
+    // Set isolation level to avoid reading "prepared" transaction that is currently being
+    // executed by another request. This ensures the transfer can be fulfilled only once.
+    assert(_.includes(['sqlite3', 'pg', 'mysql'], dbType),
+      'A valid client must be specified on the db object')
+    if (dbType === 'pg') {
+      yield transaction.raw('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+    }
+
+    return yield callback(transaction)
+  })
 }
 
 function executeStatements (sql) {
@@ -118,5 +135,6 @@ module.exports = {
   truncateTables,
   readLookupTables,
   withTransaction,
+  withSerializableTransaction,
   isConnected
 }

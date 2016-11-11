@@ -5,7 +5,7 @@ const _ = require('lodash')
 const client = require('./utils').client
 const db = require('./utils')(TABLE_NAME,
   convertToPersistent, convertFromPersistent)
-const withTransaction = require('../../lib/db').withTransaction
+const withSerializableTransaction = require('../../lib/db').withSerializableTransaction
 const rejectionReasons = require('./rejectionReasons')
 const transferStatuses = require('./transferStatuses')
 const adjustments = require('./adjustments')
@@ -189,6 +189,6 @@ module.exports = {
   upsertTransfer,
   updateTransfer,
   insertTransfers,
-  withTransaction,
+  withSerializableTransaction,
   client
 }
