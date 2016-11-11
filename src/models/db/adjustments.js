@@ -101,7 +101,7 @@ function upsertAdjustment (persistentAdjustment, options) {
   if (options && options.transaction) {
     return _upsertAdjustment(persistentAdjustment, options.transaction)
   } else {
-    return db.withTransaction((transaction) =>
+    return db.withSerializableTransaction((transaction) =>
       _upsertAdjustment(persistentAdjustment, transaction))
   }
 }

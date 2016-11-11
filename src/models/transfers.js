@@ -6,7 +6,6 @@ const _ = require('lodash')
 const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
 const stringifyJSON = require('canonical-json')
-const assert = require('assert')
 const db = require('./db/transfers')
 const convertToInternalFulfillment = require('./converters/fulfillments')
   .convertToInternalFulfillment
@@ -388,14 +387,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
   const fulfillment = convertToInternalFulfillment(fulfillmentUri)
   fulfillment.transfer_id = transferId
   let transfer = null
-  const existingFulfillment = yield db.withTransaction(function * (transaction) {
-    // Set isolation level to avoid reading "prepared" transaction that is currently being
-    // executed by another request. This ensures the transfer can be fulfilled only once.
-    assert(_.includes(['sqlite3', 'pg', 'mysql'], db.client),
-      'A valid client must be specified on the db object')
-    if (db.client === 'pg') {
-      yield transaction.raw('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
-    }
+  const existingFulfillment = yield db.withSerializableTransaction(function * (transaction) {
     transfer = yield db.getTransfer(transferId, {transaction})
 
     if (!transfer) {
@@ -505,7 +497,7 @@ function * setTransfer (externalTransfer, requestingUser) {
   normalizeCreditAndDebitAmounts(transfer)
 
   let originalTransfer, previousDebits, previousCredits
-  yield db.withTransaction(function * (transaction) {
+  yield db.withSerializableTransaction(function * (transaction) {
     originalTransfer = yield db.getTransfer(transfer.id, {transaction})
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
