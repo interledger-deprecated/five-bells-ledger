@@ -125,7 +125,8 @@ function * putResource () {
  *    WebSocket connection with the server. There is no immediate response
  *    after opening the connection.
  *
- * @apiSuccess (Additional Messages) {RpcRequest|RpcResponse}
+ * @apiSuccess (Additional Messages) {Object} RpcRequest or RpcResponse; Notifications about
+ *   the change in the state of any transfer that affects this account.
  *
  * @apiSuccessExample {json} Initial connection
  *    HTTP/1.1 101 Switching Protocols
