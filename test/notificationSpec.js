@@ -457,7 +457,7 @@ describe('Notifications', function () {
       })
     })
 
-    it('gets a 400 when subscribing without an id', function * () {
+    it('gets a 4000 when subscribing with a null id', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -470,10 +470,23 @@ describe('Notifications', function () {
 
       // TODO: Is there a more elegant way?
       yield timingHelper.sleep(50)
-      assert.equal(listener.called, false)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: null,
+        error: {
+          code: 4000,
+          message: 'RpcError: Invalid id',
+          data: {
+            name: 'RpcError',
+            message: 'Invalid id'
+          }
+        }
+      })
     })
 
-    it('gets a 400 when subscribing to an invalid account', function * () {
+    it('gets a 4002 when subscribing to an invalid account', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -491,11 +504,18 @@ describe('Notifications', function () {
       sinon.assert.calledWithMatch(listener.firstCall, {
         jsonrpc: '2.0',
         id: 2,
-        error: { code: 400, message: 'InvalidBodyError', data: 'Invalid account: foo' }
+        error: {
+          code: 4002,
+          message: 'RpcError: Invalid account: foo',
+          data: {
+            name: 'RpcError',
+            message: 'Invalid account: foo'
+          }
+        }
       })
     })
 
-    it('gets a 400 when subscribing with invalid parameters', function * () {
+    it('gets a -32602 when subscribing with invalid parameters', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -513,11 +533,18 @@ describe('Notifications', function () {
       sinon.assert.calledWithMatch(listener.firstCall, {
         jsonrpc: '2.0',
         id: 2,
-        error: { code: 400, message: 'InvalidBodyError', data: 'Invalid params' }
+        error: {
+          code: -32602,
+          message: 'RpcError: Invalid params',
+          data: {
+            name: 'RpcError',
+            message: 'Invalid params'
+          }
+        }
       })
     })
 
-    it('gets a 403 when subscribing to an account without permission', function * () {
+    it('gets a 4003 when subscribing to an account without permission', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -535,7 +562,14 @@ describe('Notifications', function () {
       sinon.assert.calledWithMatch(listener.firstCall, {
         jsonrpc: '2.0',
         id: 2,
-        error: { code: 403, message: 'UnauthorizedError', data: 'Not authorized' }
+        error: {
+          code: 4003,
+          message: 'RpcError: Not authorized',
+          data: {
+            name: 'RpcError',
+            message: 'Not authorized'
+          }
+        }
       })
     })
   })
@@ -589,7 +623,7 @@ describe('Notifications', function () {
       this.socket.terminate()
     })
 
-    it('gets a 400 when using an invalid method', function * () {
+    it('gets a -32601 when using an invalid method', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -606,7 +640,14 @@ describe('Notifications', function () {
       sinon.assert.calledWithMatch(listener.firstCall, {
         jsonrpc: '2.0',
         id: 1,
-        error: { code: 400, message: 'InvalidBodyError', data: 'Unknown method: foo' }
+        error: {
+          code: -32601,
+          message: 'RpcError: Unknown method: foo',
+          data: {
+            name: 'RpcError',
+            message: 'Unknown method: foo'
+          }
+        }
       })
     })
   })
