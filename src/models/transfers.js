@@ -395,6 +395,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
     }
 
     const conditionType = validateConditionFulfillment(transfer, fulfillment)
+    transferExpiryMonitor.validateNotExpired(transfer)
 
     if (
       conditionType === CONDITION_TYPE_EXECUTION &&

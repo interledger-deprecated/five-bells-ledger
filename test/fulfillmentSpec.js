@@ -32,6 +32,7 @@ describe('GET /fulfillment', function () {
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
     this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
     this.invalidTransfer = _.cloneDeep(require('./data/transfers/simple'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry.json'))
 
     this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
     this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
@@ -69,6 +70,28 @@ describe('GET /fulfillment', function () {
       .expect({
         id: 'MissingFulfillmentError',
         message: 'This transfer has not yet been fulfilled'
+      })
+      .end()
+  })
+
+  it('should return a 422 if the transfer has already expired', function * () {
+    const transfer = this.transferWithExpiry
+    transfer.execution_condition = this.preparedTransfer.execution_condition
+    yield this.request()
+      .put(transfer.id)
+      .auth('admin', 'admin')
+      .send(transfer)
+      .end()
+
+    this.clock.tick(10000000)
+
+    yield this.request()
+      .put(transfer.id + '/fulfillment')
+      .send(this.executionConditionFulfillment)
+      .expect(422)
+      .expect({
+        id: 'ExpiredTransferError',
+        message: 'Cannot modify transfer after expires_at date'
       })
       .end()
   })
