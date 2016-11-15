@@ -457,7 +457,7 @@ describe('Notifications', function () {
       })
     })
 
-    it('gets a 4000 when subscribing with a null id', function * () {
+    it('gets a 40000 when subscribing with a null id', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -476,7 +476,7 @@ describe('Notifications', function () {
         jsonrpc: '2.0',
         id: null,
         error: {
-          code: 4000,
+          code: 40000,
           message: 'RpcError: Invalid id',
           data: {
             name: 'RpcError',
@@ -486,7 +486,7 @@ describe('Notifications', function () {
       })
     })
 
-    it('gets a 4002 when subscribing to an invalid account', function * () {
+    it('gets a 40002 when subscribing to an invalid account', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -505,7 +505,7 @@ describe('Notifications', function () {
         jsonrpc: '2.0',
         id: 2,
         error: {
-          code: 4002,
+          code: 40002,
           message: 'RpcError: Invalid account: foo',
           data: {
             name: 'RpcError',
@@ -544,7 +544,7 @@ describe('Notifications', function () {
       })
     })
 
-    it('gets a 4003 when subscribing to an account without permission', function * () {
+    it('gets a 40300 when subscribing to an account without permission', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -563,7 +563,7 @@ describe('Notifications', function () {
         jsonrpc: '2.0',
         id: 2,
         error: {
-          code: 4003,
+          code: 40300,
           message: 'RpcError: Not authorized',
           data: {
             name: 'RpcError',

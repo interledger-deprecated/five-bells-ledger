@@ -210,9 +210,9 @@ function * putResource () {
  *      "jsonrpc": "2.0",
  *      "id": 1,
  *      "error": {
- *        "code": 400,
- *        "message": "InvalidBodyError",
- *        "data": "Invalid params"
+ *        "code": 4000,
+ *        "message": "RpcError",
+ *        "data": "Invalid id"
  *      }
  *    }
  */

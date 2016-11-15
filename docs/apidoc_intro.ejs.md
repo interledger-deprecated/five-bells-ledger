@@ -118,14 +118,16 @@ Use the following environment variables to configure the service when run:
 ## RPC Error Codes
 <a id='rpc_error_codes'></a>
 
+For errors which have an equivalent in HTTP, we choose a five digit error code where the first three digits correspond to the HTTP status code.
+
 | Error Code | Description | Applicable Methods |
 | ---------- | ----------- | ------------------ |
 | `-32700` | Error parsing incoming message JSON | any |
 | `-32600` | Request didn't match `RpcRequest` schema | any |
 | `-32601` | Unknown method | any |
 | `-32602` | Invalid parameters | any |
-| `4000` | Request id is null | any |
-| `4001` | Invalid account name | `subscribe_account` |
-| `4002` | Invalid account | `subscribe_account` |
-| `4003` | Not authorized | any |
-| `5000` | Internal server error | any |
+| `40000` | Request id is null | any |
+| `40001` | Invalid account name | `subscribe_account` |
+| `40002` | Invalid account | `subscribe_account` |
+| `40300` | Not authorized | any |
+| `50000` | Internal server error | any |
