@@ -26,7 +26,7 @@ class RpcHandler {
       if (!validatorResult.valid) {
         throw new RpcError(-32600, 'Invalid Request', {validationErrors: validatorResult.errors})
       }
-      if (reqMessage.id === null) throw new RpcError(4000, 'Invalid id')
+      if (reqMessage.id === null) throw new RpcError(40000, 'Invalid id')
       resMessage.id = reqMessage.id
 
       if (reqMessage.method === 'subscribe_account') {
@@ -37,7 +37,7 @@ class RpcHandler {
       }
     } catch (err) {
       resMessage.error = {
-        code: err instanceof SyntaxError ? -32700 : (err.code || 5000),
+        code: err instanceof SyntaxError ? -32700 : (err.code || 50000),
         message: err.name + ': ' + err.message,
         data: Object.assign({
           name: err.name,
@@ -87,14 +87,14 @@ class RpcHandler {
     for (const accountName of accountNames) {
       const validatorResult = this.validator.create('Identifier')(accountName)
       if (!validatorResult.valid) {
-        throw new RpcError(4001, 'Invalid account name: ' + accountName)
+        throw new RpcError(40001, 'Invalid account name: ' + accountName)
       }
     }
 
     if (this.requestingUser.is_admin) return
     for (const accountName of accountNames) {
       if (this.requestingUser.name !== accountName) {
-        throw new RpcError(4003, 'Not authorized')
+        throw new RpcError(40300, 'Not authorized')
       }
     }
   }
@@ -103,7 +103,7 @@ class RpcHandler {
     try {
       return this.uri.parse(account, 'account').name.toLowerCase()
     } catch (err) {
-      throw new RpcError(4002, 'Invalid account: ' + account)
+      throw new RpcError(40002, 'Invalid account: ' + account)
     }
   }
 
