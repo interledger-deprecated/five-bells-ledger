@@ -4,6 +4,7 @@
 const request = require('five-bells-shared/utils/request')
 const model = require('../models/accounts')
 const makeRpcHandler = require('../services/makeRpcHandler')
+const uri = require('../services/uriManager')
 
 function * getCollection () {
   this.body = yield model.getAccounts()
@@ -101,6 +102,11 @@ function * putResource () {
   const name = this.params.name
   request.validateUriParameter('name', name, 'Identifier')
   const account = this.body
+  if (account.id) {
+    request.assert.strictEqual(account.id.toLowerCase(),
+      uri.make('account', name.toLowerCase()),
+      'Account id must match the URL')
+  }
   if (account.name) {
     request.assert.strictEqual(account.name.toLowerCase(), name.toLowerCase(),
       'Account name must match the one in the URL')
