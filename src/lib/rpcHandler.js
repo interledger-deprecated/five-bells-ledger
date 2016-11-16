@@ -1,6 +1,18 @@
 'use strict'
 const BaseError = require('five-bells-shared/errors/base-error')
 
+const errors = {
+  INVALID_REQUEST: -32600,
+  INVALID_METHOD: -32601,
+  INVALID_PARAMS: -32602,
+  SYNTAX_ERROR: -32700,
+  INVALID_ID: 40000,
+  INVALID_ACCOUNT_NAME: 40001,
+  INVALID_ACCOUNT: 40002,
+  UNAUTHORIZED: 40300,
+  INTERNAL_ERROR: 50000
+}
+
 class RpcHandler {
   constructor (params, websocket, requestingUser) {
     this.log = params.log
@@ -24,20 +36,20 @@ class RpcHandler {
       const reqMessage = JSON.parse(reqMessageString)
       const validatorResult = this.validator.create('RpcRequest')(reqMessage)
       if (!validatorResult.valid) {
-        throw new RpcError(-32600, 'Invalid Request', {validationErrors: validatorResult.errors})
+        throw new RpcError(errors.INVALID_REQUEST, 'Invalid Request', {validationErrors: validatorResult.errors})
       }
-      if (reqMessage.id === null) throw new RpcError(40000, 'Invalid id')
+      if (reqMessage.id === null) throw new RpcError(errors.INVALID_ID, 'Invalid id')
       resMessage.id = reqMessage.id
 
       if (reqMessage.method === 'subscribe_account') {
         resMessage.result = this.subscribeAccount(reqMessage.params.eventType,
           reqMessage.params.accounts)
       } else {
-        throw new RpcError(-32601, 'Unknown method: ' + reqMessage.method)
+        throw new RpcError(errors.INVALID_METHOD, 'Unknown method: ' + reqMessage.method)
       }
     } catch (err) {
       resMessage.error = {
-        code: err instanceof SyntaxError ? -32700 : (err.code || 50000),
+        code: err instanceof SyntaxError ? errors.SYNTAX_ERROR : (err.code || errors.INTERNAL_ERROR),
         message: err.name + ': ' + err.message,
         data: Object.assign({
           name: err.name,
@@ -54,7 +66,7 @@ class RpcHandler {
    */
   subscribeAccount (eventType, accounts) {
     if (typeof eventType !== 'string' || !Array.isArray(accounts)) {
-      throw new RpcError(-32602, 'Invalid params')
+      throw new RpcError(errors.INVALID_PARAMS, 'Invalid params')
     }
 
     const accountNames = accounts.map(this._accountToName, this)
@@ -87,14 +99,14 @@ class RpcHandler {
     for (const accountName of accountNames) {
       const validatorResult = this.validator.create('Identifier')(accountName)
       if (!validatorResult.valid) {
-        throw new RpcError(40001, 'Invalid account name: ' + accountName)
+        throw new RpcError(errors.INVALID_ACCOUNT_NAME, 'Invalid account name: ' + accountName)
       }
     }
 
     if (this.requestingUser.is_admin) return
     for (const accountName of accountNames) {
       if (this.requestingUser.name !== accountName) {
-        throw new RpcError(40300, 'Not authorized')
+        throw new RpcError(errors.UNAUTHORIZED, 'Not authorized')
       }
     }
   }
@@ -103,7 +115,7 @@ class RpcHandler {
     try {
       return this.uri.parse(account, 'account').name.toLowerCase()
     } catch (err) {
-      throw new RpcError(40002, 'Invalid account: ' + account)
+      throw new RpcError(errors.INVALID_ACCOUNT, 'Invalid account: ' + account)
     }
   }
 
@@ -133,4 +145,5 @@ class RpcError extends BaseError {
   }
 }
 
+RpcHandler.websocketErrorCodes = errors
 module.exports = RpcHandler
