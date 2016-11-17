@@ -150,7 +150,7 @@ define({ "api": [
       "examples": [
         {
           "title": "200 Get Account Response:",
-          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.exmaple/accounts/alice\",\n  \"name\": \"alice\",\n  \"balance\": \"100\",\n  \"is_disabled\": false\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"id\": \"http://usd-ledger.example/accounts/alice\",\n  \"name\": \"alice\",\n  \"balance\": \"100\",\n  \"is_disabled\": false\n}",
           "type": "json"
         }
       ]
@@ -201,30 +201,22 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/accounts/:name/transfers",
-    "title": "[Websocket] Subscribe to Account Transfers",
-    "name": "SubscribeAccountTransfers",
+    "url": "/websocket",
+    "title": "[Websocket] Subscribe to Account Notifications",
+    "name": "SubscribeAccountNotifications",
     "group": "Account_Methods",
     "version": "1.0.0",
-    "description": "<p>Subscribe to an account's transfers and receive real-time notifications via WebSocket.</p>",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "name",
-            "description": "<p>Account's unique identifier</p>"
-          }
-        ]
-      }
-    },
+    "description": "<p>Subscribe to an account's real-time notifications via WebSocket.</p>",
     "examples": [
       {
         "title": "Subscribe to account transfers",
-        "content": "wscat --auth alice:alice -c ws://usd-ledger.example/accounts/alice/transfers",
+        "content": "wscat --auth alice:alice -c ws://usd-ledger.example/websocket",
         "type": "shell"
+      },
+      {
+        "title": "Subscribe account (request)",
+        "content": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"subscribe_account\",\n  \"params\": {\n    \"eventType\": \"*\",\n    \"accounts\": [\"http://usd-ledger.example/accounts/alice\"]\n  }\n}",
+        "type": "json"
       }
     ],
     "success": {
@@ -243,8 +235,8 @@ define({ "api": [
             "group": "Additional Messages",
             "type": "Object",
             "optional": false,
-            "field": "Notification",
-            "description": "<p>At most one <a href=\"#notification_object\">notification object</a> for each change in the state of any transfer that affects this account. This includes transfers that debit or credit the account.</p>"
+            "field": "RpcRequest",
+            "description": "<p>or RpcResponse; Notifications about the change in the state of any transfer that affects this account.</p>"
           }
         ]
       },
@@ -255,14 +247,65 @@ define({ "api": [
           "type": "json"
         },
         {
-          "title": "Push notification",
-          "content": "{\n  \"resource\":{\n    \"debits\":[\n      {\n        \"account\":\"http://usd-ledger.exmaple/accounts/alice\",\n        \"amount\":\"0.01\",\n        \"authorized\":true\n      }\n    ],\n    \"credits\":[\n      {\n        \"account\":\"http://usd-ledger.exmaple/accounts/bob\",\n        \"amount\":\"0.01\"\n      }\n    ],\n    \"id\":\"http://usd-ledger.exmaple/transfers/4f122511-989d-101e-f938-573993b75e22\",\n    \"ledger\":\"http://localhost\",\n    \"state\":\"executed\",\n    \"timeline\":{\n      \"proposed_at\":\"2016-04-27T17:57:27.037Z\",\n      \"prepared_at\":\"2016-04-27T17:57:27.054Z\",\n      \"executed_at\":\"2016-04-27T17:57:27.060Z\"\n    }\n  }\n}",
+          "title": "On connect",
+          "content": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": null,\n  \"method\": \"connect\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Push transfer notification",
+          "content": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": null,\n  \"method\": \"notify\",\n  \"params\": {\n    \"event\": \"transfer.update\",\n    \"resource\":{\n      \"debits\":[\n        {\n          \"account\":\"http://usd-ledger.example/accounts/alice\",\n          \"amount\":\"0.01\",\n          \"authorized\":true\n        }\n      ],\n      \"credits\":[\n        {\n          \"account\":\"http://usd-ledger.example/accounts/bob\",\n          \"amount\":\"0.01\"\n        }\n      ],\n      \"id\":\"http://usd-ledger.example/transfers/4f122511-989d-101e-f938-573993b75e22\",\n      \"ledger\":\"http://usd-localhost.example\",\n      \"state\":\"executed\",\n      \"timeline\":{\n        \"proposed_at\":\"2016-04-27T17:57:27.037Z\",\n        \"prepared_at\":\"2016-04-27T17:57:27.054Z\",\n        \"executed_at\":\"2016-04-27T17:57:27.060Z\"\n      }\n    }\n  }\n}",
+          "type": "json"
+        },
+        {
+          "title": "Push message notification",
+          "content": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": null,\n  \"method\": \"notify\",\n  \"params\": {\n    \"event\": \"message.send\",\n    \"resource\":{\n      \"ledger\": \"http://usd-localhost.example\",\n      \"from\": \"http://usd-localhost.example/accounts/alice\",\n      \"to\": \"http://usd-localhost.example/accounts/bob\",\n      \"data\": { \"foo\": \"bar\" }\n    }\n  }\n}",
+          "type": "json"
+        },
+        {
+          "title": "Subscribe account (response)",
+          "content": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"result\": 1\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "examples": [
+        {
+          "title": "Subscribe account (response)",
+          "content": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"error\": {\n    \"code\": 4000,\n    \"message\": \"RpcError\",\n    \"data\": \"Invalid id\"\n  }\n}",
           "type": "json"
         }
       ]
     },
     "filename": "src/controllers/accounts.js",
-    "groupTitle": "Account_Methods",
+    "groupTitle": "Account_Methods"
+  },
+  {
+    "type": "get",
+    "url": "/auth_token",
+    "title": "Get Auth Token",
+    "name": "GetAuthToken",
+    "group": "Auth_Tokens",
+    "version": "1.0.0",
+    "description": "<p>Get a token that can be used to authenticate future requests.</p>",
+    "examples": [
+      {
+        "title": "Get Auth Token",
+        "content": "curl -X GET -H \"Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l\"\nhttp://usd-ledger.example/auth_token",
+        "type": "shell"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "200 Token Response:",
+          "content": "HTTP/1.1 200 OK\nContent-Type: application/json\n\n{ \"token\": \"9AtVZPN3t49Kx07stO813UHXv6pcES\" }",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "src/controllers/authTokens.js",
+    "groupTitle": "Auth_Tokens",
     "error": {
       "fields": {
         "Error 4xx": [
@@ -271,12 +314,6 @@ define({ "api": [
             "optional": false,
             "field": "UnauthorizedError",
             "description": "<p>You do not have permissions to access this resource.</p>"
-          },
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "InvalidUriParameterError",
-            "description": "<p>(One of) the provided URI parameter(s) was invalid.</p>"
           }
         ]
       },
@@ -284,11 +321,6 @@ define({ "api": [
         {
           "title": "UnauthorizedError",
           "content": "HTTP/1.1 403 Forbidden\n{\n  \"id\": \"UnauthorizedError\",\n  \"message\": \"Error description here.\"\n}",
-          "type": "json"
-        },
-        {
-          "title": "InvalidUriParameterError",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidUriParameterError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
           "type": "json"
         }
       ]
@@ -359,7 +391,7 @@ define({ "api": [
       "examples": [
         {
           "title": "200 OK",
-          "content": "HTTP/1.1 200 OK\n\n{\n    \"currency_code\": null,\n    \"currency_symbol\": null,\n    \"condition_sign_public_key\": \"YNDefwo4LB+AjkCRzuCSGuAlDLvSCWUxPRX7lXLhV1I=\",\n    \"urls\": {\n        \"health\": \"http://usd-ledger.example/health\",\n        \"transfer\": \"http://usd-ledger.example/transfers/:id\",\n        \"transfer_fulfillment\": \"http://usd-ledger.example/transfers/:id/fulfillment\",\n        \"transfer_rejection\": \"http://usd-ledger.example/transfers/:id/rejection\",\n        \"transfer_state\": \"http://usd-ledger.example/transfers/:id/state\",\n        \"accounts\": \"http://usd-ledger.example/accounts\",\n        \"account\": \"http://usd-ledger.example/accounts/:name\",\n        \"account_transfers\": \"ws://usd-ledger.example/accounts/:name/transfers\",\n        \"message\": \"http://usd-ledger.example/messages\"\n    },\n    \"precision\": 10,\n    \"scale\": 2,\n    \"connectors\": [\n        {\n            \"id\": \"http://usd-ledger.example/accounts/chloe\",\n            \"name\": \"chloe\"\n        }\n    ]\n}",
+          "content": "HTTP/1.1 200 OK\n\n{\n    \"currency_code\": null,\n    \"currency_symbol\": null,\n    \"condition_sign_public_key\": \"YNDefwo4LB+AjkCRzuCSGuAlDLvSCWUxPRX7lXLhV1I=\",\n    \"urls\": {\n        \"health\": \"http://usd-ledger.example/health\",\n        \"transfer\": \"http://usd-ledger.example/transfers/:id\",\n        \"transfer_fulfillment\": \"http://usd-ledger.example/transfers/:id/fulfillment\",\n        \"transfer_rejection\": \"http://usd-ledger.example/transfers/:id/rejection\",\n        \"transfer_state\": \"http://usd-ledger.example/transfers/:id/state\",\n        \"accounts\": \"http://usd-ledger.example/accounts\",\n        \"account\": \"http://usd-ledger.example/accounts/:name\",\n        \"auth_token\": \"http://usd-ledger.example/auth_token\",\n        \"websocket\": \"ws://usd-ledger.example/websocket\",\n        \"message\": \"http://usd-ledger.example/messages\"\n    },\n    \"precision\": 10,\n    \"scale\": 2,\n    \"connectors\": [\n        {\n            \"id\": \"http://usd-ledger.example/accounts/chloe\",\n            \"name\": \"chloe\"\n        }\n    ]\n}",
           "type": "json"
         }
       ]

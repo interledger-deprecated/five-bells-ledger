@@ -12,6 +12,7 @@ Five Bells Ledger is a JavaScript reference implementation of an ILP-compatible 
     * [Authentication](#authentication)
     * [Crypto-Conditions](#cryptoconditions)
     * [Environment Variables](#environment_variables)
+    * [RPC Error Codes](#rpc_error_codes)
 
 
 
@@ -74,7 +75,7 @@ Name | Type | Description
 ---- | ---- | -----------
 name | string | Name of the account
 balance | string | *Optional* Balance as decimal
-connector | uri string | *Optional* A link to the account holder's API
+connector | uri string | *Optional* DEPRECATED: A link to the account holder's API
 fingerprint | string | *Optional* A fingerprint of the account's client certificate
 id | uri string | *Optional* Unique ID
 is_admin | boolean | *Optional* admin flag
@@ -95,8 +96,7 @@ A notification object can have the following fields:
 <!-- This table sourced from the five-bells-shared Notification.json schema. -->
 Name | Type | Description
 ---- | ---- | -----------
-id | uri string | Unique identifier for this notification
-type | string | Event identifier for the type of event
+event | string | Event identifier for the type of event
 resource | object | The subject of the notification
 *resource.* ledger | uri string | The ledger where the message is to be delivered
 *resource.* data | object | The message payload
@@ -104,6 +104,7 @@ resource | object | The subject of the notification
 *resource.* to | uri string | The message recipient
 *resource.* account | uri string | *Optional* (deprecated) The message sender/recipient (depending on whether the message is incoming or outgoing)
 *resource.* account | uri string | The message sender/recipient (depending on whether the message is incoming or outgoing)
+id | uri string | *Optional* Unique identifier for this notification
 related_resources | object | *Optional* Additional resources relevant to the event
 *related_resources.* cancellation_condition_fulfillment | string | *Optional* Proof of condition completion
 *related_resources.* execution_condition_fulfillment | string | *Optional* Proof of condition completion
@@ -122,7 +123,6 @@ signature | object | *Optional* The signature of the notification
 *signature.publicKey.* type | string | *Optional* RSA key type indicator.
 *signature.* required | object | *Optional* 
 *signature.* value | string | *Optional* The signature data.
-subscription | uri string | *Optional* The subscription this notification corresponds to
 
 
 ## Crypto-Conditions
@@ -189,3 +189,21 @@ Use the following environment variables to configure the service when run:
 * `LEDGER_AMOUNT_SCALE` (default: `2`) the number of digits allowed in amounts to the right of the decimal place
 * `LEDGER_LOG_LEVEL` (default: `info`) the allowed levels in order of verbosity are `fatal`, `error`, `warn`, `info`, `debug`, and `trace`
 * `LEDGER_RECOMMENDED_CONNECTORS` (default: `'*'`) a comma-delimited list of connector usernames
+* `LEDGER_SECRET` (default: random bytes) a secret used to sign `/auth_token` tokens. Any length.
+
+## RPC Error Codes
+<a id='rpc_error_codes'></a>
+
+For errors which have an equivalent in HTTP, we choose a five digit error code where the first three digits correspond to the HTTP status code.
+
+| Error Code | Description | Applicable Methods |
+| ---------- | ----------- | ------------------ |
+| `-32700` | Error parsing incoming message JSON | any |
+| `-32600` | Request didn't match `RpcRequest` schema | any |
+| `-32601` | Unknown method | any |
+| `-32602` | Invalid parameters | any |
+| `40000` | Request id is null | any |
+| `40001` | Invalid account name | `subscribe_account` |
+| `40002` | Invalid account | `subscribe_account` |
+| `40300` | Not authorized | any |
+| `50000` | Internal server error | any |
