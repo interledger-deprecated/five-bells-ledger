@@ -1,6 +1,6 @@
 {
   "name": "five-bells-ledger",
-  "version": "18.0.1",
+  "version": "19.0.0",
   "description": "Five Bells ledger reference implementation",
   "keywords": [
     "interledger",
