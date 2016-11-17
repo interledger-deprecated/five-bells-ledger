@@ -13,6 +13,8 @@ const readRejectionReasons = require('../models/db/rejectionReasons')
   .readRejectionReasons
 const readTransferStatuses = require('../models/db/transferStatuses')
   .readTransferStatuses
+const config = require('../services/config')
+const sqlDir = path.resolve(__dirname, '..', 'sql')
 
 const TABLE_NAMES = [
   'L_TRANSFER_ADJUSTMENTS',
@@ -83,8 +85,7 @@ function executePSQL (sqlFilepath) {
 
 function executeScript (filename) {
   const dbType = knex.client.config.client
-  const filepath = path.resolve(
-    __dirname, '..', 'sql', dbType, filename)
+  const filepath = path.resolve(sqlDir, dbType, filename)
 
   if (dbType === 'pg') {
     return executePSQL(filepath)
@@ -94,12 +95,34 @@ function executeScript (filename) {
   }
 }
 
-function createTables () {
-  return executeScript('create.sql')
+function * createTables () {
+  if (knex.client.config.client === 'pg') {
+    yield migratePostgres()
+  } else {
+    yield executeScript('create.sql')
+  }
 }
 
 function * dropTables () {
-  return executeScript('drop.sql')
+  if (knex.client.config.client === 'pg') {
+    yield migratePostgres('1')
+  } else {
+    yield executeScript('drop.sql')
+  }
+}
+
+function migratePostgres (step) {
+  return new Promise((resolve, reject) => {
+    const command = path.resolve(__dirname, '../../node_modules/.bin/pg-migrator')
+    const args = [config.db.uri]
+    if (step) args.push(step)
+    const childProcess = spawn(command, args, {cwd: path.resolve(sqlDir, 'pg')})
+    childProcess.on('error', reject)
+    childProcess.on('close', (code) => {
+      return code === 0 ? resolve() : reject(
+        new Error('pg-migrator exited with code ' + code))
+    })
+  })
 }
 
 function * truncateTables () {
