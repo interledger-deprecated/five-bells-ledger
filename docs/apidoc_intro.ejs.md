@@ -27,6 +27,21 @@ A transfer object can have the following fields:
 <%- renderSchema("TransferTemplate.json") %>
 
 
+## Message Object
+<a id='message_object'></a>
+
+A message represents an arbitrary message for the ledger to relay from sender to recipient.
+
+A message object can has the following fields:
+
+| Name | Type | Description |
+|:--|:--|:--|
+| `ledger` | uri string | The ledger where the message is to be delivered |
+| `from` | uri string | The message sender |
+| `to` | uri string | The message recipient |
+| `data` | object | The message payload |
+
+
 ## Account Object
 <a id='account_object'></a>
 
