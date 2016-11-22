@@ -20,7 +20,6 @@ class NotificationBroadcaster extends EventEmitter {
   * sendNotifications (transfer, transaction) {
     const affectedAccounts = _([transfer.debits, transfer.credits])
       .flatten().map('account').value()
-    affectedAccounts.push('*')
 
     let relatedResources
     // If the transfer is finalized, see if it was finalized by a fulfillment
@@ -49,7 +48,7 @@ class NotificationBroadcaster extends EventEmitter {
   }
 
   * sendMessage (destinationAccount, message) {
-    yield this.emitNotification([destinationAccount, '*'], 'message.send', message)
+    return yield this.emitNotification([destinationAccount], 'message.send', message)
   }
 
   * emitNotification (affectedAccounts, eventType, resource, relatedResources) {
@@ -63,11 +62,13 @@ class NotificationBroadcaster extends EventEmitter {
     if (relatedResources) notification.related_resources = relatedResources
 
     this.log.debug('emitting notification:{' + affectedAccounts.join(',') + '}:' + eventType)
+    let isDelivered = false
     for (const account of affectedAccounts) {
       for (const event of eventTypes) {
-        this.emit('notification:' + account + ':' + event, notification)
+        isDelivered = this.emit('notification:' + account + ':' + event, notification) || isDelivered
       }
     }
+    return isDelivered
   }
 }
 
