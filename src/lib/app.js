@@ -21,6 +21,7 @@ const authTokens = require('../controllers/authTokens')
 const seedDB = require('./seed-db')
 const createTables = require('./db').createTables
 const readLookupTables = require('./db').readLookupTables
+const accountsModel = require('../models/accounts')
 
 // Configure passport
 require('../services/auth')
@@ -77,6 +78,7 @@ class App {
 
     yield readLookupTables()
     yield seedDB(this.config)
+    yield accountsModel.verifyConnectors(this.config)
 
     if (this.config.getIn(['server', 'secure'])) {
       const spdy = require('spdy')

@@ -26,6 +26,7 @@ const model = require('../models/messages')
  *    HTTP/1.1 201 CREATED
  *
  * @apiUse InvalidBodyError
+ * @apiUse NoSubscriptionsError
  */
 function * postMessage () {
   const message = this.body
