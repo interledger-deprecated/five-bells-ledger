@@ -87,7 +87,21 @@ To run tests using an in-memory database, run:
 ``` sh
 npm test
 ```
+
 If you wish to specify the database against which the tests are run, use the `LEDGER_UNIT_DB_URI` environment variable.
+
 ``` sh
 LEDGER_UNIT_DB_URI=postgres://root:password@localhost:5432/ledger_test_db npm test
+```
+
+For example, to run against a Postgres instance in Docker, first start the database server:
+
+``` sh
+docker run -it --rm --name fbl-pg-test postgres
+```
+
+Then, in another terminal, run the tests:
+
+``` sh
+LEDGER_UNIT_DB_URI=postgres://postgres@`docker inspect --format '{{ .NetworkSettings.IPAddress }}' fbl-pg-test`/postgres npm test
 ```
