@@ -3,6 +3,8 @@
 const Bignumber = require('bignumber.js')
 const crypto = require('crypto')
 const _ = require('lodash')
+const co = require('co')
+const promiseRetry = require('promise-retry')
 const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
 const stringifyJSON = require('canonical-json')
@@ -369,76 +371,88 @@ function validateConditionFulfillment (transfer, fulfillmentModel) {
 }
 
 function * cancelTransfer (transaction, transfer, fulfillment) {
+  yield fulfillments.insertFulfillment(fulfillment, {transaction})
   if (transfer.state === transferStates.TRANSFER_STATE_PREPARED) {
     yield holds.returnHeldFunds(transfer, transaction)
   }
-  yield fulfillments.upsertFulfillment(fulfillment, {transaction})
   transfer.rejection_reason = 'cancelled'
   updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
 }
 
 function * executeTransfer (transaction, transfer, fulfillment) {
+  yield fulfillments.insertFulfillment(fulfillment, {transaction})
   yield holds.disburseFunds(transfer, transaction)
   updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED)
-  yield fulfillments.upsertFulfillment(fulfillment, {transaction})
 }
 
 function * fulfillTransfer (transferId, fulfillmentUri) {
   const fulfillment = convertToInternalFulfillment(fulfillmentUri)
   fulfillment.transfer_id = transferId
   let transfer = null
-  const existingFulfillment = yield db.withSerializableTransaction(function * (transaction) {
-    transfer = yield db.getTransfer(transferId, {transaction})
+  return yield promiseRetry(co.wrap(function * (retry, attemptNo) {
+    log.debug('fulfill transfer attempt %d', attemptNo)
+    try {
+      const existingFulfillment = yield db.withSerializableTransaction(function * (transaction) {
+        transfer = yield db.getTransfer(transferId, {transaction})
 
-    if (!transfer) {
-      throw new NotFoundError('Invalid transfer ID')
-    }
+        if (!transfer) {
+          throw new NotFoundError('Invalid transfer ID')
+        }
 
-    const conditionType = validateConditionFulfillment(transfer, fulfillment)
-    transferExpiryMonitor.validateNotExpired(transfer)
+        const conditionType = validateConditionFulfillment(transfer, fulfillment)
+        transferExpiryMonitor.validateNotExpired(transfer)
 
-    if (
-      conditionType === CONDITION_TYPE_EXECUTION &&
-      transfer.state === transferStates.TRANSFER_STATE_EXECUTED ||
-      conditionType === CONDITION_TYPE_CANCELLATION &&
-      transfer.state === transferStates.TRANSFER_STATE_REJECTED
-    ) {
-      return convertToExternalFulfillment(yield fulfillments.getFulfillment(
-        transferId, {transaction}))
-    }
+        if (
+          conditionType === CONDITION_TYPE_EXECUTION &&
+          transfer.state === transferStates.TRANSFER_STATE_EXECUTED ||
+          conditionType === CONDITION_TYPE_CANCELLATION &&
+          transfer.state === transferStates.TRANSFER_STATE_REJECTED
+        ) {
+          return convertToExternalFulfillment(yield fulfillments.getFulfillment(
+            transferId, {transaction}))
+        }
 
-    if (conditionType === CONDITION_TYPE_EXECUTION) {
-      if (!_.includes(validExecutionStates, transfer.state)) {
-        throw new InvalidModificationError('Transfers in state ' +
-          transfer.state + ' may not be executed')
+        if (conditionType === CONDITION_TYPE_EXECUTION) {
+          if (!_.includes(validExecutionStates, transfer.state)) {
+            throw new InvalidModificationError('Transfers in state ' +
+            transfer.state + ' may not be executed')
+          }
+          yield executeTransfer(transaction, transfer, fulfillment)
+        } else if (conditionType === CONDITION_TYPE_CANCELLATION) {
+          if (!_.includes(validCancellationStates, transfer.state)) {
+            throw new InvalidModificationError('Transfers in state ' +
+            transfer.state + ' may not be cancelled')
+          }
+          yield cancelTransfer(transaction, transfer, fulfillment)
+        }
+
+        transferExpiryMonitor.unwatch(transfer.id)
+        yield db.updateTransfer(transfer, {transaction})
+
+        // Start the expiry countdown if the transfer is not yet finalized
+        // If the expires_at has passed by this time we'll consider
+        // the transfer to have made it in before the deadline
+        if (!isTransferFinalized(transfer)) {
+          yield transferExpiryMonitor.watch(transfer)
+        }
+      })
+
+      log.debug('changes written to database')
+      yield notificationBroadcaster.sendNotifications(transfer, null)
+
+      return {
+        fulfillment: existingFulfillment || convertToExternalFulfillment(fulfillment),
+        existed: Boolean(existingFulfillment)
       }
-      yield executeTransfer(transaction, transfer, fulfillment)
-    } else if (conditionType === CONDITION_TYPE_CANCELLATION) {
-      if (!_.includes(validCancellationStates, transfer.state)) {
-        throw new InvalidModificationError('Transfers in state ' +
-          transfer.state + ' may not be cancelled')
+    } catch (err) {
+      // In case of a synchronization error, retry
+      if (Number(err.code) === 40001) {
+        retry(err)
+      } else {
+        throw err
       }
-      yield cancelTransfer(transaction, transfer, fulfillment)
     }
-
-    transferExpiryMonitor.unwatch(transfer.id)
-    yield db.updateTransfer(transfer, {transaction})
-
-    // Start the expiry countdown if the transfer is not yet finalized
-    // If the expires_at has passed by this time we'll consider
-    // the transfer to have made it in before the deadline
-    if (!isTransferFinalized(transfer)) {
-      yield transferExpiryMonitor.watch(transfer)
-    }
-  })
-
-  log.debug('changes written to database')
-  yield notificationBroadcaster.sendNotifications(transfer, null)
-
-  return {
-    fulfillment: existingFulfillment || convertToExternalFulfillment(fulfillment),
-    existed: Boolean(existingFulfillment)
-  }
+  }))
 }
 
 function * rejectTransfer (transferId, rejectionMessage, requestingUser) {

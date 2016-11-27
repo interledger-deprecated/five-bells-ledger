@@ -60,6 +60,7 @@
     "passport-strategy": "^1.0.0",
     "pg-migrator": "^1.0.5",
     "priorityqueuejs": "^1.0.0",
+    "promise-retry": "^1.1.1",
     "riverpig": "^1.0.0",
     "spdy": "^3.2.3",
     "tweetnacl": "^0.14.3",
