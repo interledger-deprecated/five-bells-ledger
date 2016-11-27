@@ -381,29 +381,39 @@ describe('PUT /fulfillment', function () {
       .expect(validator.validateTransfer)
       .end()
 
-    yield this.request()
-      .put(transfer.id + '/fulfillment')
-      .send(this.executionConditionFulfillment)
-      .expect(201)
-      .expect(this.executionConditionFulfillment)
-      .expect(validator.validateFulfillment)
-      .end()
+    const validateResponse = (res) => {
+      if (res.statusCode !== 200 && res.statusCode !== 201) {
+        throw new Error('Unexpected status code ' + res.statusCode)
+      }
+    }
+
+    // Send three concurrent fulfillment requests
+    yield [
+      this.request()
+        .put(transfer.id + '/fulfillment')
+        .send(this.executionConditionFulfillment)
+        .expect(validateResponse)
+        .end(),
+      this.request()
+        .put(transfer.id + '/fulfillment')
+        .send(this.executionConditionFulfillment)
+        .expect(validateResponse)
+        .end(),
+      this.request()
+        .put(transfer.id + '/fulfillment')
+        .send(this.executionConditionFulfillment)
+        .expect(validateResponse)
+        .end()
+    ]
 
     // Check balances
-    expect((yield getAccount('alice')).balance).to.equal(90)
-    expect((yield getAccount('bob')).balance).to.equal(10)
+    const holdAccount = yield getAccount('hold')
+    const senderAccount = yield getAccount('alice')
+    const receiverAccount = yield getAccount('bob')
 
-    yield this.request()
-      .put(transfer.id + '/fulfillment')
-      .send(this.executionConditionFulfillment)
-      .expect(200)
-      .expect(this.executionConditionFulfillment)
-      .expect(validator.validateFulfillment)
-      .end()
-
-    // Check balances
-    expect((yield getAccount('alice')).balance).to.equal(90)
-    expect((yield getAccount('bob')).balance).to.equal(10)
+    expect(holdAccount.balance).to.equal(0)
+    expect(senderAccount.balance).to.equal(90)
+    expect(receiverAccount.balance).to.equal(10)
   })
 
   it('should not allow a transfer to be cancelled multiple times', function * () {
