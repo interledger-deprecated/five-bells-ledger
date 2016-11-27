@@ -40,6 +40,16 @@ function createModule (tableName, convertToPersistent, convertFromPersistent) {
       .into(tableName)
   }
 
+  function insertIgnore (data, transaction) {
+    const dbType = knex.client.config.client
+    if (dbType === 'pg') {
+      const sql = knex('L_FULFILLMENTS').insert(convertToPersistent(data)).toString() + ' ON CONFLICT DO NOTHING'
+      return (transaction || knex).raw(sql)
+    } else {
+      return insert(data, transaction)
+    }
+  }
+
   function insertAll (data, transaction) {
     return Promise.all(_.map(data.map(convertToPersistent), (tableRow) => {
       return (transaction || knex).insert(tableRow)
@@ -60,10 +70,6 @@ function createModule (tableName, convertToPersistent, convertFromPersistent) {
     })
   }
 
-  function withTransaction (callback) {
-    return knex.transaction((transaction) => callback(transaction))
-  }
-
   function upsert (data, where, transaction) {
     if (transaction) {
       return _upsert(data, where, transaction)
@@ -72,12 +78,17 @@ function createModule (tableName, convertToPersistent, convertFromPersistent) {
     }
   }
 
+  function withTransaction (callback) {
+    return knex.transaction((transaction) => callback(transaction))
+  }
+
   return {
     getTransaction,
     select,
     selectOne,
     update,
     insert,
+    insertIgnore,
     insertAll,
     upsert,
     withTransaction

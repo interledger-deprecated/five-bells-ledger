@@ -79,15 +79,14 @@ function * maybeGetFulfillment (transferUuid, options) {
   }
 }
 
-function * upsertFulfillment (fulfillment, options) {
+function * insertFulfillment (fulfillment, options) {
   const row = yield convertToIntegerTransferId(fulfillment, options)
-  const where = {TRANSFER_ID: row.transfer_id}
-  return db.upsert(row, where, options && options.transaction)
+  yield db.insertIgnore(row, options && options.transaction)
 }
 
 module.exports = {
   maybeGetFulfillment,
   getFulfillment,
   insertFulfillments,
-  upsertFulfillment
+  insertFulfillment
 }
