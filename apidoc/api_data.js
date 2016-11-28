@@ -1126,6 +1126,12 @@ define({ "api": [
             "optional": false,
             "field": "InvalidBodyError",
             "description": "<p>The submitted JSON entity does not match the required schema.</p>"
+          },
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "NoSubscriptionsError",
+            "description": "<p>Destination account could not be reached</p>"
           }
         ]
       },
@@ -1133,6 +1139,11 @@ define({ "api": [
         {
           "title": "InvalidBodyError",
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidBodyError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
+          "type": "json"
+        },
+        {
+          "title": "NoSubscriptionsError",
+          "content": "HTTP/1.1 422 Unprocessable Entity\n{\n  \"id\": \"NoSubscriptionsError\",\n  \"message\": \"Error description here.\"\n}",
           "type": "json"
         }
       ]
