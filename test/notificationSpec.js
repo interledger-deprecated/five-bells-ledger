@@ -602,7 +602,7 @@ describe('Notifications', function () {
     })
   })
 
-  describe('GET /websocket method:invalid', function () {
+  describe('GET /websocket errors', function () {
     beforeEach(function * () {
       this.socket = this.ws('http://localhost/websocket', {
         headers: {
@@ -649,6 +649,24 @@ describe('Notifications', function () {
           }
         }
       })
+    })
+
+    it('ignores an oversized payload', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const payload = new Buffer(64 * 1024)
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'foo',
+        params: {bar: payload.toString()}
+      }))
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(250)
+
+      assert.equal(listener.callCount, 0)
     })
   })
 })

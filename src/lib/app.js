@@ -8,6 +8,7 @@ const cors = require('koa-cors')
 const passport = require('koa-passport')
 const websockify = require('koa-websocket')
 const koa = require('koa')
+const WebSocketServer = require('ws').Server
 const path = require('path')
 const makeLogger = require('koa-riverpig')
 const errorHandler = require('five-bells-shared/middlewares/error-handler')
@@ -55,6 +56,16 @@ class App {
     koaApp.ws.use(passport.initialize())
     koaApp.ws.use(websocketRouter.routes())
     koaApp.ws.use(websocketRouter.allowedMethods())
+    // Override listen() in order to specify a maxPayload. See:
+    //   https://github.com/kudos/koa-websocket/blob/785001c20d94fbb60cb05596bb1869889f539351/index.js#L15-L20
+    // for the original version.
+    koaApp.ws.listen = function (server) {
+      this.server = new WebSocketServer({
+        server: server,
+        maxPayload: 64 * 1024
+      })
+      this.server.on('connection', this.onConnection.bind(this))
+    }
   }
 
   start () {
