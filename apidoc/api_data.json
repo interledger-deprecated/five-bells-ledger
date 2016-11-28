@@ -327,6 +327,76 @@
     }
   },
   {
+    "type": "post",
+    "url": "/messages",
+    "title": "Send Message",
+    "name": "SendMessage",
+    "group": "Message_Methods",
+    "version": "1.0.0",
+    "description": "<p>Send a message to another account. This is not a reliable delivery mechanism.</p>",
+    "parameter": {
+      "fields": {
+        "Request Body": [
+          {
+            "group": "Request Body",
+            "type": "Message",
+            "optional": false,
+            "field": "Object",
+            "description": "<p>A <a href=\"#message_object\">Message object</a> to be forwarded to the recipient.</p>"
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Send a Message",
+        "content": "curl -X POST -H \"Content-Type: application/json\" -d \\\n'{\n  \"ledger\": \"http://usd-ledger.example\",\n  \"from\": \"http://usd-ledger.example/accounts/alice\",\n  \"to\": \"http://usd-ledger.example/accounts/bob\",\n  \"data\": { \"foo\": \"bar\" }\n}' \\\nhttp://usd-ledger.example/messages",
+        "type": "shell"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "201 Message Accepted Response:",
+          "content": "HTTP/1.1 201 CREATED",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "src/controllers/messages.js",
+    "groupTitle": "Message_Methods",
+    "error": {
+      "fields": {
+        "Error 4xx": [
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "InvalidBodyError",
+            "description": "<p>The submitted JSON entity does not match the required schema.</p>"
+          },
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "NoSubscriptionsError",
+            "description": "<p>Destination account could not be reached</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "InvalidBodyError",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidBodyError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
+          "type": "json"
+        },
+        {
+          "title": "NoSubscriptionsError",
+          "content": "HTTP/1.1 422 Unprocessable Entity\n{\n  \"id\": \"NoSubscriptionsError\",\n  \"message\": \"Error description here.\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
     "type": "get",
     "url": "/",
     "title": "Get Server Metadata",
@@ -1067,83 +1137,6 @@
         {
           "title": "InvalidBodyError",
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidBodyError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "post",
-    "url": "/messages",
-    "title": "Send Message",
-    "name": "SendMessage",
-    "group": "Transfer_Methods",
-    "version": "1.0.0",
-    "description": "<p>Send a message to another account. This is not a reliable delivery mechanism.</p>",
-    "parameter": {
-      "fields": {
-        "Request Body": [
-          {
-            "group": "Request Body",
-            "type": "String",
-            "optional": false,
-            "field": "Rejection",
-            "description": "<p>An error message in string format.</p>"
-          },
-          {
-            "group": "Request Body",
-            "type": "Message",
-            "optional": false,
-            "field": "Object",
-            "description": "<p>A Message object to be forwarded to the recipient.</p>"
-          }
-        ]
-      }
-    },
-    "examples": [
-      {
-        "title": "Send a Message",
-        "content": "curl -X POST -H \"Content-Type: application/json\" -d \\\n'{\n  \"ledger\": \"http://usd-ledger.example\",\n  \"account\": \"http://usd-ledger.example/accounts/bob\",\n  \"data\": { \"foo\": \"bar\" }\n}' \\\nhttp://usd-ledger.example/messages",
-        "type": "shell"
-      }
-    ],
-    "success": {
-      "examples": [
-        {
-          "title": "201 Message Accepted Response:",
-          "content": "HTTP/1.1 201 CREATED",
-          "type": "json"
-        }
-      ]
-    },
-    "filename": "src/controllers/messages.js",
-    "groupTitle": "Transfer_Methods",
-    "error": {
-      "fields": {
-        "Error 4xx": [
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "InvalidBodyError",
-            "description": "<p>The submitted JSON entity does not match the required schema.</p>"
-          },
-          {
-            "group": "Error 4xx",
-            "optional": false,
-            "field": "NoSubscriptionsError",
-            "description": "<p>Destination account could not be reached</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "InvalidBodyError",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidBodyError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
-          "type": "json"
-        },
-        {
-          "title": "NoSubscriptionsError",
-          "content": "HTTP/1.1 422 Unprocessable Entity\n{\n  \"id\": \"NoSubscriptionsError\",\n  \"message\": \"Error description here.\"\n}",
           "type": "json"
         }
       ]

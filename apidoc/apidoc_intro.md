@@ -63,6 +63,21 @@ timeline | object | *Optional* Timeline of the transfer's state transitions
 *timeline.* rejected_at | date-time string | *Optional* An informational field added by the ledger to indicate when the transfer was originally rejected
 
 
+## Message Object
+<a id='message_object'></a>
+
+A message represents an arbitrary message for the ledger to relay from sender to recipient.
+
+A message object can has the following fields:
+
+| Name | Type | Description |
+|:--|:--|:--|
+| `ledger` | uri string | The ledger where the message is to be delivered |
+| `from` | uri string | The message sender |
+| `to` | uri string | The message recipient |
+| `data` | object | The message payload |
+
+
 ## Account Object
 <a id='account_object'></a>
 
