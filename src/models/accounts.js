@@ -25,6 +25,16 @@ function * getConnectors (config) {
   return config.recommendedConnectors.map(name => ({ name })).map(getPublicData)
 }
 
+function * verifyConnectors (config) {
+  for (const connector of config.recommendedConnectors) {
+    try {
+      yield getAccount(connector)
+    } catch (err) {
+      log.warn('connector account ' + err.name + ': ' + err.message + ': ' + connector)
+    }
+  }
+}
+
 function * getAccounts () {
   const accounts = yield db.getAccounts()
   return accounts.map(converters.convertToExternalAccount)
@@ -104,6 +114,7 @@ function setBalance (name, balance, options) {
 module.exports = {
   getAccounts,
   getConnectors,
+  verifyConnectors,
   getAccount,
   setAccount,
   setBalance,

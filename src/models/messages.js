@@ -1,6 +1,7 @@
 'use strict'
 
 const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
+const NoSubscriptionsError = require('../errors/no-subscriptions-error')
 const uri = require('../services/uriManager')
 const validator = require('../services/validator')
 const notificationBroadcaster = require('../services/notificationBroadcaster')
@@ -32,8 +33,11 @@ function * sendMessage (message, requestingUser) {
     throw new InvalidBodyError('You do not have permission to impersonate this user')
   }
 
-  yield notificationBroadcaster.sendMessage(recipientName,
-    Object.assign({}, message, {account: senderAccount}))
+  const messageDelivered = yield notificationBroadcaster.sendMessage(
+    recipientName, Object.assign({}, message, {account: senderAccount}))
+  if (!messageDelivered) {
+    throw new NoSubscriptionsError('Destination account could not be reached')
+  }
 }
 
 module.exports = { sendMessage }

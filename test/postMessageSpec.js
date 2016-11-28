@@ -158,6 +158,23 @@ describe('POST /messages', function () {
       .end()
   })
 
+  it('returns 422 if the message recipient isn\'t listening', function * () {
+    const message = Object.assign(this.exampleMessage, {
+      account: 'http://localhost/accounts/carl'
+    })
+
+    yield this.request()
+      .post('/messages')
+      .auth('alice', 'alice')
+      .send(message)
+      .expect(422)
+      .expect({
+        id: 'NoSubscriptionsError',
+        message: 'Destination account could not be reached'
+      })
+      .end()
+  })
+
   it('relays a message with "account"', function * () {
     const message = this.exampleMessage
     const listener = sinon.spy()
