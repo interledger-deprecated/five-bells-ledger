@@ -26,6 +26,7 @@ function * getConnectors (config) {
 }
 
 function * verifyConnectors (config) {
+  if (!config.recommendedConnectors) return
   for (const connector of config.recommendedConnectors) {
     try {
       yield getAccount(connector)
