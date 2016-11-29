@@ -10,6 +10,8 @@ const log = require('../services/log').create('koa-websocket')
 // If it is too low, valid messages will be discarded.
 const MAX_PAYLOAD = 64 * 1024
 
+// Originally from https://github.com/kudos/koa-websocket
+// Modified to set custom `maxPayload` and fix crash in `onConnection`.
 class KoaWebSocketServer {
   constructor (app) {
     this.app = app
