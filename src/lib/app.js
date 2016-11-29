@@ -23,6 +23,8 @@ const createTables = require('./db').createTables
 const readLookupTables = require('./db').readLookupTables
 const accountsModel = require('../models/accounts')
 
+const MAX_HTTP_PAYLOAD = '64kb'
+
 // Configure passport
 require('../services/auth')
 
@@ -188,7 +190,7 @@ function * filterAdmin (next) {
 }
 
 function * setupBody (next) {
-  this.body = yield parseBody(this)
+  this.body = yield parseBody(this, {limit: MAX_HTTP_PAYLOAD})
   yield next
 }
 
