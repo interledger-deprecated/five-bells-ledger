@@ -23,8 +23,6 @@ const createTables = require('./db').createTables
 const readLookupTables = require('./db').readLookupTables
 const accountsModel = require('../models/accounts')
 
-const MAX_HTTP_PAYLOAD = '64kb'
-
 // Configure passport
 require('../services/auth')
 
@@ -116,6 +114,7 @@ class App {
   }
 
   _makeRouter () {
+    const setupBody = makeSetupBody(this.config.maxHttpPayload)
     const router = new Router()
     router.get('/', this.metadata.getResource)
     router.get('/health', health.getResource)
@@ -189,9 +188,11 @@ function * filterAdmin (next) {
   }
 }
 
-function * setupBody (next) {
-  this.body = yield parseBody(this, {limit: MAX_HTTP_PAYLOAD})
-  yield next
+function makeSetupBody (maxHttpPayload) {
+  return function * setupBody (next) {
+    this.body = yield parseBody(this, {limit: maxHttpPayload})
+    yield next
+  }
 }
 
 module.exports = App

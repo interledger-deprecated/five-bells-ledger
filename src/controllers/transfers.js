@@ -2,6 +2,7 @@
 'use strict'
 
 const _ = require('lodash')
+const config = require('../services/config')
 const uri = require('../services/uriManager')
 const parse = require('co-body')
 const requestUtil = require('five-bells-shared/utils/request')
@@ -337,7 +338,7 @@ function * putResource () {
 function * putFulfillment () {
   const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  const fulfillment = yield parse.text(this)
+  const fulfillment = yield parse.text(this, {limit: config.maxHttpPayload})
   const result = yield model.fulfillTransfer(id, fulfillment)
   this.body = result.fulfillment
   this.status = result.existed ? 200 : 201
@@ -407,7 +408,7 @@ function * getFulfillment () {
 function * putRejection () {
   const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  const rejectionMessage = yield parse.text(this)
+  const rejectionMessage = yield parse.text(this, {limit: config.maxHttpPayload})
   const result = yield model.rejectTransfer(id, rejectionMessage, this.req.user)
   this.body = result.rejection
   this.status = result.existed ? 200 : 201
