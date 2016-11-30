@@ -113,10 +113,9 @@ function * dropTables () {
 
 function migratePostgres (step) {
   return new Promise((resolve, reject) => {
-    const command = path.resolve(__dirname, '../../node_modules/.bin/pg-migrator')
     const args = [config.db.uri]
     if (step) args.push(step)
-    const childProcess = spawn(command, args, {cwd: path.resolve(sqlDir, 'pg')})
+    const childProcess = spawn('pg-migrator', args, {cwd: path.resolve(sqlDir, 'pg')})
     childProcess.on('error', reject)
     childProcess.on('close', (code) => {
       return code === 0 ? resolve() : reject(
