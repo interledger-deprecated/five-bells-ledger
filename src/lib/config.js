@@ -90,6 +90,7 @@ function getLogLevel () {
 function loadConfig () {
   const localConfig = {}
 
+  localConfig.maxHttpPayload = '64kb'
   localConfig.features = parseFeaturesConfig()
   localConfig.amount = parseAmountConfig()
   localConfig.default_admin = parseAdminConfig()
