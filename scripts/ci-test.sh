@@ -71,9 +71,9 @@ threeNodes() {
 
 fourNodes() {
   case "$NODE_INDEX" in
-    0) integrationtest;;
-    1) dockerBuild; sqlitetest; postgrestest;;
-    2) lint; dockerBuild;;
+    0) lint; dockerBuild; integrationtest;;
+    1) dockerBuild; postgrestest;;
+    2) dockerBuild; sqlitetest;;
     3) docs;;
     *) echo "ERROR: invalid usage"; exit 2;;
   esac
