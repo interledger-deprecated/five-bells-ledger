@@ -202,6 +202,42 @@ describe('Notifications', function () {
       })
     })
 
+    it('should not send notifications twice, even if sender and receiver are the same in a transfer', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transfer
+      transfer.credits[0].account = 'http://localhost/accounts/alice'
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: _.assign({}, transfer, {
+            state: 'executed',
+            timeline: {
+              proposed_at: '2015-06-16T00:00:00.000Z',
+              prepared_at: '2015-06-16T00:00:00.000Z',
+              executed_at: '2015-06-16T00:00:00.000Z'
+            }
+          })
+        }
+      })
+    })
+
     it('should send notifications about rejected transfers', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))

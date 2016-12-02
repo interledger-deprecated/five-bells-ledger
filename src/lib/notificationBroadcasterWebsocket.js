@@ -19,7 +19,7 @@ class NotificationBroadcaster extends EventEmitter {
 
   * sendNotifications (transfer, transaction) {
     const affectedAccounts = _([transfer.debits, transfer.credits])
-      .flatten().map('account').value()
+      .flatten().map('account').uniq().value()
 
     let relatedResources
     // If the transfer is finalized, see if it was finalized by a fulfillment
