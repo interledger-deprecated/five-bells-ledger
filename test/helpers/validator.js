@@ -34,7 +34,7 @@ function validateNotification (res) {
 }
 
 function validateFulfillment (res) {
-  validate('Fulfillment', res.body)
+  validate('ConditionFulfillment', res.text)
 }
 
 function validateSubscription (res) {

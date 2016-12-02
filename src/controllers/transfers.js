@@ -293,7 +293,7 @@ function * putResource () {
     )
   }
 
-  transfer.id = id.toLowerCase()
+  transfer.id = uri.make('transfer', id.toLowerCase())
   const result = yield model.setTransfer(transfer, this.req.user)
   this.body = result.transfer
   this.status = result.existed ? 200 : 201
