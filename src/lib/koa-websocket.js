@@ -10,6 +10,8 @@ const log = require('../services/log').create('koa-websocket')
 // If it is too low, valid messages will be discarded.
 const MAX_PAYLOAD = 64 * 1024
 
+const PING_INTERVAL = 10000
+
 // Originally from https://github.com/kudos/koa-websocket
 // Modified to set custom `maxPayload` and fix crash in `onConnection`.
 class KoaWebSocketServer {
@@ -31,6 +33,9 @@ class KoaWebSocketServer {
     const context = this.app.createContext(socket.upgradeReq)
     context.websocket = socket
     context.path = url.parse(socket.upgradeReq.url).pathname
+
+    const pingerInterval = setInterval(() => socket.ping(), PING_INTERVAL)
+    socket.on('close', () => clearInterval(pingerInterval))
 
     fn.bind(context).call().catch((err) => { log.debug(err) })
   }
