@@ -24,9 +24,10 @@ class RpcHandler {
     this.requestingUser = requestingUser
     this.accountSubscriptions = []
     this.sendNotification = this._sendNotification.bind(this)
+    this.pingInterval = setInterval(this._ping.bind(this), params.pingInterval)
 
     websocket.on('message', this.handleMessage.bind(this))
-    websocket.on('close', this.removeAccountSubscriptions.bind(this))
+    websocket.on('close', this._onClose.bind(this))
     this._send({ jsonrpc: '2.0', id: null, method: 'connect' })
   }
 
@@ -88,12 +89,20 @@ class RpcHandler {
     return accounts.length
   }
 
+  _onClose () {
+    clearInterval(this.pingInterval)
+    this.removeAccountSubscriptions()
+  }
+
   removeAccountSubscriptions () {
     for (const eventName of this.accountSubscriptions) {
       this.notificationBroadcaster.removeListener(eventName, this.sendNotification)
     }
     this.accountSubscriptions = []
   }
+
+  // Keep the websocket connection alive.
+  _ping () { this.websocket.ping() }
 
   _validateAccountNames (accountNames) {
     for (const accountName of accountNames) {

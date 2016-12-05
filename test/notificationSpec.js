@@ -28,7 +28,7 @@ describe('Notifications', function () {
     appHelper.create(this, app)
     yield dbHelper.clean()
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setInterval', 'clearInterval')
 
     // Define example data
     this.exampleAccounts = _.cloneDeep(require('./data/accounts'))
@@ -61,6 +61,10 @@ describe('Notifications', function () {
       this.traderAccount,
       this.disabledAccount
     ])
+  })
+
+  afterEach(function () {
+    this.clock.restore()
   })
 
   describe('GET /websocket method:subscribe_account', function () {
@@ -607,6 +611,11 @@ describe('Notifications', function () {
           }
         }
       })
+    })
+
+    it('sends intermittent pings', function (done) {
+      this.socket.on('ping', done)
+      this.clock.tick(20000)
     })
   })
 

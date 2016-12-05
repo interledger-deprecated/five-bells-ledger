@@ -87,6 +87,13 @@ function getLogLevel () {
   }
 }
 
+function parseWebsocketConfig () {
+  const intervalSeconds = parseInt(Config.getEnv(envPrefix, 'WEBSOCKET_PING_INTERVAL'), 10) || 20
+  return {
+    pingInterval: intervalSeconds * 1000
+  }
+}
+
 function loadConfig () {
   const localConfig = {}
 
@@ -98,6 +105,7 @@ function loadConfig () {
   localConfig.recommendedConnectors = parseRecommendedConnectors()
   localConfig.logLevel = getLogLevel()
   localConfig.authTokenSecret = Config.generateSecret(envPrefix, 'authToken')
+  localConfig.websocket = parseWebsocketConfig()
 
   // optional
   localConfig.currency = parseCurrencyConfig()
