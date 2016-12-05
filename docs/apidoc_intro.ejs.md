@@ -129,6 +129,7 @@ Use the following environment variables to configure the service when run:
 * `LEDGER_LOG_LEVEL` (default: `info`) the allowed levels in order of verbosity are `fatal`, `error`, `warn`, `info`, `debug`, and `trace`
 * `LEDGER_RECOMMENDED_CONNECTORS` (default: `'*'`) a comma-delimited list of connector usernames
 * `LEDGER_SECRET` (default: random bytes) a secret used to sign `/auth_token` tokens. Any length.
+* `LEDGER_WEBSOCKET_PING_INTERVAL` (default: `20`) seconds between websocket pings.
 
 ## RPC Error Codes
 <a id='rpc_error_codes'></a>
