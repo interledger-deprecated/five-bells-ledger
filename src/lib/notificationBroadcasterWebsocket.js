@@ -1,7 +1,6 @@
 'use strict'
 
 const _ = require('lodash')
-const EventEmitter = require('events').EventEmitter
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const transferStates = transferDictionary.transferStates
 const isTransferFinalized = require('./transferUtils').isTransferFinalized
@@ -11,10 +10,15 @@ const maybeGetFulfillment = require('../models/db/fulfillments').maybeGetFulfill
 const convertToExternalFulfillment = require('../models/converters/fulfillments')
   .convertToExternalFulfillment
 
-class NotificationBroadcaster extends EventEmitter {
+class NotificationBroadcaster {
   constructor (log) {
-    super()
     this.log = log
+
+    // This value is a Map mapping accounts to a Map mapping types to a Set of
+    // listeners.
+    //
+    // { account → { type → [ listener ] } }
+    this.listeners = new Map()
   }
 
   * sendNotifications (transfer, transaction) {
@@ -62,23 +66,63 @@ class NotificationBroadcaster extends EventEmitter {
     if (relatedResources) notification.related_resources = relatedResources
 
     this.log.debug('emitting notification:{' + affectedAccounts.join(',') + '}:' + eventType)
-    let isDelivered = false
+
+    const selectedListeners = new Set()
     for (const account of affectedAccounts) {
-      for (const event of eventTypes) {
-        isDelivered = this.emit('notification:' + account + ':' + event, notification) || isDelivered
+      const accountListeners = this.listeners.get(account)
+
+      if (accountListeners) {
+        for (const eventType of eventTypes) {
+          const typeListeners = accountListeners.get(eventType)
+
+          if (typeListeners) {
+            for (const listener of typeListeners) {
+              selectedListeners.add(listener)
+            }
+          }
+        }
       }
     }
-    return isDelivered
+
+    for (const listener of selectedListeners) {
+      listener(notification)
+    }
+
+    return !!selectedListeners.size
   }
 
   addNotificationListener (accountName, eventType, listener) {
-    const eventName = 'notification:' + accountName + ':' + eventType
-    this.addListener(eventName, listener)
+    let accountListeners = this.listeners.get(accountName)
+    if (!accountListeners) {
+      accountListeners = new Map()
+      this.listeners.set(accountName, accountListeners)
+    }
+
+    let typeListeners = accountListeners.get(eventType)
+    if (!typeListeners) {
+      typeListeners = new Set()
+      accountListeners.set(eventType, typeListeners)
+    }
+
+    typeListeners.add(listener)
   }
 
   removeNotificationListener (accountName, eventType, listener) {
-    const eventName = 'notification:' + accountName + ':' + eventType
-    this.removeListener(eventName, listener)
+    const accountListeners = this.listeners.get(accountName)
+    if (!accountListeners) return
+
+    const typeListeners = accountListeners.get(eventType)
+    if (!typeListeners) return
+
+    typeListeners.delete(listener)
+
+    if (!typeListeners.size) {
+      accountListeners.delete(eventType)
+
+      if (!accountListeners.size) {
+        this.listeners.delete(accountName)
+      }
+    }
   }
 }
 
