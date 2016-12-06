@@ -77,12 +77,9 @@ class RpcHandler {
     this.removeAccountSubscriptions()
 
     for (const accountName of accountNames) {
-      const eventName = 'notification:' + accountName + ':' + eventType
-      this.log.info('new ws subscriber for ' + eventName)
-      this.notificationBroadcaster.addListener(eventName, this.sendNotification)
-      this.websocket.on('close', () =>
-        this.notificationBroadcaster.removeListener(eventName, this.sendNotification))
-      this.accountSubscriptions.push(eventName)
+      this.log.info('new ws subscriber for ' + accountName + ':' + eventType)
+      this.notificationBroadcaster.addNotificationListener(accountName, eventType, this.sendNotification)
+      this.accountSubscriptions.push({ accountName, eventType })
     }
 
     // Updated number of active account subscriptions on this WebSocket connection.
@@ -95,8 +92,10 @@ class RpcHandler {
   }
 
   removeAccountSubscriptions () {
-    for (const eventName of this.accountSubscriptions) {
-      this.notificationBroadcaster.removeListener(eventName, this.sendNotification)
+    for (const eventInfo of this.accountSubscriptions) {
+      this.notificationBroadcaster.removeNotificationListener(
+        eventInfo.accountName, eventInfo.eventType, this.sendNotification
+      )
     }
     this.accountSubscriptions = []
   }
