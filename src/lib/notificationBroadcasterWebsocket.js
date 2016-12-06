@@ -70,6 +70,16 @@ class NotificationBroadcaster extends EventEmitter {
     }
     return isDelivered
   }
+
+  addNotificationListener (accountName, eventType, listener) {
+    const eventName = 'notification:' + accountName + ':' + eventType
+    this.addListener(eventName, listener)
+  }
+
+  removeNotificationListener (accountName, eventType, listener) {
+    const eventName = 'notification:' + accountName + ':' + eventType
+    this.removeListener(eventName, listener)
+  }
 }
 
 module.exports = NotificationBroadcaster
