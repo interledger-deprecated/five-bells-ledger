@@ -36,6 +36,7 @@ describe('Notifications', function () {
     this.holdAccount = this.exampleAccounts.hold
     this.existingAccount = this.exampleAccounts.alice
     this.existingAccount2 = this.exampleAccounts.bob
+    this.existingAccount3 = this.exampleAccounts.candice
     this.traderAccount = this.exampleAccounts.trader
     this.disabledAccount = this.exampleAccounts.disabledAccount
     this.infiniteMinBalance = this.exampleAccounts.infiniteMinBalance
@@ -58,6 +59,7 @@ describe('Notifications', function () {
       this.holdAccount,
       this.existingAccount,
       this.existingAccount2,
+      this.existingAccount3,
       this.traderAccount,
       this.disabledAccount
     ])
@@ -206,7 +208,7 @@ describe('Notifications', function () {
       })
     })
 
-    it('should not send notifications twice, even if sender and receiver are the same in a transfer', function * () {
+    it('should send notification only once, even if sender and receiver are the same in a transfer', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -616,6 +618,152 @@ describe('Notifications', function () {
     it('sends intermittent pings', function (done) {
       this.socket.on('ping', done)
       this.clock.tick(20000)
+    })
+  })
+
+  describe('GET /websocket method:subscribe_account as admin', function () {
+    beforeEach(function * () {
+      this.socket = this.ws('http://localhost/websocket', {
+        headers: {
+          Authorization: 'Basic ' + new Buffer('admin:admin', 'utf8').toString('base64')
+        }
+      })
+
+      // Wait until WS connection is established
+      yield new Promise((resolve) => {
+        this.socket.once('message', (msg) => {
+          assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: null, method: 'connect' })
+          resolve()
+        })
+      })
+
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'subscribe_account',
+        params: {
+          eventType: '*',
+          accounts: ['http://localhost/accounts/alice', 'http://localhost/accounts/bob']
+        }
+      }))
+
+      yield new Promise((resolve) => {
+        this.socket.once('message', (msg) => {
+          assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: 1, result: 2 })
+          resolve()
+        })
+      })
+    })
+
+    afterEach(function * () {
+      this.socket.terminate()
+    })
+
+    it('should send notifications when sender is one of the subscribers', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transfer
+      transfer.credits[0].account = 'http://localhost/accounts/candice'
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(49)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: _.assign({}, transfer, {
+            state: 'executed',
+            timeline: {
+              proposed_at: '2015-06-16T00:00:00.000Z',
+              prepared_at: '2015-06-16T00:00:00.000Z',
+              executed_at: '2015-06-16T00:00:00.000Z'
+            }
+          })
+        }
+      })
+    })
+
+    it('should send notifications when receiver is one of the subscribers', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transfer
+      transfer.debits[0].account = 'http://localhost/accounts/candice'
+      yield this.request()
+        .put(transfer.id)
+        .auth('candice', 'candice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(49)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: _.assign({}, transfer, {
+            state: 'executed',
+            timeline: {
+              proposed_at: '2015-06-16T00:00:00.000Z',
+              prepared_at: '2015-06-16T00:00:00.000Z',
+              executed_at: '2015-06-16T00:00:00.000Z'
+            }
+          })
+        }
+      })
+    })
+
+    it('should send notifications once, even if subscribed to both sender and receiver of a transfer', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      const transfer = this.transfer
+      yield this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+        .end()
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(49)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: null,
+        method: 'notify',
+        params: {
+          event: 'transfer.update',
+          resource: _.assign({}, transfer, {
+            state: 'executed',
+            timeline: {
+              proposed_at: '2015-06-16T00:00:00.000Z',
+              prepared_at: '2015-06-16T00:00:00.000Z',
+              executed_at: '2015-06-16T00:00:00.000Z'
+            }
+          })
+        }
+      })
     })
   })
 
