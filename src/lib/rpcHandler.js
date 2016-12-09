@@ -45,6 +45,9 @@ class RpcHandler {
       if (reqMessage.method === 'subscribe_account') {
         resMessage.result = this.subscribeAccount(reqMessage.params.eventType,
           reqMessage.params.accounts)
+      } else if (reqMessage.method === 'subscribe_all_accounts') {
+        resMessage.result = this.subscribeAllAccounts(reqMessage.params.eventType,
+          reqMessage.params.accounts)
       } else {
         throw new RpcError(errors.INVALID_METHOD, 'Unknown method: ' + reqMessage.method)
       }
@@ -84,6 +87,21 @@ class RpcHandler {
 
     // Updated number of active account subscriptions on this WebSocket connection.
     return accounts.length
+  }
+
+  subscribeAllAccounts (eventType, accounts) {
+    if (typeof eventType !== 'string') {
+      throw new RpcError(errors.INVALID_PARAMS, 'Invalid params')
+    }
+
+    if (!this.requestingUser.is_admin) {
+      throw new RpcError(errors.UNAUTHORIZED, 'Not authorized')
+    }
+
+    this.notificationBroadcaster.addNotificationListener('*', eventType, this.sendNotification)
+    this.accountSubscriptions.push({ accountName: '*', eventType })
+
+    return 1
   }
 
   _onClose () {
