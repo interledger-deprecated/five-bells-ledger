@@ -840,6 +840,59 @@ describe('Notifications', function () {
     })
   })
 
+  describe('GET /websocket method:subscribe_all_accounts as non-admin', function () {
+    beforeEach(function * () {
+      this.socket = this.ws('http://localhost/websocket', {
+        headers: {
+          Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
+        }
+      })
+
+      // Wait until WS connection is established
+      yield new Promise((resolve) => {
+        this.socket.once('message', (msg) => {
+          assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: null, method: 'connect' })
+          resolve()
+        })
+      })
+    })
+
+    afterEach(function * () {
+      this.socket.terminate()
+    })
+
+    it('gets a 40300 error', function * () {
+      const listener = sinon.spy()
+      this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+      this.socket.send(JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'subscribe_all_accounts',
+        params: {
+          eventType: '*'
+        }
+      }))
+
+      // TODO: Is there a more elegant way?
+      yield timingHelper.sleep(50)
+
+      sinon.assert.calledOnce(listener)
+      sinon.assert.calledWithMatch(listener.firstCall, {
+        jsonrpc: '2.0',
+        id: 1,
+        error: {
+          code: 40300,
+          message: 'RpcError: Not authorized',
+          data: {
+            name: 'RpcError',
+            message: 'Not authorized'
+          }
+        }
+      })
+    })
+  })
+
   describe('GET /websocket?token=...', function () {
     beforeEach(function * () {
       const tokenRes = yield this.request()
