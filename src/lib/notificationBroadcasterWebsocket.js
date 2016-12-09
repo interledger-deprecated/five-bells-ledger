@@ -56,6 +56,9 @@ class NotificationBroadcaster {
   }
 
   * emitNotification (affectedAccounts, eventType, resource, relatedResources) {
+    // Always notify global listeners - as identified by the special "*" account name
+    affectedAccounts = affectedAccounts.concat('*')
+
     const eventTypes = ['*', eventType]
     const eventParts = eventType.split('.')
     for (let i = 1; i < eventParts.length; i++) {
