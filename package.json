@@ -47,7 +47,7 @@
     "koa-cors": "0.0.16",
     "koa-mag": "^1.0.4",
     "koa-passport": "^1.1.6",
-    "koa-riverpig": "^1.0.0",
+    "koa-riverpig": "^1.0.1",
     "koa-router": "^5.1.2",
     "koa-static": "^2.0.0",
     "lodash": "^4.16.4",

@@ -116,10 +116,12 @@ function migratePostgres (step) {
     const args = [config.db.uri]
     if (step) args.push(step)
     const childProcess = spawn('pg-migrator', args, {cwd: path.resolve(sqlDir, 'pg')})
+    let error = ''
     childProcess.on('error', reject)
+    childProcess.stderr.on('data', (data) => { error += data.toString() })
     childProcess.on('close', (code) => {
       return code === 0 ? resolve() : reject(
-        new Error('pg-migrator exited with code ' + code))
+        new Error('pg-migrator exited with code ' + code + ' stderr: ' + error))
     })
   })
 }
