@@ -31,7 +31,7 @@ const ROOT = path.dirname(path.normalize(__dirname))
 // }
 
 function renderSchema (schemaRelativePath) {
-  const schemasPath = path.join(ROOT, 'node_modules', 'five-bells-shared', 'schemas')
+  const schemasPath = path.join(path.dirname(require.resolve('five-bells-shared')), 'schemas')
   const schemaPath = path.join(schemasPath, schemaRelativePath)
   return renderFromPaths(schemaPath, schemasPath)
 }
