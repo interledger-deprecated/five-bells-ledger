@@ -1,0 +1,35 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 20
+  defaults:
+    headers:
+  payload:
+    path: "./usernames.csv"
+    fields:
+      - username
+
+scenarios:
+  - flow:
+    - put:
+        url: "/accounts/{{ username }}"
+        auth:
+          user: admin
+          pass: admin
+        json:
+          name: "{{ username }}"
+          password: "{{ username }}"
+    - post:
+        url: "/transfers"
+        auth:
+          user: admin
+          pass: admin
+        json:
+          debits:
+            - account: http://localhost:3000/accounts/admin
+              amount: 10
+              auth: true
+          credits:
+            - account: http://localhost:3000/accounts/{{ username }}
+              amount: 10
