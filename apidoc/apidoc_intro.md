@@ -123,21 +123,6 @@ id | uri string | *Optional* Unique identifier for this notification
 related_resources | object | *Optional* Additional resources relevant to the event
 *related_resources.* cancellation_condition_fulfillment | string | *Optional* Proof of condition completion
 *related_resources.* execution_condition_fulfillment | string | *Optional* Proof of condition completion
-signature | object | *Optional* The signature of the notification
-*signature.* additionalProperties | object | *Optional* 
-*signature.* algorithm | string | *Optional* Signature algorithm ID.
-*signature.* publicKey | object | *Optional* Public key object.
-*signature.publicKey.* additionalProperties | object | *Optional* 
-*signature.publicKey.* curve | string | *Optional* EC curve ID
-*signature.publicKey.* required | object | *Optional* 
-*signature.publicKey.* type | string | *Optional* EC key type indicator.
-*signature.publicKey.* x | string | *Optional* EC curve point X.
-*signature.publicKey.* y | string | *Optional* EC curve point Y.
-*signature.publicKey.* e | string | *Optional* RSA exponent.
-*signature.publicKey.* n | string | *Optional* RSA modulus.
-*signature.publicKey.* type | string | *Optional* RSA key type indicator.
-*signature.* required | object | *Optional* 
-*signature.* value | string | *Optional* The signature data.
 
 
 ## Crypto-Conditions
