@@ -1,5 +1,6 @@
 'use strict'
 const BaseError = require('five-bells-shared/errors/base-error')
+const co = require('co')
 
 const errors = {
   INVALID_REQUEST: -32600,
@@ -9,7 +10,9 @@ const errors = {
   INVALID_ID: 40000,
   INVALID_ACCOUNT_NAME: 40001,
   INVALID_ACCOUNT: 40002,
+  INVALID_MESSAGE: 40003,
   UNAUTHORIZED: 40300,
+  NO_SUBSCRIPTIONS: 42200,
   INTERNAL_ERROR: 50000
 }
 
@@ -26,33 +29,41 @@ class RpcHandler {
     this.sendNotification = this._sendNotification.bind(this)
     this.pingInterval = setInterval(this._ping.bind(this), params.pingInterval)
 
-    websocket.on('message', this.handleMessage.bind(this))
+    websocket.on('message', this.handleRpcRequest.bind(this))
     websocket.on('close', this._onClose.bind(this))
     this._send({ jsonrpc: '2.0', id: null, method: 'connect' })
   }
 
-  handleMessage (reqMessageString) {
-    const resMessage = { jsonrpc: '2.0', id: null }
+  handleRpcRequest (rpcRequestString) {
+    co.wrap(this._handleRpcRequest).call(this, rpcRequestString).catch((err) => {
+      this.log.debug('handleRpcRequest error: %s', err.message)
+    })
+  }
+
+  * _handleRpcRequest (rpcRequestString) {
+    const rpcResponse = { jsonrpc: '2.0', id: null }
     try {
-      const reqMessage = JSON.parse(reqMessageString)
-      const validatorResult = this.validator.create('RpcRequest')(reqMessage)
+      const rpcRequest = JSON.parse(rpcRequestString)
+      const validatorResult = this.validator.create('RpcRequest')(rpcRequest)
       if (!validatorResult.valid) {
         throw new RpcError(errors.INVALID_REQUEST, 'Invalid Request', {validationErrors: validatorResult.errors})
       }
-      if (reqMessage.id === null) throw new RpcError(errors.INVALID_ID, 'Invalid id')
-      resMessage.id = reqMessage.id
+      if (rpcRequest.id === null) throw new RpcError(errors.INVALID_ID, 'Invalid id')
+      rpcResponse.id = rpcRequest.id
 
-      if (reqMessage.method === 'subscribe_account') {
-        resMessage.result = this.subscribeAccount(reqMessage.params.eventType,
-          reqMessage.params.accounts)
-      } else if (reqMessage.method === 'subscribe_all_accounts') {
-        resMessage.result = this.subscribeAllAccounts(reqMessage.params.eventType,
-          reqMessage.params.accounts)
+      if (rpcRequest.method === 'send_message') {
+        rpcResponse.result = yield this.sendMessage(rpcRequest.params)
+      } else if (rpcRequest.method === 'subscribe_account') {
+        rpcResponse.result = this.subscribeAccount(rpcRequest.params.eventType,
+          rpcRequest.params.accounts)
+      } else if (rpcRequest.method === 'subscribe_all_accounts') {
+        rpcResponse.result = this.subscribeAllAccounts(rpcRequest.params.eventType,
+          rpcRequest.params.accounts)
       } else {
-        throw new RpcError(errors.INVALID_METHOD, 'Unknown method: ' + reqMessage.method)
+        throw new RpcError(errors.INVALID_METHOD, 'Unknown method: ' + rpcRequest.method)
       }
     } catch (err) {
-      resMessage.error = {
+      rpcResponse.error = {
         code: err instanceof SyntaxError ? errors.SYNTAX_ERROR : (err.code || errors.INTERNAL_ERROR),
         message: err.name + ': ' + err.message,
         data: Object.assign({
@@ -61,7 +72,20 @@ class RpcHandler {
         }, err.data || {})
       }
     }
-    this._send(resMessage)
+    this._send(rpcResponse)
+  }
+
+  /**
+   * @param {Message} message
+   */
+  * sendMessage (message) {
+    yield sendMessage({
+      log: this.log,
+      uri: this.uri,
+      validator: this.validator,
+      requestingUser: this.requestingUser,
+      notificationBroadcaster: this.notificationBroadcaster
+    }, message)
   }
 
   /**
@@ -154,8 +178,8 @@ class RpcHandler {
     })
   }
 
-  _send (resMessage) {
-    this.websocket.send(JSON.stringify(resMessage), (error) => {
+  _send (rpcResponse) {
+    this.websocket.send(JSON.stringify(rpcResponse), (error) => {
       if (error) {
         this.log.error('failed to send notification to ' + this.requestingUser.name, error)
       }
@@ -171,5 +195,36 @@ class RpcError extends BaseError {
   }
 }
 
+function * sendMessage (params, message) {
+  const validationResult = params.validator.create('Message')(message)
+  if (validationResult.valid !== true) {
+    throw new RpcError(errors.INVALID_MESSAGE, 'Invalid message')
+  }
+
+  // For backwards compatibility.
+  if (message.account && !message.from && !message.to) {
+    message.to = message.account
+    message.from = params.uri.make('account', params.requestingUser.name)
+  }
+
+  const senderAccount = message.from
+  const senderName = params.uri.parse(senderAccount, 'account').name.toLowerCase()
+  const recipientName = params.uri.parse(message.to, 'account').name.toLowerCase()
+
+  params.log.debug('%s -> %s: %o', senderName, recipientName, message.data)
+
+  // Only admin can impersonate users.
+  if (!params.requestingUser.is_admin && senderName !== params.requestingUser.name) {
+    throw new RpcError(errors.UNAUTHORIZED, 'You do not have permission to impersonate this user')
+  }
+
+  const messageDelivered = yield params.notificationBroadcaster.sendMessage(
+    recipientName, Object.assign({}, message, {account: senderAccount}))
+  if (!messageDelivered) {
+    throw new RpcError(errors.NO_SUBSCRIPTIONS, 'Destination account could not be reached')
+  }
+}
+
+RpcHandler.sendMessage = co.wrap(sendMessage)
 RpcHandler.websocketErrorCodes = errors
 module.exports = RpcHandler

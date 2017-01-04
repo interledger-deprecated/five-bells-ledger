@@ -145,5 +145,7 @@ For errors which have an equivalent in HTTP, we choose a five digit error code w
 | `40000` | Request id is null | any |
 | `40001` | Invalid account name | `subscribe_account` |
 | `40002` | Invalid account | `subscribe_account` |
+| `40003` | Invalid message | `send_message` |
 | `40300` | Not authorized | any |
+| `42200` | No subscriptions | `send_message` |
 | `50000` | Internal server error | any |

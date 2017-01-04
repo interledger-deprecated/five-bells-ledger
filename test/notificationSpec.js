@@ -657,6 +657,62 @@ describe('Notifications', function () {
       })
     })
 
+    describe('method:send_message', function () {
+      it('delivers a valid message', function * () {
+        this.bob = this.ws('http://localhost/websocket', {
+          headers: {
+            Authorization: 'Basic ' + new Buffer('bob:bob', 'utf8').toString('base64')
+          }
+        })
+        // Wait for connect
+        yield new Promise((resolve) => { this.bob.once('message', resolve) })
+
+        const listener = sinon.spy()
+        this.bob.on('message', (msg) => listener(JSON.parse(msg)))
+        this.bob.send(JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'subscribe_account',
+          params: {
+            eventType: '*',
+            accounts: ['http://localhost/accounts/bob']
+          }
+        }))
+
+        this.socket.send(JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'send_message',
+          params: {
+            ledger: 'http://localhost',
+            from: 'http://localhost/accounts/alice',
+            to: 'http://localhost/accounts/bob',
+            data: {foo: 'bar'}
+          }
+        }))
+
+        // TODO: Is there a more elegant way?
+        yield timingHelper.sleep(150)
+
+        sinon.assert.calledTwice(listener)
+        sinon.assert.calledWithMatch(listener.secondCall, {
+          id: null,
+          jsonrpc: '2.0',
+          method: 'notify',
+          params: {
+            event: 'message.send',
+            resource: {
+              ledger: 'http://localhost',
+              account: 'http://localhost/accounts/alice',
+              from: 'http://localhost/accounts/alice',
+              to: 'http://localhost/accounts/bob',
+              data: { foo: 'bar' }
+            }
+          }
+        })
+      })
+    })
+
     it('gets a -32601 when using an invalid method', function * () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
