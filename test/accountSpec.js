@@ -482,58 +482,40 @@ describe('Accounts', function () {
         .end()
     })
 
-    it('should lowercase account name -- uppercased in url', function * () {
+    it('should reject invalid account name -- uppercased in url', function * () {
       const lowerCased = this.exampleAccounts.candice
       const account = _.assign({}, lowerCased, {id: lowerCased.id.toUpperCase()})
-      const withoutPassword = _.omit(lowerCased, 'password')
 
       yield this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(account)
-        .expect(201)
-        .expect(withoutPassword)
-        .expect(validator.validateAccount)
+        .expect(400)
         .end()
-
-      // Check balances
-      expect(convertToExternal(yield getAccount('candice'))).to.deep.equal(withoutPassword)
     })
 
-    it('should lowercase account name -- uppercased in body', function * () {
+    it('should reject invalid account name -- uppercased in body', function * () {
       const lowerCased = this.exampleAccounts.candice
       const account = _.assign({}, lowerCased, {name: lowerCased.name.toUpperCase()})
-      const withoutPassword = _.omit(lowerCased, 'password')
 
       yield this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(account)
-        .expect(201)
-        .expect(withoutPassword)
-        .expect(validator.validateAccount)
+        .expect(400)
         .end()
-
-      // Check balances
-      expect(convertToExternal(yield getAccount('candice'))).to.deep.equal(withoutPassword)
     })
 
-    it('should lowercase account name -- omit id in body', function * () {
+    it('should reject invaid account name -- uppercased in url, lowercase in body', function * () {
       const lowerCased = this.exampleAccounts.candice
       const account = _.assign({}, lowerCased, {name: lowerCased.name.toUpperCase()})
-      const withoutPassword = _.omit(lowerCased, 'password')
 
       yield this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(_.omit(account, 'id'))
-        .expect(201)
-        .expect(withoutPassword)
-        .expect(validator.validateAccount)
+        .expect(400)
         .end()
-
-      // Check balances
-      expect(convertToExternal(yield getAccount('candice'))).to.deep.equal(withoutPassword)
     })
 
     it('should return 400 if name and id are omitted in body', function * () {
