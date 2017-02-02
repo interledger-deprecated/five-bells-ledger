@@ -5,6 +5,9 @@ const request = require('five-bells-shared/utils/request')
 const model = require('../models/accounts')
 const makeRpcHandler = require('../services/makeRpcHandler')
 const uri = require('../services/uriManager')
+const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
+
+const ACCOUNT_REGISTRATION_REGEX = /^[a-z0-9]([a-z0-9]|[-](?!-)){0,18}[a-z0-9]$/
 
 function * getCollection () {
   this.body = yield model.getAccounts()
@@ -103,13 +106,16 @@ function * putResource () {
   request.validateUriParameter('name', name, 'Identifier')
   const account = this.body
   if (account.id) {
-    request.assert.strictEqual(account.id.toLowerCase(),
-      uri.make('account', name.toLowerCase()),
+    request.assert.strictEqual(account.id,
+      uri.make('account', name),
       'Account id must match the URL')
   }
   if (account.name) {
-    request.assert.strictEqual(account.name.toLowerCase(), name.toLowerCase(),
+    request.assert.strictEqual(account.name, name,
       'Account name must match the one in the URL')
+  }
+  if (!ACCOUNT_REGISTRATION_REGEX.test(account.name)) {
+    throw new InvalidBodyError('Account name must be 2-20 characters, lowercase letters, numbers and hyphens ("-") only, with no two or more consecutive hyphens.')
   }
   const result = yield model.setAccount(account, this.req.user)
   this.body = result.account
