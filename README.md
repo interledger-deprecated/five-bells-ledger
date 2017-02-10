@@ -1,11 +1,13 @@
-# Five Bells Ledger [![npm][npm-image]][npm-url] [![circle][circle-image]][circle-url] [![codecov][codecov-image]][codecov-url]
-
+# Five Bells Ledger [![npm][npm-image]][npm-url] [![circle][circle-image]][circle-url] [![codecov][codecov-image]][codecov-url] [![Known Vulnerabilities][snyk-image]][snyk-url] 
+ 
 [npm-image]: https://img.shields.io/npm/v/five-bells-ledger.svg?style=flat
 [npm-url]: https://npmjs.org/package/five-bells-ledger
 [circle-image]: https://circleci.com/gh/interledgerjs/five-bells-ledger.svg?style=shield&circle-token=e31b3ba89c015bf7f1c6de9f5156e7daa32fd793
 [circle-url]: https://circleci.com/gh/interledgerjs/five-bells-ledger
 [codecov-image]: https://codecov.io/gh/interledgerjs/five-bells-ledger/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/interledgerjs/five-bells-ledger
+[snyk-image]: https://snyk.io/test/github/interledgerjs/five-bells-ledger/badge.svg
+[snyk-url]: https://snyk.io/test/github/interledgerjs/five-bells-ledger
 
 > A reference implementation of the Five Bells Ledger API
 
