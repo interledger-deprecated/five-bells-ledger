@@ -10,7 +10,7 @@
     "account": "http://localhost/accounts/bob",
     "amount": "10"
   }],
-  "execution_condition": "cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7",
+  "execution_condition": "ni:///sha-256;vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI?fpt=preimage-sha-256&cost=7",
   "cancellation_condition": "cc:0:3:I3TZF5S3n0-07JWH0s8ArsxPmVP6s-0d0SqxR6C3Ifk:6",
   "state": "executed"
 }
