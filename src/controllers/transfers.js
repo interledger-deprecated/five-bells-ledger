@@ -338,13 +338,25 @@ function * getFulfillment () {
  * @apiParam (Request Body) {String} Rejection An error message in string format.
  *
  * @apiExample {shell} Put Transfer Rejection:
- *    curl -X PUT -H "Content-Type: text/plain" -d \
- *    'an error'
+ *    curl -X PUT -H "Content-Type: application/json" -d \
+ *    '{
+ *      "code": "S00",
+ *      "name": "Bad Request",
+ *      "message": "destination transfer failed",
+ *      "triggered_by": "example.red.bob",
+ *      "additional_info": {}
+ *    }'
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection
  *
  * @apiSuccessExample {json} 200 Rejection Accepted Response:
  *    HTTP/1.1 200 OK
- *    'an error'
+ *    '{
+ *      "code": "S00",
+ *      "name": "Bad Request",
+ *      "message": "destination transfer failed",
+ *      "triggered_by": "example.red.bob",
+ *      "additional_info": {}
+ *    }'
  *
  * @apiUse UnprocessableEntityError
  * @apiUse InvalidUriParameterError
@@ -357,8 +369,7 @@ function * getFulfillment () {
 function * putRejection () {
   const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  const rejectionMessage = yield parse.text(this, {limit: config.maxHttpPayload})
-  const result = yield model.rejectTransfer(id, rejectionMessage, this.req.user)
+  const result = yield model.rejectTransfer(id, this.body, this.req.user)
   this.body = result.rejection
   this.status = result.existed ? 200 : 201
 }

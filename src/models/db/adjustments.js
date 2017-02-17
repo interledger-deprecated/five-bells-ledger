@@ -18,7 +18,7 @@ function convertFromPersistentAdjustment (data, options) {
       amount: Number(data.AMOUNT).toString(),
       authorized: Boolean(data.IS_AUTHORIZED) || null,
       rejected: Boolean(data.IS_REJECTED) || null,
-      rejection_message: data.REJECTION_MESSAGE,
+      rejection_message: data.REJECTION_MESSAGE ? JSON.parse(data.REJECTION_MESSAGE) : null,
       memo: data.MEMO ? JSON.parse(data.MEMO) : null
     }, isNil)
   })
@@ -49,7 +49,7 @@ function convertToPersistentAdjustment (transferId, type, data, options) {
       AMOUNT: data.amount,
       IS_AUTHORIZED: isNil(data.authorized) ? null : Number(data.authorized),
       IS_REJECTED: isNil(data.rejected) ? null : Number(data.rejected),
-      REJECTION_MESSAGE: data.rejection_message,
+      REJECTION_MESSAGE: isNil(data.rejection_message) ? null : JSON.stringify(data.rejection_message),
       MEMO: data.memo ? JSON.stringify(data.memo) : null
     }, (x) => isNil(x))
   })
