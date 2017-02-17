@@ -105,23 +105,6 @@ function * getTransferWhere (where, options) {
   })
 }
 
-function * getTransfersWhere (where, options) {
-  return db.select(where, options && options.transaction)
-  .then((transfers) => {
-    if (_.isEmpty(transfers)) {
-      return []
-    }
-
-    return Promise.all(transfers.map((transfer) => {
-      return adjustments.getAdjustments(transfer._id, options)
-      .then((adjustments) => {
-        const result = _.assign({}, transfer, adjustments)
-        return _.isEmpty(result) ? null : _.omit(result, '_id')
-      })
-    }))
-  })
-}
-
 function * getTransfer (uuid, options) {
   return yield getTransferWhere({TRANSFER_UUID: uuid}, options)
 }
@@ -134,10 +117,6 @@ function getTransferId (uuid, options) {
 
 function * getTransferById (id, options) {
   return yield getTransferWhere({TRANSFER_ID: id}, options)
-}
-
-function * getTransfersByExecutionCondition (executionCondition, options) {
-  return yield getTransfersWhere({EXECUTION_CONDITION: executionCondition}, options)
 }
 
 function * updateTransfer (transfer, options) {
@@ -185,7 +164,6 @@ module.exports = {
   getTransfer,
   getTransferId,
   getTransferById,
-  getTransfersByExecutionCondition,
   upsertTransfer,
   updateTransfer,
   insertTransfers,
