@@ -445,6 +445,14 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
 }
 
 function * rejectTransfer (transferId, rejectionMessage, requestingUser) {
+  const validationResult = validator.create('RejectionMessage')(rejectionMessage)
+  if (validationResult.valid !== true) {
+    const message = validationResult.schema
+      ? 'Body did not match schema ' + validationResult.schema
+      : 'Body did not pass validation'
+    throw new InvalidBodyError(message, validationResult.errors)
+  }
+
   const transfer = yield getTransfer(transferId)
   if (!transfer.execution_condition) {
     throw new TransferNotConditionalError('Transfer is not conditional')
@@ -458,7 +466,7 @@ function * rejectTransfer (transferId, rejectionMessage, requestingUser) {
   const alreadyRejected = credit.rejected
 
   credit.rejected = true
-  credit.rejection_message = (new Buffer(rejectionMessage)).toString('base64')
+  credit.rejection_message = rejectionMessage
   delete transfer.timeline
   yield setTransfer(transfer, requestingUser)
   return {

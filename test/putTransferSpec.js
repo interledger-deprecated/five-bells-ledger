@@ -1541,7 +1541,13 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       transfer.credits[0].rejected = true
-      transfer.credits[0].rejection_message = (new Buffer('error 1')).toString('base64')
+      transfer.credits[0].rejection_message = {
+        code: '123',
+        name: 'Error',
+        message: 'error 1',
+        triggered_by: 'example.red.bob',
+        additional_info: {}
+      }
       yield this.request()
         .put(this.exampleTransfer.id)
         .auth('bob', 'bob')
@@ -1578,7 +1584,13 @@ describe('PUT /transfers/:id', function () {
         .end()
 
       transfer.credits[0].rejected = true
-      transfer.credits[0].rejection_message = (new Buffer('error 1')).toString('base64')
+      transfer.credits[0].rejection_message = {
+        code: '123',
+        name: 'Error',
+        message: 'error 1',
+        triggered_by: 'example.red.bob',
+        additional_info: {}
+      }
       yield this.request()
         .put(this.exampleTransfer.id)
         .auth('bob', 'bob')

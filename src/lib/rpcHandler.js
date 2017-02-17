@@ -46,8 +46,7 @@ class RpcHandler {
         resMessage.result = this.subscribeAccount(reqMessage.params.eventType,
           reqMessage.params.accounts)
       } else if (reqMessage.method === 'subscribe_all_accounts') {
-        resMessage.result = this.subscribeAllAccounts(reqMessage.params.eventType,
-          reqMessage.params.accounts)
+        resMessage.result = this.subscribeAllAccounts(reqMessage.params.eventType)
       } else {
         throw new RpcError(errors.INVALID_METHOD, 'Unknown method: ' + reqMessage.method)
       }
@@ -89,7 +88,7 @@ class RpcHandler {
     return accounts.length
   }
 
-  subscribeAllAccounts (eventType, accounts) {
+  subscribeAllAccounts (eventType) {
     if (typeof eventType !== 'string') {
       throw new RpcError(errors.INVALID_PARAMS, 'Invalid params')
     }

@@ -33,6 +33,21 @@ describe('PUT /rejection', function () {
     this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
     this.multiCreditTransfer = _.cloneDeep(require('./data/transfers/multiCredit'))
 
+    this.rejectionMessage1 = {
+      code: '123',
+      name: 'Error 1',
+      message: 'error 1',
+      triggered_by: 'example.red.bob',
+      additional_info: {}
+    }
+    this.rejectionMessage2 = {
+      code: '123',
+      name: 'Error 2',
+      message: 'error 2',
+      triggered_by: 'example.red.bob',
+      additional_info: {}
+    }
+
     yield dbHelper.addAccounts(_.values(accounts))
   })
 
@@ -46,7 +61,7 @@ describe('PUT /rejection', function () {
     yield this.request()
       .put(transfer.id + '/rejection')
       .auth('bob', 'bob')
-      .send('error 1')
+      .send(this.rejectionMessage1)
       .expect(404)
       .end()
   })
@@ -64,7 +79,7 @@ describe('PUT /rejection', function () {
     yield this.request()
       .put(transfer.id + '/rejection')
       .auth('alice', 'alice')
-      .send('error 1')
+      .send(this.rejectionMessage1)
       .expect(403)
       .expect({
         id: 'UnauthorizedError',
@@ -90,9 +105,9 @@ describe('PUT /rejection', function () {
     yield this.request()
       .put(transfer.id + '/rejection')
       .auth('bob', 'bob')
-      .send('error 1')
+      .send(this.rejectionMessage1)
       .expect(201)
-      .expect('error 1')
+      .expect(this.rejectionMessage1)
       .end()
 
     // Check balances
@@ -102,7 +117,7 @@ describe('PUT /rejection', function () {
     yield this.request()
       .put(transfer.id + '/rejection')
       .auth('bob', 'bob')
-      .send('error 2')
+      .send(this.rejectionMessage2)
       .expect(400)
       .expect(function (res) {
         expect(res.body.id).to.equal('InvalidModificationError')
@@ -119,7 +134,7 @@ describe('PUT /rejection', function () {
         credits: [
           Object.assign(transfer.credits[0], {
             rejected: true,
-            rejection_message: (new Buffer('error 1')).toString('base64')
+            rejection_message: this.rejectionMessage1
           })
         ],
         timeline: {
@@ -148,9 +163,9 @@ describe('PUT /rejection', function () {
     yield this.request()
       .put(transfer.id + '/rejection')
       .auth('dave', 'dave')
-      .send('error 1')
+      .send(this.rejectionMessage1)
       .expect(201)
-      .expect('error 1')
+      .expect(this.rejectionMessage1)
       .end()
 
     // Check balances
@@ -160,9 +175,9 @@ describe('PUT /rejection', function () {
     yield this.request()
       .put(transfer.id + '/rejection')
       .auth('bob', 'bob')
-      .send('error 2')
+      .send(this.rejectionMessage2)
       .expect(201)
-      .expect('error 2')
+      .expect(this.rejectionMessage2)
       .end()
 
     yield this.request()
@@ -174,11 +189,11 @@ describe('PUT /rejection', function () {
         credits: [
           Object.assign(transfer.credits[0], { // bob
             rejected: true,
-            rejection_message: (new Buffer('error 2')).toString('base64')
+            rejection_message: this.rejectionMessage2
           }),
           Object.assign(transfer.credits[1], { // dave
             rejected: true,
-            rejection_message: (new Buffer('error 1')).toString('base64')
+            rejection_message: this.rejectionMessage1
           })
         ],
         timeline: {

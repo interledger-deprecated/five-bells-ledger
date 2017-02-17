@@ -136,6 +136,7 @@ class App {
     router.get('/transfers/:id/fulfillment', transfers.getFulfillment)
     router.put('/transfers/:id/rejection',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      setupBody,
       transfers.putRejection)
 
     router.get('/transfers/:id', transfers.getResource)
