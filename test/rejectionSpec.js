@@ -132,7 +132,7 @@ describe('PUT /rejection', function () {
 
   it('rejects the transfer when a credit is rejected', function * () {
     const transfer = Object.assign(this.multiCreditTransfer,
-      {execution_condition: 'cc:0:3:vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI:7'})
+      {execution_condition: 'ni:///sha-256;vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI?fpt=preimage-sha-256&cost=7'})
     yield this.request()
       .put(transfer.id)
       .auth('alice', 'alice')
