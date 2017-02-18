@@ -20,7 +20,7 @@
       "http://localhost:3003/cases/b1f11915-1fb5-4c4d-9523-8267ecc7f15d"
     ]
   },
-  "execution_condition": "cc:2:b:fc7hVoN43o57pcqzAHLadWuQ5ldiibFL4mJq_Vrn_68:29",
-  "cancellation_condition": "cc:0:3:I3TZF5S3n0-07JWH0s8ArsxPmVP6s-0d0SqxR6C3Ifk:6",
+  "execution_condition": "ni:///sha-256;3XlGNxVGkB4YN5hLRRzKK0uZlfMYa-ZT-mIKde_8E1c?fpt=threshold-sha-256&cost=2063&subtypes=preimage-sha-256",
+  "cancellation_condition": "ni:///sha-256;I3TZF5S3n0-07JWH0s8ArsxPmVP6s-0d0SqxR6C3Ifk?fpt=preimage-sha-256&cost=6",
   "state": "proposed"
 }
