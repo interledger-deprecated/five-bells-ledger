@@ -290,7 +290,7 @@ describe('PUT /fulfillment', function () {
         .end()
 
       // Invalid fulfillment
-      const invalidCancellationConditionFulfillment = 'cf:0:Y2FvY2Vs'
+      const invalidCancellationConditionFulfillment = 'oAiABp6LXGp3Hg'
       yield this.request()
         .put(transfer.id + '/fulfillment')
         .send(invalidCancellationConditionFulfillment)
