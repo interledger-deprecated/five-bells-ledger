@@ -132,10 +132,10 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should return 422 if the sender amount precision is too high', function * () {
-    assert.strictEqual(config.amount.precision, 10) // default precision is 10
+    assert.strictEqual(config.amount.precision, 19) // default precision is 19
     const transfer = this.exampleTransfer
-    transfer.debits[0].amount = '100000000.23'
-    transfer.credits[0].amount = '100000000.23'
+    transfer.debits[0].amount = '991234567890.123456789'
+    transfer.credits[0].amount = '991234567890.123456789'
     yield this.request()
       .put(transfer.id)
       .auth('bob', 'bob')
@@ -145,10 +145,10 @@ describe('PUT /transfers/:id', function () {
   })
 
   it('should return 422 if the sender amount scale is too high', function * () {
-    assert.strictEqual(config.amount.scale, 2) // default scale is 2
+    assert.strictEqual(config.amount.scale, 9) // default scale is 9
     const transfer = this.exampleTransfer
-    transfer.debits[0].amount = '1.123'
-    transfer.credits[0].amount = '1.123'
+    transfer.debits[0].amount = '1.1234567899'
+    transfer.credits[0].amount = '1.1234567899'
     yield this.request()
       .put(transfer.id)
       .auth('bob', 'bob')

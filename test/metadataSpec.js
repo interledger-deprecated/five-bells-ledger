@@ -42,8 +42,8 @@ describe('Metadata', function () {
               websocket: 'ws://localhost/websocket',
               message: 'http://localhost/messages'
             },
-            precision: 10,
-            scale: 2,
+            precision: 19,
+            scale: 9,
             connectors: []
           })
         })
@@ -88,8 +88,8 @@ describe('Metadata', function () {
               websocket: 'ws://localhost/websocket',
               message: 'http://localhost/messages'
             },
-            precision: 10,
-            scale: 2,
+            precision: 19,
+            scale: 9,
             connectors: [
               {
                 id: 'http://localhost/accounts/trader',
