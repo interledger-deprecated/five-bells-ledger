@@ -30,7 +30,7 @@
     "bignumber.js": "^2.3.0",
     "canonical-json": "0.0.4",
     "co": "^4.1.0",
-    "co-body": "^4.0.0",
+    "co-body": "^5.0.0",
     "co-defer": "^1.0.0",
     "co-emitter": "^0.2.3",
     "co-request": "^1.0.0",
