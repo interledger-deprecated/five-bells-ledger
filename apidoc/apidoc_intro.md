@@ -136,13 +136,13 @@ In the Five Bells Ledger, we use crypto-conditions to control the execution or c
 
 The Crypto-Conditions specification anticipates that it will need to expand to keep up with changes in the field of cryptography, so conditions always define which rules and algorithms are necessary to verify the fulfillment. Implementations can use the condition's feature list to determine if they can properly process the fulfillment, without having seen the fulfillment itself.
 
-Example condition in string format:
+Example condition in string (URI) format:
 
-    cc:0:3:dB-8fb14MdO75Brp_Pvh4d7ganckilrRl13RS_UmrXA:66
+    ni:///sha-256;7595axk1N4p0jqxvEUfdHmVrJDMcLSlVRQID0Lh8fcA?fpt=preimage-sha-256&cost=32
 
-Example fulfillment in string format:
+Example fulfillment in string (base64url) format:
 
-    cf:0:VGhlIG9ubHkgYmFzaXMgZm9yIGdvb2QgU29jaWV0eSBpcyB1bmxpbWl0ZWQgY3JlZGl0LuKAlE9zY2FyIFdpbGRl
+    oCKAIKcusA8Ll4mGZR-D9BO37C1N9K5f9psH5y5KlRyZi_Na
 
 
 ## Authentication
