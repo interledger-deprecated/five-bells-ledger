@@ -39,7 +39,7 @@ const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-p
  *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
- *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+ *      "execution_condition": "ni:///sha-256;8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y?fpt=preimage-sha-256&cost=32",
  *      "expires_at": "2015-06-16T00:00:01.000Z",
  *      "state": "executed",
  *      "timeline": {
@@ -59,57 +59,6 @@ function * getResource () {
   const id = this.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
   this.body = yield model.getTransfer(id.toLowerCase())
-}
-
-/**
- * @api {get} /transfers/byExecutionCondition/:execution_condition Get Transfers by Condition
- * @apiName GetTransferByExecutionCondition
- * @apiGroup Transfer Methods
- * @apiVersion 15.0.0
- *
- * @apiDescription Use this to query about the details or status of a local
- *   transfer that is using atomic mode.
- *
- * @apiParam {String} execution_condition
- *
- * @apiExample {shell} Get a transfer
- *   curl -X GET http://usd-ledger.example/transfers/ByExecutionCondition/cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2
- *
- * @apiSuccess (Success) {Transfer[]} Array Array of [Transfer objects](#transfer_object) matching the condition.
- *
- * @apiSuccessExample {Array} Array of Transfer responses:
- *    HTTP/1.1 200 OK
- *    [{
- *      "id": "http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204",
- *      "ledger": "http://usd-ledger.example",
- *      "debits": [{
- *        "account": "http://usd-ledger.example/accounts/alice",
- *        "amount": "50"
- *      }],
- *      "credits": [{
- *        "account": "http://usd-ledger.example/accounts/bob",
- *        "amount": "50"
- *      }],
- *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
- *      "expires_at": "2015-06-16T00:00:01.000Z",
- *      "state": "executed",
- *      "timeline": {
- *        "proposed_at": "2015-06-16T00:00:00.000Z",
- *        "prepared_at": "2015-06-16T00:00:00.500Z",
- *        "executed_at": "2015-06-16T00:00:00.999Z"
- *      }
- *    }]
- *
- * @apiUse NotFoundError
- * @apiUse InvalidUriParameterError
- */
-/**
- * @returns {void}
- */
-function * getResourcesByExecutionCondition () {
-  const executionConditon = this.params.execution_condition
-  requestUtil.validateUriParameter('execution_condition', executionConditon, 'Condition')
-  this.body = yield model.getTransfersByExecutionCondition(executionConditon)
 }
 
 /**
@@ -201,7 +150,7 @@ function * getStateResource () {
  *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
- *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+ *      "execution_condition": "ni:///sha-256;8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y?fpt=preimage-sha-256&cost=32",
  *      "expires_at": "2015-06-16T00:00:01.000Z"
  *    }' \
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
@@ -227,7 +176,7 @@ function * getStateResource () {
  *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
- *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+ *      "execution_condition": "ni:///sha-256;8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y?fpt=preimage-sha-256&cost=32",
  *      "expires_at": "2015-06-16T00:00:01.000Z",
  *      "state": "proposed"
  *    }
@@ -246,7 +195,7 @@ function * getStateResource () {
  *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
- *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+ *      "execution_condition": "ni:///sha-256;8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y?fpt=preimage-sha-256&cost=32",
  *      "expires_at": "2015-06-16T00:00:01.000Z"
  *    }' \
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204
@@ -265,7 +214,7 @@ function * getStateResource () {
  *        "account": "http://usd-ledger.example/accounts/bob",
  *        "amount": "50"
  *      }],
- *      "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+ *      "execution_condition": "ni:///sha-256;8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y?fpt=preimage-sha-256&cost=32",
  *      "expires_at": "2015-06-16T00:00:01.000Z",
  *      "state": "prepared"
  *    }
@@ -319,12 +268,12 @@ function * putResource () {
  *
  * @apiExample {shell} Put Transfer Fulfillment:
  *    curl -X PUT -H "Content-Type: text/plain" -d \
- *    'cf:0:_v8' \
+ *    'oAKAAA' \
  *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment
  *
  * @apiSuccessExample {json} 200 Fulfillment Accepted Response:
  *    HTTP/1.1 200 OK
- *    cf:0:_v8
+ *    oAKAAA
  *
  * @apiUse UnmetConditionError
  * @apiUse UnprocessableEntityError
@@ -361,7 +310,7 @@ function * putFulfillment () {
  *
  * @apiSuccessExample {json} 200 Fulfillment Response:
  *    HTTP/1.1 200 OK
- *    cf:0:_v8
+ *    oAKAAA
  *
  * @apiUse NotFoundError
  */
@@ -416,7 +365,6 @@ function * putRejection () {
 
 module.exports = {
   getResource,
-  getResourcesByExecutionCondition,
   getStateResource,
   putResource,
   putFulfillment,

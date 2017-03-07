@@ -139,7 +139,6 @@ class App {
       transfers.putRejection)
 
     router.get('/transfers/:id', transfers.getResource)
-    router.get('/transfers/byExecutionCondition/:execution_condition', transfers.getResourcesByExecutionCondition)
     router.get('/transfers/:id/state', transfers.getStateResource)
 
     router.get('/accounts',

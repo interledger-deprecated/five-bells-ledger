@@ -60,17 +60,6 @@ function * getTransfer (id) {
   return converters.convertToExternalTransfer(transfer)
 }
 
-function * getTransfersByExecutionCondition (executionCondition) {
-  log.debug('fetching transfers by execution condition ' + executionCondition)
-
-  const transfers = yield db.getTransfersByExecutionCondition(executionCondition)
-  if (_.isEmpty(transfers)) {
-    throw new NotFoundError('Unknown execution condition')
-  }
-
-  return Promise.all(transfers.map(converters.convertToExternalTransfer))
-}
-
 function * getTransferStateReceipt (id, receiptType, conditionState) {
   log.debug('fetching state receipt for transfer ID ' + id)
   const transfer = yield db.getTransfer(id)
@@ -577,7 +566,6 @@ function * insertTransfers (externalTransfers) {
 
 module.exports = {
   getTransfer,
-  getTransfersByExecutionCondition,
   getTransferStateReceipt,
   setTransfer,
   fulfillTransfer,
