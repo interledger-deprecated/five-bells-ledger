@@ -34,7 +34,7 @@ function * setupAdminAccount (adminParams) {
       balance: '0',
       password_hash: passwordHash,
       is_admin: true,
-      minimum_allowed_balance: '-infinity',
+      minimum_allowed_balance: '-Infinity',
       fingerprint: adminParams.fingerprint
     })
   }

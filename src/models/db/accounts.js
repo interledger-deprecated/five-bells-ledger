@@ -1,5 +1,6 @@
 'use strict'
 
+const assert = require('assert')
 const TABLE_NAME = 'L_ACCOUNTS'
 const _ = require('lodash')
 const db = require('./utils')(TABLE_NAME,
@@ -34,11 +35,14 @@ function convertToPersistent (data) {
     data.balance = Number(Number(data.balance).toFixed(config.amount.scale))
   }
   if (data.minimum_allowed_balance) {
-    if (data.minimum_allowed_balance === Number.NEGATIVE_INFINITY) {
+    const minBalance = Number(data.minimum_allowed_balance)
+    assert(!Number.isNaN(minBalance), 'minimum_allowed_balance needs to be numeric, ' +
+      'but was ' + data.minimum_allowed_balance)
+    if (minBalance === Number.NEGATIVE_INFINITY) {
       // A null value in the db column means the balance can go negative without limit
       data.minimum_allowed_balance = null
     } else {
-      data.minimum_allowed_balance = Number(data.minimum_allowed_balance)
+      data.minimum_allowed_balance = minBalance
     }
   } // Otherwise the db defaults minimum_allowed_balance to 0
   if (!_.isUndefined(data.is_admin)) {
