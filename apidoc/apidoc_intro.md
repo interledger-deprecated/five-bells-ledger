@@ -37,7 +37,14 @@ credits[] | object | A defined quantity of an asset optionally located on a spec
 *credits[].* invoice | uri string | *Optional* Unique invoice URI - the ledger will only allow one transfer referencing a given invoice ID
 *credits[].* memo | object | *Optional* Additional information related to the credit
 *credits[].* rejected | boolean | *Optional* Indicates whether the credit has been rejected by the required account holder
-*credits[].* rejection_message | string | *Optional* The reason the credit was rejected
+*credits[].* rejection_message | object | *Optional* The reason the credit was rejected
+*credits[].rejection_message.* code | string | Machine-readable error code
+*credits[].rejection_message.* name | string | Human-readable description of the error code
+*credits[].rejection_message.* message | string | Description of the error.
+*credits[].rejection_message.* triggered_by | string | ILP address or ledger prefix from which the rejection originates
+*credits[].rejection_message.* additional_info | object | Additional details about the error
+*credits[].rejection_message.* forwarded_by | string | *Optional* ILP address of the last connector to forward the rejection
+*credits[].rejection_message.* triggered_at | date-time string | *Optional* The time the rejection occurred.
 debits | array | *Optional* Funds that go into the transfer
 debits[] | object | A defined quantity of an asset optionally located on a specified ledger.
 *debits[].* account | uri string, null | Account holding the funds
@@ -46,7 +53,14 @@ debits[] | object | A defined quantity of an asset optionally located on a speci
 *debits[].* invoice | uri string | *Optional* Unique invoice URI - the ledger will only allow one transfer referencing a given invoice ID
 *debits[].* memo | object | *Optional* Additional information related to the credit
 *debits[].* rejected | boolean | *Optional* Indicates whether the credit has been rejected by the required account holder
-*debits[].* rejection_message | string | *Optional* The reason the credit was rejected
+*debits[].* rejection_message | object | *Optional* The reason the credit was rejected
+*debits[].rejection_message.* code | string | Machine-readable error code
+*debits[].rejection_message.* name | string | Human-readable description of the error code
+*debits[].rejection_message.* message | string | Description of the error.
+*debits[].rejection_message.* triggered_by | string | ILP address or ledger prefix from which the rejection originates
+*debits[].rejection_message.* additional_info | object | Additional details about the error
+*debits[].rejection_message.* forwarded_by | string | *Optional* ILP address of the last connector to forward the rejection
+*debits[].rejection_message.* triggered_at | date-time string | *Optional* The time the rejection occurred.
 execution_condition | string | *Optional* The condition for executing the transfer
 expires_at | date-time string | *Optional* The date when the transfer expires and will be rejected by the ledger
 expiry_duration | string | *Optional* Time in seconds between proposed_at and expires_at. Set in quotes from payment systems but not valid in actual transfers

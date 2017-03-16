@@ -1004,7 +1004,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Put Transfer Rejection:",
-        "content": "curl -X PUT -H \"Content-Type: text/plain\" -d \\\n'an error'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection",
+        "content": "curl -X PUT -H \"Content-Type: application/json\" -d \\\n'{\n  \"code\": \"S00\",\n  \"name\": \"Bad Request\",\n  \"message\": \"destination transfer failed\",\n  \"triggered_by\": \"example.red.bob\",\n  \"additional_info\": {}\n}'\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection",
         "type": "shell"
       }
     ],
@@ -1012,7 +1012,7 @@ define({ "api": [
       "examples": [
         {
           "title": "200 Rejection Accepted Response:",
-          "content": "HTTP/1.1 200 OK\n'an error'",
+          "content": "HTTP/1.1 200 OK\n'{\n  \"code\": \"S00\",\n  \"name\": \"Bad Request\",\n  \"message\": \"destination transfer failed\",\n  \"triggered_by\": \"example.red.bob\",\n  \"additional_info\": {}\n}'",
           "type": "json"
         }
       ]
