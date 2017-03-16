@@ -12,6 +12,9 @@ const logHelper = require('./helpers/log')
 const getAccount = require('../src/models/db/accounts').getAccount
 const convertToExternal = require('../src/models/converters/accounts')
   .convertToExternalAccount
+const seedDB = require('../src/lib/seed-db')
+const loadConfig = require('../src/lib/config')
+const hashPassword = require('five-bells-shared/utils/hashPassword')
 
 const validator = require('./helpers/validator')
 
@@ -604,6 +607,31 @@ describe('Accounts', function () {
       // Check balances
       const user = (yield getAccount('eve'))
       expect(user.public_key).to.equal(publicKey)
+    })
+  })
+
+  describe('Initializes accounts', function () {
+    it('Sets up admin account', function * () {
+      const pass = 'admin_pass'
+      const expectedAdmin = {
+        name: 'admin_user',
+        balance: 0,
+        minimum_allowed_balance: -Infinity,
+        fingerprint: 'admin_fingerprint',
+        is_admin: true,
+        is_disabled: false
+      }
+
+      process.env.LEDGER_ADMIN_USER = expectedAdmin.name
+      process.env.LEDGER_ADMIN_PASS = pass
+      process.env.LEDGER_ADMIN_TLS_FINGERPRINT = expectedAdmin.fingerprint
+      yield seedDB(loadConfig())
+
+      const actualAdmin = _.omitBy(yield getAccount(expectedAdmin.name), _.isNull)
+
+      expect(hashPassword.verifyPassword(pass, new Buffer(actualAdmin.password_hash, 'base64')))
+      delete actualAdmin.password_hash
+      expect(actualAdmin).to.deep.equal(expectedAdmin)
     })
   })
 })
