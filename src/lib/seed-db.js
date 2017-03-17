@@ -2,6 +2,7 @@
 const hashPassword = require('five-bells-shared/utils/hashPassword')
 const getAccount = require('../models/db/accounts').getAccount
 const upsertAccount = require('../models/db/accounts').upsertAccount
+const insertAccounts = require('../models/accounts').insertAccounts
 
 module.exports = function * (config) {
   yield setupHoldAccount()
@@ -29,13 +30,13 @@ function * setupAdminAccount (adminParams) {
     adminAccount.fingerprint = adminParams.fingerprint
     yield upsertAccount(adminAccount)
   } else {
-    yield upsertAccount({
+    yield insertAccounts([{
       name: adminParams.user,
       balance: '0',
-      password_hash: passwordHash,
+      password: adminParams.pass,
       is_admin: true,
       minimum_allowed_balance: '-infinity',
       fingerprint: adminParams.fingerprint
-    })
+    }])
   }
 }
