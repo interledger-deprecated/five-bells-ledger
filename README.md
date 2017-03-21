@@ -61,26 +61,31 @@ Open `apidocs-out/index.html` in a web browser to see the generated API document
 
 This project can be run in a [Docker](https://www.docker.com/) container.
 
-You need a local database instance listening on port 8080. Here is how to set that up:
+You need to start a postgres container:
 
 ``` sh
-docker run --name mysql -e MYSQL_ROOT_PASSWORD=password -p 3306:3306 -d mysql
-export LEDGER_DB_URI=mysql://root:password@localhost/fivebells
-npm run migrate
+docker run --name five-bells-ledger-db -e POSTGRES_PASSWORD=password -d postgres
 ```
 
-Then run the following (with the same environment variables) as described above:
+After giving postgres a few seconds to start up, you can run a five-bells-ledger Docker container, linking to that database:
 
 ``` sh
-docker run -it --rm --net=host -e LEDGER_PORT=1337 -e LEDGER_DB_URI=$LEDGER_DB_URI interledger/five-bells-ledger
+docker run -it --rm -e LEDGER_PORT=1337 -e LEDGER_DB_URI=postgres://postgres:password@db --link five-bells-ledger-db:db -p 1337:1337 -h localhost --name fivebells interledger/five-bells-ledger
 ```
 
 Breaking down that command:
 
 * `-it` Run Five Bells Ledger in an interactive terminal.
 * `--rm` Delete container when it's done running.
-* `--net=host` Don't isolate container into its own virtual network. This allows Five Bells Ledger to see the database that we set up above.
 * `-e LEDGER_PORT=1337` Set the ledger's port to 1337. This is just an example for how to set a config option.
+* `-e LEDGER_DB_URI=postgres://postgres:password@db` Set the database URL. Here, 'db' is a host that is Docker-linked:
+* `--link five-bells-ledger-db:db` This allows Five Bells Ledger to see the database that we set up above.
+* `-p 1337:1337` Expose port 1337 to localhost
+* `-h localhost` makes the ledger use 'localhost' as its hostname in the endpoint URLs it announces
+* `--name fivebells` This allows you to refer to this container in for instance `docker inspect fivebells`
+* `interledger/five-bells-ledger` Use the [`five-bells-ledger` Docker image](https://hub.docker.com/r/interledger/five-bells-ledger/)
+
+Now open http://localhost:1337/health in your browser.
 
 ## Running tests
 
