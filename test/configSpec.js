@@ -119,8 +119,8 @@ describe('loadConfig', () => {
 
   describe('config.amount', () => {
     const defaults = {
-      precision: 10,
-      scale: 2
+      precision: 19,
+      scale: 9
     }
 
     it('returns default amount config when no env vars set', () => {
@@ -128,10 +128,10 @@ describe('loadConfig', () => {
       expect(_config.amount).to.deep.equal(defaults)
     })
 
-    it('LEDGER_AMOUNT_SCALE=10', () => {
-      process.env.LEDGER_AMOUNT_SCALE = '10'
+    it('LEDGER_AMOUNT_SCALE=7', () => {
+      process.env.LEDGER_AMOUNT_SCALE = '7'
       const amount = _.defaults({
-        scale: 10
+        scale: 7
       }, defaults)
       const _config = loadConfig()
       expect(_config.amount).to.deep.equal(amount)
