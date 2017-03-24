@@ -70,13 +70,12 @@ docker run --name five-bells-ledger-db -e POSTGRES_PASSWORD=password -d postgres
 After giving postgres a few seconds to start up, you can run a five-bells-ledger Docker container, linking to that database:
 
 ``` sh
-docker run -it --rm -e LEDGER_PORT=1337 -e LEDGER_DB_URI=postgres://postgres:password@db --link five-bells-ledger-db:db -p 1337:1337 -h localhost --name fivebells interledger/five-bells-ledger
+docker run -d -e LEDGER_PORT=1337 -e LEDGER_ADMIN_PASSWORD=admin -e LEDGER_DB_URI=postgres://postgres:password@db --link five-bells-ledger-db:db -p 1337:1337 -h localhost --name fivebells interledger/five-bells-ledger
 ```
 
 Breaking down that command:
 
-* `-it` Run Five Bells Ledger in an interactive terminal.
-* `--rm` Delete container when it's done running.
+* `-d` Run in the background
 * `-e LEDGER_PORT=1337` Set the ledger's port to 1337. This is just an example for how to set a config option.
 * `-e LEDGER_DB_URI=postgres://postgres:password@db` Set the database URL. Here, 'db' is a host that is Docker-linked:
 * `--link five-bells-ledger-db:db` This allows Five Bells Ledger to see the database that we set up above.
@@ -86,6 +85,21 @@ Breaking down that command:
 * `interledger/five-bells-ledger` Use the [`five-bells-ledger` Docker image](https://hub.docker.com/r/interledger/five-bells-ledger/)
 
 Now open http://localhost:1337/health in your browser.
+
+To create a user, you can run:
+
+```sh
+curl -i -sS -X PUT --user admin:admin -H "Content-Type: application/json" -d'{ "name" : "alice", "password" : "alice", "balance" : "20000" }' http://localhost:1337/accounts/alice
+```
+
+To see the database contents, you can create a postgres container that interactively runs psql:
+```sh
+docker run -it --rm --link five-bells-ledger-db:db postgres psql postgres://postgres:password@db
+```
+
+You can then use [`ilp-plugin-bells`](https://github.com/interledgerjs/ilp-plugin-bells) to develop a client that connects to this ledger. Make sure you use the matching plugin version to connect to the ledger.
+
+In particular, ledger version 20 can be accessed using `ilp-plugin-bells` version 12.
 
 ## Running tests
 
@@ -112,3 +126,7 @@ Then, in another terminal, run the tests:
 ``` sh
 LEDGER_UNIT_DB_URI=postgres://postgres@`docker inspect --format '{{ .NetworkSettings.IPAddress }}' fbl-pg-test`/postgres npm test
 ```
+
+## A word of warning
+
+This software is under development and no guarantees are made regarding reliability.
