@@ -56,6 +56,13 @@ describe('PUT /rejection', function () {
     this.clock.restore()
   })
 
+  it('should return 401 if the request is not authenticated', function * () {
+    yield this.request()
+      .put(this.preparedTransfer.id + '/rejection')
+      .expect(401)
+      .end()
+  })
+
   it('should return 404 when rejecting a non-existent transfer', function * () {
     const transfer = this.preparedTransfer
     yield this.request()
@@ -127,6 +134,7 @@ describe('PUT /rejection', function () {
 
     yield this.request()
       .get(transfer.id)
+      .auth('alice', 'alice')
       .expect(200)
       .expect(Object.assign(transfer, {
         state: 'rejected',
@@ -182,6 +190,7 @@ describe('PUT /rejection', function () {
 
     yield this.request()
       .get(transfer.id)
+      .auth('alice', 'alice')
       .expect(200)
       .expect(Object.assign(transfer, {
         state: 'rejected',

@@ -50,6 +50,13 @@ describe('Transfer State', function () {
   })
 
   describe('GET /transfers/:uuid/state', function () {
+    it('should return 401 if the request is not authenticated', function * () {
+      yield this.request()
+        .get(this.transferWithExpiry.id)
+        .expect(401)
+        .end()
+    })
+
     it('should return a 200 if the transfer does not exist', function * () {
       const stateReceipt = {
         id: 'http://localhost/transfers/03b7c787-e104-4390-934e-693072c6eda2',
@@ -65,6 +72,7 @@ describe('Transfer State', function () {
 
       yield this.request()
         .get('/transfers/03b7c787-e104-4390-934e-693072c6eda2/state')
+        .auth('admin', 'admin')
         .expect(200, {
           message: stateReceipt,
           type: 'ed25519-sha512',
@@ -104,6 +112,7 @@ describe('Transfer State', function () {
 
       yield this.request()
         .get(transfer.id + '/state?type=sha256')
+        .auth('alice', 'alice')
         .expect(200, {
           message: stateReceipt,
           type: 'sha256',
@@ -149,6 +158,7 @@ describe('Transfer State', function () {
 
       yield this.request()
         .get(transfer.id + '/state?type=sha256&condition_state=executed')
+        .auth('alice', 'alice')
         .expect(200, {
           message: stateReceipt,
           type: 'sha256',
@@ -168,6 +178,7 @@ describe('Transfer State', function () {
     it('returns 400 if the ?type parameter is invalid', function * () {
       yield this.request()
         .get(this.executedTransfer.id + '/state?type=bogus')
+        .auth('alice', 'alice')
         .expect(400, {
           id: 'InvalidUriParameterError',
           message: 'type is not valid'
@@ -193,6 +204,7 @@ describe('Transfer State', function () {
 
       yield this.request()
         .get(this.executedTransfer.id + '/state')
+        .auth('alice', 'alice')
         .expect(200, {
           message: stateReceipt,
           type: 'ed25519-sha512',
@@ -225,6 +237,7 @@ describe('Transfer State', function () {
 
         yield this.request()
           .get(transfer.id + '/state')
+          .auth('alice', 'alice')
           .expect(200, {
             message: stateReceipt,
             type: 'ed25519-sha512',
@@ -243,6 +256,7 @@ describe('Transfer State', function () {
 
       yield this.request()
         .get(transfer.id + '/state')
+        .auth('alice', 'alice')
         .expect(function (res) {
           let validationResult = validate('TransferStateReceipt', res.body)
           if (!validationResult.valid) {
@@ -285,6 +299,7 @@ describe('Transfer State', function () {
 
       yield this.request()
         .get(transfer.id + '/state')
+        .auth('alice', 'alice')
         .expect(200, {
           message: stateReceipt,
           type: 'ed25519-sha512',
