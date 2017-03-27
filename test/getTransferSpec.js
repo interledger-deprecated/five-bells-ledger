@@ -53,6 +53,7 @@ describe('GET /transfers/:uuid', function () {
     const transfer = this.existingTransfer
     yield this.request()
       .get(transfer.id)
+      .auth('alice', 'alice')
       .expect(200)
       .expect(transfer)
       .expect(validator.validateTransfer)
@@ -62,7 +63,15 @@ describe('GET /transfers/:uuid', function () {
   it('should return 404 when the transfer does not exist', function * () {
     yield this.request()
       .get(this.exampleTransfer.id)
+      .auth('admin', 'admin')
       .expect(404)
+      .end()
+  })
+
+  it('should return 401 if the request is not authenticated', function * () {
+    yield this.request()
+      .get(this.exampleTransfer.id)
+      .expect(401)
       .end()
   })
 
@@ -86,6 +95,7 @@ describe('GET /transfers/:uuid', function () {
 
     yield this.request()
       .get(transfer.id)
+      .auth('alice', 'alice')
       .expect(200, _.assign({}, transfer, {
         state: transferStates.TRANSFER_STATE_REJECTED,
         rejection_reason: 'expired',

@@ -48,6 +48,13 @@ describe('GET /fulfillment', function () {
     this.clock.restore()
   })
 
+  it('should return 401 if the request is not authenticated', function * () {
+    yield this.request()
+        .get(this.executedTransfer.id + '/fulfillment')
+        .expect(401)
+        .end()
+  })
+
   /* GET fulfillments */
   it('should return 404 for fulfillment when given an invalid transfer id', function * () {
     yield this.request()
@@ -87,6 +94,7 @@ describe('GET /fulfillment', function () {
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
       .send(this.executionConditionFulfillment)
       .expect(422)
       .expect({
@@ -155,6 +163,7 @@ describe('GET /fulfillment', function () {
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
       .send(this.executionConditionFulfillment)
       .expect(201)
       .expect(this.executionConditionFulfillment)
@@ -177,6 +186,7 @@ describe('GET /fulfillment', function () {
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
       .send(this.executionConditionFulfillment)
       .expect(400)
       .end()
@@ -187,6 +197,7 @@ describe('GET /fulfillment', function () {
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
       .send(this.cancellationConditionFulfillment)
       .expect(400)
       .end()
@@ -199,6 +210,7 @@ describe('GET /fulfillment', function () {
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
       .send(executionConditionFulfillment)
       .expect(422)
       .end()
@@ -235,10 +247,18 @@ describe('PUT /fulfillment', function () {
     this.clock.restore()
   })
 
+  it('should return 401 if the request is not authenticated', function * () {
+    yield this.request()
+      .put(this.preparedTransfer.id + '/fulfillment')
+      .expect(401)
+      .end()
+  })
+
   it('should return 404 when fulfilling a non-existent transfer', function * () {
     const transfer = this.preparedTransfer
     yield this.request()
       .put(transfer.id + '/fulfillment')
+      .auth('admin', 'admin')
       .send(this.executionConditionFulfillment)
       .expect(404)
       .end()
@@ -263,6 +283,7 @@ describe('PUT /fulfillment', function () {
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
       .send(this.cancellationConditionFulfillment)
       .expect(422)
       .expect({
@@ -293,6 +314,7 @@ describe('PUT /fulfillment', function () {
       const invalidCancellationConditionFulfillment = 'oAiABp6LXGp3Hg'
       yield this.request()
         .put(transfer.id + '/fulfillment')
+        .auth('alice', 'alice')
         .send(invalidCancellationConditionFulfillment)
         .expect(422)
         .expect({
@@ -307,6 +329,7 @@ describe('PUT /fulfillment', function () {
 
       yield this.request()
         .put(transfer.id + '/fulfillment')
+        .auth('alice', 'alice')
         .send(this.cancellationConditionFulfillment)
         .expect(201)
         .expect(this.cancellationConditionFulfillment)
@@ -334,6 +357,7 @@ describe('PUT /fulfillment', function () {
 
       yield this.request()
         .put(transfer.id + '/fulfillment')
+        .auth('alice', 'alice')
         .send(this.executionConditionFulfillment)
         .expect(201)
         .expect(this.executionConditionFulfillment)
@@ -359,6 +383,7 @@ describe('PUT /fulfillment', function () {
 
       yield this.request()
         .put(transfer.id + '/fulfillment')
+        .auth('alice', 'alice')
         .send(this.executionConditionFulfillmentTypeAnd)
         .expect(201)
         .expect(this.executionConditionFulfillmentTypeAnd)
@@ -391,16 +416,19 @@ describe('PUT /fulfillment', function () {
     yield [
       this.request()
         .put(transfer.id + '/fulfillment')
+        .auth('alice', 'alice')
         .send(this.executionConditionFulfillment)
         .expect(validateResponse)
         .end(),
       this.request()
         .put(transfer.id + '/fulfillment')
+        .auth('alice', 'alice')
         .send(this.executionConditionFulfillment)
         .expect(validateResponse)
         .end(),
       this.request()
         .put(transfer.id + '/fulfillment')
+        .auth('alice', 'alice')
         .send(this.executionConditionFulfillment)
         .expect(validateResponse)
         .end()
@@ -429,6 +457,7 @@ describe('PUT /fulfillment', function () {
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
       .send(this.cancellationConditionFulfillment)
       .expect(201)
       .expect(this.cancellationConditionFulfillment)
@@ -441,6 +470,7 @@ describe('PUT /fulfillment', function () {
 
     yield this.request()
       .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
       .send(this.cancellationConditionFulfillment)
       .expect(422)
       .expect({

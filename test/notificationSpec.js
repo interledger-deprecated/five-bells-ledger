@@ -182,6 +182,7 @@ describe('Notifications', function () {
         this.clock.tick(500)
         yield this.request()
           .put(transfer.id + '/fulfillment')
+          .auth('alice', 'alice')
           .send(fulfillment)
           .expect(201)
           .end()
@@ -343,6 +344,7 @@ describe('Notifications', function () {
 
         yield this.request()
           .put(transfer.id + '/fulfillment')
+          .auth('alice', 'alice')
           .send(this.executionConditionFulfillment)
           .expect(201)
           .expect(this.executionConditionFulfillment)
@@ -410,6 +412,7 @@ describe('Notifications', function () {
 
         yield this.request()
           .put(transfer.id + '/fulfillment')
+          .auth('alice', 'alice')
           .send(this.cancellationConditionFulfillment)
           .expect(201)
           .expect(this.cancellationConditionFulfillment)
