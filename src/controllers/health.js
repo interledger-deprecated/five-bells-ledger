@@ -1,7 +1,10 @@
 'use strict'
 
 const model = require('../models/health')
+const cacheExpiry = 60000
 
+let lastQueried
+let cachedResult
 /**
  * @api {get} /health Get server health status
  * @apiName GetHealth
@@ -17,5 +20,11 @@ const model = require('../models/health')
  * @returns {void}
  */
 exports.getResource = function * health () {
-  this.body = yield model.getDbHealth()
+  const now = Date.now()
+  // call model.getDbHealth(...) max. once per minute
+  if (!lastQueried || lastQueried > (now - cacheExpiry)) {
+    cachedResult = yield model.getDbHealth()
+    lastQueried = now
+  }
+  this.body = cachedResult
 }
