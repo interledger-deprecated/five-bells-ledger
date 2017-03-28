@@ -117,7 +117,9 @@ class App {
     const setupBody = makeSetupBody(this.config.maxHttpPayload)
     const router = new Router()
     router.get('/', this.metadata.getResource)
-    router.get('/health', health.getResource)
+    router.get('/health',
+      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      health.getResource)
 
     router.post('/messages',
       passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
