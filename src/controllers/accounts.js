@@ -60,7 +60,8 @@ async function getCollection (ctx) {
 async function getResource (ctx) {
   const name = ctx.params.name
   request.validateUriParameter('name', name, 'Identifier')
-  ctx.body = await model.getAccount(name.toLowerCase(), ctx.state.user)
+  ctx.body = await model.getAccount(name.toLowerCase(),
+    ctx.isAuthenticated() ? ctx.state.user : undefined)
 }
 
 /**

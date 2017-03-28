@@ -1,5 +1,6 @@
 'use strict'
 
+const mock = require('mock-require')
 const fs = require('fs')
 const _ = require('lodash')
 const expect = require('chai').expect
@@ -106,7 +107,39 @@ describe('Accounts', function () {
     })
   })
 
-  describe('GET /accounts/:uuid', function () {
+  describe('GET /accounts/:uuid (unauthenticated)', function () {
+    it('should return 200 + partial data', async function () {
+      await this.request()
+        .get(this.existingAccount.id)
+        .expect(200, {
+          id: this.existingAccount.id,
+          name: this.existingAccount.name,
+          ledger: 'http://localhost'
+        })
+        .expect(validator.validateAccount)
+    })
+
+    it('should return 200 + partial data for an account that does not exist', async function () {
+      await this.request()
+        .get(this.exampleAccounts.candice.id)
+        .expect(200, {
+          id: this.exampleAccounts.candice.id,
+          name: this.exampleAccounts.candice.name,
+          ledger: 'http://localhost'
+        })
+        .expect(validator.validateAccount)
+    })
+
+    it('does not query the database', async function () {
+      mock('../src/models/db/accounts', './helpers/dbAccountsMock')
+      mock.reRequire('../src/models/accounts')
+      const accounts = require('../src/models/accounts')
+      // throws if getAccount() queries the database
+      await accounts.getAccount('alice', undefined)
+    })
+  })
+
+  describe('GET /accounts/:uuid (authenticated)', async function () {
     it('should return 200 for an account that exists', async function () {
       await this.request()
         .get(this.existingAccount.id)
@@ -119,23 +152,6 @@ describe('Accounts', function () {
       await this.request()
         .get(this.exampleAccounts.candice.id)
         .auth('admin', 'admin')
-        .expect(404)
-    })
-
-    it('should return 200 + partial data, when not authenticated', async function () {
-      await this.request()
-        .get(this.existingAccount.id)
-        .expect(200, {
-          id: this.existingAccount.id,
-          name: this.existingAccount.name,
-          ledger: 'http://localhost'
-        })
-        .expect(validator.validateAccount)
-    })
-
-    it('should return 404 when not authenticated + nonexistent target', async function () {
-      await this.request()
-        .get(this.exampleAccounts.candice.id)
         .expect(404)
     })
 

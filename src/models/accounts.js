@@ -44,19 +44,25 @@ async function getAccounts () {
 async function getAccount (name, requestingUser) {
   log.debug('fetching account name ' + name)
 
-  const canExamine = requestingUser &&
-    (requestingUser.name === name || requestingUser.is_admin)
-  const account = await db.getAccount(name)
-  if (!account) {
-    throw new NotFoundError('Unknown account')
-  } else if (account.is_disabled &&
+  let canExamine = false
+  let account
+  if (!requestingUser) { // anonymous request
+    account = {id: name, name: name}
+  } else { // authenticated request
+    canExamine = requestingUser.name === name || requestingUser.is_admin
+    account = await db.getAccount(name)
+    if (!account) {
+      throw new NotFoundError('Unknown account')
+    } else if (account.is_disabled &&
       (requestingUser && !requestingUser.is_admin)) {
-    throw new UnauthorizedError('This account is disabled')
+      throw new UnauthorizedError('This account is disabled')
+    }
+
+    // TODO get rid of this when we start using biginteger math everywhere
+    account.balance = Number(account.balance).toString()
+    delete account.password_hash
   }
 
-  // TODO get rid of this when we start using biginteger math everywhere
-  account.balance = Number(account.balance).toString()
-  delete account.password_hash
   const data = canExamine ? converters.convertToExternalAccount(account)
     : getPublicData(account)
   data.ledger = config.getIn(['server', 'base_uri'])
