@@ -402,7 +402,6 @@ define({ "api": [
     "title": "Get Server Metadata",
     "name": "GetMetadata",
     "group": "Metadata_Methods",
-    "version": "1.0.0",
     "description": "<p>This endpoint will return server metadata.</p>",
     "examples": [
       {
@@ -466,6 +465,7 @@ define({ "api": [
         }
       ]
     },
+    "version": "0.0.0",
     "filename": "src/controllers/metadata.js",
     "groupTitle": "Metadata_Methods"
   },
