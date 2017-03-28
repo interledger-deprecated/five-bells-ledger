@@ -6,7 +6,7 @@ const accounts = require('../models/accounts')
  * @api {get} / Get Server Metadata
  * @apiName GetMetadata
  * @apiGroup Metadata Methods
- * @apiVersion 1.0.0
+ * @version 1.0.0
  *
  * @apiDescription This endpoint will return server metadata.
  * @apiExample {shell} Get Metadata
@@ -72,6 +72,11 @@ module.exports = (config) => {
     },
     precision: config.get('amount.precision'),
     scale: config.get('amount.scale')
+  }
+
+  try {
+    metadata.version = `five-bells@${require('../../package.json').version.split('.')[0]}`
+  } catch (e) {
   }
 
   return {

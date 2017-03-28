@@ -42,6 +42,7 @@ describe('Metadata', function () {
               websocket: 'ws://localhost/websocket',
               message: 'http://localhost/messages'
             },
+            version: 'five-bells@20',
             precision: 19,
             scale: 9,
             connectors: []
@@ -88,6 +89,7 @@ describe('Metadata', function () {
               websocket: 'ws://localhost/websocket',
               message: 'http://localhost/messages'
             },
+            version: 'five-bells@20',
             precision: 19,
             scale: 9,
             connectors: [
