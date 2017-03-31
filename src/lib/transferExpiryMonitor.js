@@ -20,11 +20,13 @@ class TransferExpiryMonitor {
   }
 
   validateNotExpired (transfer) {
+    const now = moment()
     if (transfer.expires_at &&
-      moment().isAfter(transfer.expires_at)) {
+      now.isAfter(transfer.expires_at)) {
       throw new ExpiredTransferError('Cannot modify transfer ' +
         'after expires_at date')
     }
+    return now
   }
 
   * expireTransfer (transferId) {

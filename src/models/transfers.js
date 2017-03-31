@@ -368,10 +368,12 @@ function * cancelTransfer (transaction, transfer, fulfillment) {
   updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
 }
 
-function * executeTransfer (transaction, transfer, fulfillment) {
+function * executeTransfer (transaction, transfer, fulfillment, executedAt) {
   yield fulfillments.insertFulfillment(fulfillment, {transaction})
   yield holds.disburseFunds(transfer, transaction)
-  updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED)
+  updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED, {
+    updatedAt: executedAt
+  })
 }
 
 function * fulfillTransfer (transferId, fulfillmentUri) {
@@ -389,7 +391,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
         }
 
         const conditionType = validateConditionFulfillment(transfer, fulfillment)
-        transferExpiryMonitor.validateNotExpired(transfer)
+        const validatedAt = transferExpiryMonitor.validateNotExpired(transfer)
 
         if (
           conditionType === CONDITION_TYPE_EXECUTION &&
@@ -406,7 +408,7 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
             throw new InvalidModificationError('Transfers in state ' +
             transfer.state + ' may not be executed')
           }
-          yield executeTransfer(transaction, transfer, fulfillment)
+          yield executeTransfer(transaction, transfer, fulfillment, validatedAt)
         } else if (conditionType === CONDITION_TYPE_CANCELLATION) {
           if (!_.includes(validCancellationStates, transfer.state)) {
             throw new InvalidModificationError('Transfers in state ' +
