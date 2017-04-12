@@ -1,7 +1,6 @@
 'use strict'
 
 const _ = require('lodash')
-const co = require('co')
 const fs = require('fs')
 const path = require('path')
 const assert = require('assert')
@@ -26,22 +25,20 @@ const TABLE_NAMES = [
   'L_LU_TRANSFER_STATUS'
 ]
 
-function withTransaction (callback) {
-  return knex.transaction(co.wrap(callback))
-}
+const withTransaction = knex.transaction.bind(knex)
 
 function withSerializableTransaction (callback) {
   const dbType = knex.client.config.client
-  return withTransaction(function * (transaction) {
+  return withTransaction(async function (transaction) {
     // Set isolation level to avoid reading "prepared" transaction that is currently being
     // executed by another request. This ensures the transfer can be fulfilled only once.
     assert(_.includes(['sqlite3', 'pg', 'mysql'], dbType),
       'A valid client must be specified on the db object')
     if (dbType === 'pg') {
-      yield transaction.raw('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+      await transaction.raw('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
     }
 
-    return yield callback(transaction)
+    return await callback(transaction)
   })
 }
 
@@ -95,19 +92,19 @@ function executeScript (filename) {
   }
 }
 
-function * createTables () {
+async function createTables () {
   if (knex.client.config.client === 'pg') {
-    yield migratePostgres()
+    await migratePostgres()
   } else {
-    yield executeScript('create.sql')
+    await executeScript('create.sql')
   }
 }
 
-function * dropTables () {
+async function dropTables () {
   if (knex.client.config.client === 'pg') {
-    yield migratePostgres('1')
+    await migratePostgres('1')
   } else {
-    yield executeScript('drop.sql')
+    await executeScript('drop.sql')
   }
 }
 
@@ -126,20 +123,20 @@ function migratePostgres (step) {
   })
 }
 
-function * truncateTables () {
+async function truncateTables () {
   const dbType = knex.client.config.client
   for (const tableName of TABLE_NAMES) {
     if (!tableName.includes('_LU_')) {
       if (dbType === 'pg') {
-        yield knex.raw('TRUNCATE TABLE "' + tableName + '" CASCADE;')
+        await knex.raw('TRUNCATE TABLE "' + tableName + '" CASCADE;')
       } else {
-        yield knex(tableName).truncate()
+        await knex(tableName).truncate()
       }
     }
   }
 }
 
-function * isConnected () {
+async function isConnected () {
   return knex.raw('SELECT 1')
   .then(() => {
     return true

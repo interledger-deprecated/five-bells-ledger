@@ -24,8 +24,7 @@ describe('TimerWorker', function () {
     this.transferExpiryMonitor = new TransferExpiryMonitor(this.timeQueue)
     sinon.stub(this.transferExpiryMonitor,
       'processExpiredTransfers',
-      function * () {
-        return
+      async function () {
       })
     this.timerWorker = new TimerWorker(this.timeQueue, this.transferExpiryMonitor)
   })
@@ -36,82 +35,82 @@ describe('TimerWorker', function () {
   })
 
   describe('.start()', function () {
-    it('should add a listener to the timeQueue to watch for newly inserted transfers', function * () {
-      yield this.timerWorker.start()
+    it('should add a listener to the timeQueue to watch for newly inserted transfers', async function () {
+      await this.timerWorker.start()
       expect(this.timeQueue.listeners('insert')).to.have.length(1)
     })
 
-    it('should trigger the transferExpiryMonitor to process expired transfers when called', function * () {
-      yield this.timerWorker.start()
+    it('should trigger the transferExpiryMonitor to process expired transfers when called', async function () {
+      await this.timerWorker.start()
 
       expect(this.transferExpiryMonitor.processExpiredTransfers).to.have.callCount(1)
     })
   })
 
   describe('.processTimeQueue()', function () {
-    it('should trigger the transferExpiryMonitor to process expired transfers when called', function * () {
-      yield this.timerWorker.processTimeQueue()
+    it('should trigger the transferExpiryMonitor to process expired transfers when called', async function () {
+      await this.timerWorker.processTimeQueue()
 
       expect(this.transferExpiryMonitor.processExpiredTransfers).to.have.callCount(1)
     })
 
-    it('should set a timeout to trigger itself again at the expiry date of the earliest item in the timeQueue', function * () {
-      yield this.timerWorker.start()
-      yield this.timeQueue.insert(START_DATE + 100, 'hello')
+    it('should set a timeout to trigger itself again at the expiry date of the earliest item in the timeQueue', async function () {
+      await this.timerWorker.start()
+      await this.timeQueue.insert(START_DATE + 100, 'hello')
 
       this.clock.tick(100)
 
       expect(this.transferExpiryMonitor.processExpiredTransfers).to.have.callCount(3)
     })
 
-    it('should be trigger the transferExpiryMonitor to process expired transfers each time a new item is inserted into the timeQueue', function * () {
-      yield this.timerWorker.start()
-      yield this.timeQueue.insert(START_DATE + 100, 'hello')
-      yield this.timeQueue.insert(START_DATE + 200, 'hello')
+    it('should be trigger the transferExpiryMonitor to process expired transfers each time a new item is inserted into the timeQueue', async function () {
+      await this.timerWorker.start()
+      await this.timeQueue.insert(START_DATE + 100, 'hello')
+      await this.timeQueue.insert(START_DATE + 200, 'hello')
 
       // The function will be called on the next tick
-      yield Promise.resolve()
+      await Promise.resolve()
       expect(this.transferExpiryMonitor.processExpiredTransfers).to.have.callCount(3)
     })
 
-    it('should only have one timeQueue listener at a time, even if it is triggered by a timeout', function * () {
-      yield this.timerWorker.start()
-      yield this.timeQueue.insert(START_DATE + 100, 'hello')
+    it('should only have one timeQueue listener at a time, even if it is triggered by a timeout', async function () {
+      await this.timerWorker.start()
+      await this.timeQueue.insert(START_DATE + 100, 'hello')
 
       this.clock.tick(100)
 
       expect(this.timeQueue.listeners('insert')).to.have.length(1)
     })
 
-    it('should keep the timeQueue ordered from earliest date to latest', function * () {
-      yield this.timerWorker.start()
-      yield this.timeQueue.insert(START_DATE + 100, 'hello')
-      yield this.timeQueue.insert(START_DATE + 200, 'hello again')
+    it('should keep the timeQueue ordered from earliest date to latest', async function () {
+      await this.timerWorker.start()
+      await this.timeQueue.insert(START_DATE + 100, 'hello')
+      await this.timeQueue.insert(START_DATE + 200, 'hello again')
 
       this.clock.tick(100)
 
       // The function will be called on the next tick
-      yield Promise.resolve()
+      await Promise.resolve()
       expect(this.transferExpiryMonitor.processExpiredTransfers).to.have.callCount(4)
     })
 
     it('should work with a timeout that is greater than the maximum for setTimeout',
-      function * () {
+      async function () {
         const max32int = 2147483647
 
-        yield this.timerWorker.start()
-        yield this.timeQueue.insert(START_DATE + max32int + 1, 'hello')
+        await this.timerWorker.start()
+        await this.timeQueue.insert(START_DATE + max32int + 1, 'hello')
 
         expect(this.transferExpiryMonitor.processExpiredTransfers).to.have.callCount(2)
 
         this.clock.tick(1)
 
-        yield Promise.resolve()
+        await Promise.resolve()
         expect(this.transferExpiryMonitor.processExpiredTransfers).to.have.callCount(2)
 
         this.clock.tick(max32int)
 
-        yield Promise.resolve()
+        await Promise.resolve()
         expect(this.transferExpiryMonitor.processExpiredTransfers).to.have.callCount(3)
       })
   })

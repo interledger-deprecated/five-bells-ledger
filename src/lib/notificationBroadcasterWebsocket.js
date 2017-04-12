@@ -21,14 +21,14 @@ class NotificationBroadcaster {
     this.listeners = new Map()
   }
 
-  * sendNotifications (transfer, transaction) {
+  async sendNotifications (transfer, transaction) {
     const affectedAccounts = _([transfer.debits, transfer.credits])
       .flatten().map('account').uniq().value()
 
     let relatedResources
     // If the transfer is finalized, see if it was finalized by a fulfillment
     if (isTransferFinalized(transfer)) {
-      const fulfillment = yield maybeGetFulfillment(transfer.id, { transaction })
+      const fulfillment = await maybeGetFulfillment(transfer.id, { transaction })
 
       if (fulfillment) {
         if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
@@ -47,15 +47,15 @@ class NotificationBroadcaster {
 
     const eventName = transfer.state === transferStates.TRANSFER_STATE_PREPARED
       ? 'transfer.create' : 'transfer.update'
-    yield this.emitNotification(affectedAccounts, eventName,
+    await this.emitNotification(affectedAccounts, eventName,
       convertToExternalTransfer(transfer), relatedResources)
   }
 
-  * sendMessage (destinationAccount, message) {
-    return yield this.emitNotification([destinationAccount], 'message.send', message)
+  async sendMessage (destinationAccount, message) {
+    return await this.emitNotification([destinationAccount], 'message.send', message)
   }
 
-  * emitNotification (affectedAccounts, eventType, resource, relatedResources) {
+  async emitNotification (affectedAccounts, eventType, resource, relatedResources) {
     // Always notify global listeners - as identified by the special "*" account name
     affectedAccounts = affectedAccounts.concat('*')
 

@@ -7,7 +7,7 @@ const validator = require('../services/validator')
 const notificationBroadcaster = require('../services/notificationBroadcaster')
 const log = require('../services/log').create('messages')
 
-function * sendMessage (message, requestingUser) {
+async function sendMessage (message, requestingUser) {
   const validationResult = validator.create('Message')(message)
   if (validationResult.valid !== true) {
     const error = validationResult.schema
@@ -33,7 +33,7 @@ function * sendMessage (message, requestingUser) {
     throw new InvalidBodyError('You do not have permission to impersonate this user')
   }
 
-  const messageDelivered = yield notificationBroadcaster.sendMessage(
+  const messageDelivered = await notificationBroadcaster.sendMessage(
     recipientName, Object.assign({}, message, {account: senderAccount}))
   if (!messageDelivered) {
     throw new NoSubscriptionsError('Destination account could not be reached')

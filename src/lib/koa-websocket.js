@@ -2,7 +2,6 @@
 
 const url = require('url')
 const compose = require('koa-compose')
-const co = require('co')
 const WebSocketServer = require('ws').Server
 const log = require('../services/log').create('koa-websocket')
 
@@ -26,13 +25,13 @@ class KoaWebSocketServer {
   onConnection (socket) {
     log.debug('Connection received')
     socket.on('error', (err) => { log.debug('Error occurred:', err) })
-    const fn = co.wrap(compose(this.middleware))
+    const fn = compose(this.middleware)
 
     const context = this.app.createContext(socket.upgradeReq)
     context.websocket = socket
     context.path = url.parse(socket.upgradeReq.url).pathname
 
-    fn.bind(context).call().catch((err) => { log.debug(err) })
+    fn(context).catch((err) => { log.debug(err) })
   }
 
   use (fn) {

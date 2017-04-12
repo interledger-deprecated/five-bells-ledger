@@ -24,13 +24,13 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('Transfer State', function () {
   logHelper(logger)
 
-  before(function * () {
-    yield dbHelper.init()
+  before(async function () {
+    await dbHelper.init()
   })
 
-  beforeEach(function * () {
+  beforeEach(async function () {
     appHelper.create(this, app)
-    yield dbHelper.clean()
+    await dbHelper.clean()
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     this.keyPair = tweetnacl.sign.keyPair.fromSeed(
@@ -42,22 +42,21 @@ describe('Transfer State', function () {
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
 
     // Store some example data
-    yield dbHelper.addAccounts(_.values(require('./data/accounts')))
+    await dbHelper.addAccounts(_.values(require('./data/accounts')))
   })
 
-  afterEach(function * () {
+  afterEach(async function () {
     this.clock.restore()
   })
 
   describe('GET /transfers/:uuid/state', function () {
-    it('should return 401 if the request is not authenticated', function * () {
-      yield this.request()
+    it('should return 401 if the request is not authenticated', async function () {
+      await this.request()
         .get(this.transferWithExpiry.id)
         .expect(401)
-        .end()
     })
 
-    it('should return a 200 if the transfer does not exist', function * () {
+    it('should return a 200 if the transfer does not exist', async function () {
       const stateReceipt = {
         id: 'http://localhost/transfers/03b7c787-e104-4390-934e-693072c6eda2',
         state: transferStates.TRANSFER_STATE_NONEXISTENT
@@ -70,7 +69,7 @@ describe('Transfer State', function () {
         )
       ).toString('base64')
 
-      yield this.request()
+      await this.request()
         .get('/transfers/03b7c787-e104-4390-934e-693072c6eda2/state')
         .auth('admin', 'admin')
         .expect(200, {
@@ -81,21 +80,19 @@ describe('Transfer State', function () {
           signature: signature
         })
         .expect(validator.validateTransferStateReceipt)
-        .end()
     })
 
-    it('supports type=sha256', function * () {
+    it('supports type=sha256', async function () {
       const transfer = _.cloneDeep(this.transferWithExpiry)
       delete transfer.debits[0].authorized
       delete transfer.debits[1].authorized
       transfer.state = transferStates.TRANSFER_STATE_PROPOSED
-      yield this.request()
+      await this.request()
         .put(transfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
         .expect(validator.validateTransfer)
-        .end()
 
       const currentToken = new Buffer(
         tweetnacl.sign.detached(
@@ -110,7 +107,7 @@ describe('Transfer State', function () {
         token: currentToken
       }
 
-      yield this.request()
+      await this.request()
         .get(transfer.id + '/state?type=sha256')
         .auth('alice', 'alice')
         .expect(200, {
@@ -120,21 +117,19 @@ describe('Transfer State', function () {
           digest: sha256(stringifyJSON(stateReceipt))
         })
         .expect(validator.validateTransferStateReceipt)
-        .end()
     })
 
-    it('supports type=sha256 and condition_state', function * () {
+    it('supports type=sha256 and condition_state', async function () {
       const transfer = _.cloneDeep(this.transferWithExpiry)
       delete transfer.debits[0].authorized
       delete transfer.debits[1].authorized
       transfer.state = transferStates.TRANSFER_STATE_PROPOSED
-      yield this.request()
+      await this.request()
         .put(transfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
         .expect(validator.validateTransfer)
-        .end()
 
       const currentToken = new Buffer(
         tweetnacl.sign.detached(
@@ -156,7 +151,7 @@ describe('Transfer State', function () {
         token: currentToken
       }
 
-      yield this.request()
+      await this.request()
         .get(transfer.id + '/state?type=sha256&condition_state=executed')
         .auth('alice', 'alice')
         .expect(200, {
@@ -172,23 +167,21 @@ describe('Transfer State', function () {
           }))
         })
         .expect(validator.validateTransferStateReceipt)
-        .end()
     })
 
-    it('returns 400 if the ?type parameter is invalid', function * () {
-      yield this.request()
+    it('returns 400 if the ?type parameter is invalid', async function () {
+      await this.request()
         .get(this.executedTransfer.id + '/state?type=bogus')
         .auth('alice', 'alice')
         .expect(400, {
           id: 'InvalidUriParameterError',
           message: 'type is not valid'
         })
-        .end()
     })
 
     it('should return a 200 and a signed receipt including the message, ' +
-      'messageHash, type, public_key, and signature', function * () {
-      yield dbHelper.addTransfers([this.executedTransfer])
+      'messageHash, type, public_key, and signature', async function () {
+      await dbHelper.addTransfers([this.executedTransfer])
 
       const stateReceipt = {
         id: this.executedTransfer.id,
@@ -202,7 +195,7 @@ describe('Transfer State', function () {
         )
       ).toString('base64')
 
-      yield this.request()
+      await this.request()
         .get(this.executedTransfer.id + '/state')
         .auth('alice', 'alice')
         .expect(200, {
@@ -213,15 +206,14 @@ describe('Transfer State', function () {
           signature: signature
         })
         .expect(validator.validateTransferStateReceipt)
-        .end()
     })
 
     it('should return the correct state if the transfer is prepared',
-      function * () {
+      async function () {
         const transfer = _.cloneDeep(this.executedTransfer)
         transfer.state = transferStates.TRANSFER_STATE_PREPARED
 
-        yield dbHelper.addTransfers([transfer])
+        await dbHelper.addTransfers([transfer])
 
         const stateReceipt = {
           id: transfer.id,
@@ -235,7 +227,7 @@ describe('Transfer State', function () {
           )
         ).toString('base64')
 
-        yield this.request()
+        await this.request()
           .get(transfer.id + '/state')
           .auth('alice', 'alice')
           .expect(200, {
@@ -246,15 +238,14 @@ describe('Transfer State', function () {
             signature: signature
           })
           .expect(validator.validateTransferStateReceipt)
-          .end()
       })
 
-    it('should return a valid TransferStateReceipt', function * () {
+    it('should return a valid TransferStateReceipt', async function () {
       const transfer = _.cloneDeep(this.executedTransfer)
 
-      yield dbHelper.addTransfers([transfer])
+      await dbHelper.addTransfers([transfer])
 
-      yield this.request()
+      await this.request()
         .get(transfer.id + '/state')
         .auth('alice', 'alice')
         .expect(function (res) {
@@ -264,22 +255,20 @@ describe('Transfer State', function () {
           }
         })
         .expect(validator.validateTransferStateReceipt)
-        .end()
     })
 
     it('should return a rejected transfer receipt if the expires_at date ' +
-      'has passed', function * () {
+      'has passed', async function () {
       const transfer = this.transferWithExpiry
       delete transfer.debits[0].authorized
       delete transfer.debits[1].authorized
 
-      yield this.request()
+      await this.request()
         .put(transfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
         .expect(validator.validateTransfer)
-        .end()
 
       const stateReceipt = {
         id: transfer.id,
@@ -295,9 +284,9 @@ describe('Transfer State', function () {
 
       // In production this function should be triggered by the worker started in app.js
       this.clock.tick(1000)
-      yield transferExpiryMonitor.processExpiredTransfers()
+      await transferExpiryMonitor.processExpiredTransfers()
 
-      yield this.request()
+      await this.request()
         .get(transfer.id + '/state')
         .auth('alice', 'alice')
         .expect(200, {
@@ -308,7 +297,6 @@ describe('Transfer State', function () {
           signature: signature
         })
         .expect(validator.validateTransferStateReceipt)
-        .end()
     })
   })
 })

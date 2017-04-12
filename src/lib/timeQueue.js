@@ -13,7 +13,7 @@ class TimeQueue {
     emitter(this)
   }
 
-  * insert (date, item) {
+  async insert (date, item) {
     const dateValue = moment(date).valueOf()
     this._queue.enq({
       date: dateValue,
@@ -21,7 +21,7 @@ class TimeQueue {
     })
 
     // This event is used by the worker started in app.js
-    yield this.emit('insert', dateValue, item)
+    await this.emit('insert', dateValue, item)
   }
 
   getEarliestDate () {

@@ -1,6 +1,6 @@
 'use strict'
 
-const superagent = require('co-supertest')
+const superagent = require('supertest')
 const WebSocket = require('ws')
 const methods = require('methods')
 const url = require('url')

@@ -1,6 +1,6 @@
 'use strict'
 
-const superagent = require('co-supertest')
+const superagent = require('supertest')
 const nock = require('nock')
 const expect = require('chai').expect
 nock.enableNetConnect(['localhost', '127.0.0.1'])
@@ -20,8 +20,8 @@ describe('Metadata', function () {
   delete process.env.UNIT_TEST_OVERRIDE
 
   describe('GET /', function () {
-    it('should return metadata', function * () {
-      yield request()
+    it('should return metadata', async function () {
+      await request()
         .get('/')
         .expect(200)
         .expect(function (res) {
@@ -48,10 +48,9 @@ describe('Metadata', function () {
             connectors: []
           })
         })
-        .end()
     })
 
-    it('should return metadata when values are set', function * () {
+    it('should return metadata when values are set', async function () {
       delete process.env.UNIT_TEST_OVERRIDE
 
       process.env.LEDGER_CURRENCY_CODE = 'USD'
@@ -68,7 +67,7 @@ describe('Metadata', function () {
       })
       const agent = superagent(newApp.koa.listen())
 
-      yield agent
+      await agent
         .get('/')
         .expect(200)
         .expect(function (res) {
@@ -100,7 +99,6 @@ describe('Metadata', function () {
             ]
           })
         })
-        .end()
 
       delete process.env.LEDGER_CURRENCY_CODE
       delete process.env.LEDGER_CURRENCY_SYMBOL

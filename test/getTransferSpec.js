@@ -20,13 +20,13 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('GET /transfers/:uuid', function () {
   logHelper(logger)
 
-  before(function * () {
-    yield dbHelper.init()
+  before(async function () {
+    await dbHelper.init()
   })
 
-  beforeEach(function * () {
+  beforeEach(async function () {
     appHelper.create(this, app)
-    yield dbHelper.clean()
+    await dbHelper.clean()
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     // Define example data
@@ -40,60 +40,50 @@ describe('GET /transfers/:uuid', function () {
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry'))
 
     // Store some example data
-    yield dbHelper.addAccounts(_.values(require('./data/accounts')))
-    yield dbHelper.addTransfers([this.existingTransfer])
+    await dbHelper.addAccounts(_.values(require('./data/accounts')))
+    await dbHelper.addTransfers([this.existingTransfer])
   })
 
-  afterEach(function * () {
+  afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
   })
 
-  it('should return 200 for an existing transfer', function * () {
+  it('should return 200 for an existing transfer', async function () {
     const transfer = this.existingTransfer
-    yield this.request()
+    await this.request()
       .get(transfer.id)
       .auth('alice', 'alice')
       .expect(200)
       .expect(transfer)
       .expect(validator.validateTransfer)
-      .end()
   })
 
-  it('should return 404 when the transfer does not exist', function * () {
-    yield this.request()
+  it('should return 404 when the transfer does not exist', async function () {
+    await this.request()
       .get(this.exampleTransfer.id)
       .auth('admin', 'admin')
       .expect(404)
-      .end()
   })
 
-  it('should return 401 if the request is not authenticated', function * () {
-    yield this.request()
-      .get(this.exampleTransfer.id)
-      .expect(401)
-      .end()
-  })
-
-  it('should return a rejected transfer if the expiry date has passed', function * () {
+  it('should return a rejected transfer if the expiry date has passed', async function () {
     const transfer = this.transferWithExpiry
     delete transfer.debits[0].authorized
     delete transfer.debits[1].authorized
 
-    yield this.request()
+    await this.request()
       .put(transfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
       .expect(validator.validateTransfer)
-      .end()
 
     this.clock.tick(1000)
 
     // In production this function should be triggered by the worker started in app.js
-    yield transferExpiryMonitor.processExpiredTransfers()
+    await transferExpiryMonitor.processExpiredTransfers()
 
-    yield this.request()
+    await this.request()
       .get(transfer.id)
       .auth('alice', 'alice')
       .expect(200, _.assign({}, transfer, {
@@ -105,6 +95,5 @@ describe('GET /transfers/:uuid', function () {
         }
       }))
       .expect(validator.validateTransfer)
-      .end()
   })
 })

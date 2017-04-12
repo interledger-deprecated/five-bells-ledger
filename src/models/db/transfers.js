@@ -91,7 +91,7 @@ function convertToPersistent (data) {
   return _.mapKeys(data, (value, key) => key.toUpperCase())
 }
 
-function * getTransferWhere (where, options) {
+function getTransferWhere (where, options) {
   return db.selectOne(where, options && options.transaction)
   .then((transfer) => {
     if (transfer === null) {
@@ -105,8 +105,8 @@ function * getTransferWhere (where, options) {
   })
 }
 
-function * getTransfer (uuid, options) {
-  return yield getTransferWhere({TRANSFER_UUID: uuid}, options)
+async function getTransfer (uuid, options) {
+  return await getTransferWhere({TRANSFER_UUID: uuid}, options)
 }
 
 function getTransferId (uuid, options) {
@@ -115,21 +115,17 @@ function getTransferId (uuid, options) {
       (transfer) => transfer ? transfer._id : null)
 }
 
-function * getTransferById (id, options) {
-  return yield getTransferWhere({TRANSFER_ID: id}, options)
+async function getTransferById (id, options) {
+  return await getTransferWhere({TRANSFER_ID: id}, options)
 }
 
-function * updateTransfer (transfer, options) {
+async function updateTransfer (transfer, options) {
   const transaction = options && options.transaction
-  return db.update(transfer, {TRANSFER_UUID: transfer.id}, transaction)
-  .then((result) => {
-    return db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
-    .then((dbTransfer) => {
-      const transferWithId = _.assign({}, transfer, {'_id': dbTransfer._id})
-      return adjustments.upsertAdjustments(transferWithId, options)
-        .then(() => result)
-    })
-  })
+  const result = await db.update(transfer, {TRANSFER_UUID: transfer.id}, transaction)
+  const dbTransfer = await db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
+  const transferWithId = _.assign({}, transfer, {'_id': dbTransfer._id})
+  await adjustments.upsertAdjustments(transferWithId, options)
+  return result
 }
 
 function insertTransfer (transfer, options) {
@@ -142,12 +138,12 @@ function insertTransfer (transfer, options) {
   })
 }
 
-function * insertTransfers (transfers, options) {
+function insertTransfers (transfers, options) {
   return Promise.all(transfers.map(
     (transfer) => insertTransfer(transfer, options)))
 }
 
-function * upsertTransfer (transfer, options) {
+function upsertTransfer (transfer, options) {
   const transaction = options && options.transaction
   return db.upsert(transfer, {TRANSFER_UUID: transfer.id}, transaction)
   .then((result) => {

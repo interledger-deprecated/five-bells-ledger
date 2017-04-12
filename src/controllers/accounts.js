@@ -9,8 +9,8 @@ const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
 
 const ACCOUNT_REGISTRATION_REGEX = /^[a-z0-9]([a-z0-9]|[-](?!-)){0,18}[a-z0-9]$/
 
-function * getCollection () {
-  this.body = yield model.getAccounts()
+async function getCollection (ctx) {
+  ctx.body = await model.getAccounts()
 }
 
 /**
@@ -57,10 +57,10 @@ function * getCollection () {
 /**
  * @returns {void}
  */
-function * getResource () {
-  const name = this.params.name
+async function getResource (ctx) {
+  const name = ctx.params.name
   request.validateUriParameter('name', name, 'Identifier')
-  this.body = yield model.getAccount(name.toLowerCase(), this.req.user)
+  ctx.body = await model.getAccount(name.toLowerCase(), ctx.state.user)
 }
 
 /**
@@ -101,10 +101,10 @@ function * getResource () {
 /**
  * @return {void}
  */
-function * putResource () {
-  const name = this.params.name
+async function putResource (ctx) {
+  const name = ctx.params.name
   request.validateUriParameter('name', name, 'Identifier')
-  const account = this.body
+  const account = ctx.body
   if (account.id) {
     request.assert.strictEqual(account.id,
       uri.make('account', name),
@@ -117,9 +117,9 @@ function * putResource () {
   if (!ACCOUNT_REGISTRATION_REGEX.test(account.name)) {
     throw new InvalidBodyError('Account name must be 2-20 characters, lowercase letters, numbers and hyphens ("-") only, with no two or more consecutive hyphens.')
   }
-  const result = yield model.setAccount(account, this.req.user)
-  this.body = result.account
-  this.status = result.existed ? 200 : 201
+  const result = await model.setAccount(account, ctx.state.user)
+  ctx.body = result.account
+  ctx.status = result.existed ? 200 : 201
 }
 
 /**
@@ -231,10 +231,10 @@ function * putResource () {
 /**
  * @return {void}
  */
-function * subscribeTransfers () {
+async function subscribeTransfers (ctx) {
   // The websocket is already closed, so don't subscribe.
-  if (this.websocket.readyState !== 1) return
-  makeRpcHandler(this.websocket, this.req.user)
+  if (ctx.websocket.readyState !== 1) return
+  makeRpcHandler(ctx.websocket, ctx.state.user)
 }
 
 module.exports = {

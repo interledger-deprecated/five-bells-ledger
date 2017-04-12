@@ -1,12 +1,11 @@
 'use strict'
-const co = require('co')
 const parseBody = require('co-body')
 const compress = require('koa-compress')
 const serve = require('koa-static')
 const Router = require('koa-router')
 const cors = require('koa-cors')
 const passport = require('koa-passport')
-const koa = require('koa')
+const Koa = require('koa')
 const path = require('path')
 const makeLogger = require('koa-riverpig')
 const errorHandler = require('five-bells-shared/middlewares/error-handler')
@@ -35,50 +34,49 @@ class App {
     this.timerWorker = modules.timerWorker
     this.notificationBroadcaster = modules.notificationBroadcaster
 
-    const koaApp = this.koa = websockify(koa())
+    const koaApp = this.koa = websockify(new Koa())
     const router = this._makeRouter()
     const logger = makeLogger({logger: modules.log.create('koa')})
     koaApp.use(logger)
     koaApp.use(errorHandler({log: modules.log.create('error-handler')}))
-    koaApp.on('error', function () {})
     koaApp.use(cors({expose: ['link']}))
     koaApp.use(passport.initialize())
-    koaApp.use(router.middleware())
     koaApp.use(router.routes())
+    koaApp.use(router.allowedMethods())
     // Serve static files
     koaApp.use(serve(path.join(__dirname, 'public')))
     koaApp.use(compress())
 
     const websocketRouter = this._makeWebsocketRouter()
-    koaApp.ws.use(logger)
-    koaApp.ws.use(errorHandler({log: modules.log.create('ws-error-handler')}))
     koaApp.ws.use(passport.initialize())
     koaApp.ws.use(websocketRouter.routes())
+    koaApp.ws.use(logger)
+    koaApp.ws.use(errorHandler({log: modules.log.create('ws-error-handler')}))
     koaApp.ws.use(websocketRouter.allowedMethods())
   }
 
   start () {
     const log = this.log
-    co(this._start.bind(this)).catch(function (err) {
+    this._start().catch(function (err) {
       log.error((err && err.stack) ? err.stack : err)
     })
   }
 
-  * _start () {
+  async _start () {
     // Start timerWorker to trigger the transferExpiryMonitor
     // when transfers are going to expire
-    yield this.timerWorker.start()
+    await this.timerWorker.start()
 
     try {
       this.log.info('syncing database')
-      yield createTables()
+      await createTables()
     } catch (e) {
       this.log.info('database sync aborted')
     }
 
-    yield readLookupTables()
-    yield seedDB(this.config)
-    yield accountsModel.verifyConnectors(this.config)
+    await readLookupTables()
+    await seedDB(this.config)
+    await accountsModel.verifyConnectors(this.config)
 
     if (this.config.getIn(['server', 'secure'])) {
       const spdy = require('spdy')
@@ -172,36 +170,39 @@ class App {
     const router = new Router()
 
     // Passport errors don't play nice with the koa-websocket context, so use a custom handler.
-    router.get('/websocket', function * () {
-      yield passport.authenticate(['basic', 'http-signature', 'client-cert', 'token'], {
-        session: false
-      }, function * (err, user, info) {
-        if (user) {
-          this.req.user = user
-          yield accounts.subscribeTransfers.call(this)
-        } else {
-          log.warn('websocket authentication error: ' + (err && err.message) + ' info: ' + JSON.stringify(info))
-          this.websocket.close()
-        }
-      }.bind(this))
-    })
+    router.get(
+      '/websocket',
+      (ctx, next) => {
+        return passport.authenticate(['basic', 'http-signature', 'client-cert', 'token'], {
+          session: false
+        }, (err, user, info, status) => {
+          if (user) {
+            ctx.state.user = user
+            return accounts.subscribeTransfers(ctx)
+          } else {
+            log.warn('websocket authentication error: ' + (err && err.message) + ' info: ' + JSON.stringify(info))
+            ctx.websocket.close()
+          }
+        })(ctx, next)
+      }
+    )
 
     return router
   }
 }
 
-function * filterAdmin (next) {
-  if (this.req.user && this.req.user.is_admin) {
-    yield next
+async function filterAdmin (ctx, next) {
+  if (ctx.state.user && ctx.state.user.is_admin) {
+    await next()
   } else {
     throw new UnauthorizedError('You aren\'t an admin')
   }
 }
 
 function makeSetupBody (maxHttpPayload) {
-  return function * setupBody (next) {
-    this.body = yield parseBody(this, {limit: maxHttpPayload})
-    yield next
+  return async function setupBody (ctx, next) {
+    ctx.body = await parseBody(ctx, {limit: maxHttpPayload})
+    await next()
   }
 }
 

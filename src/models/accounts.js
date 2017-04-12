@@ -19,34 +19,34 @@ function getPublicData (data) {
   }
 }
 
-function * getConnectors (config) {
+function getConnectors (config) {
   if (!config.recommendedConnectors) return []
 
   return config.recommendedConnectors.map(name => ({ name })).map(getPublicData)
 }
 
-function * verifyConnectors (config) {
+async function verifyConnectors (config) {
   if (!config.recommendedConnectors) return
   for (const connector of config.recommendedConnectors) {
     try {
-      yield getAccount(connector)
+      await getAccount(connector)
     } catch (err) {
       log.warn('connector account ' + err.name + ': ' + err.message + ': ' + connector)
     }
   }
 }
 
-function * getAccounts () {
-  const accounts = yield db.getAccounts()
+async function getAccounts () {
+  const accounts = await db.getAccounts()
   return accounts.map(converters.convertToExternalAccount)
 }
 
-function * getAccount (name, requestingUser) {
+async function getAccount (name, requestingUser) {
   log.debug('fetching account name ' + name)
 
   const canExamine = requestingUser &&
     (requestingUser.name === name || requestingUser.is_admin)
-  const account = yield db.getAccount(name)
+  const account = await db.getAccount(name)
   if (!account) {
     throw new NotFoundError('Unknown account')
   } else if (account.is_disabled &&
@@ -63,7 +63,7 @@ function * getAccount (name, requestingUser) {
   return data
 }
 
-function * setAccount (externalAccount, requestingUser) {
+async function setAccount (externalAccount, requestingUser) {
   assert(requestingUser)
 
   const validationResult = validator.create('Account')(externalAccount)
@@ -76,7 +76,7 @@ function * setAccount (externalAccount, requestingUser) {
   const account = converters.convertToInternalAccount(externalAccount)
 
   if (account.password) {
-    account.password_hash = (yield hashPassword(account.password)).toString('base64')
+    account.password_hash = (await hashPassword(account.password)).toString('base64')
     delete account.password
   }
 
@@ -86,7 +86,7 @@ function * setAccount (externalAccount, requestingUser) {
       _.every(_.keys(account), (key) => _.includes(allowedKeys, key))))) {
     throw new UnauthorizedError('Not authorized')
   }
-  const existed = yield db.upsertAccount(account)
+  const existed = await db.upsertAccount(account)
   log.debug((existed ? 'updated' : 'created') + ' account name ' +
     account.name)
   return {
@@ -95,17 +95,17 @@ function * setAccount (externalAccount, requestingUser) {
   }
 }
 
-function * insertAccounts (externalAccounts) {
+async function insertAccounts (externalAccounts) {
   const accounts = externalAccounts.map(converters.convertToInternalAccount)
   // Hash passwords
   for (let account of accounts) {
     if (account.password) {
-      account.password_hash = (yield hashPassword(account.password))
+      account.password_hash = (await hashPassword(account.password))
         .toString('base64')
       delete account.password
     }
   }
-  yield db.insertAccounts(accounts)
+  await db.insertAccounts(accounts)
 }
 
 function setBalance (name, balance, options) {

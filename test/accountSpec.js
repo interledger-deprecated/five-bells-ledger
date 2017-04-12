@@ -3,6 +3,7 @@
 const fs = require('fs')
 const _ = require('lodash')
 const expect = require('chai').expect
+const assert = require('chai').assert
 const sinon = require('sinon')
 const app = require('../src/services/app')
 const logger = require('../src/services/log')
@@ -25,13 +26,13 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('Accounts', function () {
   logHelper(logger)
 
-  before(function * () {
-    yield dbHelper.init()
+  before(async function () {
+    await dbHelper.init()
   })
 
-  beforeEach(function * () {
+  beforeEach(async function () {
     appHelper.create(this, app)
-    yield dbHelper.clean()
+    await dbHelper.clean()
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
@@ -53,7 +54,7 @@ describe('Accounts', function () {
     this.fulfillment = require('./data/fulfillments/execution')
 
     // Store some example data
-    yield dbHelper.addAccounts([
+    await dbHelper.addAccounts([
       this.adminAccount,
       this.holdAccount,
       this.existingAccount,
@@ -64,7 +65,7 @@ describe('Accounts', function () {
   })
 
   describe('GET /accounts', function () {
-    it('should return 200', function * () {
+    it('should return 200', async function () {
       const account1 = this.adminAccount
       const account2 = this.holdAccount
       const account3 = this.existingAccount
@@ -78,7 +79,7 @@ describe('Accounts', function () {
       delete account4.password
       delete account5.password
       delete account6.password
-      yield this.request()
+      await this.request()
         .get('/accounts')
         .auth('admin', 'admin')
         .expect((res) => {
@@ -92,42 +93,37 @@ describe('Accounts', function () {
         })
         .expect(validator.validateAccounts)
         .expect(200)
-        .end()
     })
 
-    it('should return 401/403 if the user isn\'t an admin', function * () {
-      yield this.request()
+    it('should return 401/403 if the user isn\'t an admin', async function () {
+      await this.request()
         .get('/accounts')
         .expect(401)
-        .end()
-      yield this.request()
+      await this.request()
         .get('/accounts')
         .auth('alice', 'alice')
         .expect(403)
-        .end()
     })
   })
 
   describe('GET /accounts/:uuid', function () {
-    it('should return 200 for an account that exists', function * () {
-      yield this.request()
+    it('should return 200 for an account that exists', async function () {
+      await this.request()
         .get(this.existingAccount.id)
         .auth('admin', 'admin')
         .expect(200)
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should return 404 when the account does not exist', function * () {
-      yield this.request()
+    it('should return 404 when the account does not exist', async function () {
+      await this.request()
         .get(this.exampleAccounts.candice.id)
         .auth('admin', 'admin')
         .expect(404)
-        .end()
     })
 
-    it('should return 200 + partial data, when not authenticated', function * () {
-      yield this.request()
+    it('should return 200 + partial data, when not authenticated', async function () {
+      await this.request()
         .get(this.existingAccount.id)
         .expect(200, {
           id: this.existingAccount.id,
@@ -135,36 +131,32 @@ describe('Accounts', function () {
           ledger: 'http://localhost'
         })
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should return 404 when not authenticated + nonexistent target', function * () {
-      yield this.request()
+    it('should return 404 when not authenticated + nonexistent target', async function () {
+      await this.request()
         .get(this.exampleAccounts.candice.id)
         .expect(404)
-        .end()
     })
 
-    it('should return 403 with invalid credentials', function * () {
-      yield this.request()
+    it('should return 403 with invalid credentials', async function () {
+      await this.request()
         .get(this.existingAccount.id)
         .auth('candice', 'candice')
         .expect(403)
-        .end()
     })
 
-    it('should default the balance to 0', function * () {
+    it('should default the balance to 0', async function () {
       const account = this.noBalance
 
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(account)
         .expect(201)
-        .end()
 
       delete account.password
-      yield this.request()
+      await this.request()
         .get(account.id)
         .auth('admin', 'admin')
         .expect(200)
@@ -173,11 +165,10 @@ describe('Accounts', function () {
           ledger: 'http://localhost'
         }))
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should return partial data for valid but unauthorized credentials', function * () {
-      yield this.request()
+    it('should return partial data for valid but unauthorized credentials', async function () {
+      await this.request()
         .get(this.existingAccount2.id)
         .auth('alice', 'alice')
         .expect(200, {
@@ -186,25 +177,23 @@ describe('Accounts', function () {
           ledger: 'http://localhost'
         })
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should strip out the password field', function * () {
+    it('should strip out the password field', async function () {
       const account = this.existingAccount
       const accountWithoutPassword = _.clone(account)
       delete accountWithoutPassword.password
       accountWithoutPassword.ledger = 'http://localhost'
-      yield this.request()
+      await this.request()
         .get(this.existingAccount.id)
         .auth('admin', 'admin')
         .expect(200)
         .expect(accountWithoutPassword)
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should return the balance as a string', function * () {
-      yield this.request()
+    it('should return the balance as a string', async function () {
+      await this.request()
         .get(this.existingAccount.id)
         .auth('admin', 'admin')
         .expect(200)
@@ -214,11 +203,10 @@ describe('Accounts', function () {
           }
         })
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should return the minimum_allowed_balance as a string', function * () {
-      yield this.request()
+    it('should return the minimum_allowed_balance as a string', async function () {
+      await this.request()
         .get(this.existingAccount.id)
         .auth('admin', 'admin')
         .expect(200)
@@ -228,11 +216,10 @@ describe('Accounts', function () {
           }
         })
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should return the disabled field as a boolean for an admin user', function * () {
-      yield this.request()
+    it('should return the disabled field as a boolean for an admin user', async function () {
+      await this.request()
         .get(this.existingAccount.id)
         .auth('admin', 'admin')
         .expect(200)
@@ -242,32 +229,29 @@ describe('Accounts', function () {
           }
         })
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should allow an admin user to view a disabled account', function * () {
-      yield this.request()
+    it('should allow an admin user to view a disabled account', async function () {
+      await this.request()
         .get(this.disabledAccount.id)
         .auth('admin', 'admin')
         .expect(200)
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should return a 403 when a non-admin user tries to view a disabled account', function * () {
-      yield this.request()
+    it('should return a 403 when a non-admin user tries to view a disabled account', async function () {
+      await this.request()
         .get(this.disabledAccount.id)
         .auth('disabled', 'disabled')
         .expect(403)
-        .end()
     })
 
-    it('should return 0 as a minimum_allowed_balance', function * () {
-      yield dbHelper.addAccounts([this.unspecifiedMinBalance])
+    it('should return 0 as a minimum_allowed_balance', async function () {
+      await dbHelper.addAccounts([this.unspecifiedMinBalance])
 
       const account = this.unspecifiedMinBalance
       delete account.password
-      yield this.request()
+      await this.request()
         .get(account.id)
         .auth('admin', 'admin')
         .expect(200)
@@ -276,15 +260,14 @@ describe('Accounts', function () {
           ledger: 'http://localhost'
         }))
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should return -infinity as a minimum_allowed_balance', function * () {
-      yield dbHelper.addAccounts([this.infiniteMinBalance])
+    it('should return -infinity as a minimum_allowed_balance', async function () {
+      await dbHelper.addAccounts([this.infiniteMinBalance])
 
       const account = this.infiniteMinBalance
       delete account.password
-      yield this.request()
+      await this.request()
         .get(account.id)
         .auth('admin', 'admin')
         .expect(200)
@@ -293,15 +276,14 @@ describe('Accounts', function () {
           ledger: 'http://localhost'
         }))
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should return -100 as a minimum_allowed_balance', function * () {
-      yield dbHelper.addAccounts([this.finiteMinBalance])
+    it('should return -100 as a minimum_allowed_balance', async function () {
+      await dbHelper.addAccounts([this.finiteMinBalance])
 
       const account = this.finiteMinBalance
       delete account.password
-      yield this.request()
+      await this.request()
         .get(account.id)
         .auth('admin', 'admin')
         .expect(200)
@@ -310,28 +292,26 @@ describe('Accounts', function () {
           ledger: 'http://localhost'
         }))
         .expect(validator.validateAccount)
-        .end()
     })
   })
 
   describe('PUT /accounts/:uuid', function () {
-    it('should return 201', function * () {
+    it('should return 201', async function () {
       const account = this.exampleAccounts.candice
       const withoutPassword = _.omit(account, 'password')
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(account)
         .expect(201)
         .expect(withoutPassword)
         .expect(validator.validateAccount)
-        .end()
 
       // Check balances
-      expect(convertToExternal(yield getAccount('candice'))).to.deep.equal(withoutPassword)
+      expect(convertToExternal(await getAccount('candice'))).to.deep.equal(withoutPassword)
     })
 
-    it('should return 200 if the account already exists', function * () {
+    it('should return 200 if the account already exists', async function () {
       const account = this.existingAccount
 
       // Update balance
@@ -340,53 +320,50 @@ describe('Accounts', function () {
       // Passwords are not returned
       delete account.password
 
-      yield this.request()
+      await this.request()
         .put(this.existingAccount.id)
         .auth('admin', 'admin')
         .send(account)
         .expect(200)
         .expect(account)
         .expect(validator.validateAccount)
-        .end()
 
       // Check balances
-      const row = yield getAccount('alice')
+      const row = await getAccount('alice')
       expect(row.balance).to.equal(90)
     })
 
-    it('should return a 400 if the account URL does not match the account id in the JSON', function * () {
+    it('should return a 400 if the account URL does not match the account id in the JSON', async function () {
       const existingAccount = this.existingAccount
       const existingAccountId = existingAccount.id
       existingAccount.id = this.exampleAccounts.candice.id
 
       delete existingAccount.password
 
-      yield this.request()
+      await this.request()
         .put(existingAccountId)
         .auth('admin', 'admin')
         .send(existingAccount)
         .expect(400)
-        .end()
     })
 
-    it('should return a 400 if the account name in the URL does not match the account name in the JSON', function * () {
+    it('should return a 400 if the account name in the URL does not match the account name in the JSON', async function () {
       const existingAccount = this.existingAccount
       const newAccount = this.exampleAccounts.candice
 
       delete existingAccount.password
 
-      yield this.request()
+      await this.request()
         .put(newAccount.id)
         .auth('admin', 'admin')
         .send(existingAccount)
         .expect(400)
-        .end()
     })
 
-    it('should not reset the admin flag when updating an account', function * () {
+    it('should not reset the admin flag when updating an account', async function () {
       const adminAccount = this.adminAccount
 
-      yield this.request()
+      await this.request()
         .put(adminAccount.id)
         .auth('admin', 'admin')
         .send({
@@ -394,22 +371,20 @@ describe('Accounts', function () {
           balance: '500'
         })
         .expect(200)
-        .end()
 
-      yield this.request()
+      await this.request()
         .get(adminAccount.id)
         .auth('admin', 'admin')
         .expect(200)
         .expect(function (res) {
-          expect(res.body.is_admin).to.be.true
+          assert.isTrue(res.body.is_admin)
         })
-        .end()
     })
 
-    it('should default minimum_allowed_balance to 0 when unspecified', function * () {
+    it('should default minimum_allowed_balance to 0 when unspecified', async function () {
       const noMinBalanceAccount = this.unspecifiedMinBalance
       delete noMinBalanceAccount.password
-      yield this.request()
+      await this.request()
         .put(noMinBalanceAccount.id)
         .auth('admin', 'admin')
         .send(noMinBalanceAccount)
@@ -418,36 +393,33 @@ describe('Accounts', function () {
           minimum_allowed_balance: '0'
         }))
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should allow "-infinity" as a valid minimum_allowed_balance', function * () {
+    it('should allow "-infinity" as a valid minimum_allowed_balance', async function () {
       const infiniteMinBalanceAccount = this.infiniteMinBalance
       delete infiniteMinBalanceAccount.password
-      yield this.request()
+      await this.request()
         .put(infiniteMinBalanceAccount.id)
         .auth('admin', 'admin')
         .send(infiniteMinBalanceAccount)
         .expect(201)
         .expect(infiniteMinBalanceAccount)
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should allow the user to specify a minimum_allowed_balance', function * () {
+    it('should allow the user to specify a minimum_allowed_balance', async function () {
       const finiteMinBalanceAccount = this.finiteMinBalance
       delete finiteMinBalanceAccount.password
-      yield this.request()
+      await this.request()
         .put(finiteMinBalanceAccount.id)
         .auth('admin', 'admin')
         .send(finiteMinBalanceAccount)
         .expect(201)
         .expect(finiteMinBalanceAccount)
         .expect(validator.validateAccount)
-        .end()
     })
 
-    it('should allow admin user to disable an account', function * () {
+    it('should allow admin user to disable an account', async function () {
       const uri = 'http://localhost/accounts/abbey'
       const account = {
         name: 'abbey',
@@ -466,132 +438,120 @@ describe('Accounts', function () {
         minimum_allowed_balance: '0',
         name: 'abbey'
       }
-      yield this.request()  // create "abbey" account
+      await this.request()  // create "abbey" account
         .put(uri)
         .auth('admin', 'admin')
         .send(account)
         .expect(201)
-        .end()
-      yield this.request()  // disable "abbey" account
+      await this.request()  // disable "abbey" account
         .put(uri)
         .auth('admin', 'admin')
         .send(updatedAccount)
         .expect(200)
-        .end()
-      yield this.request()  // check "abbey" account
+      await this.request()  // check "abbey" account
         .get(uri)
         .auth('admin', 'admin')
         .expect(expected)
-        .end()
     })
 
-    it('should reject invalid account name -- uppercased in url', function * () {
+    it('should reject invalid account name -- uppercased in url', async function () {
       const lowerCased = this.exampleAccounts.candice
       const account = _.assign({}, lowerCased, {id: lowerCased.id.toUpperCase()})
 
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(account)
         .expect(400)
-        .end()
     })
 
-    it('should reject invalid account name -- uppercased in body', function * () {
+    it('should reject invalid account name -- uppercased in body', async function () {
       const lowerCased = this.exampleAccounts.candice
       const account = _.assign({}, lowerCased, {name: lowerCased.name.toUpperCase()})
 
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(account)
         .expect(400)
-        .end()
     })
 
-    it('should reject invaid account name -- uppercased in url, lowercase in body', function * () {
+    it('should reject invaid account name -- uppercased in url, lowercase in body', async function () {
       const lowerCased = this.exampleAccounts.candice
       const account = _.assign({}, lowerCased, {name: lowerCased.name.toUpperCase()})
 
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(_.omit(account, 'id'))
         .expect(400)
-        .end()
     })
 
-    it('should return 400 if name and id are omitted in body', function * () {
+    it('should return 400 if name and id are omitted in body', async function () {
       const account = this.exampleAccounts.candice
 
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(_.omit(account, ['name', 'id']))
         .expect(400)
-        .end()
     })
 
-    it('should allow creating account without password then setting password', function * () {
+    it('should allow creating account without password then setting password', async function () {
       const account = this.exampleAccounts.candice
 
       // create account without password or fingerprint
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send({name: account.name, balance: '50'})
         .expect(201)
-        .end()
 
       // now try to set a password for the account
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send({name: account.name, password: 'password'})
         .expect(200)
-        .end()
     })
 
-    it('should not allow user to create themself', function * () {
+    it('should not allow user to create themself', async function () {
       const account = this.exampleAccounts.candice
 
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth(account.name, account.name)
         .send({name: account.name, password: account.name})
         .expect(403)
-        .end()
     })
 
-    it('should not allow user to set their balance', function * () {
+    it('should not allow user to set their balance', async function () {
       const account = this.exampleAccounts.alice
 
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth(account.name, account.name)
         .send({name: account.name, balance: '1000000'})
         .expect(403)
-        .end()
     })
 
-    it('should allow user to change their password', function * () {
+    it('should allow user to change their password', async function () {
       const account = this.exampleAccounts.alice
 
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth(account.name, account.name)
         .send({name: account.name, password: 'newpass'})
         .expect(200)
-        .end()
     })
   })
 
   describe('PUT /accounts/:uuid with public_key', function () {
-    it('should return 201', function * () {
+    it('should return 201', async function () {
       const account = this.exampleAccounts.eve
       account.public_key = publicKey
       delete account.password
-      yield this.request()
+      await this.request()
         .put(account.id)
         .auth('admin', 'admin')
         .send(account)
@@ -602,10 +562,9 @@ describe('Accounts', function () {
         })
         .expect(201)
         .expect(validator.validateAccount)
-        .end()
 
       // Check balances
-      const user = (yield getAccount('eve'))
+      const user = (await getAccount('eve'))
       expect(user.public_key).to.equal(publicKey)
     })
   })

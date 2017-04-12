@@ -2,8 +2,8 @@
 
 const db = require('../lib/db')
 
-function * getDbHealth () {
-  const isConnected = yield db.isConnected()
+async function getDbHealth () {
+  const isConnected = await db.isConnected()
   return isConnected ? {
     status: 'OK'
   } : {

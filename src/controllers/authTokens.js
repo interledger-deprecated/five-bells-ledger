@@ -22,9 +22,9 @@ const model = require('../models/authTokens')
  *
  * @apiUse UnauthorizedError
  */
-function * getAuthToken () {
-  this.body = {
-    token: yield model.getAuthToken(this.req.user)
+async function getAuthToken (ctx) {
+  ctx.body = {
+    token: await model.getAuthToken(ctx.state.user)
   }
 }
 
