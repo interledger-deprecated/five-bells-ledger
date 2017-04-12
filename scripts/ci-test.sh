@@ -34,7 +34,7 @@ postgrestest() {
 sqlitetest() {
   # Run tests with coverage (SQLite)
   mkdir coverage
-  LEDGER_UNIT_DB_URI=sqlite:// XUNIT_FILE=coverage/xunit.xml npm test --coverage -- -R spec-xunit-file
+  LEDGER_UNIT_DB_URI=sqlite:// XUNIT_FILE=coverage/xunit.xml npm run coverage -- -- -R spec-xunit-file
 
   # Extract test results
   cp coverage/xunit.xml "${CIRCLE_TEST_REPORTS}/"
