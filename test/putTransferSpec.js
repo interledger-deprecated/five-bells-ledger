@@ -1539,7 +1539,7 @@ describe('PUT /transfers/:id', function () {
 
   it('returns 413 on oversized requests', async function () {
     const transfer = this.exampleTransfer
-    transfer.foo = (new Buffer((64 * 1024) + 1)).toString()
+    transfer.foo = (Buffer.alloc((64 * 1024) + 1)).toString()
     await this.request()
       .put(transfer.id)
       .auth('alice', 'alice')

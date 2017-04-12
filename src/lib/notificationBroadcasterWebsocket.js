@@ -51,8 +51,8 @@ class NotificationBroadcaster {
       convertToExternalTransfer(transfer), relatedResources)
   }
 
-  async sendMessage (destinationAccount, message) {
-    return await this.emitNotification([destinationAccount], 'message.send', message)
+  sendMessage (destinationAccount, message) {
+    return this.emitNotification([destinationAccount], 'message.send', message)
   }
 
   async emitNotification (affectedAccounts, eventType, resource, relatedResources) {

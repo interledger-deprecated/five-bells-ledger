@@ -73,7 +73,7 @@ describe('Notifications', function () {
     beforeEach(async function () {
       this.socket = this.ws('http://localhost/websocket', {
         headers: {
-          Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
+          Authorization: 'Basic ' + Buffer.from('alice:alice', 'utf8').toString('base64')
         }
       })
 
@@ -685,7 +685,7 @@ describe('Notifications', function () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
-      const payload = new Buffer(64 * 1024)
+      const payload = Buffer.alloc(64 * 1024)
       this.socket.send(JSON.stringify({
         jsonrpc: '2.0',
         id: 1,
@@ -704,7 +704,7 @@ describe('Notifications', function () {
     beforeEach(async function () {
       this.socket = this.ws('http://localhost/websocket', {
         headers: {
-          Authorization: 'Basic ' + new Buffer('admin:admin', 'utf8').toString('base64')
+          Authorization: 'Basic ' + Buffer.from('admin:admin', 'utf8').toString('base64')
         }
       })
 
