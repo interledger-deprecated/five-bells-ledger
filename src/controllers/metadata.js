@@ -1,6 +1,7 @@
 'use strict'
 
 const accounts = require('../models/accounts')
+const version = require('../../package.json').version.split('.')[0]
 
 /**
  * @api {get} / Get Server Metadata
@@ -75,7 +76,7 @@ module.exports = (config) => {
   }
 
   try {
-    metadata.version = `five-bells@${require('../../package.json').version.split('.')[0]}`
+    metadata.version = `five-bells@${version}`
   } catch (e) {
   }
 
