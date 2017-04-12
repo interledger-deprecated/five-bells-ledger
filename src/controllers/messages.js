@@ -29,10 +29,10 @@ const model = require('../models/messages')
  * @apiUse InvalidBodyError
  * @apiUse NoSubscriptionsError
  */
-function * postMessage () {
-  const message = this.body
-  yield model.sendMessage(message, this.req.user)
-  this.status = 201
+async function postMessage (ctx) {
+  const message = ctx.body
+  await model.sendMessage(message, ctx.state.user)
+  ctx.status = 201
 }
 
 module.exports = { postMessage }

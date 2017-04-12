@@ -13,24 +13,24 @@ class TimerWorker {
     this.listener = null
   }
 
-  * start () {
+  async start () {
     const _this = this
 
     // Make sure we only have one listener waiting for new
     // items to be added to the timeQueue
-    _this.listener = function * () {
-      yield _this.processTimeQueue()
+    _this.listener = async function () {
+      await _this.processTimeQueue()
     }
     _this.timeQueue.on('insert', _this.listener)
 
-    yield this.processTimeQueue()
+    await this.processTimeQueue()
   }
 
-  * processTimeQueue () {
+  async processTimeQueue () {
     const _this = this
 
     // Process expired transfers
-    yield this.transferExpiryMonitor.processExpiredTransfers()
+    await this.transferExpiryMonitor.processExpiredTransfers()
 
     // Set the timer to the earliest date on the timeQueue
     if (this.timeout) {
@@ -47,8 +47,8 @@ class TimerWorker {
     // will be triggered right away so we'll just set it to
     // the longest possible timeout and that will cause us to check again
     const timeoutDuration = Math.min(moment(earliestDate).diff(moment()), MAX_32INT)
-    this.timeout = defer.setTimeout(function * () {
-      yield _this.processTimeQueue()
+    this.timeout = defer.setTimeout(async function () {
+      await _this.processTimeQueue()
     }, timeoutDuration)
   }
 

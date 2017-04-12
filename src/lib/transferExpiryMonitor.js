@@ -29,11 +29,11 @@ class TransferExpiryMonitor {
     return now
   }
 
-  * expireTransfer (transferId) {
+  async expireTransfer (transferId) {
     const _this = this
 
-    yield withSerializableTransaction(function * (transaction) {
-      const transfer = yield getTransfer(transferId, { transaction })
+    await withSerializableTransaction(async function (transaction) {
+      const transfer = await getTransfer(transferId, { transaction })
 
       if (!transfer) {
         log.error('trying to expire transfer that cannot be found ' +
@@ -48,22 +48,22 @@ class TransferExpiryMonitor {
         }
         updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
         transfer.rejection_reason = 'expired'
-        yield updateTransfer(transfer, {transaction})
+        await updateTransfer(transfer, {transaction})
 
         log.debug('expired transfer: ' + transferId)
 
-        yield _this.notificationBroadcaster.sendNotifications(transfer, transaction)
+        await _this.notificationBroadcaster.sendNotifications(transfer, transaction)
       }
     })
   }
 
-  * watch (transfer) {
+  async watch (transfer) {
     // Start the expiry countdown if we're not already watching it
     if (!this.queue.includes(transfer.id)) {
       const now = moment()
       const expiry = moment(transfer.expires_at)
       if (transfer.expires_at && now.isBefore(expiry)) {
-        yield this.queue.insert(expiry, transfer.id)
+        await this.queue.insert(expiry, transfer.id)
 
         log.debug('transfer ' + transfer.id +
           ' will expire in ' + expiry.diff(now, 'milliseconds') + 'ms')
@@ -74,11 +74,11 @@ class TransferExpiryMonitor {
     }
   }
 
-  * processExpiredTransfers () {
+  async processExpiredTransfers () {
     log.debug('checking for transfers to expire')
     const transfersToExpire = this.queue.popBeforeDate(moment())
     for (const id of transfersToExpire) {
-      yield this.expireTransfer(id)
+      await this.expireTransfer(id)
     }
   }
 

@@ -80,9 +80,9 @@ module.exports = (config) => {
   }
 
   return {
-    getResource: function * () {
-      this.body = Object.assign({
-        connectors: yield accounts.getConnectors(config)
+    getResource: async function (ctx) {
+      ctx.body = Object.assign({
+        connectors: await accounts.getConnectors(config)
       }, metadata)
     }
   }

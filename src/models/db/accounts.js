@@ -50,7 +50,7 @@ function convertToPersistent (data) {
   return _.mapKeys(data, (value, key) => key.toUpperCase())
 }
 
-function * getAccounts (options) {
+function getAccounts (options) {
   return db.select({}, options && options.transaction)
 }
 
@@ -85,11 +85,11 @@ function updateAccount (account, options) {
     options && options.transaction)
 }
 
-function * insertAccounts (accounts, options) {
+function insertAccounts (accounts, options) {
   return db.insertAll(accounts, options && options.transaction)
 }
 
-function * upsertAccount (account, options) {
+function upsertAccount (account, options) {
   return db.upsert(account, {NAME: account.name},
     options && options.transaction)
 }

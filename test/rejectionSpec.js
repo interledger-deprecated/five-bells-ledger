@@ -19,13 +19,13 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('PUT /rejection', function () {
   logHelper(logger)
 
-  before(function * () {
-    yield dbHelper.init()
+  before(async function () {
+    await dbHelper.init()
   })
 
-  beforeEach(function * () {
+  beforeEach(async function () {
     appHelper.create(this, app)
-    yield dbHelper.clean()
+    await dbHelper.clean()
     this.clock = sinon.useFakeTimers(START_DATE, 'Date')
 
     this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
@@ -48,42 +48,39 @@ describe('PUT /rejection', function () {
       additional_info: {}
     }
 
-    yield dbHelper.addAccounts(_.values(accounts))
+    await dbHelper.addAccounts(_.values(accounts))
   })
 
-  afterEach(function * () {
+  afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
   })
 
-  it('should return 401 if the request is not authenticated', function * () {
-    yield this.request()
+  it('should return 401 if the request is not authenticated', async function () {
+    await this.request()
       .put(this.preparedTransfer.id + '/rejection')
       .expect(401)
-      .end()
   })
 
-  it('should return 404 when rejecting a non-existent transfer', function * () {
+  it('should return 404 when rejecting a non-existent transfer', async function () {
     const transfer = this.preparedTransfer
-    yield this.request()
+    await this.request()
       .put(transfer.id + '/rejection')
       .auth('bob', 'bob')
       .send(this.rejectionMessage1)
       .expect(404)
-      .end()
   })
 
-  it('should return 403 when rejecting a transfer as the wrong user', function * () {
+  it('should return 403 when rejecting a transfer as the wrong user', async function () {
     const transfer = this.preparedTransfer
-    yield this.request()
+    await this.request()
       .put(transfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
       .expect(validator.validateTransfer)
-      .end()
 
-    yield this.request()
+    await this.request()
       .put(transfer.id + '/rejection')
       .auth('alice', 'alice')
       .send(this.rejectionMessage1)
@@ -92,36 +89,33 @@ describe('PUT /rejection', function () {
         id: 'UnauthorizedError',
         message: 'Invalid attempt to reject credit'
       })
-      .end()
   })
 
-  it('should reject a prepared transfer', function * () {
+  it('should reject a prepared transfer', async function () {
     const transfer = this.preparedTransfer
-    yield this.request()
+    await this.request()
       .put(transfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
       .expect(validator.validateTransfer)
-      .end()
 
     // Check balances
-    expect((yield getAccount('alice')).balance).to.equal(90)
-    expect((yield getAccount('bob')).balance).to.equal(0)
+    expect((await getAccount('alice')).balance).to.equal(90)
+    expect((await getAccount('bob')).balance).to.equal(0)
 
-    yield this.request()
+    await this.request()
       .put(transfer.id + '/rejection')
       .auth('bob', 'bob')
       .send(this.rejectionMessage1)
       .expect(201)
       .expect(this.rejectionMessage1)
-      .end()
 
     // Check balances
-    expect((yield getAccount('alice')).balance).to.equal(100)
-    expect((yield getAccount('bob')).balance).to.equal(0)
+    expect((await getAccount('alice')).balance).to.equal(100)
+    expect((await getAccount('bob')).balance).to.equal(0)
 
-    yield this.request()
+    await this.request()
       .put(transfer.id + '/rejection')
       .auth('bob', 'bob')
       .send(this.rejectionMessage2)
@@ -130,9 +124,8 @@ describe('PUT /rejection', function () {
         expect(res.body.id).to.equal('InvalidModificationError')
         expect(res.body.message).to.equal('Transfer may not be modified in this way')
       })
-      .end()
 
-    yield this.request()
+    await this.request()
       .get(transfer.id)
       .auth('alice', 'alice')
       .expect(200)
@@ -153,42 +146,39 @@ describe('PUT /rejection', function () {
       }))
   })
 
-  it('rejects the transfer when a credit is rejected', function * () {
+  it('rejects the transfer when a credit is rejected', async function () {
     const transfer = Object.assign(this.multiCreditTransfer,
       {execution_condition: 'ni:///sha-256;vmvf6B7EpFalN6RGDx9F4f4z0wtOIgsIdCmbgv06ceI?fpt=preimage-sha-256&cost=7'})
-    yield this.request()
+    await this.request()
       .put(transfer.id)
       .auth('alice', 'alice')
       .send(transfer)
       .expect(201)
       .expect(validator.validateTransfer)
-      .end()
 
     // Check balances
-    expect((yield getAccount('alice')).balance).to.equal(80)
-    expect((yield getAccount('bob')).balance).to.equal(0)
+    expect((await getAccount('alice')).balance).to.equal(80)
+    expect((await getAccount('bob')).balance).to.equal(0)
 
-    yield this.request()
+    await this.request()
       .put(transfer.id + '/rejection')
       .auth('dave', 'dave')
       .send(this.rejectionMessage1)
       .expect(201)
       .expect(this.rejectionMessage1)
-      .end()
 
     // Check balances
-    expect((yield getAccount('alice')).balance).to.equal(100)
-    expect((yield getAccount('bob')).balance).to.equal(0)
+    expect((await getAccount('alice')).balance).to.equal(100)
+    expect((await getAccount('bob')).balance).to.equal(0)
 
-    yield this.request()
+    await this.request()
       .put(transfer.id + '/rejection')
       .auth('bob', 'bob')
       .send(this.rejectionMessage2)
       .expect(201)
       .expect(this.rejectionMessage2)
-      .end()
 
-    yield this.request()
+    await this.request()
       .get(transfer.id)
       .auth('alice', 'alice')
       .expect(200)

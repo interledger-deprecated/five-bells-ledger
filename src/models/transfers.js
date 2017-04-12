@@ -3,7 +3,6 @@
 const Bignumber = require('bignumber.js')
 const crypto = require('crypto')
 const _ = require('lodash')
-const co = require('co')
 const promiseRetry = require('promise-retry')
 const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
@@ -49,10 +48,10 @@ const RECEIPT_TYPE_SHA256 = 'sha256'
 const CONDITION_TYPE_EXECUTION = 'execution'
 const CONDITION_TYPE_CANCELLATION = 'cancellation'
 
-function * getTransfer (id) {
+async function getTransfer (id) {
   log.debug('fetching transfer ID ' + id)
 
-  const transfer = yield db.getTransfer(id)
+  const transfer = await db.getTransfer(id)
   if (!transfer) {
     throw new NotFoundError('Unknown transfer ID')
   }
@@ -60,9 +59,9 @@ function * getTransfer (id) {
   return converters.convertToExternalTransfer(transfer)
 }
 
-function * getTransferStateReceipt (id, receiptType, conditionState) {
+async function getTransferStateReceipt (id, receiptType, conditionState) {
   log.debug('fetching state receipt for transfer ID ' + id)
-  const transfer = yield db.getTransfer(id)
+  const transfer = await db.getTransfer(id)
   const transferState = transfer ? transfer.state : transferStates.TRANSFER_STATE_NONEXISTENT
 
   if (receiptType === RECEIPT_TYPE_ED25519) {
@@ -299,24 +298,24 @@ function isAuthorized (transfer) {
   return areDebitsAuthorized
 }
 
-function * processTransitionToPreparedState (transfer, transaction) {
+async function processTransitionToPreparedState (transfer, transaction) {
   if (transfer.state === transferStates.TRANSFER_STATE_PROPOSED && isAuthorized(transfer)) {
-    yield holds.holdFunds(transfer, transaction)  // hold sender funds
+    await holds.holdFunds(transfer, transaction)  // hold sender funds
     updateState(transfer, transferStates.TRANSFER_STATE_PREPARED)
   }
 }
 
-function * processImmediateExecution (transfer, transaction) {
+async function processImmediateExecution (transfer, transaction) {
   if (transfer.state === transferStates.TRANSFER_STATE_PREPARED &&
       transfer.execution_condition === undefined) {
     // release held funds to recipient
-    yield holds.disburseFunds(transfer, transaction)
+    await holds.disburseFunds(transfer, transaction)
     transferExpiryMonitor.unwatch(transfer.id)
     updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED)
   }
 }
 
-function * processCreditRejection (transfer, transaction) {
+async function processCreditRejection (transfer, transaction) {
   if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) return
   const hasRejectedCredit = _.some(transfer.credits, 'rejected')
   if (!hasRejectedCredit) return
@@ -327,7 +326,7 @@ function * processCreditRejection (transfer, transaction) {
   }
 
   if (transfer.state === transferStates.TRANSFER_STATE_PREPARED) {
-    yield holds.returnHeldFunds(transfer, transaction)
+    await holds.returnHeldFunds(transfer, transaction)
   }
   transfer.rejection_reason = 'cancelled'
   updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
@@ -359,32 +358,32 @@ function validateConditionFulfillment (transfer, fulfillmentModel) {
   throw new UnmetConditionError('Fulfillment does not match any condition')
 }
 
-function * cancelTransfer (transaction, transfer, fulfillment) {
-  yield fulfillments.insertFulfillment(fulfillment, {transaction})
+async function cancelTransfer (transaction, transfer, fulfillment) {
+  await fulfillments.insertFulfillment(fulfillment, {transaction})
   if (transfer.state === transferStates.TRANSFER_STATE_PREPARED) {
-    yield holds.returnHeldFunds(transfer, transaction)
+    await holds.returnHeldFunds(transfer, transaction)
   }
   transfer.rejection_reason = 'cancelled'
   updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
 }
 
-function * executeTransfer (transaction, transfer, fulfillment, executedAt) {
-  yield fulfillments.insertFulfillment(fulfillment, {transaction})
-  yield holds.disburseFunds(transfer, transaction)
+async function executeTransfer (transaction, transfer, fulfillment, executedAt) {
+  await fulfillments.insertFulfillment(fulfillment, {transaction})
+  await holds.disburseFunds(transfer, transaction)
   updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED, {
     updatedAt: executedAt
   })
 }
 
-function * fulfillTransfer (transferId, fulfillmentUri) {
+async function fulfillTransfer (transferId, fulfillmentUri) {
   const fulfillment = convertToInternalFulfillment(fulfillmentUri)
   fulfillment.transfer_id = transferId
   let transfer = null
-  return yield promiseRetry(co.wrap(function * (retry, attemptNo) {
+  return await promiseRetry(async function (retry, attemptNo) {
     log.debug('fulfill transfer attempt %d', attemptNo)
     try {
-      const existingFulfillment = yield db.withSerializableTransaction(function * (transaction) {
-        transfer = yield db.getTransfer(transferId, {transaction})
+      const existingFulfillment = await db.withSerializableTransaction(async function (transaction) {
+        transfer = await db.getTransfer(transferId, {transaction})
 
         if (!transfer) {
           throw new NotFoundError('Invalid transfer ID')
@@ -394,12 +393,12 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
         const validatedAt = transferExpiryMonitor.validateNotExpired(transfer)
 
         if (
-          conditionType === CONDITION_TYPE_EXECUTION &&
-          transfer.state === transferStates.TRANSFER_STATE_EXECUTED ||
-          conditionType === CONDITION_TYPE_CANCELLATION &&
-          transfer.state === transferStates.TRANSFER_STATE_REJECTED
+          (conditionType === CONDITION_TYPE_EXECUTION &&
+          transfer.state === transferStates.TRANSFER_STATE_EXECUTED) ||
+          (conditionType === CONDITION_TYPE_CANCELLATION &&
+          transfer.state === transferStates.TRANSFER_STATE_REJECTED)
         ) {
-          return convertToExternalFulfillment(yield fulfillments.getFulfillment(
+          return convertToExternalFulfillment(await fulfillments.getFulfillment(
             transferId, {transaction}))
         }
 
@@ -408,28 +407,28 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
             throw new InvalidModificationError('Transfers in state ' +
             transfer.state + ' may not be executed')
           }
-          yield executeTransfer(transaction, transfer, fulfillment, validatedAt)
+          await executeTransfer(transaction, transfer, fulfillment, validatedAt)
         } else if (conditionType === CONDITION_TYPE_CANCELLATION) {
           if (!_.includes(validCancellationStates, transfer.state)) {
             throw new InvalidModificationError('Transfers in state ' +
             transfer.state + ' may not be cancelled')
           }
-          yield cancelTransfer(transaction, transfer, fulfillment)
+          await cancelTransfer(transaction, transfer, fulfillment)
         }
 
         transferExpiryMonitor.unwatch(transfer.id)
-        yield db.updateTransfer(transfer, {transaction})
+        await db.updateTransfer(transfer, {transaction})
 
         // Start the expiry countdown if the transfer is not yet finalized
         // If the expires_at has passed by this time we'll consider
         // the transfer to have made it in before the deadline
         if (!isTransferFinalized(transfer)) {
-          yield transferExpiryMonitor.watch(transfer)
+          await transferExpiryMonitor.watch(transfer)
         }
       })
 
       log.debug('changes written to database')
-      yield notificationBroadcaster.sendNotifications(transfer, null)
+      await notificationBroadcaster.sendNotifications(transfer, null)
 
       return {
         fulfillment: existingFulfillment || convertToExternalFulfillment(fulfillment),
@@ -443,10 +442,10 @@ function * fulfillTransfer (transferId, fulfillmentUri) {
         throw err
       }
     }
-  }))
+  })
 }
 
-function * rejectTransfer (transferId, rejectionMessage, requestingUser) {
+async function rejectTransfer (transferId, rejectionMessage, requestingUser) {
   const validationResult = validator.create('RejectionMessage')(rejectionMessage)
   if (validationResult.valid !== true) {
     const message = validationResult.schema
@@ -455,7 +454,7 @@ function * rejectTransfer (transferId, rejectionMessage, requestingUser) {
     throw new InvalidBodyError(message, validationResult.errors)
   }
 
-  const transfer = yield getTransfer(transferId)
+  const transfer = await getTransfer(transferId)
   if (!transfer.execution_condition) {
     throw new TransferNotConditionalError('Transfer is not conditional')
   }
@@ -470,14 +469,14 @@ function * rejectTransfer (transferId, rejectionMessage, requestingUser) {
   credit.rejected = true
   credit.rejection_message = rejectionMessage
   delete transfer.timeline
-  yield setTransfer(transfer, requestingUser)
+  await setTransfer(transfer, requestingUser)
   return {
     existed: alreadyRejected,
     rejection: rejectionMessage
   }
 }
 
-function * setTransfer (externalTransfer, requestingUser) {
+async function setTransfer (externalTransfer, requestingUser) {
   const validationResult = validator.create('Transfer')(externalTransfer)
   if (validationResult.valid !== true) {
     const message = validationResult.schema
@@ -511,8 +510,8 @@ function * setTransfer (externalTransfer, requestingUser) {
   normalizeCreditAndDebitAmounts(transfer)
 
   let originalTransfer, previousDebits, previousCredits
-  yield db.withSerializableTransaction(function * (transaction) {
-    originalTransfer = yield db.getTransfer(transfer.id, {transaction})
+  await db.withSerializableTransaction(async function (transaction) {
+    originalTransfer = await db.getTransfer(transfer.id, {transaction})
     if (originalTransfer) {
       log.debug('found an existing transfer with this ID')
       previousDebits = originalTransfer.debits
@@ -522,7 +521,7 @@ function * setTransfer (externalTransfer, requestingUser) {
       // version, but only allowing specific fields to change.
       transfer = updateTransferObject(originalTransfer, transfer)
     } else {
-      yield validateNoDisabledAccounts(transaction, transfer)
+      await validateNoDisabledAccounts(transaction, transfer)
       // A brand-new transfer will start out as proposed
       updateState(transfer, transferStates.TRANSFER_STATE_PROPOSED)
     }
@@ -540,20 +539,20 @@ function * setTransfer (externalTransfer, requestingUser) {
 
     // The transfer must be inserted into the database before holds can
     // be placed because the adjustments reference the transfer's primary key
-    yield db.upsertTransfer(transfer, {transaction})
-    yield processTransitionToPreparedState(transfer, transaction)
-    yield processImmediateExecution(transfer, transaction)
-    yield processCreditRejection(transfer, transaction)
-    yield db.upsertTransfer(transfer, {transaction})
+    await db.upsertTransfer(transfer, {transaction})
+    await processTransitionToPreparedState(transfer, transaction)
+    await processImmediateExecution(transfer, transaction)
+    await processCreditRejection(transfer, transaction)
+    await db.upsertTransfer(transfer, {transaction})
   })
 
-  yield notificationBroadcaster.sendNotifications(transfer, null)
+  await notificationBroadcaster.sendNotifications(transfer, null)
 
   // Start the expiry countdown if the transfer is not yet finalized
   // If the expires_at has passed by this time we'll consider
   // the transfer to have made it in before the deadline
   if (!isTransferFinalized(transfer)) {
-    yield transferExpiryMonitor.watch(transfer)
+    await transferExpiryMonitor.watch(transfer)
   }
 
   log.debug('changes written to database')
@@ -564,13 +563,13 @@ function * setTransfer (externalTransfer, requestingUser) {
   }
 }
 
-function * getFulfillment (transferId) {
-  const fulfillment = yield fulfillments.getFulfillment(transferId)
+async function getFulfillment (transferId) {
+  const fulfillment = await fulfillments.getFulfillment(transferId)
   return convertToExternalFulfillment(fulfillment)
 }
 
-function * insertTransfers (externalTransfers) {
-  yield db.insertTransfers(externalTransfers.map(
+async function insertTransfers (externalTransfers) {
+  await db.insertTransfers(externalTransfers.map(
     converters.convertToInternalTransfer))
 }
 

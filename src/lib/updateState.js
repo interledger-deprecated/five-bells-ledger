@@ -8,7 +8,7 @@ function updateState (transfer, state, opts) {
     ' to ' + state)
 
   transfer.state = state
-  const updatedAt = opts && opts.updatedAt || moment()
+  const updatedAt = (opts && opts.updatedAt) || moment()
   transfer[state + '_at'] = updatedAt.toISOString()
 }
 

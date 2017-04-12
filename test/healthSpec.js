@@ -1,6 +1,6 @@
 'use strict'
 
-const superagent = require('co-supertest')
+const superagent = require('supertest')
 const nock = require('nock')
 nock.enableNetConnect(['localhost', '127.0.0.1'])
 const app = require('../src/services/app')
@@ -26,8 +26,8 @@ describe('Health', function () {
   })
 
   describe('GET /health', function () {
-    it('should return 200 for an authenticated request', function * () {
-      yield request()
+    it('should return 200 for an authenticated request', async function () {
+      await request()
         .get('/health')
         .auth('admin', 'admin')
         .expect(200)
@@ -36,7 +36,6 @@ describe('Health', function () {
             status: 'OK'
           })
         })
-        .end()
     })
 
     it('should return 401 for an unauthenticated request', function * () {

@@ -9,42 +9,42 @@ const insertFulfillments = require('../../src/models/db/fulfillments')
 
 // Only run migrations once during tests
 let init = false
-exports.init = function * () {
+exports.init = async function () {
   if (init) {
     return
   }
-  yield db.dropTables()
-  yield db.createTables()
-  yield db.readLookupTables()
+  await db.dropTables()
+  await db.createTables()
+  await db.readLookupTables()
   init = true
 }
 
-exports.clean = function * () {
-  yield db.truncateTables()
+exports.clean = async function () {
+  await db.truncateTables()
 }
 
-exports.setHoldBalance = function * (balance) {
-  yield setBalance('hold', balance)
+exports.setHoldBalance = async function (balance) {
+  await setBalance('hold', balance)
 }
 
-exports.addAccounts = function * (accounts) {
+exports.addAccounts = async function (accounts) {
   if (!Array.isArray(accounts)) {
     throw new Error('Requires an array of accounts, got ' + accounts)
   }
 
-  yield insertAccounts(accounts)
+  await insertAccounts(accounts)
 }
 
-exports.addTransfers = function * (transfers) {
+exports.addTransfers = async function (transfers) {
   if (!Array.isArray(transfers)) {
     throw new Error('Requires an array of transfers, got ' + transfers)
   }
-  yield insertTransfers(transfers)
+  await insertTransfers(transfers)
 }
 
-exports.addFulfillments = function * (fulfillments) {
+exports.addFulfillments = async function (fulfillments) {
   if (!Array.isArray(fulfillments)) {
     throw new Error('Requires an array of fulfillments, got ' + fulfillments)
   }
-  yield insertFulfillments(fulfillments)
+  await insertFulfillments(fulfillments)
 }

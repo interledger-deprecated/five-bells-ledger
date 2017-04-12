@@ -55,10 +55,10 @@ const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-p
 /**
  * @returns {void}
  */
-function * getResource () {
-  const id = this.params.id
+async function getResource (ctx) {
+  const id = ctx.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  this.body = yield model.getTransfer(id.toLowerCase())
+  ctx.body = await model.getTransfer(id.toLowerCase())
 }
 
 /**
@@ -98,16 +98,16 @@ function * getResource () {
 /**
  * @returns {void}
  */
-function * getStateResource () {
-  const id = this.params.id
+async function getStateResource (ctx) {
+  const id = ctx.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  const conditionState = this.query.condition_state
-  const receiptType = this.query.type || 'ed25519-sha512'
+  const conditionState = ctx.query.condition_state
+  const receiptType = ctx.query.type || 'ed25519-sha512'
   const receiptTypes = ['ed25519-sha512', 'sha256']
   if (!_.includes(receiptTypes, receiptType)) {
     throw new InvalidUriParameterError('type is not valid')
   }
-  this.body = yield model.getTransferStateReceipt(
+  ctx.body = await model.getTransferStateReceipt(
     id.toLowerCase(), receiptType, conditionState)
 }
 
@@ -229,10 +229,10 @@ function * getStateResource () {
  * @param {String} id Transfer UUID
  * @returns {void}
  */
-function * putResource () {
-  const id = this.params.id
+async function putResource (ctx) {
+  const id = ctx.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  const transfer = this.body
+  const transfer = ctx.body
 
   if (typeof transfer.id !== 'undefined') {
     requestUtil.assert.strictEqual(
@@ -243,9 +243,9 @@ function * putResource () {
   }
 
   transfer.id = uri.make('transfer', id.toLowerCase())
-  const result = yield model.setTransfer(transfer, this.req.user)
-  this.body = result.transfer
-  this.status = result.existed ? 200 : 201
+  const result = await model.setTransfer(transfer, ctx.state.user)
+  ctx.body = result.transfer
+  ctx.status = result.existed ? 200 : 201
 }
 
 /**
@@ -284,13 +284,13 @@ function * putResource () {
  * @param {String} id Transfer UUID
  * @returns {void}
  */
-function * putFulfillment () {
-  const id = this.params.id
+async function putFulfillment (ctx) {
+  const id = ctx.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  const fulfillment = yield parse.text(this, {limit: config.maxHttpPayload})
-  const result = yield model.fulfillTransfer(id, fulfillment)
-  this.body = result.fulfillment
-  this.status = result.existed ? 200 : 201
+  const fulfillment = await parse.text(ctx, {limit: config.maxHttpPayload})
+  const result = await model.fulfillTransfer(id, fulfillment)
+  ctx.body = result.fulfillment
+  ctx.status = result.existed ? 200 : 201
 }
 
 /**
@@ -318,10 +318,10 @@ function * putFulfillment () {
  * @param {String} id Transfer UUID
  * @returns {void}
  */
-function * getFulfillment () {
-  const id = this.params.id
+async function getFulfillment (ctx) {
+  const id = ctx.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  this.body = yield model.getFulfillment(id.toLowerCase())
+  ctx.body = await model.getFulfillment(id.toLowerCase())
 }
 
 /**
@@ -366,12 +366,12 @@ function * getFulfillment () {
  * @param {String} id Transfer UUID
  * @returns {void}
  */
-function * putRejection () {
-  const id = this.params.id
+async function putRejection (ctx) {
+  const id = ctx.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  const result = yield model.rejectTransfer(id, this.body, this.req.user)
-  this.body = result.rejection
-  this.status = result.existed ? 200 : 201
+  const result = await model.rejectTransfer(id, ctx.body, ctx.req.user)
+  ctx.body = result.rejection
+  ctx.status = result.existed ? 200 : 201
 }
 
 module.exports = {

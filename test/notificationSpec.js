@@ -20,13 +20,13 @@ const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 describe('Notifications', function () {
   logHelper(logger)
 
-  before(function * () {
-    yield dbHelper.init()
+  before(async function () {
+    await dbHelper.init()
   })
 
-  beforeEach(function * () {
+  beforeEach(async function () {
     appHelper.create(this, app)
-    yield dbHelper.clean()
+    await dbHelper.clean()
 
     this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setInterval', 'clearInterval')
 
@@ -54,7 +54,7 @@ describe('Notifications', function () {
     this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
 
     // Store some example data
-    yield dbHelper.addAccounts([
+    await dbHelper.addAccounts([
       this.adminAccount,
       this.holdAccount,
       this.existingAccount,
@@ -70,7 +70,7 @@ describe('Notifications', function () {
   })
 
   describe('GET /websocket as alice (regular user)', function () {
-    beforeEach(function * () {
+    beforeEach(async function () {
       this.socket = this.ws('http://localhost/websocket', {
         headers: {
           Authorization: 'Basic ' + new Buffer('alice:alice', 'utf8').toString('base64')
@@ -78,7 +78,8 @@ describe('Notifications', function () {
       })
 
       // Wait until WS connection is established
-      yield new Promise((resolve) => {
+      await new Promise((resolve, reject) => {
+        this.socket.on('error', reject)
         this.socket.once('message', (msg) => {
           assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: null, method: 'connect' })
           resolve()
@@ -86,12 +87,12 @@ describe('Notifications', function () {
       })
     })
 
-    afterEach(function * () {
+    afterEach(async function () {
       this.socket.terminate()
     })
 
     describe('method:subscribe_account', function () {
-      beforeEach(function * () {
+      beforeEach(async function () {
         this.socket.send(JSON.stringify({
           jsonrpc: '2.0',
           id: 1,
@@ -102,7 +103,7 @@ describe('Notifications', function () {
           }
         }))
 
-        yield new Promise((resolve) => {
+        await new Promise((resolve) => {
           this.socket.once('message', (msg) => {
             assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: 1, result: 1 })
             resolve()
@@ -110,21 +111,20 @@ describe('Notifications', function () {
         })
       })
 
-      it('should send notifications about simple transfers', function * () {
+      it('should send notifications about simple transfers', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
         const transfer = this.transfer
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('alice', 'alice')
           .send(transfer)
           .expect(201)
           .expect(validator.validateTransfer)
-          .end()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -145,23 +145,22 @@ describe('Notifications', function () {
         })
       })
 
-      it('should send notifications about executed transfers', function * () {
+      it('should send notifications about executed transfers', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
         const transfer = this.transferWithExpiry
         const fulfillment = this.fulfillment
 
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('alice', 'alice')
           .send(transfer)
           .expect(201)
           .expect(validator.validateTransfer)
-          .end()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -180,18 +179,17 @@ describe('Notifications', function () {
           }
         })
         this.clock.tick(500)
-        yield this.request()
+        await this.request()
           .put(transfer.id + '/fulfillment')
           .auth('alice', 'alice')
           .send(fulfillment)
           .expect(201)
-          .end()
 
         // In production this function should be triggered by the workers started in app.js
-        yield transferExpiryMonitor.processExpiredTransfers()
+        await transferExpiryMonitor.processExpiredTransfers()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledTwice(listener)
         sinon.assert.calledWithMatch(listener.secondCall, {
@@ -212,22 +210,21 @@ describe('Notifications', function () {
         })
       })
 
-      it('should send notification only once, even if sender and receiver are the same in a transfer', function * () {
+      it('should send notification only once, even if sender and receiver are the same in a transfer', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
         const transfer = this.transfer
         transfer.credits[0].account = 'http://localhost/accounts/alice'
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('alice', 'alice')
           .send(transfer)
           .expect(201)
           .expect(validator.validateTransfer)
-          .end()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -248,23 +245,22 @@ describe('Notifications', function () {
         })
       })
 
-      it('should send notifications about rejected transfers', function * () {
+      it('should send notifications about rejected transfers', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
         const transfer = this.transferWithExpiry
         delete transfer.debits[0].authorized
 
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('alice', 'alice')
           .send(transfer)
           .expect(201)
           .expect(validator.validateTransfer)
-          .end()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -284,10 +280,10 @@ describe('Notifications', function () {
         this.clock.tick(1000)
 
         // In production this function should be triggered by the workers started in app.js
-        yield transferExpiryMonitor.processExpiredTransfers()
+        await transferExpiryMonitor.processExpiredTransfers()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledTwice(listener)
         sinon.assert.calledWithMatch(listener.secondCall, {
@@ -307,7 +303,7 @@ describe('Notifications', function () {
         })
       })
 
-      it('should check fulfillment condition in notification', function * () {
+      it('should check fulfillment condition in notification', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -319,17 +315,16 @@ describe('Notifications', function () {
           }
         })
 
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('alice', 'alice')
           .send(transfer)
           .expect(201)
           .expect(transferPrepared)
           .expect(validator.validateTransfer)
-          .end()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         const transferExecuted = _.assign({}, transfer, {
           state: transferStates.TRANSFER_STATE_EXECUTED,
@@ -340,17 +335,16 @@ describe('Notifications', function () {
           }
         })
 
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
-        yield this.request()
+        await this.request()
           .put(transfer.id + '/fulfillment')
           .auth('alice', 'alice')
           .send(this.executionConditionFulfillment)
           .expect(201)
           .expect(this.executionConditionFulfillment)
-          .end()
 
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledTwice(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -374,7 +368,7 @@ describe('Notifications', function () {
         })
       })
 
-      it('should check cancellation condition in notification', function * () {
+      it('should check cancellation condition in notification', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -386,17 +380,16 @@ describe('Notifications', function () {
           }
         })
 
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('alice', 'alice')
           .send(transfer)
           .expect(201)
           .expect(transferPrepared)
           .expect(validator.validateTransfer)
-          .end()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         const transferCancelled = _.assign({}, transfer, {
           state: transferStates.TRANSFER_STATE_REJECTED,
@@ -408,17 +401,16 @@ describe('Notifications', function () {
           }
         })
 
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
-        yield this.request()
+        await this.request()
           .put(transfer.id + '/fulfillment')
           .auth('alice', 'alice')
           .send(this.cancellationConditionFulfillment)
           .expect(201)
           .expect(this.cancellationConditionFulfillment)
-          .end()
 
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledTwice(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -441,7 +433,7 @@ describe('Notifications', function () {
         })
       })
 
-      it('unsubscribes when passed an empty array of accounts', function * () {
+      it('unsubscribes when passed an empty array of accounts', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -453,21 +445,20 @@ describe('Notifications', function () {
         }))
 
         const transfer = this.transfer
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('alice', 'alice')
           .send(transfer)
           .expect(201)
           .expect(validator.validateTransfer)
-          .end()
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {jsonrpc: '2.0', id: 2, result: 0})
       })
 
-      it('supports transfer.*', function * () {
+      it('supports transfer.*', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -477,20 +468,19 @@ describe('Notifications', function () {
           method: 'subscribe_account',
           params: { eventType: 'transfer.*', accounts: ['http://localhost/accounts/alice'] }
         }))
-        yield new Promise((resolve) => {
+        await new Promise((resolve) => {
           this.socket.once('message', (msg) => { resolve() })
         })
 
         const transfer = this.transfer
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('alice', 'alice')
           .send(transfer)
           .expect(201)
           .expect(validator.validateTransfer)
-          .end()
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledTwice(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {jsonrpc: '2.0', id: 2, result: 1})
@@ -505,7 +495,7 @@ describe('Notifications', function () {
         })
       })
 
-      it('gets a 40000 when subscribing with a null id', function * () {
+      it('gets a 40000 when subscribing with a null id', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -517,7 +507,7 @@ describe('Notifications', function () {
         }))
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -534,7 +524,7 @@ describe('Notifications', function () {
         })
       })
 
-      it('gets a 40002 when subscribing to an invalid account', function * () {
+      it('gets a 40002 when subscribing to an invalid account', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -546,7 +536,7 @@ describe('Notifications', function () {
         }))
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -563,7 +553,7 @@ describe('Notifications', function () {
         })
       })
 
-      it('gets a -32602 when subscribing with invalid parameters', function * () {
+      it('gets a -32602 when subscribing with invalid parameters', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -575,7 +565,7 @@ describe('Notifications', function () {
         }))
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -592,7 +582,7 @@ describe('Notifications', function () {
         })
       })
 
-      it('gets a 40300 when subscribing to an account without permission', function * () {
+      it('gets a 40300 when subscribing to an account without permission', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -604,7 +594,7 @@ describe('Notifications', function () {
         }))
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -621,14 +611,17 @@ describe('Notifications', function () {
         })
       })
 
-      it('sends intermittent pings', function (done) {
-        this.socket.on('ping', done)
-        this.clock.tick(20000)
+      it('sends intermittent pings', async function () {
+        await new Promise((resolve, reject) => {
+          this.socket.on('ping', resolve)
+          this.socket.on('error', reject)
+          this.clock.tick(20000)
+        })
       })
     })
 
     describe('method:subscribe_all_accounts', function () {
-      it('gets a 40300 error', function * () {
+      it('gets a 40300 error', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -642,7 +635,7 @@ describe('Notifications', function () {
         }))
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(50)
+        await timingHelper.sleep(50)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -660,7 +653,7 @@ describe('Notifications', function () {
       })
     })
 
-    it('gets a -32601 when using an invalid method', function * () {
+    it('gets a -32601 when using an invalid method', async function () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -671,7 +664,7 @@ describe('Notifications', function () {
       }))
 
       // TODO: Is there a more elegant way?
-      yield timingHelper.sleep(50)
+      await timingHelper.sleep(50)
 
       sinon.assert.calledOnce(listener)
       sinon.assert.calledWithMatch(listener.firstCall, {
@@ -688,7 +681,7 @@ describe('Notifications', function () {
       })
     })
 
-    it('ignores an oversized payload', function * () {
+    it('ignores an oversized payload', async function () {
       const listener = sinon.spy()
       this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -701,14 +694,14 @@ describe('Notifications', function () {
       }))
 
       // TODO: Is there a more elegant way?
-      yield timingHelper.sleep(250)
+      await timingHelper.sleep(250)
 
       assert.equal(listener.callCount, 0)
     })
   })
 
   describe('GET /websocket as admin', function () {
-    beforeEach(function * () {
+    beforeEach(async function () {
       this.socket = this.ws('http://localhost/websocket', {
         headers: {
           Authorization: 'Basic ' + new Buffer('admin:admin', 'utf8').toString('base64')
@@ -716,7 +709,8 @@ describe('Notifications', function () {
       })
 
       // Wait until WS connection is established
-      yield new Promise((resolve) => {
+      await new Promise((resolve, reject) => {
+        this.socket.on('error', reject)
         this.socket.once('message', (msg) => {
           assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: null, method: 'connect' })
           resolve()
@@ -724,12 +718,12 @@ describe('Notifications', function () {
       })
     })
 
-    afterEach(function * () {
+    afterEach(async function () {
       this.socket.terminate()
     })
 
     describe('method:subscribe_account', function () {
-      beforeEach(function * () {
+      beforeEach(async function () {
         this.socket.send(JSON.stringify({
           jsonrpc: '2.0',
           id: 1,
@@ -740,7 +734,7 @@ describe('Notifications', function () {
           }
         }))
 
-        yield new Promise((resolve) => {
+        await new Promise((resolve) => {
           this.socket.once('message', (msg) => {
             assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: 1, result: 2 })
             resolve()
@@ -748,22 +742,21 @@ describe('Notifications', function () {
         })
       })
 
-      it('should send notifications when sender is one of the subscribers', function * () {
+      it('should send notifications when sender is one of the subscribers', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
         const transfer = this.transfer
         transfer.credits[0].account = 'http://localhost/accounts/candice'
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('alice', 'alice')
           .send(transfer)
           .expect(201)
           .expect(validator.validateTransfer)
-          .end()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(49)
+        await timingHelper.sleep(49)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -784,22 +777,21 @@ describe('Notifications', function () {
         })
       })
 
-      it('should send notifications when receiver is one of the subscribers', function * () {
+      it('should send notifications when receiver is one of the subscribers', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
         const transfer = this.transfer
         transfer.debits[0].account = 'http://localhost/accounts/candice'
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('candice', 'candice')
           .send(transfer)
           .expect(201)
           .expect(validator.validateTransfer)
-          .end()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(49)
+        await timingHelper.sleep(49)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -820,21 +812,20 @@ describe('Notifications', function () {
         })
       })
 
-      it('should send notifications once, even if subscribed to both sender and receiver of a transfer', function * () {
+      it('should send notifications once, even if subscribed to both sender and receiver of a transfer', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
         const transfer = this.transfer
-        yield this.request()
+        await this.request()
           .put(transfer.id)
           .auth('alice', 'alice')
           .send(transfer)
           .expect(201)
           .expect(validator.validateTransfer)
-          .end()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(49)
+        await timingHelper.sleep(49)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -857,7 +848,7 @@ describe('Notifications', function () {
     })
 
     describe('method:subscribe_all_accounts', function () {
-      beforeEach(function * () {
+      beforeEach(async function () {
         this.socket.send(JSON.stringify({
           jsonrpc: '2.0',
           id: 1,
@@ -867,7 +858,7 @@ describe('Notifications', function () {
           }
         }))
 
-        yield new Promise((resolve) => {
+        await new Promise((resolve) => {
           this.socket.once('message', (msg) => {
             assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: 1, result: 1 })
             resolve()
@@ -875,25 +866,24 @@ describe('Notifications', function () {
         })
       })
 
-      afterEach(function * () {
+      afterEach(async function () {
         this.socket.terminate()
       })
 
-      it('should send notifications about any transfer', function * () {
+      it('should send notifications about any transfer', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
         const transfer = this.transfer
-        yield this.request()
+        await this.request()
         .put(transfer.id)
         .auth('alice', 'alice')
         .send(transfer)
         .expect(201)
         .expect(validator.validateTransfer)
-        .end()
 
         // TODO: Is there a more elegant way?
-        yield timingHelper.sleep(49)
+        await timingHelper.sleep(49)
 
         sinon.assert.calledOnce(listener)
         sinon.assert.calledWithMatch(listener.firstCall, {
@@ -917,20 +907,20 @@ describe('Notifications', function () {
   })
 
   describe('GET /websocket?token=...', function () {
-    beforeEach(function * () {
-      const tokenRes = yield this.request()
+    beforeEach(async function () {
+      const tokenRes = await this.request()
         .get('/auth_token')
         .auth('alice', 'alice')
         .expect(200)
-        .end()
       this.token = tokenRes.body.token
     })
 
-    it('connects the websocket if a valid token is passed', function * () {
+    it('connects the websocket if a valid token is passed', async function () {
       this.socket = this.ws('http://localhost/websocket?token=' + encodeURIComponent(this.token), {})
 
       // Wait until WS connection is established
-      yield new Promise((resolve) => {
+      await new Promise((resolve, reject) => {
+        this.socket.on('error', reject)
         this.socket.once('message', (msg) => {
           assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: null, method: 'connect' })
           resolve()

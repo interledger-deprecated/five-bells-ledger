@@ -14,19 +14,19 @@ const accounts = require('./data/accounts')
 describe('GET /auth_token', function () {
   logHelper(logger)
 
-  before(function * () {
-    yield dbHelper.init()
+  before(async function () {
+    await dbHelper.init()
   })
 
-  beforeEach(function * () {
+  beforeEach(async function () {
     appHelper.create(this, app)
-    yield dbHelper.clean()
+    await dbHelper.clean()
     // Store some example data
-    yield dbHelper.addAccounts(_.values(_.omit(accounts, 'noBalance')))
+    await dbHelper.addAccounts(_.values(_.omit(accounts, 'noBalance')))
   })
 
-  it('returns 200 and a token on success', function * () {
-    yield this.request()
+  it('returns 200 and a token on success', async function () {
+    await this.request()
       .get('/auth_token')
       .auth('alice', 'alice')
       .expect(200)
@@ -38,13 +38,11 @@ describe('GET /auth_token', function () {
         assert.ok(typeof token.iat === 'number')
         assert.ok(typeof token.exp === 'number')
       })
-      .end()
   })
 
-  it('returns 401 when not authenticated', function * () {
-    yield this.request()
+  it('returns 401 when not authenticated', async function () {
+    await this.request()
       .get('/auth_token')
       .expect(401)
-      .end()
   })
 })

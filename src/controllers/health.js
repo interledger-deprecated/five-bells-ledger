@@ -16,6 +16,6 @@ const model = require('../models/health')
 /**
  * @returns {void}
  */
-exports.getResource = function * health () {
-  this.body = yield model.getDbHealth()
+exports.getResource = async function health (ctx) {
+  ctx.body = await model.getDbHealth()
 }

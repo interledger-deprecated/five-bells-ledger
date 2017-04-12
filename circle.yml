@@ -4,7 +4,7 @@ machine:
     - mysql
     - postgresql
   node:
-    version: 6.9.1
+    version: 7.7.1
   environment:
     # Read-only
     AWS_SECRET_ACCESS_KEY: Q0SsTtjzt9zK3VpGpdp3VdGdYZshfdJ7IDtdr8BU

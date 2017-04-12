@@ -32,25 +32,25 @@ function convertToPersistent (data) {
   return _.mapKeys(result, (value, key) => key.toUpperCase())
 }
 
-function * convertToIntegerTransferId (fulfillment, options) {
+function convertToIntegerTransferId (fulfillment, options) {
   return getTransferId(fulfillment.transfer_id, options).then((transferId) => {
     return _.assign({}, fulfillment, {transfer_id: transferId})
   })
 }
 
-function * insertFulfillments (fulfillments, options) {
+async function insertFulfillments (fulfillments, options) {
   for (const fulfillment of fulfillments) {
-    const row = yield convertToIntegerTransferId(fulfillment, options)
-    yield db.insert(row, options && options.transaction)
+    const row = await convertToIntegerTransferId(fulfillment, options)
+    await db.insert(row, options && options.transaction)
   }
 }
 
-function * getFulfillment (transferUuid, options) {
-  const transferId = yield getTransferId(transferUuid, options)
+async function getFulfillment (transferUuid, options) {
+  const transferId = await getTransferId(transferUuid, options)
   if (!transferId) {
     throw new TransferNotFoundError('This transfer does not exist')
   }
-  const transfer = yield getTransferById(transferId, options)
+  const transfer = await getTransferById(transferId, options)
   if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
     throw new AlreadyRolledBackError('This transfer has already been rejected')
   }
@@ -71,17 +71,17 @@ function * getFulfillment (transferUuid, options) {
     })
 }
 
-function * maybeGetFulfillment (transferUuid, options) {
+async function maybeGetFulfillment (transferUuid, options) {
   try {
-    return yield getFulfillment(transferUuid, options)
+    return await getFulfillment(transferUuid, options)
   } catch (err) {
     return null
   }
 }
 
-function * insertFulfillment (fulfillment, options) {
-  const row = yield convertToIntegerTransferId(fulfillment, options)
-  yield db.insertIgnore(row, options && options.transaction)
+async function insertFulfillment (fulfillment, options) {
+  const row = await convertToIntegerTransferId(fulfillment, options)
+  await db.insertIgnore(row, options && options.transaction)
 }
 
 module.exports = {

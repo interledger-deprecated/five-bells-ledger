@@ -14,17 +14,17 @@ const timingHelper = require('./helpers/timing')
 describe('POST /messages', function () {
   logHelper(logger)
 
-  before(function * () {
-    yield dbHelper.init()
+  before(async function () {
+    await dbHelper.init()
   })
 
-  beforeEach(function * () {
+  beforeEach(async function () {
     appHelper.create(this, app)
-    yield dbHelper.clean()
+    await dbHelper.clean()
     this.exampleMessage = _.cloneDeep(require('./data/messages/simple'))
     this.fromToMessage = _.cloneDeep(require('./data/messages/fromto'))
     // Store some example data
-    yield dbHelper.addAccounts(_.values(_.omit(accounts, 'noBalance')))
+    await dbHelper.addAccounts(_.values(_.omit(accounts, 'noBalance')))
 
     this.socket = this.ws('http://localhost/websocket', {
       headers: {
@@ -33,7 +33,7 @@ describe('POST /messages', function () {
     })
 
     // Wait until WS connection is established
-    yield new Promise((resolve) => {
+    await new Promise((resolve) => {
       this.socket.once('message', (msg) => {
         assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: null, method: 'connect' })
         resolve()
@@ -47,7 +47,7 @@ describe('POST /messages', function () {
       params: { eventType: 'message.send', accounts: ['http://localhost/accounts/bob'] }
     }))
 
-    yield new Promise((resolve) => {
+    await new Promise((resolve) => {
       this.socket.once('message', (msg) => {
         assert.deepEqual(JSON.parse(msg), { jsonrpc: '2.0', id: 1, result: 1 })
         resolve()
@@ -55,98 +55,91 @@ describe('POST /messages', function () {
     })
   })
 
-  afterEach(function * () {
+  afterEach(async function () {
     this.socket.terminate()
   })
 
-  it('returns 201 if the message is valid', function * () {
+  it('returns 201 if the message is valid', async function () {
     const message = this.exampleMessage
 
-    yield this.request()
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
       .expect(201)
-      .end()
   })
 
-  it('returns 201 if the message has "from", "to", and "account', function * () {
+  it('returns 201 if the message has "from", "to", and "account', async function () {
     const message = this.fromToMessage
     message.account = message.from
 
-    yield this.request()
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
       .expect(201)
-      .end()
   })
 
-  it('returns 400 if the message is missing "ledger"', function * () {
+  it('returns 400 if the message is missing "ledger"', async function () {
     const message = this.exampleMessage
     delete message.ledger
 
-    yield this.request()
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
       .expect(400)
-      .end()
   })
 
-  it('returns 400 if the message is missing "account"', function * () {
+  it('returns 400 if the message is missing "account"', async function () {
     const message = this.exampleMessage
     delete message.account
 
-    yield this.request()
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
       .expect(400)
-      .end()
   })
 
-  it('returns 400 if the message has "from" but no "to"', function * () {
+  it('returns 400 if the message has "from" but no "to"', async function () {
     const message = this.fromToMessage
     delete message.to
 
-    yield this.request()
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
       .expect(400)
-      .end()
   })
 
-  it('returns 400 if the message has "to" but no "from"', function * () {
+  it('returns 400 if the message has "to" but no "from"', async function () {
     const message = this.fromToMessage
     delete message.from
 
-    yield this.request()
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
       .expect(400)
-      .end()
   })
 
-  it('returns 400 if the message is missing "data"', function * () {
+  it('returns 400 if the message is missing "data"', async function () {
     const message = this.exampleMessage
     delete message.data
 
-    yield this.request()
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
       .expect(400)
-      .end()
   })
 
-  it('returns 400 if "from" doesn\'t match the sender (when the sender isn\'t admin)', function * () {
+  it('returns 400 if "from" doesn\'t match the sender (when the sender isn\'t admin)', async function () {
     const message = this.fromToMessage
     message.from = 'http://localhost/accounts/carl'
 
-    yield this.request()
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
@@ -155,15 +148,14 @@ describe('POST /messages', function () {
         id: 'InvalidBodyError',
         message: 'You do not have permission to impersonate this user'
       })
-      .end()
   })
 
-  it('returns 422 if the message recipient isn\'t listening', function * () {
+  it('returns 422 if the message recipient isn\'t listening', async function () {
     const message = Object.assign(this.exampleMessage, {
       account: 'http://localhost/accounts/carl'
     })
 
-    yield this.request()
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
@@ -172,22 +164,20 @@ describe('POST /messages', function () {
         id: 'NoSubscriptionsError',
         message: 'Destination account could not be reached'
       })
-      .end()
   })
 
-  it('relays a message with "account"', function * () {
+  it('relays a message with "account"', async function () {
     const message = this.exampleMessage
     const listener = sinon.spy()
     this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
-    yield timingHelper.sleep(50)
-    yield this.request()
+    await timingHelper.sleep(50)
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
       .expect(201)
-      .end()
-    yield timingHelper.sleep(50)
+    await timingHelper.sleep(50)
 
     sinon.assert.calledOnce(listener)
     sinon.assert.calledWith(listener.firstCall, {
@@ -207,19 +197,18 @@ describe('POST /messages', function () {
     })
   })
 
-  it('relays a message with "from"/"to"', function * () {
+  it('relays a message with "from"/"to"', async function () {
     const message = this.fromToMessage
     const listener = sinon.spy()
     this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
-    yield timingHelper.sleep(50)
-    yield this.request()
+    await timingHelper.sleep(50)
+    await this.request()
       .post('/messages')
       .auth('alice', 'alice')
       .send(message)
       .expect(201)
-      .end()
-    yield timingHelper.sleep(50)
+    await timingHelper.sleep(50)
 
     sinon.assert.calledOnce(listener)
     sinon.assert.calledWith(listener.firstCall, {
@@ -239,19 +228,18 @@ describe('POST /messages', function () {
     })
   })
 
-  it('relays a message when the admin is impersonating another user', function * () {
+  it('relays a message when the admin is impersonating another user', async function () {
     const message = this.fromToMessage
     const listener = sinon.spy()
     this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
-    yield timingHelper.sleep(50)
-    yield this.request()
+    await timingHelper.sleep(50)
+    await this.request()
       .post('/messages')
       .auth('admin', 'admin')
       .send(message)
       .expect(201)
-      .end()
-    yield timingHelper.sleep(50)
+    await timingHelper.sleep(50)
 
     sinon.assert.calledOnce(listener)
     sinon.assert.calledWith(listener.firstCall, {

@@ -19,86 +19,86 @@ describe('TimeQueue', function () {
   })
 
   describe('.insert()', function () {
-    it('should insert an item to the priority queue', function * () {
+    it('should insert an item to the priority queue', async function () {
       const bananaItem = {'day-o': 'daaaay-o'}
-      yield this.timeQueue.insert(START_DATE, bananaItem)
+      await this.timeQueue.insert(START_DATE, bananaItem)
       expect(this.timeQueue._queue.peek().item).to.deep.equal(bananaItem)
     })
-    it('should emit an "insert" event when adding items', function * () {
+    it('should emit an "insert" event when adding items', async function () {
       const insertListener = sinon.spy()
-      this.timeQueue.on('insert', function * () {
+      this.timeQueue.on('insert', async function () {
         insertListener()
       })
       expect(this.timeQueue.listeners('insert')).to.have.length(1)
       expect(insertListener.called).to.equal(false)
-      yield this.timeQueue.insert(START_DATE, {})
+      await this.timeQueue.insert(START_DATE, {})
       expect(insertListener.calledOnce).to.equal(true)
     })
   })
 
   describe('.getEarliestDate()', function () {
-    it('should return the earliest item', function * () {
+    it('should return the earliest item', async function () {
       const bananaItem1 = {'day-o': 'daaaay-o'}
       const bananaItem2 = {'daylight': 'come'}
       const bananaItem3 = {'and me': 'wanna go home'}
-      yield this.timeQueue.insert(START_DATE, bananaItem1)
-      yield this.timeQueue.insert(START_DATE + 100, bananaItem2)
-      yield this.timeQueue.insert(START_DATE + 100000, bananaItem3)
+      await this.timeQueue.insert(START_DATE, bananaItem1)
+      await this.timeQueue.insert(START_DATE + 100, bananaItem2)
+      await this.timeQueue.insert(START_DATE + 100000, bananaItem3)
       expect(this.timeQueue.getEarliestDate()).to.equal(START_DATE)
     })
-    it('should return the earliest item even when added out of order', function * () {
+    it('should return the earliest item even when added out of order', async function () {
       const bananaItem1 = {'day-o': 'daaaay-o'}
       const bananaItem2 = {'daylight': 'come'}
       const bananaItem3 = {'and me': 'wanna go home'}
-      yield this.timeQueue.insert(START_DATE + 100000, bananaItem1)
-      yield this.timeQueue.insert(START_DATE, bananaItem2)
-      yield this.timeQueue.insert(START_DATE + 100, bananaItem3)
+      await this.timeQueue.insert(START_DATE + 100000, bananaItem1)
+      await this.timeQueue.insert(START_DATE, bananaItem2)
+      await this.timeQueue.insert(START_DATE + 100, bananaItem3)
       expect(this.timeQueue.getEarliestDate()).to.equal(START_DATE)
     })
   })
 
   describe('.popBeforeDate()', function () {
-    it('should return all items before the cutoff date', function * () {
+    it('should return all items before the cutoff date', async function () {
       const bananaItem1 = {'day-o': 'daaaay-o'}
       const bananaItem2 = {'daylight': 'come'}
       const bananaItem3 = {'and me': 'wanna go home'}
-      yield this.timeQueue.insert(START_DATE + 100000, bananaItem1)
-      yield this.timeQueue.insert(START_DATE, bananaItem2)
-      yield this.timeQueue.insert(START_DATE + 100, bananaItem3)
+      await this.timeQueue.insert(START_DATE + 100000, bananaItem1)
+      await this.timeQueue.insert(START_DATE, bananaItem2)
+      await this.timeQueue.insert(START_DATE + 100, bananaItem3)
       expect(this.timeQueue.popBeforeDate(START_DATE + 101)).to.deep.equal([
         bananaItem2,
         bananaItem3
       ])
     })
-    it('or no items at all if there are none', function * () {
+    it('or no items at all if there are none', async function () {
       const bananaItem1 = {'day-o': 'daaaay-o'}
       const bananaItem2 = {'daylight': 'come'}
       const bananaItem3 = {'and me': 'wanna go home'}
-      yield this.timeQueue.insert(START_DATE + 100000, bananaItem1)
-      yield this.timeQueue.insert(START_DATE, bananaItem2)
-      yield this.timeQueue.insert(START_DATE + 100, bananaItem3)
+      await this.timeQueue.insert(START_DATE + 100000, bananaItem1)
+      await this.timeQueue.insert(START_DATE, bananaItem2)
+      await this.timeQueue.insert(START_DATE + 100, bananaItem3)
       expect(this.timeQueue.popBeforeDate(START_DATE - 1)).to.deep.equal([])
     })
   })
 
   describe('.includes()', function () {
-    it('should find an included item', function * () {
+    it('should find an included item', async function () {
       const bananaItem1 = {'day-o': 'daaaay-o'}
       const bananaItem2 = {'daylight': 'come'}
       const bananaItem3 = {'and me': 'wanna go home'}
-      yield this.timeQueue.insert(START_DATE + 100000, bananaItem1)
-      yield this.timeQueue.insert(START_DATE, bananaItem2)
-      yield this.timeQueue.insert(START_DATE + 100, bananaItem3)
+      await this.timeQueue.insert(START_DATE + 100000, bananaItem1)
+      await this.timeQueue.insert(START_DATE, bananaItem2)
+      await this.timeQueue.insert(START_DATE + 100, bananaItem3)
       expect(this.timeQueue.includes(bananaItem1)).to.equal(true)
       expect(this.timeQueue.includes(bananaItem2)).to.equal(true)
       expect(this.timeQueue.includes(bananaItem3)).to.equal(true)
     })
-    it('should not find a non-included item', function * () {
+    it('should not find a non-included item', async function () {
       const bananaItem1 = {'day-o': 'daaaay-o'}
       const bananaItem2 = {'daylight': 'come'}
       const bananaItem3 = {'and me': 'wanna go home'}
-      yield this.timeQueue.insert(START_DATE + 100000, bananaItem1)
-      yield this.timeQueue.insert(START_DATE, bananaItem2)
+      await this.timeQueue.insert(START_DATE + 100000, bananaItem1)
+      await this.timeQueue.insert(START_DATE, bananaItem2)
       expect(this.timeQueue.includes(bananaItem1)).to.equal(true)
       expect(this.timeQueue.includes(bananaItem2)).to.equal(true)
       expect(this.timeQueue.includes(bananaItem3)).to.equal(false)
@@ -106,13 +106,13 @@ describe('TimeQueue', function () {
   })
 
   describe('.remove()', function () {
-    it('should remove an included item', function * () {
+    it('should remove an included item', async function () {
       const bananaItem1 = {'day-o': 'daaaay-o'}
       const bananaItem2 = {'daylight': 'come'}
       const bananaItem3 = {'and me': 'wanna go home'}
-      yield this.timeQueue.insert(START_DATE + 100000, bananaItem1)
-      yield this.timeQueue.insert(START_DATE, bananaItem2)
-      yield this.timeQueue.insert(START_DATE + 100, bananaItem3)
+      await this.timeQueue.insert(START_DATE + 100000, bananaItem1)
+      await this.timeQueue.insert(START_DATE, bananaItem2)
+      await this.timeQueue.insert(START_DATE + 100, bananaItem3)
       expect(this.timeQueue.includes(bananaItem1)).to.equal(true)
       expect(this.timeQueue.includes(bananaItem2)).to.equal(true)
       expect(this.timeQueue.includes(bananaItem3)).to.equal(true)
