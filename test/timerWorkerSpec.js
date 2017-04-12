@@ -22,10 +22,11 @@ describe('TimerWorker', function () {
 
     this.timeQueue = new TimeQueue()
     this.transferExpiryMonitor = new TransferExpiryMonitor(this.timeQueue)
-    sinon.stub(this.transferExpiryMonitor,
-      'processExpiredTransfers',
-      async function () {
-      })
+    sinon.stub(
+      this.transferExpiryMonitor,
+      'processExpiredTransfers'
+    )
+      .callsFake(async function () { })
     this.timerWorker = new TimerWorker(this.timeQueue, this.transferExpiryMonitor)
   })
 
