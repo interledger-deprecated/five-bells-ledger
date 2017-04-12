@@ -33,7 +33,7 @@ passport.use(new BasicStrategy(
           return done(new UnauthorizedError(
             'Unknown or invalid account / password'))
         }
-        return verifyPassword(password, new Buffer(userObj.password_hash, 'base64'))
+        return verifyPassword(password, Buffer.from(userObj.password_hash, 'base64'))
           .then((valid) => {
             if (!valid) {
               return done(new UnauthorizedError('Invalid password'))

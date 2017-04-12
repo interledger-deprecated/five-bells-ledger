@@ -28,7 +28,7 @@ describe('POST /messages', function () {
 
     this.socket = this.ws('http://localhost/websocket', {
       headers: {
-        Authorization: 'Basic ' + new Buffer('bob:bob', 'utf8').toString('base64')
+        Authorization: 'Basic ' + Buffer.from('bob:bob', 'utf8').toString('base64')
       }
     })
 

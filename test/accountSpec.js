@@ -588,7 +588,7 @@ describe('Accounts', function () {
 
       const actualAdmin = _.omitBy(yield getAccount(expectedAdmin.name), _.isNull)
 
-      expect(hashPassword.verifyPassword(pass, new Buffer(actualAdmin.password_hash, 'base64')))
+      expect(hashPassword.verifyPassword(pass, Buffer.from(actualAdmin.password_hash, 'base64')))
       delete actualAdmin.password_hash
       expect(actualAdmin).to.deep.equal(expectedAdmin)
     })

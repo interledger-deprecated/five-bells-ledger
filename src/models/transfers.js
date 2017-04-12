@@ -112,11 +112,11 @@ function makeTransferStateMessage (transferId, state, receiptType) {
 }
 
 function sign (base64Str) {
-  const seed = new Buffer(config.getIn(['keys', 'ed25519', 'secret']), 'base64')
+  const seed = Buffer.from(config.getIn(['keys', 'ed25519', 'secret']), 'base64')
   const keyPair = tweetnacl.sign.keyPair.fromSeed(seed)
-  return new Buffer(
+  return Buffer.from(
     tweetnacl.sign.detached(
-      new Buffer(base64Str, 'base64'),
+      Buffer.from(base64Str, 'base64'),
       keyPair.secretKey
     )
   ).toString('base64')
@@ -379,7 +379,7 @@ async function fulfillTransfer (transferId, fulfillmentUri) {
   const fulfillment = convertToInternalFulfillment(fulfillmentUri)
   fulfillment.transfer_id = transferId
   let transfer = null
-  return await promiseRetry(async function (retry, attemptNo) {
+  return promiseRetry(async function (retry, attemptNo) {
     log.debug('fulfill transfer attempt %d', attemptNo)
     try {
       const existingFulfillment = await db.withSerializableTransaction(async function (transaction) {

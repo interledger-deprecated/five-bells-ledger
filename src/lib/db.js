@@ -38,7 +38,7 @@ function withSerializableTransaction (callback) {
       await transaction.raw('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
     }
 
-    return await callback(transaction)
+    return callback(transaction)
   })
 }
 

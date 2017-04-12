@@ -105,8 +105,8 @@ function getTransferWhere (where, options) {
   })
 }
 
-async function getTransfer (uuid, options) {
-  return await getTransferWhere({TRANSFER_UUID: uuid}, options)
+function getTransfer (uuid, options) {
+  return getTransferWhere({TRANSFER_UUID: uuid}, options)
 }
 
 function getTransferId (uuid, options) {
@@ -115,8 +115,8 @@ function getTransferId (uuid, options) {
       (transfer) => transfer ? transfer._id : null)
 }
 
-async function getTransferById (id, options) {
-  return await getTransferWhere({TRANSFER_ID: id}, options)
+function getTransferById (id, options) {
+  return getTransferWhere({TRANSFER_ID: id}, options)
 }
 
 async function updateTransfer (transfer, options) {
