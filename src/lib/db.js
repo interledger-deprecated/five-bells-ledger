@@ -7,6 +7,7 @@ const assert = require('assert')
 const connection = require('./knex').config.connection
 const spawn = require('child_process').spawn
 const knex = require('./knex').knex
+const promiseRetry = require('promise-retry')
 const sequence = require('./utils').sequence
 const readRejectionReasons = require('../models/db/rejectionReasons')
   .readRejectionReasons
@@ -14,6 +15,7 @@ const readTransferStatuses = require('../models/db/transferStatuses')
   .readTransferStatuses
 const config = require('../services/config')
 const sqlDir = path.resolve(__dirname, '..', 'sql')
+const log = require('../services/log').create('db')
 
 const TABLE_NAMES = [
   'L_TRANSFER_ADJUSTMENTS',
@@ -25,20 +27,41 @@ const TABLE_NAMES = [
   'L_LU_TRANSFER_STATUS'
 ]
 
+const DEFAULT_DB_RETRIES = 5
+
 const withTransaction = knex.transaction.bind(knex)
 
-function withSerializableTransaction (callback) {
+function withSerializableTransaction (callback, retries = DEFAULT_DB_RETRIES) {
   const dbType = knex.client.config.client
-  return withTransaction(async function (transaction) {
-    // Set isolation level to avoid reading "prepared" transaction that is currently being
-    // executed by another request. This ensures the transfer can be fulfilled only once.
-    assert(_.includes(['sqlite3', 'pg', 'mysql'], dbType),
-      'A valid client must be specified on the db object')
-    if (dbType === 'pg') {
-      await transaction.raw('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
-    }
+  return promiseRetry(function (retry, attemptNo) {
+    return withTransaction(async function (transaction) {
+      // Set isolation level to avoid reading "prepared" transaction that is currently being
+      // executed by another request. This ensures the transfer can be fulfilled only once.
+      assert(_.includes(['sqlite3', 'pg', 'mysql'], dbType),
+        'A valid client must be specified on the db object')
+      if (dbType === 'pg') {
+        await transaction.raw('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+      }
 
-    return callback(transaction)
+      return callback(transaction)
+    }).catch(err => {
+      // 40001 is a postgres error code meaning the database could not complete the transaction
+      // because this would interfere with other concurrent transactions
+      if (err.code === '40001') {
+        log.debug('retrying database query', `${attemptNo}/${retries}`, err)
+        err.isDbRetry = true
+        return retry(err)
+      }
+      throw err
+    })
+  }, {
+    minTimeout: 10, // milliseconds
+    factor: 1.2, // consecutive retries have an increasing timeout
+    retries,
+    randomize: true // randomizing the duration after which the retry occurs helps if a batch
+                    // of transfers/fulfillments are submitted at the same time. Since the
+                    // retries do not happen all at the same time, they have a higher likelihood
+                    // of succeeding.
   })
 }
 

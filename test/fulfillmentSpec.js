@@ -14,6 +14,9 @@ const accounts = require('./data/accounts')
 const validator = require('./helpers/validator')
 const getAccount = require('../src/models/db/accounts').getAccount
 
+// see test/mocha.opts and test/helpers/dbFailureMock.js
+const dbFailureMock = require('../src/models/db/utils')
+
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
 
 describe('GET /fulfillment', function () {
@@ -48,11 +51,10 @@ describe('GET /fulfillment', function () {
     this.clock.restore()
   })
 
-  it('should return 401 if the request is not authenticated', function * () {
-    yield this.request()
+  it('should return 401 if the request is not authenticated', async function () {
+    await this.request()
         .get(this.executedTransfer.id + '/fulfillment')
         .expect(401)
-        .end()
   })
 
   /* GET fulfillments */
@@ -149,7 +151,7 @@ describe('GET /fulfillment', function () {
       })
   })
 
-  it('should return a fulfillment', async function () {
+  async function returnFulfillment () {
     const transfer = this.preparedTransfer
 
     await dbHelper.setHoldBalance(10)
@@ -168,6 +170,55 @@ describe('GET /fulfillment', function () {
       .expect(200)
       .expect(this.executionConditionFulfillment)
       .expect(validator.validateFulfillment)
+  }
+
+  it('should return a fulfillment', returnFulfillment)
+
+  describe('when hold account is busy', function () {
+    const ARGS_EXPECTED = {
+      '0': 'UPDATE "L_ACCOUNTS" SET "BALANCE" = "BALANCE" + ? WHERE "NAME" = ?',
+      '1': [ -10, 'hold' ]
+    }
+
+    beforeEach(function () {
+      dbFailureMock.timesQueryShouldFail[JSON.stringify(ARGS_EXPECTED)] = 3
+    })
+
+    afterEach(function () {
+      const timesLeft = dbFailureMock.timesQueryShouldFail[JSON.stringify(ARGS_EXPECTED)]
+      dbFailureMock.timesQueryShouldFail[JSON.stringify(ARGS_EXPECTED)] = 0
+      expect(timesLeft).to.equal(0)
+    })
+
+    it('should return a fulfillment', returnFulfillment)
+
+    it('should give up if retrying takes too long', async function () {
+      dbFailureMock.timesQueryShouldFail[JSON.stringify(ARGS_EXPECTED)] = 1000000
+      try {
+        const transfer = this.preparedTransfer
+
+        await dbHelper.setHoldBalance(10)
+
+        await this.request()
+          .put(transfer.id + '/fulfillment')
+          .auth('admin', 'admin')
+          .send(this.executionConditionFulfillment)
+          .expect(503)
+          .expect('Database is busy')
+
+        await this.request()
+          .get(transfer.id + '/fulfillment')
+          .auth('admin', 'admin')
+          .expect(404)
+          .expect('{"id":"MissingFulfillmentError","message":"This transfer has not yet been fulfilled"}')
+      } catch (e) {
+        dbFailureMock.timesQueryShouldFail[JSON.stringify(ARGS_EXPECTED)] = 0
+        throw e
+      }
+      const timesLeft = dbFailureMock.timesQueryShouldFail[JSON.stringify(ARGS_EXPECTED)]
+      dbFailureMock.timesQueryShouldFail[JSON.stringify(ARGS_EXPECTED)] = 0
+      expect(timesLeft).to.be.above(0)
+    })
   })
 
   /* put fulfillments */

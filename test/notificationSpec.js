@@ -13,6 +13,9 @@ const transferExpiryMonitor = require('../src/services/transferExpiryMonitor')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const transferStates = transferDictionary.transferStates
 
+// see test/mocha.opts and test/helpers/dbFailureMock.js
+const dbFailureMock = require('../src/models/db/utils')
+
 const validator = require('./helpers/validator')
 
 const START_DATE = 1434412800000 // June 16, 2015 00:00:00 GMT
@@ -145,7 +148,7 @@ describe('Notifications', function () {
         })
       })
 
-      it('should send notifications about executed transfers', async function () {
+      async function executedTransfersSpec () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
 
@@ -208,8 +211,23 @@ describe('Notifications', function () {
             })
           }
         })
-      })
+      }
 
+      it('should send notifications about executed transfers', executedTransfersSpec)
+      describe('database is busy', function () {
+        beforeEach(function () {
+          // this should make returnHeldTransfer fail:
+          this.ARGS_EXPECTED = { '0': 'L_TRANSFERS' }
+          dbFailureMock.timesQueryShouldFail[JSON.stringify(this.ARGS_EXPECTED)] = 3
+        })
+
+        afterEach(function () {
+          const timesLeft = dbFailureMock.timesQueryShouldFail[JSON.stringify(this.ARGS_EXPECTED)]
+          dbFailureMock.timesQueryShouldFail[JSON.stringify(this.ARGS_EXPECTED)] = 0
+          assert.equal(timesLeft, 0)
+        })
+        it('should send notifications about executed transfers', executedTransfersSpec)
+      })
       it('should send notification only once, even if sender and receiver are the same in a transfer', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))
