@@ -109,6 +109,18 @@ To run tests using an in-memory database, run:
 npm test
 ```
 
+By default, stdout from the app process is buffered up, and only shown after a test fails. That way, you can easily debug a failing test:
+
+```sh
+DEBUG=ledger:* npm test
+```
+
+If you want to see the output for passing tests as well, and not buffered until the test is over, use the `SHOW_STDOUT` environment variable for this:
+
+```sh
+SHOW_STDOUT=true DEBUG=ledger:transfers npm test
+```
+
 If you wish to specify the database against which the tests are run, use the `LEDGER_UNIT_DB_URI` environment variable.
 
 ``` sh
