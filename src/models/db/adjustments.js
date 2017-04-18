@@ -7,6 +7,8 @@ const getAccountId = require('./accounts').getAccountId
 const getAccountById = require('./accounts').getAccountById
 const db = require('./utils')()
 
+const DB_RETRIES = 5
+
 function isNil (x) {
   return x === null || x === undefined
 }
@@ -101,8 +103,9 @@ function upsertAdjustment (persistentAdjustment, options) {
   if (options && options.transaction) {
     return _upsertAdjustment(persistentAdjustment, options.transaction)
   } else {
+    // second parameter is number of retries in case database is busy
     return db.withSerializableTransaction((transaction) =>
-      _upsertAdjustment(persistentAdjustment, transaction))
+      _upsertAdjustment(persistentAdjustment, transaction), DB_RETRIES)
   }
 }
 

@@ -243,9 +243,20 @@ async function putResource (ctx) {
   }
 
   transfer.id = uri.make('transfer', id.toLowerCase())
-  const result = await model.setTransfer(transfer, ctx.state.user)
-  ctx.body = result.transfer
-  ctx.status = result.existed ? 200 : 201
+
+  let result
+  try {
+    result = await model.setTransfer(transfer, ctx.req.user)
+    ctx.body = result.transfer
+    ctx.status = result.existed ? 200 : 201
+  } catch (err) {
+    if (err.isDbRetry) {
+      ctx.status = 503
+      ctx.body = 'Database is busy'
+    } else {
+      throw err
+    }
+  }
 }
 
 /**
@@ -287,10 +298,21 @@ async function putResource (ctx) {
 async function putFulfillment (ctx) {
   const id = ctx.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
+
   const fulfillment = await parse.text(ctx, {limit: config.maxHttpPayload})
-  const result = await model.fulfillTransfer(id, fulfillment)
-  ctx.body = result.fulfillment
-  ctx.status = result.existed ? 200 : 201
+  let result
+  try {
+    result = await model.fulfillTransfer(id, fulfillment)
+    ctx.body = result.fulfillment
+    ctx.status = result.existed ? 200 : 201
+  } catch (err) {
+    if (err.isDbRetry) {
+      ctx.status = 503
+      ctx.body = 'Database is busy'
+    } else {
+      throw err
+    }
+  }
 }
 
 /**
@@ -369,9 +391,20 @@ async function getFulfillment (ctx) {
 async function putRejection (ctx) {
   const id = ctx.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  const result = await model.rejectTransfer(id, ctx.body, ctx.req.user)
-  ctx.body = result.rejection
-  ctx.status = result.existed ? 200 : 201
+
+  let result
+  try {
+    result = await model.rejectTransfer(id, ctx.body, ctx.req.user)
+    ctx.body = result.rejection
+    ctx.status = result.existed ? 200 : 201
+  } catch (err) {
+    if (err.isDbRetry) {
+      ctx.status = 503
+      ctx.body = 'Database is busy'
+    } else {
+      throw err
+    }
+  }
 }
 
 module.exports = {

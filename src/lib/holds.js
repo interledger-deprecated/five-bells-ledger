@@ -8,6 +8,12 @@ function adjustBalance (accountName, amount, transaction) {
   /* eslint-disable handle-callback-err */
   return accounts.adjustBalance(accountName, amount, {transaction})
   .catch((error) => {
+    // 40001 is a postgres error code meaning the database could not complete the transaction
+    // because this would interfere with other concurrent transactions
+    // letting this type of errors through so they can trigger a retry at the src/lib/db.js level
+    if (error.code === '40001') {
+      throw error
+    }
     throw new InsufficientFundsError(
       'Sender has insufficient funds.', accountName)
   })

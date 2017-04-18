@@ -3,7 +3,6 @@
 const Bignumber = require('bignumber.js')
 const crypto = require('crypto')
 const _ = require('lodash')
-const promiseRetry = require('promise-retry')
 const diff = require('deep-diff')
 const tweetnacl = require('tweetnacl')
 const stringifyJSON = require('canonical-json')
@@ -47,6 +46,18 @@ const RECEIPT_TYPE_SHA256 = 'sha256'
 
 const CONDITION_TYPE_EXECUTION = 'execution'
 const CONDITION_TYPE_CANCELLATION = 'cancellation'
+
+// The time inbetween retries increases exponentially, along the following lines:
+// # retries  time before giving up
+//      1        10 ms
+//     10        260 ms
+//     20        1.87 seconds
+//     30        11.82 seconds
+//     40        3 minutes
+//     50        5 days
+
+const DB_RETRIES_CREATE = 5
+const DB_RETRIES_FULFILL = 10
 
 async function getTransfer (id) {
   log.debug('fetching transfer ID ' + id)
@@ -379,70 +390,58 @@ async function fulfillTransfer (transferId, fulfillmentUri) {
   const fulfillment = convertToInternalFulfillment(fulfillmentUri)
   fulfillment.transfer_id = transferId
   let transfer = null
-  return promiseRetry(async function (retry, attemptNo) {
-    log.debug('fulfill transfer attempt %d', attemptNo)
-    try {
-      const existingFulfillment = await db.withSerializableTransaction(async function (transaction) {
-        transfer = await db.getTransfer(transferId, {transaction})
+  const existingFulfillment = await db.withSerializableTransaction(async function (transaction) {
+    transfer = await db.getTransfer(transferId, {transaction})
 
-        if (!transfer) {
-          throw new NotFoundError('Invalid transfer ID')
-        }
-
-        const conditionType = validateConditionFulfillment(transfer, fulfillment)
-        const validatedAt = transferExpiryMonitor.validateNotExpired(transfer)
-
-        if (
-          (conditionType === CONDITION_TYPE_EXECUTION &&
-          transfer.state === transferStates.TRANSFER_STATE_EXECUTED) ||
-          (conditionType === CONDITION_TYPE_CANCELLATION &&
-          transfer.state === transferStates.TRANSFER_STATE_REJECTED)
-        ) {
-          return convertToExternalFulfillment(await fulfillments.getFulfillment(
-            transferId, {transaction}))
-        }
-
-        if (conditionType === CONDITION_TYPE_EXECUTION) {
-          if (!_.includes(validExecutionStates, transfer.state)) {
-            throw new InvalidModificationError('Transfers in state ' +
-            transfer.state + ' may not be executed')
-          }
-          await executeTransfer(transaction, transfer, fulfillment, validatedAt)
-        } else if (conditionType === CONDITION_TYPE_CANCELLATION) {
-          if (!_.includes(validCancellationStates, transfer.state)) {
-            throw new InvalidModificationError('Transfers in state ' +
-            transfer.state + ' may not be cancelled')
-          }
-          await cancelTransfer(transaction, transfer, fulfillment)
-        }
-
-        transferExpiryMonitor.unwatch(transfer.id)
-        await db.updateTransfer(transfer, {transaction})
-
-        // Start the expiry countdown if the transfer is not yet finalized
-        // If the expires_at has passed by this time we'll consider
-        // the transfer to have made it in before the deadline
-        if (!isTransferFinalized(transfer)) {
-          await transferExpiryMonitor.watch(transfer)
-        }
-      })
-
-      log.debug('changes written to database')
-      await notificationBroadcaster.sendNotifications(transfer, null)
-
-      return {
-        fulfillment: existingFulfillment || convertToExternalFulfillment(fulfillment),
-        existed: Boolean(existingFulfillment)
-      }
-    } catch (err) {
-      // In case of a synchronization error, retry
-      if (Number(err.code) === 40001) {
-        retry(err)
-      } else {
-        throw err
-      }
+    if (!transfer) {
+      throw new NotFoundError('Invalid transfer ID')
     }
-  })
+
+    const conditionType = validateConditionFulfillment(transfer, fulfillment)
+    const validatedAt = transferExpiryMonitor.validateNotExpired(transfer)
+
+    if (
+      (conditionType === CONDITION_TYPE_EXECUTION &&
+      transfer.state === transferStates.TRANSFER_STATE_EXECUTED) ||
+      (conditionType === CONDITION_TYPE_CANCELLATION &&
+      transfer.state === transferStates.TRANSFER_STATE_REJECTED)
+    ) {
+      return convertToExternalFulfillment(await fulfillments.getFulfillment(
+        transferId, {transaction}))
+    }
+
+    if (conditionType === CONDITION_TYPE_EXECUTION) {
+      if (!_.includes(validExecutionStates, transfer.state)) {
+        throw new InvalidModificationError('Transfers in state ' +
+        transfer.state + ' may not be executed')
+      }
+      await executeTransfer(transaction, transfer, fulfillment, validatedAt)
+    } else if (conditionType === CONDITION_TYPE_CANCELLATION) {
+      if (!_.includes(validCancellationStates, transfer.state)) {
+        throw new InvalidModificationError('Transfers in state ' +
+        transfer.state + ' may not be cancelled')
+      }
+      await cancelTransfer(transaction, transfer, fulfillment)
+    }
+
+    transferExpiryMonitor.unwatch(transfer.id)
+    await db.updateTransfer(transfer, {transaction})
+
+    // Start the expiry countdown if the transfer is not yet finalized
+    // If the expires_at has passed by this time we'll consider
+    // the transfer to have made it in before the deadline
+    if (!isTransferFinalized(transfer)) {
+      await transferExpiryMonitor.watch(transfer)
+    }
+  }, DB_RETRIES_FULFILL)
+
+  log.debug('changes written to database')
+  await notificationBroadcaster.sendNotifications(transfer, null)
+
+  return {
+    fulfillment: existingFulfillment || convertToExternalFulfillment(fulfillment),
+    existed: Boolean(existingFulfillment)
+  }
 }
 
 async function rejectTransfer (transferId, rejectionMessage, requestingUser) {
@@ -544,7 +543,7 @@ async function setTransfer (externalTransfer, requestingUser) {
     await processImmediateExecution(transfer, transaction)
     await processCreditRejection(transfer, transaction)
     await db.upsertTransfer(transfer, {transaction})
-  })
+  }, DB_RETRIES_CREATE)
 
   await notificationBroadcaster.sendNotifications(transfer, null)
 

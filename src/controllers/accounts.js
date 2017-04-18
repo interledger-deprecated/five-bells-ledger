@@ -117,9 +117,19 @@ async function putResource (ctx) {
   if (!ACCOUNT_REGISTRATION_REGEX.test(account.name)) {
     throw new InvalidBodyError('Account name must be 2-20 characters, lowercase letters, numbers and hyphens ("-") only, with no two or more consecutive hyphens.')
   }
-  const result = await model.setAccount(account, ctx.state.user)
-  ctx.body = result.account
-  ctx.status = result.existed ? 200 : 201
+  let result
+  try {
+    result = await model.setAccount(account, ctx.req.user)
+    ctx.body = result.account
+    ctx.status = result.existed ? 200 : 201
+  } catch (err) {
+    if (err.isDbRetry) {
+      ctx.body = 'Database is busy'
+      ctx.status = 503
+    } else {
+      throw err
+    }
+  }
 }
 
 /**

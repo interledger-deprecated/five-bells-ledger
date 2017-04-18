@@ -1,1 +1,2 @@
 --timeout 150000
+--require test/helpers/dbFailureMock

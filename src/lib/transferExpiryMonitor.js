@@ -11,6 +11,8 @@ const updateTransfer = require('../models/db/transfers').updateTransfer
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const isTransferFinalized = require('./transferUtils').isTransferFinalized
 
+const DB_RETRIES = 10
+
 const transferStates = transferDictionary.transferStates
 
 class TransferExpiryMonitor {
@@ -46,6 +48,7 @@ class TransferExpiryMonitor {
           // Return the money to the original senders
           holds.returnHeldFunds(transfer, transaction)
         }
+
         updateState(transfer, transferStates.TRANSFER_STATE_REJECTED)
         transfer.rejection_reason = 'expired'
         await updateTransfer(transfer, {transaction})
@@ -54,7 +57,7 @@ class TransferExpiryMonitor {
 
         await _this.notificationBroadcaster.sendNotifications(transfer, transaction)
       }
-    })
+    }, DB_RETRIES) // retries if database is busy
   }
 
   async watch (transfer) {
