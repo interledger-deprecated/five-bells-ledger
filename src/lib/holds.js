@@ -3,9 +3,10 @@
 const InsufficientFundsError = require('../errors/insufficient-funds-error')
 const accounts = require('../models/db/accounts')
 const entries = require('../models/db/entries')
+const holdBalance = {}
 
 function adjustBalance (accountName, amount, transaction) {
-  /* eslint-disable handle-callback-err */
+    /* eslint-disable handle-callback-err */
   return accounts.adjustBalance(accountName, amount, {transaction})
   .catch((error) => {
     // 40001 is a postgres error code meaning the database could not complete the transaction
@@ -17,7 +18,14 @@ function adjustBalance (accountName, amount, transaction) {
     throw new InsufficientFundsError(
       'Sender has insufficient funds.', accountName)
   })
-  /* eslint-enable */
+}
+
+function adjustHoldBalance (amount) {
+  if (holdBalance['accountName']) {
+    holdBalance['accountName'] = amount
+  } else {
+    holdBalance['accountName'] += amount
+  }
 }
 
 function insertEntryByName (accountName, transferId, transaction) {
@@ -34,6 +42,7 @@ function holdFunds (transfer, transaction) {
   return Promise.all(transfer.debits.map((debit) => {
     return Promise.all([
       adjustBalance(debit.account, -debit.amount, transaction),
+      adjustHoldBalance(debit.amount),
       insertEntryByName(debit.account, transfer.id, transaction)
     ])
   }))
@@ -42,6 +51,7 @@ function holdFunds (transfer, transaction) {
 function disburseFunds (transfer, transaction) {
   return Promise.all(transfer.credits.map((credit) => {
     return Promise.all([
+      adjustHoldBalance(-credit.amount),
       adjustBalance(credit.account, credit.amount, transaction),
       insertEntryByName(credit.account, transfer.id, transaction)
     ])
@@ -51,6 +61,7 @@ function disburseFunds (transfer, transaction) {
 function returnHeldFunds (transfer, transaction) {
   return Promise.all(transfer.debits.map((debit) => {
     return Promise.all([
+      adjustHoldBalance(-debit.amount),
       adjustBalance(debit.account, debit.amount, transaction),
       insertEntryByName(debit.account, transfer.id, transaction)
     ])

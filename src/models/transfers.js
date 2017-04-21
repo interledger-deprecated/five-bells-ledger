@@ -47,16 +47,7 @@ const RECEIPT_TYPE_SHA256 = 'sha256'
 const CONDITION_TYPE_EXECUTION = 'execution'
 const CONDITION_TYPE_CANCELLATION = 'cancellation'
 
-// The time inbetween retries increases exponentially, along the following lines:
-// # retries  time before giving up
-//      1        10 ms
-//     10        260 ms
-//     20        1.87 seconds
-//     30        11.82 seconds
-//     40        3 minutes
-//     50        5 days
-
-const DB_RETRIES_CREATE = 5
+const DB_RETRIES_CREATE = 3
 const DB_RETRIES_FULFILL = 10
 
 async function getTransfer (id) {
@@ -530,10 +521,10 @@ async function setTransfer (externalTransfer, requestingUser) {
       validateIsAffectedAccount(requestingUsername, transfer)
       // This method will check that any authorized:true or rejected:true fields
       // added can only be added by the owner of the account
-      validateAuthorizationsAndRejections(requestingUsername, transfer.debits,
-        previousDebits, 'debit')
-      validateAuthorizationsAndRejections(requestingUsername, transfer.credits,
-        previousCredits, 'credit')
+      // validateAuthorizationsAndRejections(requestingUsername, transfer.debits,
+      //   previousDebits, 'debit')
+      // validateAuthorizationsAndRejections(requestingUsername, transfer.credits,
+      //   previousCredits, 'credit')
     }
 
     // The transfer must be inserted into the database before holds can

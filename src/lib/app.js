@@ -71,10 +71,7 @@ class App {
       this.log.info('syncing database')
       await createTables()
     } catch (e) {
-      const dbExistsError = e.message && e.message.includes('already exists')
-      if (e.code !== 'SQLITE_ERROR' || !dbExistsError) {
-        this.log.info('Database sync aborted. Error was: ', e)
-      }
+      this.log.info('database sync aborted', e)
     }
 
     await readLookupTables()
@@ -131,15 +128,15 @@ class App {
       authTokens.getAuthToken)
 
     router.put('/transfers/:id',
-      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['anonymous'], { session: false }),
       setupBody,
       transfers.putResource)
 
     router.put('/transfers/:id/fulfillment',
-      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['anonymous'], { session: false }),
       transfers.putFulfillment)
     router.get('/transfers/:id/fulfillment',
-      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['anonymous'], { session: false }),
       transfers.getFulfillment)
     router.put('/transfers/:id/rejection',
       passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
@@ -147,7 +144,7 @@ class App {
       transfers.putRejection)
 
     router.get('/transfers/:id',
-      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['anonymous'], { session: false }),
       transfers.getResource)
     router.get('/transfers/:id/state',
       passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
