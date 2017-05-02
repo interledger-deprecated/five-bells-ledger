@@ -29,7 +29,12 @@ function parseDatabaseType (uri) {
 
 function getKnexConfig () {
   const knexConfig = {
-    sqlite: {client: 'sqlite3', useNullAsDefault: true},
+    sqlite: {
+      client: 'sqlite3',
+      useNullAsDefault: true,
+      // Fix for https://github.com/interledgerjs/five-bells-ledger/issues/354
+      pool: { refreshIdle: false }
+    },
     mysql: {client: 'mysql'},
     postgres: {client: 'pg'}
   }
