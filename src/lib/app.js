@@ -71,7 +71,10 @@ class App {
       this.log.info('syncing database')
       await createTables()
     } catch (e) {
-      this.log.info('database sync aborted')
+      const dbExistsError = e.message && e.message.includes('already exists')
+      if (e.code !== 'SQLITE_ERROR' || !dbExistsError) {
+        this.log.info('Database sync aborted. Error was: ', e)
+      }
     }
 
     await readLookupTables()
