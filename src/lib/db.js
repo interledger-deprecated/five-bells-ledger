@@ -14,6 +14,12 @@ const readRejectionReasons = require('../models/db/rejectionReasons')
 const readTransferStatuses = require('../models/db/transferStatuses')
   .readTransferStatuses
 const config = require('../services/config')
+const pgMigratorPackageJson = require('pg-migrator/package.json')
+const pgMigratorPackageJsonPath = require.resolve('pg-migrator/package.json')
+const pgMigratorBinPath = path.resolve(
+  path.dirname(pgMigratorPackageJsonPath),
+  pgMigratorPackageJson.bin['pg-migrator']
+)
 const sqlDir = path.resolve(__dirname, '..', 'sql')
 const log = require('../services/log').create('db')
 
@@ -135,7 +141,7 @@ function migratePostgres (step) {
   return new Promise((resolve, reject) => {
     const args = [config.db.uri]
     if (step) args.push(step)
-    const childProcess = spawn('pg-migrator', args, {cwd: path.resolve(sqlDir, 'pg')})
+    const childProcess = spawn(pgMigratorBinPath, args, {cwd: path.resolve(sqlDir, 'pg')})
     let error = ''
     childProcess.on('error', reject)
     childProcess.stderr.on('data', (data) => { error += data.toString() })
