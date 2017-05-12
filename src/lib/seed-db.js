@@ -5,16 +5,8 @@ const upsertAccount = require('../models/db/accounts').upsertAccount
 const insertAccounts = require('../models/accounts').insertAccounts
 
 module.exports = async function (config) {
-  await setupHoldAccount()
   if (config.get('default_admin')) {
     await setupAdminAccount(config.get('default_admin'))
-  }
-}
-
-async function setupHoldAccount () {
-  const holdAccount = await getAccount('hold')
-  if (!holdAccount) {
-    await upsertAccount({name: 'hold', minimum_allowed_balance: '0', balance: '0'})
   }
 }
 
