@@ -11,6 +11,8 @@ const transferStatuses = require('./transferStatuses')
 const adjustments = require('./adjustments')
 const removeAuditFields = require('./audit').removeAuditFields
 
+const transferStore = {} // store transfers in memory
+
 function convertFromPersistent (data) {
   data = _.cloneDeep(data)
   data = _.mapKeys(data, (value, key) => key.toLowerCase())
@@ -129,6 +131,9 @@ async function updateTransfer (transfer, options) {
 }
 
 function insertTransfer (transfer, options) {
+  // transferStore[transfer.id] = transfer
+  // return transfer
+
   const transaction = options && options.transaction
   return db.insert(transfer, options).then(() => {
     return db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
@@ -144,6 +149,9 @@ function insertTransfers (transfers, options) {
 }
 
 function upsertTransfer (transfer, options) {
+  // transferStore[transfer.id] = transfer
+  // return transfer
+
   const transaction = options && options.transaction
   return db.upsert(transfer, {TRANSFER_UUID: transfer.id}, transaction)
   .then((result) => {

@@ -388,42 +388,42 @@ async function fulfillTransfer (transferId, fulfillmentUri) {
       throw new NotFoundError('Invalid transfer ID')
     }
 
-    const conditionType = validateConditionFulfillment(transfer, fulfillment)
-    const validatedAt = transferExpiryMonitor.validateNotExpired(transfer)
+    // const conditionType = validateConditionFulfillment(transfer, fulfillment)
+    // const validatedAt = transferExpiryMonitor.validateNotExpired(transfer)
 
-    if (
-      (conditionType === CONDITION_TYPE_EXECUTION &&
-      transfer.state === transferStates.TRANSFER_STATE_EXECUTED) ||
-      (conditionType === CONDITION_TYPE_CANCELLATION &&
-      transfer.state === transferStates.TRANSFER_STATE_REJECTED)
-    ) {
-      return convertToExternalFulfillment(await fulfillments.getFulfillment(
-        transferId, {transaction}))
-    }
+    // if (
+    //   (conditionType === CONDITION_TYPE_EXECUTION &&
+    //   transfer.state === transferStates.TRANSFER_STATE_EXECUTED) ||
+    //   (conditionType === CONDITION_TYPE_CANCELLATION &&
+    //   transfer.state === transferStates.TRANSFER_STATE_REJECTED)
+    // ) {
+    //   return convertToExternalFulfillment(await fulfillments.getFulfillment(
+    //     transferId, {transaction}))
+    // }
 
-    if (conditionType === CONDITION_TYPE_EXECUTION) {
-      if (!_.includes(validExecutionStates, transfer.state)) {
-        throw new InvalidModificationError('Transfers in state ' +
-        transfer.state + ' may not be executed')
-      }
-      await executeTransfer(transaction, transfer, fulfillment, validatedAt)
-    } else if (conditionType === CONDITION_TYPE_CANCELLATION) {
-      if (!_.includes(validCancellationStates, transfer.state)) {
-        throw new InvalidModificationError('Transfers in state ' +
-        transfer.state + ' may not be cancelled')
-      }
-      await cancelTransfer(transaction, transfer, fulfillment)
-    }
+    // if (conditionType === CONDITION_TYPE_EXECUTION) {
+      // if (!_.includes(validExecutionStates, transfer.state)) {
+      //   throw new InvalidModificationError('Transfers in state ' +
+      //   transfer.state + ' may not be executed')
+      // }
+      await executeTransfer(transaction, transfer, fulfillment/*, validatedAt*/)
+    // } else if (conditionType === CONDITION_TYPE_CANCELLATION) {
+    //   if (!_.includes(validCancellationStates, transfer.state)) {
+    //     throw new InvalidModificationError('Transfers in state ' +
+    //     transfer.state + ' may not be cancelled')
+    //   }
+    //   await cancelTransfer(transaction, transfer, fulfillment)
+    // }
 
-    transferExpiryMonitor.unwatch(transfer.id)
+    // transferExpiryMonitor.unwatch(transfer.id)
     await db.updateTransfer(transfer, {transaction})
 
     // Start the expiry countdown if the transfer is not yet finalized
     // If the expires_at has passed by this time we'll consider
     // the transfer to have made it in before the deadline
-    if (!isTransferFinalized(transfer)) {
-      await transferExpiryMonitor.watch(transfer)
-    }
+    // if (!isTransferFinalized(transfer)) {
+    //   await transferExpiryMonitor.watch(transfer)
+    // }
   }, DB_RETRIES_FULFILL)
 
   log.debug('changes written to database')
@@ -467,27 +467,27 @@ async function rejectTransfer (transferId, rejectionMessage, requestingUser) {
 }
 
 async function setTransfer (externalTransfer, requestingUser) {
-  const validationResult = validator.create('Transfer')(externalTransfer)
-  if (validationResult.valid !== true) {
-    const message = validationResult.schema
-      ? 'Body did not match schema ' + validationResult.schema
-      : 'Body did not pass validation'
-    throw new InvalidBodyError(message, validationResult.errors)
-  }
+  // const validationResult = validator.create('Transfer')(externalTransfer)
+  // if (validationResult.valid !== true) {
+  //   const message = validationResult.schema
+  //     ? 'Body did not match schema ' + validationResult.schema
+  //     : 'Body did not pass validation'
+  //   throw new InvalidBodyError(message, validationResult.errors)
+  // }
   let transfer = converters.convertToInternalTransfer(externalTransfer)
 
   // Do not allow modifications after the expires_at date
-  transferExpiryMonitor.validateNotExpired(transfer)
+  // transferExpiryMonitor.validateNotExpired(transfer)
 
-  if (typeof transfer.ledger !== 'undefined') {
-    if (transfer.ledger !== config.getIn(['server', 'base_uri'])) {
-      throw new InvalidBodyError('Transfer contains incorrect ledger URI')
-    }
-  }
+  // if (typeof transfer.ledger !== 'undefined') {
+  //   if (transfer.ledger !== config.getIn(['server', 'base_uri'])) {
+  //     throw new InvalidBodyError('Transfer contains incorrect ledger URI')
+  //   }
+  // }
 
-  if (transfer.type !== undefined) {
-    throw new InvalidBodyError('Transfer contains incorrect type')
-  }
+  // if (transfer.type !== undefined) {
+  //   throw new InvalidBodyError('Transfer contains incorrect type')
+  // }
 
   transfer.ledger = config.getIn(['server', 'base_uri'])
 
@@ -496,7 +496,7 @@ async function setTransfer (externalTransfer, requestingUser) {
     transfer.credits[0].account + ' : ' +
     transfer.credits[0].amount)
 
-  validateCreditAndDebitAmounts(transfer)
+  // validateCreditAndDebitAmounts(transfer)
   normalizeCreditAndDebitAmounts(transfer)
 
   let originalTransfer, previousDebits, previousCredits
@@ -511,21 +511,21 @@ async function setTransfer (externalTransfer, requestingUser) {
       // version, but only allowing specific fields to change.
       transfer = updateTransferObject(originalTransfer, transfer)
     } else {
-      await validateNoDisabledAccounts(transaction, transfer)
+      // await validateNoDisabledAccounts(transaction, transfer)
       // A brand-new transfer will start out as proposed
       updateState(transfer, transferStates.TRANSFER_STATE_PROPOSED)
     }
 
-    if (!(requestingUser && requestingUser.is_admin)) {
-      const requestingUsername = requestingUser && requestingUser.name
-      validateIsAffectedAccount(requestingUsername, transfer)
+    // if (!(requestingUser && requestingUser.is_admin)) {
+    //   const requestingUsername = requestingUser && requestingUser.name
+      // validateIsAffectedAccount(requestingUsername, transfer)
       // This method will check that any authorized:true or rejected:true fields
       // added can only be added by the owner of the account
       // validateAuthorizationsAndRejections(requestingUsername, transfer.debits,
       //   previousDebits, 'debit')
       // validateAuthorizationsAndRejections(requestingUsername, transfer.credits,
       //   previousCredits, 'credit')
-    }
+    // }
 
     // The transfer must be inserted into the database before holds can
     // be placed because the adjustments reference the transfer's primary key
@@ -541,9 +541,9 @@ async function setTransfer (externalTransfer, requestingUser) {
   // Start the expiry countdown if the transfer is not yet finalized
   // If the expires_at has passed by this time we'll consider
   // the transfer to have made it in before the deadline
-  if (!isTransferFinalized(transfer)) {
-    await transferExpiryMonitor.watch(transfer)
-  }
+  // if (!isTransferFinalized(transfer)) {
+  //   await transferExpiryMonitor.watch(transfer)
+  // }
 
   log.debug('changes written to database')
 

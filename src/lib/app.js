@@ -95,7 +95,13 @@ class App {
         // Authorization check is disabled here to allow clients to connect
         // to some endpoints without presenting client certificates, or using a
         // different authentication method (e.g., Basic Auth)
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
+
+        // spdy: {
+        //   protocols: [ 'h2', 'spdy/3.1', 'http/1.1' ],
+        //   plain: true,
+        //   ssl: false
+        // }
       }
 
       const server = spdy.createServer(

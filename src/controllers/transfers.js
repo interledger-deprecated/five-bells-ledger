@@ -231,16 +231,16 @@ async function getStateResource (ctx) {
  */
 async function putResource (ctx) {
   const id = ctx.params.id
-  requestUtil.validateUriParameter('id', id, 'Uuid')
+  // requestUtil.validateUriParameter('id', id, 'Uuid')
   const transfer = ctx.body
 
-  if (typeof transfer.id !== 'undefined') {
-    requestUtil.assert.strictEqual(
-      uri.parse(transfer.id, 'transfer').id.toLowerCase(),
-      id.toLowerCase(),
-      'Transfer ID must match the URI'
-    )
-  }
+  // if (typeof transfer.id !== 'undefined') {
+  //   requestUtil.assert.strictEqual(
+  //     uri.parse(transfer.id, 'transfer').id.toLowerCase(),
+  //     id.toLowerCase(),
+  //     'Transfer ID must match the URI'
+  //   )
+  // }
 
   transfer.id = uri.make('transfer', id.toLowerCase())
 
