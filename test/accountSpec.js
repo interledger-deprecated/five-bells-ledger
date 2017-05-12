@@ -39,7 +39,6 @@ describe('Accounts', function () {
     // Define example data
     this.exampleAccounts = _.cloneDeep(require('./data/accounts'))
     this.adminAccount = this.exampleAccounts.admin
-    this.holdAccount = this.exampleAccounts.hold
     this.existingAccount = this.exampleAccounts.alice
     this.existingAccount2 = this.exampleAccounts.bob
     this.traderAccount = this.exampleAccounts.trader
@@ -56,7 +55,6 @@ describe('Accounts', function () {
     // Store some example data
     await dbHelper.addAccounts([
       this.adminAccount,
-      this.holdAccount,
       this.existingAccount,
       this.existingAccount2,
       this.traderAccount,
@@ -67,14 +65,12 @@ describe('Accounts', function () {
   describe('GET /accounts', function () {
     it('should return 200', async function () {
       const account1 = this.adminAccount
-      const account2 = this.holdAccount
       const account3 = this.existingAccount
       const account4 = this.existingAccount2
       const account5 = this.traderAccount
       const account6 = this.disabledAccount
       // Passwords are not returned
       delete account1.password
-      delete account2.password
       delete account3.password
       delete account4.password
       delete account5.password
@@ -86,7 +82,7 @@ describe('Accounts', function () {
           const sortedResponse = _.sortBy(res.body, (account) => {
             return account.name
           })
-          const sortedAccounts = _.sortBy([account1, account2, account3, account4, account5, account6], (account) => {
+          const sortedAccounts = _.sortBy([account1, account3, account4, account5, account6], (account) => {
             return account.name
           })
           expect(sortedResponse).to.deep.equal(sortedAccounts)

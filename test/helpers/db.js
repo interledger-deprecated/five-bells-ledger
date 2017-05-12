@@ -3,7 +3,6 @@
 const db = require('../../src/lib/db')
 const insertTransfers = require('../../src/models/transfers').insertTransfers
 const insertAccounts = require('../../src/models/accounts').insertAccounts
-const setBalance = require('../../src/models/accounts').setBalance
 const insertFulfillments = require('../../src/models/db/fulfillments')
   .insertFulfillments
 
@@ -21,10 +20,6 @@ exports.init = async function () {
 
 exports.clean = async function () {
   await db.truncateTables()
-}
-
-exports.setHoldBalance = async function (balance) {
-  await setBalance('hold', balance)
 }
 
 exports.addAccounts = async function (accounts) {
