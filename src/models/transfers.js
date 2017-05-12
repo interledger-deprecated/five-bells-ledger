@@ -381,12 +381,13 @@ async function fulfillTransfer (transferId, fulfillmentUri) {
   const fulfillment = convertToInternalFulfillment(fulfillmentUri)
   fulfillment.transfer_id = transferId
   let transfer = null
-  const existingFulfillment = await db.withSerializableTransaction(async function (transaction) {
-    transfer = await db.getTransfer(transferId, {transaction})
+  // const existingFulfillment = await db.withSerializableTransaction(async function (transaction) {
+    // transfer = await db.getTransfer(transferId, {transaction})
+  transfer = transfers[transferId]
 
-    if (!transfer) {
-      throw new NotFoundError('Invalid transfer ID')
-    }
+  if (!transfer) {
+    throw new NotFoundError('Invalid transfer ID')
+  }
 
     // const conditionType = validateConditionFulfillment(transfer, fulfillment)
     // const validatedAt = transferExpiryMonitor.validateNotExpired(transfer)
@@ -406,7 +407,8 @@ async function fulfillTransfer (transferId, fulfillmentUri) {
       //   throw new InvalidModificationError('Transfers in state ' +
       //   transfer.state + ' may not be executed')
       // }
-      await executeTransfer(transaction, transfer, fulfillment/*, validatedAt*/)
+      // await executeTransfer(transaction, transfer, fulfillment/*, validatedAt*/)
+  updateState(transfer, transferStates.TRANSFER_STATE_EXECUTED)
     // } else if (conditionType === CONDITION_TYPE_CANCELLATION) {
     //   if (!_.includes(validCancellationStates, transfer.state)) {
     //     throw new InvalidModificationError('Transfers in state ' +
@@ -416,7 +418,7 @@ async function fulfillTransfer (transferId, fulfillmentUri) {
     // }
 
     // transferExpiryMonitor.unwatch(transfer.id)
-    await db.updateTransfer(transfer, {transaction})
+    // await db.updateTransfer(transfer, {transaction})
 
     // Start the expiry countdown if the transfer is not yet finalized
     // If the expires_at has passed by this time we'll consider
@@ -424,14 +426,15 @@ async function fulfillTransfer (transferId, fulfillmentUri) {
     // if (!isTransferFinalized(transfer)) {
     //   await transferExpiryMonitor.watch(transfer)
     // }
-  }, DB_RETRIES_FULFILL)
+  // }, DB_RETRIES_FULFILL)
 
   log.debug('changes written to database')
   await notificationBroadcaster.sendNotifications(transfer, null)
 
+  delete transfers[transferId]
   return {
-    fulfillment: existingFulfillment || convertToExternalFulfillment(fulfillment),
-    existed: Boolean(existingFulfillment)
+    fulfillment: convertToExternalFulfillment(fulfillment),
+    existed: Boolean(false)
   }
 }
 
@@ -466,6 +469,7 @@ async function rejectTransfer (transferId, rejectionMessage, requestingUser) {
   }
 }
 
+const transfers = {}
 async function setTransfer (externalTransfer, requestingUser) {
   // const validationResult = validator.create('Transfer')(externalTransfer)
   // if (validationResult.valid !== true) {
@@ -500,21 +504,22 @@ async function setTransfer (externalTransfer, requestingUser) {
   normalizeCreditAndDebitAmounts(transfer)
 
   let originalTransfer, previousDebits, previousCredits
-  await db.withSerializableTransaction(async function (transaction) {
-    originalTransfer = await db.getTransfer(transfer.id, {transaction})
-    if (originalTransfer) {
-      log.debug('found an existing transfer with this ID')
-      previousDebits = originalTransfer.debits
-      previousCredits = originalTransfer.credits
+  // await db.withSerializableTransaction(async function (transaction) {
+    // originalTransfer = await db.getTransfer(transfer.id, {transaction})
+  if (originalTransfer) {
+    log.debug('found an existing transfer with this ID')
+    previousDebits = originalTransfer.debits
+    previousCredits = originalTransfer.credits
 
-      // This method will update the original transfer object using the new
-      // version, but only allowing specific fields to change.
-      transfer = updateTransferObject(originalTransfer, transfer)
-    } else {
-      // await validateNoDisabledAccounts(transaction, transfer)
-      // A brand-new transfer will start out as proposed
-      updateState(transfer, transferStates.TRANSFER_STATE_PROPOSED)
-    }
+    // This method will update the original transfer object using the new
+    // version, but only allowing specific fields to change.
+    transfer = updateTransferObject(originalTransfer, transfer)
+  } else {
+    // await validateNoDisabledAccounts(transaction, transfer)
+    // A brand-new transfer will start out as proposed
+    updateState(transfer, transferStates.TRANSFER_STATE_PROPOSED)
+    updateState(transfer, transferStates.TRANSFER_STATE_PREPARED)
+  }
 
     // if (!(requestingUser && requestingUser.is_admin)) {
     //   const requestingUsername = requestingUser && requestingUser.name
@@ -529,12 +534,12 @@ async function setTransfer (externalTransfer, requestingUser) {
 
     // The transfer must be inserted into the database before holds can
     // be placed because the adjustments reference the transfer's primary key
-    await db.upsertTransfer(transfer, {transaction})
-    await processTransitionToPreparedState(transfer, transaction)
-    await processImmediateExecution(transfer, transaction)
-    await processCreditRejection(transfer, transaction)
-    await db.upsertTransfer(transfer, {transaction})
-  }, DB_RETRIES_CREATE)
+    // await db.upsertTransfer(transfer, {transaction})
+    // await processTransitionToPreparedState(transfer, transaction)
+    // await processImmediateExecution(transfer, transaction)
+    // await processCreditRejection(transfer, transaction)
+    // await db.upsertTransfer(transfer, {transaction})
+  // }, DB_RETRIES_CREATE)
 
   await notificationBroadcaster.sendNotifications(transfer, null)
 
@@ -546,7 +551,7 @@ async function setTransfer (externalTransfer, requestingUser) {
   // }
 
   log.debug('changes written to database')
-
+  transfers[transfer.id] = transfer
   return {
     transfer: converters.convertToExternalTransfer(transfer),
     existed: Boolean(originalTransfer)
