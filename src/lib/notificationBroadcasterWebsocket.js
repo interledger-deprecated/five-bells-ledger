@@ -21,14 +21,14 @@ class NotificationBroadcaster {
     this.listeners = new Map()
   }
 
-  async sendNotifications (transfer, transaction) {
+  async sendNotifications (transfer, fulfillment) {
     const affectedAccounts = _([transfer.debits, transfer.credits])
       .flatten().map('account').uniq().value()
 
     let relatedResources
     // If the transfer is finalized, see if it was finalized by a fulfillment
     if (isTransferFinalized(transfer)) {
-      const fulfillment = await maybeGetFulfillment(transfer.id, { transaction })
+      // const fulfillment = await maybeGetFulfillment(transfer.id, { transaction })
 
       if (fulfillment) {
         if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {

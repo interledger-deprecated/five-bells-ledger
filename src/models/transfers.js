@@ -429,7 +429,7 @@ async function fulfillTransfer (transferId, fulfillmentUri) {
   // }, DB_RETRIES_FULFILL)
 
   log.debug('changes written to database')
-  await notificationBroadcaster.sendNotifications(transfer, null)
+  await notificationBroadcaster.sendNotifications(transfer, fulfillment)
 
   delete transfers[transferId]
   return {
