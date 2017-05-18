@@ -8,13 +8,13 @@ const notificationBroadcaster = require('../services/notificationBroadcaster')
 const log = require('../services/log').create('messages')
 
 async function sendMessage (message, requestingUser) {
-  const validationResult = validator.create('Message')(message)
-  if (validationResult.valid !== true) {
-    const error = validationResult.schema
-      ? 'Body did not match schema ' + validationResult.schema
-      : 'Body did not pass validation'
-    throw new InvalidBodyError(error, validationResult.errors)
-  }
+  // const validationResult = validator.create('Message')(message)
+  // if (validationResult.valid !== true) {
+  //   const error = validationResult.schema
+  //     ? 'Body did not match schema ' + validationResult.schema
+  //     : 'Body did not pass validation'
+  //   throw new InvalidBodyError(error, validationResult.errors)
+  // }
 
   // For backwards compatibility.
   if (message.account && !message.from && !message.to) {
@@ -29,9 +29,9 @@ async function sendMessage (message, requestingUser) {
   log.debug('%s -> %s: %o', senderName, recipientName, message.data)
 
   // Only admin can impersonate users.
-  if (!requestingUser.is_admin && senderName !== requestingUser.name) {
-    throw new InvalidBodyError('You do not have permission to impersonate this user')
-  }
+  // if (!requestingUser.is_admin && senderName !== requestingUser.name) {
+  //   throw new InvalidBodyError('You do not have permission to impersonate this user')
+  // }
 
   const messageDelivered = await notificationBroadcaster.sendMessage(
     recipientName, Object.assign({}, message, {account: senderAccount}))
