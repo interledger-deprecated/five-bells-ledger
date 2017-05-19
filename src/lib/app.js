@@ -126,7 +126,7 @@ class App {
       health.getResource)
 
     router.post('/messages',
-      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['anonymous'], { session: false }),
       setupBody,
       messages.postMessage)
     router.get('/auth_token',
