@@ -119,11 +119,11 @@ class App {
     const router = new Router()
     router.get('/', this.metadata.getResource)
     router.get('/health',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       health.getResource)
 
     router.post('/messages',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       setupBody,
       messages.postMessage)
     router.get('/auth_token',
@@ -131,37 +131,37 @@ class App {
       authTokens.getAuthToken)
 
     router.put('/transfers/:id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       setupBody,
       transfers.putResource)
 
     router.put('/transfers/:id/fulfillment',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       transfers.putFulfillment)
     router.get('/transfers/:id/fulfillment',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       transfers.getFulfillment)
     router.put('/transfers/:id/rejection',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       setupBody,
       transfers.putRejection)
 
     router.get('/transfers/:id',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       transfers.getResource)
     router.get('/transfers/:id/state',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       transfers.getStateResource)
 
     router.get('/accounts',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       filterAdmin,
       accounts.getCollection)
     router.get('/accounts/:name',
-      passport.authenticate(['basic', 'http-signature', 'client-cert', 'anonymous'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert', 'anonymous'], { session: false }),
       accounts.getResource)
     router.put('/accounts/:name',
-      passport.authenticate(['basic', 'http-signature', 'client-cert'], { session: false }),
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       setupBody,
       accounts.putResource)
 
