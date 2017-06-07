@@ -46,7 +46,7 @@ sqlitetest() {
 oneNode() {
   lint
   dockerBuild
-  sqlitetestest
+  sqlitetest
   integrationtest
   postgrestest
   docs
