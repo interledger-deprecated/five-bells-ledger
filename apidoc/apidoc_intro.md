@@ -127,10 +127,14 @@ Name | Type | Description
 ---- | ---- | -----------
 event | string | Event identifier for the type of event
 resource | object | The subject of the notification
+*resource.* id | string | Resource identifier
 *resource.* ledger | uri string | The ledger where the message is to be delivered
-*resource.* data | object | The message payload
 *resource.* from | uri string | The message sender
 *resource.* to | uri string | The message recipient
+*resource.* account | uri string | *Optional* (deprecated)
+*resource.* custom | object | *Optional* The message payload
+*resource.* ilp | string | *Optional* The message payload
+*resource.* data | object | The message payload
 *resource.* account | uri string | *Optional* (deprecated) The message sender/recipient (depending on whether the message is incoming or outgoing)
 *resource.* account | uri string | The message sender/recipient (depending on whether the message is incoming or outgoing)
 id | uri string | *Optional* Unique identifier for this notification
