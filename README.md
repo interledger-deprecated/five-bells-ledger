@@ -70,7 +70,7 @@ docker run --name five-bells-ledger-db -e POSTGRES_PASSWORD=password -d postgres
 After giving postgres a few seconds to start up, you can run a five-bells-ledger Docker container, linking to that database:
 
 ``` sh
-docker run -d -e LEDGER_PORT=1337 -e LEDGER_ADMIN_PASSWORD=admin -e LEDGER_DB_URI=postgres://postgres:password@db --link five-bells-ledger-db:db -p 1337:1337 -h localhost --name fivebells interledger/five-bells-ledger
+docker run -d -e LEDGER_PORT=1337 -e LEDGER_ADMIN_PASS=admin -e LEDGER_DB_URI=postgres://postgres:password@db --link five-bells-ledger-db:db -p 1337:1337 -h localhost --name fivebells interledger/five-bells-ledger
 ```
 
 Breaking down that command:
