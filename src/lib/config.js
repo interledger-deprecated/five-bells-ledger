@@ -94,6 +94,10 @@ function parseWebsocketConfig () {
   }
 }
 
+function isEmpty (value) {
+  return _.isEmpty(value) && typeof value !== 'number'
+}
+
 function loadConfig () {
   const localConfig = {}
 
@@ -105,13 +109,14 @@ function loadConfig () {
   localConfig.recommendedConnectors = parseRecommendedConnectors()
   localConfig.logLevel = getLogLevel()
   localConfig.authTokenSecret = Config.generateSecret(envPrefix, 'authToken')
+  localConfig.authTokenMaxAge = 7 * 24 * 60 * 60 * 1000 // 7 days
   localConfig.websocket = parseWebsocketConfig()
 
   // optional
   localConfig.currency = parseCurrencyConfig()
   localConfig.keys = parseKeysConfig()
 
-  const config = Config.loadConfig(envPrefix, _.omitBy(localConfig, _.isEmpty))
+  const config = Config.loadConfig(envPrefix, _.omitBy(localConfig, isEmpty))
   return config
 }
 
