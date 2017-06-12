@@ -10,7 +10,7 @@ function getAuthToken (requestingUser) {
       algorithm: 'HS256',
       subject: uri.make('account', requestingUser.name.toLowerCase()),
       issuer: config.server.base_uri,
-      expiresIn: '7 days'
+      expiresIn: config.authTokenMaxAge
     }, (err, token) => {
       if (err) return reject(err)
       resolve(token)
