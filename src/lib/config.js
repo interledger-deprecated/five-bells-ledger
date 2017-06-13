@@ -109,7 +109,7 @@ function loadConfig () {
   localConfig.recommendedConnectors = parseRecommendedConnectors()
   localConfig.logLevel = getLogLevel()
   localConfig.authTokenSecret = Config.generateSecret(envPrefix, 'authToken')
-  localConfig.authTokenMaxAge = 7 * 24 * 60 * 60 * 1000 // 7 days
+  localConfig.authTokenMaxAge = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
   localConfig.websocket = parseWebsocketConfig()
 
   // optional

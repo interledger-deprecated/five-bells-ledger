@@ -29,7 +29,7 @@ const config = require('../services/config')
 async function getAuthToken (ctx) {
   ctx.body = {
     token: await model.getAuthToken(ctx.state.user),
-    token_max_age: config.authTokenMaxAge
+    token_max_age: config.authTokenMaxAge // milliseconds
   }
 }
 
