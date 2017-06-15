@@ -299,7 +299,7 @@ define({ "api": [
       "examples": [
         {
           "title": "200 Token Response:",
-          "content": "HTTP/1.1 200 OK\nContent-Type: application/json\n\n{ \"token\": \"9AtVZPN3t49Kx07stO813UHXv6pcES\" }",
+          "content": "HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\n  \"token\": \"9AtVZPN3t49Kx07stO813UHXv6pcES\",\n  \"token_max_age\": 604800000\n}",
           "type": "json"
         }
       ]
