@@ -31,12 +31,13 @@ describe('GET /auth_token', function () {
       .auth('alice', 'alice')
       .expect(200)
       .expect((res) => {
-        assert.deepEqual(Object.keys(res.body), ['token'])
+        assert.deepEqual(Object.keys(res.body), ['token', 'token_max_age'])
         const token = jwt.verify(res.body.token, config.authTokenSecret)
         assert.equal(token.iss, 'http://localhost')
         assert.equal(token.sub, 'http://localhost/accounts/alice')
         assert.ok(typeof token.iat === 'number')
         assert.ok(typeof token.exp === 'number')
+        assert.equal(res.body.token_max_age, 7 * 24 * 60 * 60 * 1000)
       })
   })
 

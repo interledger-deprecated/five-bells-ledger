@@ -36,7 +36,6 @@ describe('Notifications', function () {
     // Define example data
     this.exampleAccounts = _.cloneDeep(require('./data/accounts'))
     this.adminAccount = this.exampleAccounts.admin
-    this.holdAccount = this.exampleAccounts.hold
     this.existingAccount = this.exampleAccounts.alice
     this.existingAccount2 = this.exampleAccounts.bob
     this.existingAccount3 = this.exampleAccounts.candice
@@ -59,7 +58,6 @@ describe('Notifications', function () {
     // Store some example data
     await dbHelper.addAccounts([
       this.adminAccount,
-      this.holdAccount,
       this.existingAccount,
       this.existingAccount2,
       this.existingAccount3,

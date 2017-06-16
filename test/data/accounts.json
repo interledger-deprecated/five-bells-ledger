@@ -47,13 +47,6 @@
     "is_disabled": false,
     "minimum_allowed_balance": "0"
   },
-  "hold": {
-    "id": "http://localhost/accounts/hold",
-    "name": "hold",
-    "balance": "0",
-    "is_disabled": false,
-    "minimum_allowed_balance": "0"
-  },
   "trader": {
     "id": "http://localhost/accounts/trader",
     "name": "trader",
