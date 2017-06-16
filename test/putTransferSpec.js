@@ -571,6 +571,16 @@ describe('PUT /transfers/:id', function () {
       })
   })
 
+  it('should return 403 if invalid auth token is given', async function () {
+    const transfer = this.transferFromEve
+
+    await this.request()
+      .put(transfer.id)
+      .set('Authorization', 'Bearer wrong')
+      .send(transfer)
+      .expect(403)
+  })
+
   it('should return 403 if authorization is provided that is irrelevant ' +
     'to the transfer', async function () {
     const transfer = this.exampleTransfer
@@ -580,6 +590,27 @@ describe('PUT /transfers/:id', function () {
     await this.request()
       .put(transfer.id)
       .auth('candice', 'candice')
+      .send(transferWithoutAuthorization)
+      .expect(403)
+      .expect(function (res) {
+        expect(res.body.id).to.equal('UnauthorizedError')
+        expect(res.body.message).to.equal('Invalid attempt to authorize debit')
+      })
+  })
+
+  it('should return 403 if auth token is provided that is irrelevant ' +
+    'to the transfer', async function () {
+    const transfer = this.exampleTransfer
+    const transferWithoutAuthorization = _.cloneDeep(transfer)
+    delete transferWithoutAuthorization.debits[0].authorized
+
+    const authResp = await this.request()
+      .get('/auth_token')
+      .auth('candice', 'candice')
+
+    await this.request()
+      .put(transfer.id)
+      .set('Authorization', 'Bearer ' + authResp.body.token)
       .send(transferWithoutAuthorization)
       .expect(403)
       .expect(function (res) {
