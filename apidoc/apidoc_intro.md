@@ -133,6 +133,7 @@ resource | object | The subject of the notification
 *resource.* to | uri string | The message recipient
 *resource.* account | uri string | *Optional* (deprecated)
 *resource.* custom | object | *Optional* The message payload
+*resource.* data | object | *Optional* The message payload (deprecated)
 *resource.* ilp | string | *Optional* The message payload
 *resource.* data | object | The message payload
 *resource.* account | uri string | *Optional* (deprecated) The message sender/recipient (depending on whether the message is incoming or outgoing)
