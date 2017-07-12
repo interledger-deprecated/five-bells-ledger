@@ -38,7 +38,7 @@
     "deep-diff": "^0.3.4",
     "eslint-plugin-standard": "^3.0.1",
     "five-bells-condition": "^5.0.1",
-    "five-bells-shared": "^25.0.0",
+    "five-bells-shared": "^25.1.1",
     "jsonwebtoken": "^7.3.0",
     "knex": "^0.12.9",
     "koa": "^2.2.0",
