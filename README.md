@@ -77,6 +77,7 @@ Breaking down that command:
 
 * `-d` Run in the background
 * `-e LEDGER_PORT=1337` Set the ledger's port to 1337. This is just an example for how to set a config option.
+* `-e LEDGER_ADMIN_PASS=admin` Create an "admin" user with password "admin" at startup
 * `-e LEDGER_DB_URI=postgres://postgres:password@db` Set the database URL. Here, 'db' is a host that is Docker-linked:
 * `--link five-bells-ledger-db:db` This allows Five Bells Ledger to see the database that we set up above.
 * `-p 1337:1337` Expose port 1337 to localhost
