@@ -6,8 +6,8 @@ const config = require('../services/config')
 const uri = require('../services/uriManager')
 const parse = require('co-body')
 const requestUtil = require('five-bells-shared/utils/request')
+const HttpErrors = require('http-errors')
 const model = require('../models/transfers')
-const InvalidUriParameterError = require('five-bells-shared/errors/invalid-uri-parameter-error')
 
 /**
  * @api {get} /transfers/:id Get Transfer by ID
@@ -105,7 +105,7 @@ async function getStateResource (ctx) {
   const receiptType = ctx.query.type || 'ed25519-sha512'
   const receiptTypes = ['ed25519-sha512', 'sha256']
   if (!_.includes(receiptTypes, receiptType)) {
-    throw new InvalidUriParameterError('type is not valid')
+    throw new HttpErrors.BadRequest('type is not valid')
   }
   ctx.body = await model.getTransferStateReceipt(
     id.toLowerCase(), receiptType, conditionState)

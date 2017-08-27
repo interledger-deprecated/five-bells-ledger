@@ -9,8 +9,8 @@ const getTransferById = require('./transfers').getTransferById
 const removeAuditFields = require('./audit').removeAuditFields
 const TransferNotFoundError = require('../../errors/transfer-not-found-error')
 const MissingFulfillmentError = require('../../errors/missing-fulfillment-error')
-const TransferNotConditionalError = require('five-bells-shared/errors/transfer-not-conditional-error')
-const AlreadyRolledBackError = require('five-bells-shared/errors/already-rolled-back-error')
+const TransferNotConditionalError = require('../../errors/transfer-not-conditional-error')
+const AlreadyRolledBackError = require('../../errors/already-rolled-back-error')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 const transferStates = transferDictionary.transferStates
 

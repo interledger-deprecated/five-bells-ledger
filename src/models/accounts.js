@@ -5,9 +5,7 @@ const config = require('../services/config')
 const log = require('../services/log').create('accounts')
 const db = require('./db/accounts')
 const hashPassword = require('five-bells-shared/utils/hashPassword')
-const NotFoundError = require('five-bells-shared/errors/not-found-error')
-const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
-const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
+const HttpErrors = require('http-errors')
 const uri = require('../services/uriManager')
 const validator = require('../services/validator')
 const converters = require('./converters/accounts')
@@ -52,10 +50,10 @@ async function getAccount (name, requestingUser) {
     canExamine = requestingUser.name === name || requestingUser.is_admin
     account = await db.getAccount(name)
     if (!account) {
-      throw new NotFoundError('Unknown account')
+      throw new HttpErrors.NotFound('Unknown account')
     } else if (account.is_disabled &&
       (requestingUser && !requestingUser.is_admin)) {
-      throw new UnauthorizedError('This account is disabled')
+      throw new HttpErrors.Forbidden('This account is disabled')
     }
 
     // TODO get rid of this when we start using biginteger math everywhere
@@ -77,7 +75,7 @@ async function setAccount (externalAccount, requestingUser) {
     const message = validationResult.schema
       ? 'Body did not match schema ' + validationResult.schema
       : 'Body did not pass validation'
-    throw new InvalidBodyError(message, validationResult.errors)
+    throw new HttpErrors.BadRequest(message, validationResult.errors)
   }
   const account = converters.convertToInternalAccount(externalAccount)
 
@@ -90,7 +88,7 @@ async function setAccount (externalAccount, requestingUser) {
     'public_key']
   if (!requestingUser.is_admin && !(requestingUser.name === account.name && (
       _.every(_.keys(account), (key) => _.includes(allowedKeys, key))))) {
-    throw new UnauthorizedError('Not authorized')
+    throw new HttpErrors.Forbidden('Not authorized')
   }
   const existed = await db.upsertAccount(account)
   log.debug((existed ? 'updated' : 'created') + ' account name ' +

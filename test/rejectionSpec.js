@@ -86,7 +86,7 @@ describe('PUT /rejection', function () {
       .send(this.rejectionMessage1)
       .expect(403)
       .expect({
-        id: 'UnauthorizedError',
+        id: 'ForbiddenError',
         message: 'Invalid attempt to reject credit'
       })
   })

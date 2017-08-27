@@ -5,7 +5,7 @@ const request = require('five-bells-shared/utils/request')
 const model = require('../models/accounts')
 const makeRpcHandler = require('../services/makeRpcHandler')
 const uri = require('../services/uriManager')
-const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
+const InvalidBodyError = require('../errors/invalid-body-error')
 
 const ACCOUNT_REGISTRATION_REGEX = /^[a-z0-9]([a-z0-9]|[-](?!-)){0,18}[a-z0-9]$/
 

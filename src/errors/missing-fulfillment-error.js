@@ -1,15 +1,12 @@
 'use strict'
 
-const NotFoundError = require('five-bells-shared').NotFoundError
+const ExtensibleError = require('extensible-error')
 
-class MissingFulfillmentError extends NotFoundError {
-  * handler (ctx, log) {
-    log.warn('Fulfillment not found: ' + this.message)
-    ctx.status = 404
-    ctx.body = {
-      id: this.name,
-      message: this.message
-    }
+class MissingFulfillmentError extends ExtensibleError {
+  constructor (message) {
+    super(message)
+
+    this.status = 404
   }
 }
 

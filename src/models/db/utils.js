@@ -2,8 +2,7 @@
 
 const assert = require('assert')
 const knex = require('../../lib/knex').knex
-const InvalidModificationError = require('five-bells-shared')
-  .InvalidModificationError
+const InvalidModificationError = require('../../errors/invalid-modification-error')
 const _ = require('lodash')
 
 function createModule (tableName, convertToPersistent, convertFromPersistent) {

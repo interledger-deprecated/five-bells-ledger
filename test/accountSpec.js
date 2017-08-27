@@ -151,11 +151,11 @@ describe('Accounts', function () {
         .expect(404)
     })
 
-    it('should return 403 with invalid credentials', async function () {
+    it('should return 401 with invalid credentials', async function () {
       await this.request()
         .get(this.existingAccount.id)
         .auth('candice', 'candice')
-        .expect(403)
+        .expect(401)
     })
 
     it('should default the balance to 0', async function () {
@@ -251,11 +251,11 @@ describe('Accounts', function () {
         .expect(validator.validateAccount)
     })
 
-    it('should return a 403 when a non-admin user tries to view a disabled account', async function () {
+    it('should return a 401 when a non-admin user tries to view a disabled account', async function () {
       await this.request()
         .get(this.disabledAccount.id)
         .auth('disabled', 'disabled')
-        .expect(403)
+        .expect(401)
     })
 
     it('should return 0 as a minimum_allowed_balance', async function () {
@@ -534,7 +534,7 @@ describe('Accounts', function () {
         .put(account.id)
         .auth(account.name, account.name)
         .send({name: account.name, password: account.name})
-        .expect(403)
+        .expect(401)
     })
 
     it('should not allow user to set their balance', async function () {
