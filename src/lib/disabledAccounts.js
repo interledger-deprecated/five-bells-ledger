@@ -2,8 +2,7 @@
 
 const _ = require('lodash')
 const getAccount = require('../models/db/accounts').getAccount
-const UnprocessableEntityError =
-require('five-bells-shared/errors/unprocessable-entity-error')
+const HttpErrors = require('http-errors')
 
 async function validateNoDisabledAccounts (transaction, transfer) {
   const accounts = _.uniq(_.map(transfer.debits.concat(transfer.credits), (creditOrDebit) => {
@@ -13,10 +12,10 @@ async function validateNoDisabledAccounts (transaction, transfer) {
   for (const account of accounts) {
     const accountObj = await getAccount(account, { transaction: transaction })
     if (accountObj === null) {
-      throw new UnprocessableEntityError('Account `' + account + '` does not exist.')
+      throw new HttpErrors.UnprocessableEntity('Account `' + account + '` does not exist.')
     }
     if (accountObj.is_disabled) {
-      throw new UnprocessableEntityError('Account `' + account + '` is disabled.')
+      throw new HttpErrors.UnprocessableEntity('Account `' + account + '` is disabled.')
     }
   }
 }

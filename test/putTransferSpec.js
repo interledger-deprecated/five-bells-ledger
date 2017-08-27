@@ -539,7 +539,7 @@ describe('PUT /transfers/:id', function () {
       .expect(validator.validateTransfer)
   })
 
-  it('should return 403 if invalid authorization is given', async function () {
+  it('should return 401 if invalid authorization is given', async function () {
     const transfer = this.exampleTransfer
     const transferWithoutAuthorization = _.cloneDeep(transfer)
     delete transferWithoutAuthorization.debits[0].authorized
@@ -548,14 +548,14 @@ describe('PUT /transfers/:id', function () {
       .put(transfer.id)
       .auth(transfer.debits[0].account + ':notrealpassword')
       .send(transferWithoutAuthorization)
-      .expect(403)
+      .expect(401)
       .expect(function (res) {
         expect(res.body.id).to.equal('UnauthorizedError')
         expect(res.body.message).to.equal('Unknown or invalid account / password')
       })
   })
 
-  it('should return 403 if password is missing', async function () {
+  it('should return 401 if password is missing', async function () {
     const transfer = this.exampleTransfer
     const transferWithoutAuthorization = _.cloneDeep(transfer)
     delete transferWithoutAuthorization.debits[0].authorized
@@ -564,21 +564,21 @@ describe('PUT /transfers/:id', function () {
       .put(transfer.id)
       .auth(transfer.debits[0].account + ':')
       .send(transferWithoutAuthorization)
-      .expect(403)
+      .expect(401)
       .expect(function (res) {
         expect(res.body.id).to.equal('UnauthorizedError')
         expect(res.body.message).to.equal('Unknown or invalid account / password')
       })
   })
 
-  it('should return 403 if invalid auth token is given', async function () {
+  it('should return 401 if invalid auth token is given', async function () {
     const transfer = this.transferFromEve
 
     await this.request()
       .put(transfer.id)
       .set('Authorization', 'Bearer wrong')
       .send(transfer)
-      .expect(403)
+      .expect(401)
   })
 
   it('should return 403 if authorization is provided that is irrelevant ' +
@@ -593,7 +593,7 @@ describe('PUT /transfers/:id', function () {
       .send(transferWithoutAuthorization)
       .expect(403)
       .expect(function (res) {
-        expect(res.body.id).to.equal('UnauthorizedError')
+        expect(res.body.id).to.equal('ForbiddenError')
         expect(res.body.message).to.equal('Invalid attempt to authorize debit')
       })
   })
@@ -614,7 +614,7 @@ describe('PUT /transfers/:id', function () {
       .send(transferWithoutAuthorization)
       .expect(403)
       .expect(function (res) {
-        expect(res.body.id).to.equal('UnauthorizedError')
+        expect(res.body.id).to.equal('ForbiddenError')
         expect(res.body.message).to.equal('Invalid attempt to authorize debit')
       })
   })
@@ -640,7 +640,7 @@ describe('PUT /transfers/:id', function () {
         .expect(401)
     })
 
-  it('should return 403 if authentication invalid',
+  it('should return 401 if authentication invalid',
     async function () {
       const transfer = this.exampleTransfer
 
@@ -648,7 +648,7 @@ describe('PUT /transfers/:id', function () {
         .put(transfer.id)
         .auth('alice', 'wrongPassword')
         .send(transfer)
-        .expect(403)
+        .expect(401)
         .expect((res) => {
           expect(res.body.id).to.equal('UnauthorizedError')
           expect(res.body.message).to.equal('Invalid password')
@@ -665,7 +665,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(403)
       .expect(function (res) {
-        expect(res.body.id).to.equal('UnauthorizedError')
+        expect(res.body.id).to.equal('ForbiddenError')
         expect(res.body.message).to.equal('Invalid attempt to authorize debit')
       })
   })
@@ -823,7 +823,7 @@ describe('PUT /transfers/:id', function () {
       .send(transfer)
       .expect(403)
       .expect(function (res) {
-        expect(res.body.id).to.equal('UnauthorizedError')
+        expect(res.body.id).to.equal('ForbiddenError')
         expect(res.body.message).to.equal('Invalid attempt to authorize debit')
       })
   })
@@ -1410,7 +1410,7 @@ describe('PUT /transfers/:id', function () {
         .send(transfer)
         .expect(403)
         .expect(function (res) {
-          expect(res.body.id).to.equal('UnauthorizedError')
+          expect(res.body.id).to.equal('ForbiddenError')
           expect(res.body.message).to.equal('Invalid attempt to authorize credit')
         })
     })
@@ -1461,7 +1461,7 @@ describe('PUT /transfers/:id', function () {
         .send(transfer)
         .expect(403)
         .expect(function (res) {
-          expect(res.body.id).to.equal('UnauthorizedError')
+          expect(res.body.id).to.equal('ForbiddenError')
           expect(res.body.message).to.equal('Invalid attempt to reject credit')
         })
     })

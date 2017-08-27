@@ -1,6 +1,6 @@
 'use strict'
 
-const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
+const InvalidBodyError = require('../errors/invalid-body-error')
 const NoSubscriptionsError = require('../errors/no-subscriptions-error')
 const uri = require('../services/uriManager')
 const validator = require('../services/validator')

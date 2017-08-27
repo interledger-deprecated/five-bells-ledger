@@ -174,7 +174,7 @@ describe('Transfer State', function () {
         .get(this.executedTransfer.id + '/state?type=bogus')
         .auth('alice', 'alice')
         .expect(400, {
-          id: 'InvalidUriParameterError',
+          id: 'BadRequestError',
           message: 'type is not valid'
         })
     })

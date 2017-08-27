@@ -1,21 +1,13 @@
 'use strict'
 
-const UnprocessableEntityError = require('five-bells-shared').UnprocessableEntityError
+const ExtensibleError = require('extensible-error')
 
-class ExpiredTransferError extends UnprocessableEntityError {
+class ExpiredTransferError extends ExtensibleError {
   constructor (message, accountIdentifier) {
     super(message)
-    this.accountIdentifier = accountIdentifier
-  }
 
-  * handler (ctx, log) {
-    log.warn('Expired Transfer: ' + this.message)
-    ctx.status = 422
-    ctx.body = {
-      id: this.name,
-      message: this.message,
-      owner: this.accountIdentifier
-    }
+    this.status = 422
+    this.accountIdentifier = accountIdentifier
   }
 }
 

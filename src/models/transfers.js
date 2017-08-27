@@ -21,16 +21,11 @@ const notificationBroadcaster = require('../services/notificationBroadcaster')
 const log = require('../services/log').create('transfers')
 const updateState = require('../lib/updateState')
 const hashJSON = require('five-bells-shared/utils/hashJson')
-const NotFoundError = require('five-bells-shared/errors/not-found-error')
-const InvalidBodyError = require('five-bells-shared/errors/invalid-body-error')
-const UnmetConditionError = require('five-bells-shared/errors/unmet-condition-error')
-const TransferNotConditionalError = require('five-bells-shared/errors/transfer-not-conditional-error')
-const InvalidModificationError =
-require('five-bells-shared/errors/invalid-modification-error')
-const UnprocessableEntityError =
-require('five-bells-shared/errors/unprocessable-entity-error')
-const UnauthorizedError =
-require('five-bells-shared/errors/unauthorized-error')
+const HttpErrors = require('http-errors')
+const InvalidBodyError = require('../errors/invalid-body-error')
+const UnmetConditionError = require('../errors/unmet-condition-error')
+const TransferNotConditionalError = require('../errors/transfer-not-conditional-error')
+const InvalidModificationError = require('../errors/invalid-modification-error')
 const cc = require('five-bells-condition')
 const transferDictionary = require('five-bells-shared').TransferStateDictionary
 
@@ -64,7 +59,7 @@ async function getTransfer (id) {
 
   const transfer = await db.getTransfer(id)
   if (!transfer) {
-    throw new NotFoundError('Unknown transfer ID')
+    throw new HttpErrors.NotFound('Unknown transfer ID')
   }
 
   return converters.convertToExternalTransfer(transfer)
@@ -80,7 +75,7 @@ async function getTransferStateReceipt (id, receiptType, conditionState) {
   } else if (receiptType === RECEIPT_TYPE_SHA256) {
     return makeSha256Receipt(uri.make('transfer', id), transferState, conditionState)
   } else {
-    throw new UnprocessableEntityError('type is not valid')
+    throw new HttpErrors.UnprocessableEntity('type is not valid')
   }
 }
 
@@ -213,7 +208,7 @@ function isAffectedAccount (account, transfer) {
 
 function validateIsAffectedAccount (account, transfer) {
   if (account && !isAffectedAccount(account, transfer)) {
-    throw new UnauthorizedError('Invalid attempt to authorize debit')
+    throw new HttpErrors.Forbidden('Invalid attempt to authorize debit')
   }
 }
 
@@ -225,26 +220,26 @@ function validateIsAffectedAccount (account, transfer) {
  */
 function validateAuthorizationsAndRejections (authorizedAccount, fundsList, previousFunds, fundsType) {
   if (previousFunds && fundsList.length !== previousFunds.length) {
-    throw new UnprocessableEntityError('Invalid change in number of ' + fundsType + 's')
+    throw new HttpErrors.UnprocessableEntity('Invalid change in number of ' + fundsType + 's')
   }
   fundsList.forEach((funds, i) => {
     const previousAuthorization = previousFunds && previousFunds[i].authorized
     if (funds.authorized && funds.authorized !== previousAuthorization &&
         funds.account !== authorizedAccount) {
-      throw new UnauthorizedError('Invalid attempt to authorize ' + fundsType)
+      throw new HttpErrors.Forbidden('Invalid attempt to authorize ' + fundsType)
     }
 
     const previousRejection = previousFunds && previousFunds[i].rejected
     if (funds.rejected && funds.rejected !== previousRejection &&
         funds.account !== authorizedAccount) {
-      throw new UnauthorizedError('Invalid attempt to reject ' + fundsType)
+      throw new HttpErrors.Forbidden('Invalid attempt to reject ' + fundsType)
     }
   })
 }
 
 function validatePositiveAmounts (adjustments) {
   if (_.some(adjustments, (adjustment) => parseFloat(adjustment.amount) <= 0)) {
-    throw new UnprocessableEntityError(
+    throw new HttpErrors.UnprocessableEntity(
         'Amount must be a positive number excluding zero.')
   }
 }
@@ -260,7 +255,7 @@ function validatePrecisionAmounts (adjustments) {
   })
 
   if (invalid) {
-    throw new UnprocessableEntityError(
+    throw new HttpErrors.UnprocessableEntity(
         'Amount exceeds allowed precision scale=' + allowedScale + ' precision=' + allowedPrecision)
   }
 }
@@ -283,7 +278,7 @@ function validateCreditAndDebitAmounts (transfer) {
   const totalCredits = sumAmounts(transfer.credits)
 
   if (totalCredits !== totalDebits) {
-    throw new UnprocessableEntityError('Total credits must equal total debits')
+    throw new HttpErrors.UnprocessableEntity('Total credits must equal total debits')
   }
 }
 
@@ -394,7 +389,7 @@ async function fulfillTransfer (transferId, fulfillmentUri) {
     transfer = await db.getTransfer(transferId, {transaction})
 
     if (!transfer) {
-      throw new NotFoundError('Invalid transfer ID')
+      throw new HttpErrors.NotFound('Invalid transfer ID')
     }
 
     const conditionType = validateConditionFulfillment(transfer, fulfillment)
@@ -460,7 +455,7 @@ async function rejectTransfer (transferId, rejectionMessage, requestingUser) {
 
   const requestingAccount = config.server.base_uri + '/accounts/' + requestingUser.name
   // Pick a credit that matches the requestingUser if possible.
-  // Picking credits[0] will result in a UnauthorizedError.
+  // Picking credits[0] will result in a 403 Forbidden
   const credit = transfer.credits.find(
     (credit) => credit.account === requestingAccount) || transfer.credits[0]
   const alreadyRejected = credit.rejected

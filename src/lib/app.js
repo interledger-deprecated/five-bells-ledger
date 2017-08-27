@@ -5,11 +5,11 @@ const serve = require('koa-static')
 const Router = require('koa-router')
 const cors = require('kcors')
 const passport = require('koa-passport')
+const error = require('koa-json-error')
 const Koa = require('koa')
 const path = require('path')
 const makeLogger = require('koa-riverpig')
-const errorHandler = require('five-bells-shared/middlewares/error-handler')
-const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
+const HttpErrors = require('http-errors')
 const websockify = require('./koa-websocket')
 const getMetadataRoute = require('../controllers/metadata')
 const health = require('../controllers/health')
@@ -37,8 +37,23 @@ class App {
     const koaApp = this.koa = websockify(new Koa())
     const router = this._makeRouter()
     const logger = makeLogger({logger: modules.log.create('koa')})
+    const errorFormatter = err => ({
+      id: err.name,
+      message: err.message,
+      // For InvalidBodyError
+      validationErrors: err.validationErrors,
+      // For InvalidModificationError
+      invalidDiffs: err.invalidDiffs
+    })
+    koaApp.on('error', err => {
+      this.log.warn(err.stack || (err.name + ': ' + err.message))
+
+      if (typeof err.debugPrint === 'function') {
+        err.debugPrint(this.log)
+      }
+    })
     koaApp.use(logger)
-    koaApp.use(errorHandler({log: modules.log.create('error-handler')}))
+    koaApp.use(error(errorFormatter))
     koaApp.use(cors({exposeHeaders: ['link']}))
     koaApp.use(passport.initialize())
     koaApp.use(router.routes())
@@ -51,7 +66,7 @@ class App {
     koaApp.ws.use(passport.initialize())
     koaApp.ws.use(websocketRouter.routes())
     koaApp.ws.use(logger)
-    koaApp.ws.use(errorHandler({log: modules.log.create('ws-error-handler')}))
+    koaApp.ws.use(error(errorFormatter))
     koaApp.ws.use(websocketRouter.allowedMethods())
   }
 
@@ -198,7 +213,7 @@ async function filterAdmin (ctx, next) {
   if (ctx.state.user && ctx.state.user.is_admin) {
     await next()
   } else {
-    throw new UnauthorizedError('You aren\'t an admin')
+    throw new HttpErrors.Forbidden('You aren\'t an admin')
   }
 }
 

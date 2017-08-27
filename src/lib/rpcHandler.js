@@ -1,5 +1,6 @@
 'use strict'
-const BaseError = require('five-bells-shared/errors/base-error')
+
+const ExtensibleError = require('extensible-error')
 
 const errors = {
   INVALID_REQUEST: -32600,
@@ -162,7 +163,7 @@ class RpcHandler {
   }
 }
 
-class RpcError extends BaseError {
+class RpcError extends ExtensibleError {
   constructor (code, message, data) {
     super(message)
     this.code = code

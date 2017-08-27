@@ -2,7 +2,7 @@
 
 const ExtensibleError = require('extensible-error')
 
-class NoSubscriptionsError extends ExtensibleError {
+class UnmetConditionError extends ExtensibleError {
   constructor (message) {
     super(message)
 
@@ -10,4 +10,4 @@ class NoSubscriptionsError extends ExtensibleError {
   }
 }
 
-module.exports = NoSubscriptionsError
+module.exports = UnmetConditionError
