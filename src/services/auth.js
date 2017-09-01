@@ -14,6 +14,7 @@ const verifyPassword = require('five-bells-shared/utils/hashPassword').verifyPas
 const UnauthorizedError = require('five-bells-shared/errors/unauthorized-error')
 const config = require('./config')
 const uri = require('./uriManager')
+const debug = require('debug')('five-bells-ledger:auth')
 
 passport.use(new BasicStrategy(
   function (username, password, done) {
@@ -85,6 +86,7 @@ passport.use(new TokenStrategy(
       issuer: config.server.base_uri
     }, function (err, token) {
       if (err) {
+        debug('token error:', err, 'token:', token)
         return done(new UnauthorizedError(
           err.name === 'TokenExpiredError' ? 'Token has expired' : 'Invalid token'))
       }
