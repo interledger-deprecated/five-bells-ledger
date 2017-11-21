@@ -80,7 +80,8 @@ create table if not exists "L_ENTRIES" (
 create table if not exists "L_FULFILLMENTS" (
   "FULFILLMENT_ID" integer not null primary key,
   "TRANSFER_ID" integer,
-  "CONDITION_FULFILLMENT" text
+  "CONDITION_FULFILLMENT" text,
+  "FULFILLMENT_DATA" text
 );
 
 create unique index fulfillments_transfer_id_index on "L_FULFILLMENTS"

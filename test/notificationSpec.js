@@ -384,6 +384,80 @@ describe('Notifications', function () {
         })
       })
 
+      it('should pass on fulfillment data in notification', async function () {
+        const listener = sinon.spy()
+        this.socket.on('message', (msg) => listener(JSON.parse(msg)))
+
+        const transfer = this.preparedTransfer
+        const transferPrepared = _.assign({}, transfer, {
+          timeline: {
+            proposed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+
+        const fulfillmentData = 'ABAB'
+        const fulfillmentModel = {
+          condition_fulfillment: this.executionConditionFulfillment,
+          fulfillment_data: fulfillmentData
+        }
+
+        await this.request()
+          .put(transfer.id)
+          .auth('alice', 'alice')
+          .send(transfer)
+          .expect(201)
+          .expect(transferPrepared)
+          .expect(validator.validateTransfer)
+
+        // TODO: Is there a more elegant way?
+        await timingHelper.sleep(50)
+
+        const transferExecuted = _.assign({}, transfer, {
+          state: transferStates.TRANSFER_STATE_EXECUTED,
+          timeline: {
+            executed_at: '2015-06-16T00:00:00.000Z',
+            prepared_at: '2015-06-16T00:00:00.000Z',
+            proposed_at: '2015-06-16T00:00:00.000Z'
+          }
+        })
+
+        await timingHelper.sleep(50)
+
+        await this.request()
+          .put(transfer.id + '/fulfillment2')
+          .auth('alice', 'alice')
+          .send(fulfillmentModel)
+          .expect(201)
+          .expect(fulfillmentModel)
+
+        await timingHelper.sleep(50)
+
+        sinon.assert.calledTwice(listener)
+        sinon.assert.calledWithMatch(listener.firstCall, {
+          jsonrpc: '2.0',
+          id: null,
+          method: 'notify',
+          params: {
+            event: 'transfer.create',
+            resource: transferPrepared
+          }
+        })
+        sinon.assert.calledWithMatch(listener.secondCall, {
+          jsonrpc: '2.0',
+          id: null,
+          method: 'notify',
+          params: {
+            event: 'transfer.update',
+            resource: transferExecuted,
+            related_resources: {
+              execution_condition_fulfillment: this.executionConditionFulfillment,
+              fulfillment_data: fulfillmentData
+            }
+          }
+        })
+      })
+
       it('should check cancellation condition in notification', async function () {
         const listener = sinon.spy()
         this.socket.on('message', (msg) => listener(JSON.parse(msg)))

@@ -343,7 +343,7 @@ function validateConditionFulfillment (transfer, fulfillmentModel) {
     throw new TransferNotConditionalError('Transfer is not conditional')
   }
 
-  const fulfillment = convertToExternalFulfillment(fulfillmentModel)
+  const fulfillment = fulfillmentModel.condition_fulfillment
   try {
     const condition = cc.fulfillmentToCondition(fulfillment)
     if (
@@ -381,8 +381,8 @@ async function executeTransfer (transaction, transfer, fulfillment, executedAt) 
   })
 }
 
-async function fulfillTransfer (transferId, fulfillmentUri) {
-  const fulfillment = convertToInternalFulfillment(fulfillmentUri)
+async function fulfillTransfer (transferId, externalFulfillment) {
+  const fulfillment = convertToInternalFulfillment(externalFulfillment)
   fulfillment.transfer_id = transferId
   let transfer = null
   const existingFulfillment = await db.withSerializableTransaction(async function (transaction) {

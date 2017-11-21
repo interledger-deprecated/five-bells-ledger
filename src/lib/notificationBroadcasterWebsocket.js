@@ -31,15 +31,18 @@ class NotificationBroadcaster {
       const fulfillment = await maybeGetFulfillment(transfer.id, { transaction })
 
       if (fulfillment) {
+        const externalFulfillment = convertToExternalFulfillment(fulfillment)
         if (transfer.state === transferStates.TRANSFER_STATE_EXECUTED) {
           relatedResources = {
             execution_condition_fulfillment:
-              convertToExternalFulfillment(fulfillment)
+              externalFulfillment.condition_fulfillment,
+            fulfillment_data: externalFulfillment.fulfillment_data
           }
         } else if (transfer.state === transferStates.TRANSFER_STATE_REJECTED) {
           relatedResources = {
             cancellation_condition_fulfillment:
-              convertToExternalFulfillment(fulfillment)
+              externalFulfillment.condition_fulfillment,
+            fulfillment_data: externalFulfillment.fulfillment_data
           }
         }
       }
