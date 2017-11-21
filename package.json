@@ -39,7 +39,7 @@
     "eslint-plugin-standard": "^3.0.1",
     "extensible-error": "^1.0.2",
     "five-bells-condition": "^5.0.1",
-    "five-bells-shared": "^26.0.0",
+    "five-bells-shared": "^26.1.0",
     "http-errors": "^1.6.2",
     "jsonwebtoken": "^7.3.0",
     "kcors": "^2.2.1",

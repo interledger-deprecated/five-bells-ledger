@@ -153,6 +153,10 @@ class App {
     router.put('/transfers/:id/fulfillment',
       passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       transfers.putFulfillment)
+    router.put('/transfers/:id/fulfillment2',
+      passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
+      setupBody,
+      transfers.putFulfillment2)
     router.get('/transfers/:id/fulfillment',
       passport.authenticate(['token', 'basic', 'http-signature', 'client-cert'], { session: false }),
       transfers.getFulfillment)

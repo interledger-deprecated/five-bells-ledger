@@ -302,6 +302,65 @@ async function putFulfillment (ctx) {
   const fulfillment = await parse.text(ctx, {limit: config.maxHttpPayload})
   let result
   try {
+    result = await model.fulfillTransfer(id, { condition_fulfillment: fulfillment })
+    ctx.body = result.fulfillment.condition_fulfillment
+    ctx.status = result.existed ? 200 : 201
+  } catch (err) {
+    if (err.isDbRetry) {
+      ctx.status = 503
+      ctx.body = 'Database is busy'
+    } else {
+      throw err
+    }
+  }
+}
+
+/**
+ * @api {put} /transfers/:id/fulfillment2 Fulfill transfer condition
+ * @apiName PutTransferFulfillment2
+ * @apiGroup Transfer Methods
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Execute or cancel a transfer that has already been prepared.
+ *    If the prepared transfer has an `execution_condition`, you can submit the
+ *    fulfillment of that condition to execute the transfer. If the prepared
+ *    transfer has a `cancellation_condition`, you can submit the fulfillment
+ *    of that condition to cancel the transfer.
+ *
+ * The difference between /fulfillment and /fulfillment2 is that /fulfillment2
+ * expects a JSON object, which may have fulfillment and fulfillment_data properties.
+ *
+ * @apiHeader {String} Content-Type Must be `text/plain`.
+ * @apiParam (URL Parameters) {String} id Transfer
+ *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ * @apiParam (Request Body) {Fulfillment} Fulfillment A [Fulfillment](#cryptoconditions)
+ *   object.
+ *
+ * @apiExample {shell} Put Transfer Fulfillment:
+ *    curl -X PUT -H "Content-Type: text/plain" -d \
+ *    '{"condition_fulfillment":"oAKAAA","fulfillment_data":"ABAB"}' \
+ *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment2
+ *
+ * @apiSuccessExample {json} 200 Fulfillment Accepted Response:
+ *    HTTP/1.1 200 OK
+ *    {"condition_fulfillment":"oAKAAA","fulfillment_data":"ABAB"}
+ *
+ * @apiUse UnmetConditionError
+ * @apiUse UnprocessableEntityError
+ * @apiUse InvalidUriParameterError
+ * @apiUse InvalidBodyError
+ */
+/**
+ * @param {String} id Transfer UUID
+ * @returns {void}
+ */
+async function putFulfillment2 (ctx) {
+  const id = ctx.params.id
+  requestUtil.validateUriParameter('id', id, 'Uuid')
+
+  const fulfillment = await ctx.body
+  let result
+  try {
     result = await model.fulfillTransfer(id, fulfillment)
     ctx.body = result.fulfillment
     ctx.status = result.existed ? 200 : 201
@@ -343,7 +402,7 @@ async function putFulfillment (ctx) {
 async function getFulfillment (ctx) {
   const id = ctx.params.id
   requestUtil.validateUriParameter('id', id, 'Uuid')
-  ctx.body = await model.getFulfillment(id.toLowerCase())
+  ctx.body = (await model.getFulfillment(id.toLowerCase())).condition_fulfillment
 }
 
 /**
@@ -412,6 +471,7 @@ module.exports = {
   getStateResource,
   putResource,
   putFulfillment,
+  putFulfillment2,
   getFulfillment,
   putRejection
 }

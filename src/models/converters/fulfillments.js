@@ -1,13 +1,14 @@
 'use strict'
 
 function convertToExternalFulfillment (data) {
-  return data.condition_fulfillment
+  return {
+    condition_fulfillment: data.condition_fulfillment,
+    fulfillment_data: data.fulfillment_data
+  }
 }
 
 function convertToInternalFulfillment (data) {
-  return {
-    condition_fulfillment: data
-  }
+  return data
 }
 
 module.exports = {
