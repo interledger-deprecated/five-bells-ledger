@@ -63,6 +63,7 @@ module.exports = (config) => {
       health: base + '/health',
       transfer: base + '/transfers/:id',
       transfer_fulfillment: base + '/transfers/:id/fulfillment',
+      transfer_fulfillment2: base + '/transfers/:id/fulfillment2',
       transfer_rejection: base + '/transfers/:id/rejection',
       transfer_state: base + '/transfers/:id/state',
       accounts: base + '/accounts',
