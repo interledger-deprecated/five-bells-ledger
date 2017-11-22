@@ -204,6 +204,194 @@ describe('GET /fulfillment', function () {
   })
 })
 
+describe('GET /fulfillment2', function () {
+  logHelper(logger)
+
+  before(async function () {
+    await dbHelper.init()
+  })
+
+  beforeEach(async function () {
+    appHelper.create(this, app)
+    await dbHelper.clean()
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+
+    this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
+    this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
+    this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
+    this.invalidTransfer = _.cloneDeep(require('./data/transfers/simple'))
+    this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry.json'))
+
+    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
+    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
+    this.invalidExecutionConditionFulfillment =
+      _.cloneDeep(require('./data/fulfillments/executionInvalid'))
+
+    await dbHelper.addAccounts(_.values(accounts))
+    await dbHelper.addTransfers([this.proposedTransfer, this.preparedTransfer, this.executedTransfer])
+  })
+
+  afterEach(async function () {
+    nock.cleanAll()
+    this.clock.restore()
+  })
+
+  it('should return 401 if the request is not authenticated', async function () {
+    await this.request()
+        .get(this.executedTransfer.id + '/fulfillment2')
+        .expect(401)
+  })
+
+  /* GET fulfillments */
+  it('should return 404 for fulfillment when given an invalid transfer id', async function () {
+    await this.request()
+      .get(this.invalidTransfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .expect(404)
+      .expect({
+        id: 'TransferNotFoundError',
+        message: 'This transfer does not exist'
+      })
+  })
+
+  it('should return 404 if the transfer has no fulfillment', async function () {
+    const transfer = this.proposedTransfer
+    await this.request()
+      .get(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .expect(404)
+      .expect({
+        id: 'MissingFulfillmentError',
+        message: 'This transfer has not yet been fulfilled'
+      })
+  })
+
+  it('should return a 422 if the transfer has already expired', async function () {
+    const transfer = this.transferWithExpiry
+    transfer.execution_condition = this.preparedTransfer.execution_condition
+    await this.request()
+      .put(transfer.id)
+      .auth('admin', 'admin')
+      .send(transfer)
+
+    this.clock.tick(10000000)
+
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .send(this.executionConditionFulfillment)
+      .expect(422)
+      .expect({
+        id: 'ExpiredTransferError',
+        message: 'Cannot modify transfer after expires_at date'
+      })
+  })
+
+  it('should return AlreadyRolledBackError if the transfer is rejected', async function () {
+    const transfer = Object.assign(this.proposedTransfer, {
+      id: 'http://localhost/transfers/25644640-d140-450e-b94b-badbe23d3382',
+      state: 'rejected'
+    })
+    await dbHelper.addTransfers([transfer])
+    await this.request()
+      .get(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .expect(422)
+      .expect({
+        id: 'AlreadyRolledBackError',
+        message: 'This transfer has already been rejected'
+      })
+  })
+
+  it('should return TransferNotConditionalError for an optimistic transfer', async function () {
+    const transfer = Object.assign(this.proposedTransfer, {
+      id: 'http://localhost/transfers/25644640-d140-450e-b94b-badbe23d3381',
+      execution_condition: undefined,
+      cancellation_condition: undefined
+    })
+    await dbHelper.addTransfers([transfer])
+    await this.request()
+      .get(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .expect(422)
+      .expect({
+        id: 'TransferNotConditionalError',
+        message: 'Transfer does not have any conditions'
+      })
+  })
+
+  it('should return 404 if the transfer has no fulfillment and has already expired', async function () {
+    const transfer = Object.assign(this.proposedTransfer, {
+      id: 'http://localhost/transfers/25644640-d140-450e-b94b-badbe23d3380',
+      expires_at: (new Date(Date.now() - 1)).toISOString()
+    })
+    await dbHelper.addTransfers([transfer])
+    await this.request()
+      .get(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .expect(404)
+      .expect({
+        id: 'MissingFulfillmentError',
+        message: 'This transfer expired before it was fulfilled'
+      })
+  })
+
+  async function returnFulfillment () {
+    const transfer = this.preparedTransfer
+
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .send(this.executionConditionFulfillment)
+      .expect(201)
+      .expect(this.executionConditionFulfillment)
+      .expect(validator.validateFulfillmentModel)
+
+    await this.request()
+      .get(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .expect(200)
+      .expect(this.executionConditionFulfillment)
+      .expect(validator.validateFulfillmentModel)
+  }
+
+  it('should return a fulfillment', returnFulfillment)
+
+  /* put fulfillments */
+  /* Fulfillment errors */
+  it('should return 400 if a valid execution condition is given to an unauthorized transfer', async function () {
+    const transfer = this.proposedTransfer
+
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .send(this.executionConditionFulfillment)
+      .expect(400)
+  })
+
+  it('should return 400 if a valid cancellation condition is given for an executed transfer', async function () {
+    const transfer = this.executedTransfer
+
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .send(this.cancellationConditionFulfillment)
+      .expect(400)
+  })
+
+  it('should return 422 if the signature is invalid', async function () {
+    const transfer = this.executedTransfer
+
+    const executionConditionFulfillment = this.invalidExecutionConditionFulfillment
+
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .send(executionConditionFulfillment)
+      .expect(422)
+  })
+})
+
 describe('PUT /fulfillment', function () {
   logHelper(logger)
 

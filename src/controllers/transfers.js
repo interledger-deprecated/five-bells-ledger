@@ -406,6 +406,37 @@ async function getFulfillment (ctx) {
 }
 
 /**
+ * @api {get} /transfers/:id/fulfillment2 Get Transfer Fulfillment
+ * @apiName GetTransferFulfillment2
+ * @apiGroup Transfer Methods
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieve the fulfillment and fulfillment data for a transfer that has been executed or cancelled. This is separate from the Transfer object because it can be very large.
+ *
+ * @apiParam {String} id Transfer
+ *   [UUID](http://en.wikipedia.org/wiki/Universally_unique_identifier).
+ *
+ * @apiExample {shell} Get Transfer Fulfillment:
+ *    curl -X GET
+ *    http://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment2
+ *
+ * @apiSuccessExample {json} 200 Fulfillment Response:
+ *    HTTP/1.1 200 OK
+ *    {"condition_fulfillment":"oAKAAA","fulfillment_data":"ABAB"}
+ *
+ * @apiUse NotFoundError
+ */
+/**
+ * @param {String} id Transfer UUID
+ * @returns {void}
+ */
+async function getFulfillment2 (ctx) {
+  const id = ctx.params.id
+  requestUtil.validateUriParameter('id', id, 'Uuid')
+  ctx.body = await model.getFulfillment(id.toLowerCase())
+}
+
+/**
  * @api {put} /transfers/:id/rejection Reject Transfer
  * @apiName PutTransferRejection
  * @apiGroup Transfer Methods
@@ -473,5 +504,6 @@ module.exports = {
   putFulfillment,
   putFulfillment2,
   getFulfillment,
+  getFulfillment2,
   putRejection
 }
