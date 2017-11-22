@@ -50,10 +50,10 @@ describe('Notifications', function () {
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
     this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/simpleWithExpiry'))
-    this.fulfillment = require('./data/fulfillments/execution')
+    this.fulfillment = require('./data/fulfillments/execution').condition_fulfillment
 
-    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
-    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
+    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution')).condition_fulfillment
+    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation')).condition_fulfillment
 
     // Store some example data
     await dbHelper.addAccounts([

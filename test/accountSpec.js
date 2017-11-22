@@ -51,7 +51,6 @@ describe('Accounts', function () {
 
     this.transfer = _.cloneDeep(require('./data/transfers/simple'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/simpleWithExpiry'))
-    this.fulfillment = require('./data/fulfillments/execution')
 
     // Store some example data
     await dbHelper.addAccounts([

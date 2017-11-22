@@ -34,10 +34,10 @@ describe('GET /fulfillment', function () {
     this.invalidTransfer = _.cloneDeep(require('./data/transfers/simple'))
     this.transferWithExpiry = _.cloneDeep(require('./data/transfers/withExpiry.json'))
 
-    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
-    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
+    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution')).condition_fulfillment
+    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation')).condition_fulfillment
     this.invalidExecutionConditionFulfillment =
-      _.cloneDeep(require('./data/fulfillments/executionInvalid'))
+      _.cloneDeep(require('./data/fulfillments/executionInvalid')).condition_fulfillment
 
     await dbHelper.addAccounts(_.values(accounts))
     await dbHelper.addTransfers([this.proposedTransfer, this.preparedTransfer, this.executedTransfer])
@@ -221,10 +221,10 @@ describe('PUT /fulfillment', function () {
     this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
     this.invalidTransfer = _.cloneDeep(require('./data/transfers/simple'))
     this.transferWithAndConditionType = _.cloneDeep(require('./data/transfers/withAndCondition'))
-    this.executionConditionFulfillmentTypeAnd = _.cloneDeep(require('./data/fulfillments/executionTypeAnd'))
+    this.executionConditionFulfillmentTypeAnd = _.cloneDeep(require('./data/fulfillments/executionTypeAnd')).condition_fulfillment
 
-    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
-    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
+    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution')).condition_fulfillment
+    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation')).condition_fulfillment
 
     await dbHelper.addAccounts(_.values(accounts))
   })
@@ -439,6 +439,282 @@ describe('PUT /fulfillment', function () {
 
     await this.request()
       .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .send(this.cancellationConditionFulfillment)
+      .expect(422)
+      .expect({
+        id: 'AlreadyRolledBackError',
+        message: 'This transfer has already been rejected'
+      })
+
+    // Check balances
+    expect((await getAccount('alice')).balance).to.equal(100)
+    expect((await getAccount('bob')).balance).to.equal(0)
+  })
+})
+
+describe('PUT /fulfillment2', function () {
+  logHelper(logger)
+
+  before(async function () {
+    await dbHelper.init()
+  })
+
+  beforeEach(async function () {
+    appHelper.create(this, app)
+    await dbHelper.clean()
+    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+
+    this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
+    this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
+    this.executedTransfer = _.cloneDeep(require('./data/transfers/executed'))
+    this.invalidTransfer = _.cloneDeep(require('./data/transfers/simple'))
+    this.transferWithAndConditionType = _.cloneDeep(require('./data/transfers/withAndCondition'))
+    this.executionConditionFulfillmentTypeAnd = _.cloneDeep(require('./data/fulfillments/executionTypeAnd'))
+    this.executionConditionFulfillmentNoData = _.cloneDeep(require('./data/fulfillments/executionNoData'))
+
+    this.executionConditionFulfillment = _.cloneDeep(require('./data/fulfillments/execution'))
+    this.cancellationConditionFulfillment = _.cloneDeep(require('./data/fulfillments/cancellation'))
+
+    await dbHelper.addAccounts(_.values(accounts))
+  })
+
+  afterEach(async function () {
+    nock.cleanAll()
+    this.clock.restore()
+  })
+
+  it('should return 401 if the request is not authenticated', async function () {
+    await this.request()
+      .put(this.preparedTransfer.id + '/fulfillment2')
+      .expect(401)
+  })
+
+  it('should return 404 when fulfilling a non-existent transfer', async function () {
+    const transfer = this.preparedTransfer
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('admin', 'admin')
+      .send(this.executionConditionFulfillment)
+      .expect(404)
+  })
+
+  it('should not cancel an optimistic transfer', async function () {
+    const transfer = this.preparedTransfer
+    delete transfer.execution_condition
+    delete transfer.cancellation_condition
+    delete transfer.state
+
+    await this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
+
+    // Check balances
+    expect((await getAccount('alice')).balance).to.equal(90)
+    expect((await getAccount('bob')).balance).to.equal(10)
+
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('alice', 'alice')
+      .send(this.cancellationConditionFulfillment)
+      .expect(422)
+      .expect({
+        id: 'TransferNotConditionalError',
+        message: 'Transfer is not conditional'
+      })
+
+    // Check balances
+    expect((await getAccount('alice')).balance).to.equal(90)
+    expect((await getAccount('bob')).balance).to.equal(10)
+  })
+
+  it('should set the state to "rejected" if and only if the ' +
+    'cancellation_condition_fulfillment is present',
+    async function () {
+      const transfer = this.preparedTransfer
+
+      await this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+
+      // Invalid fulfillment
+      const invalidCancellationConditionFulfillment = {
+        condition_fulfillment: 'oAiABp6LXGp3Hg'
+      }
+      await this.request()
+        .put(transfer.id + '/fulfillment2')
+        .auth('alice', 'alice')
+        .send(invalidCancellationConditionFulfillment)
+        .expect(422)
+        .expect({
+          id: 'UnmetConditionError',
+          message: 'Fulfillment does not match any condition'
+        })
+
+      // Check balances
+      expect((await getAccount('alice')).balance).to.equal(90)
+      expect((await getAccount('bob')).balance).to.equal(0)
+
+      await this.request()
+        .put(transfer.id + '/fulfillment2')
+        .auth('alice', 'alice')
+        .send(this.cancellationConditionFulfillment)
+        .expect(201)
+        .expect(this.cancellationConditionFulfillment)
+        .expect(validator.validateFulfillmentModel)
+
+      // Check balances
+      expect((await getAccount('alice')).balance).to.equal(100)
+      expect((await getAccount('bob')).balance).to.equal(0)
+    })
+
+  /* Execution conditions */
+  it('should update the state from "prepared" to "executed" ' +
+  'when the execution criteria is met',
+    async function () {
+      const transfer = this.preparedTransfer
+
+      await this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+
+      await this.request()
+        .put(transfer.id + '/fulfillment2')
+        .auth('alice', 'alice')
+        .send(this.executionConditionFulfillment)
+        .expect(201)
+        .expect(this.executionConditionFulfillment)
+        .expect(validator.validateFulfillmentModel)
+
+      // Check balances
+      expect((await getAccount('alice')).balance).to.equal(90)
+      expect((await getAccount('bob')).balance).to.equal(10)
+    })
+
+  it('should execute the transfer when there is no fulfillment data',
+    async function () {
+      const transfer = this.preparedTransfer
+
+      await this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+
+      await this.request()
+        .put(transfer.id + '/fulfillment2')
+        .auth('alice', 'alice')
+        .send(this.executionConditionFulfillmentNoData)
+        .expect(201)
+        .expect(this.executionConditionFulfillmentNoData)
+        .expect(validator.validateFulfillmentModel)
+
+      // Check balances
+      expect((await getAccount('alice')).balance).to.equal(90)
+      expect((await getAccount('bob')).balance).to.equal(10)
+    })
+
+  it('should execute when the condition is type "and"',
+    async function () {
+      const transfer = this.transferWithAndConditionType
+
+      await this.request()
+        .put(transfer.id)
+        .auth('alice', 'alice')
+        .send(transfer)
+        .expect(201)
+        .expect(validator.validateTransfer)
+
+      await this.request()
+        .put(transfer.id + '/fulfillment2')
+        .auth('alice', 'alice')
+        .send(this.executionConditionFulfillmentTypeAnd)
+        .expect(201)
+        .expect(this.executionConditionFulfillmentTypeAnd)
+        .expect(validator.validateFulfillmentModel)
+
+      // Check balances
+      expect((await getAccount('alice')).balance).to.equal(90)
+      expect((await getAccount('bob')).balance).to.equal(10)
+    })
+
+  it('should not double spend when transfer is executed multiple times', async function () {
+    const transfer = this.executedTransfer
+
+    await this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
+
+    const validateResponse = (res) => {
+      if (res.statusCode !== 200 && res.statusCode !== 201) {
+        throw new Error('Unexpected status code ' + res.statusCode)
+      }
+    }
+
+    // Send three concurrent fulfillment requests
+    await Promise.all([
+      this.request()
+        .put(transfer.id + '/fulfillment2')
+        .auth('alice', 'alice')
+        .send(this.executionConditionFulfillment)
+        .expect(validateResponse),
+      this.request()
+        .put(transfer.id + '/fulfillment2')
+        .auth('alice', 'alice')
+        .send(this.executionConditionFulfillment)
+        .expect(validateResponse),
+      this.request()
+        .put(transfer.id + '/fulfillment2')
+        .auth('alice', 'alice')
+        .send(this.executionConditionFulfillment)
+        .expect(validateResponse)
+    ])
+
+    // Check balances
+    const senderAccount = await getAccount('alice')
+    const receiverAccount = await getAccount('bob')
+
+    expect(senderAccount.balance).to.equal(90)
+    expect(receiverAccount.balance).to.equal(10)
+  })
+
+  it('should not allow a transfer to be cancelled multiple times', async function () {
+    const transfer = this.preparedTransfer
+
+    await this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
+
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('alice', 'alice')
+      .send(this.cancellationConditionFulfillment)
+      .expect(201)
+      .expect(this.cancellationConditionFulfillment)
+      .expect(validator.validateFulfillmentModel)
+
+    // Check balances
+    expect((await getAccount('alice')).balance).to.equal(100)
+    expect((await getAccount('bob')).balance).to.equal(0)
+
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
       .auth('alice', 'alice')
       .send(this.cancellationConditionFulfillment)
       .expect(422)
