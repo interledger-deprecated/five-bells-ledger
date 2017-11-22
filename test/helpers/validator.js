@@ -37,6 +37,10 @@ function validateFulfillment (res) {
   validate('ConditionFulfillment', res.text)
 }
 
+function validateFulfillmentModel (res) {
+  validate('Fulfillment', res.body)
+}
+
 function validateSubscription (res) {
   validate('Subscription', res.body)
 }
@@ -51,6 +55,7 @@ module.exports = {
   validateAccount,
   validateAccounts,
   validateFulfillment,
+  validateFulfillmentModel,
   validateNotification,
   validateSubscription,
   validateTransferStateReceipt
