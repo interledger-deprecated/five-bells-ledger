@@ -27,7 +27,10 @@ describe('GET /transfers/:uuid', function () {
   beforeEach(async function () {
     appHelper.create(this, app)
     await dbHelper.clean()
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date']
+    })
 
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))

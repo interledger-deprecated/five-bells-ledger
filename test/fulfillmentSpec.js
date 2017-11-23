@@ -26,7 +26,10 @@ describe('GET /fulfillment', function () {
   beforeEach(async function () {
     appHelper.create(this, app)
     await dbHelper.clean()
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date']
+    })
 
     this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
@@ -214,7 +217,10 @@ describe('GET /fulfillment2', function () {
   beforeEach(async function () {
     appHelper.create(this, app)
     await dbHelper.clean()
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date']
+    })
 
     this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
@@ -402,7 +408,10 @@ describe('PUT /fulfillment', function () {
   beforeEach(async function () {
     appHelper.create(this, app)
     await dbHelper.clean()
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date']
+    })
 
     this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
@@ -651,7 +660,10 @@ describe('PUT /fulfillment2', function () {
   beforeEach(async function () {
     appHelper.create(this, app)
     await dbHelper.clean()
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date']
+    })
 
     this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))

@@ -31,7 +31,10 @@ describe('Notifications', function () {
     appHelper.create(this, app)
     await dbHelper.clean()
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setInterval', 'clearInterval')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date', 'setInterval', 'clearInterval']
+    })
 
     // Define example data
     this.exampleAccounts = _.cloneDeep(require('./data/accounts'))

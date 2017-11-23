@@ -35,7 +35,10 @@ describe('Accounts', function () {
     appHelper.create(this, app)
     await dbHelper.clean()
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date']
+    })
 
     // Define example data
     this.exampleAccounts = _.cloneDeep(require('./data/accounts'))
