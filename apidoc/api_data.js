@@ -611,6 +611,65 @@ define({ "api": [
   },
   {
     "type": "get",
+    "url": "/transfers/:id/fulfillment2",
+    "title": "Get Transfer Fulfillment",
+    "name": "GetTransferFulfillment2",
+    "group": "Transfer_Methods",
+    "version": "1.0.0",
+    "description": "<p>Retrieve the fulfillment and fulfillment data for a transfer that has been executed or cancelled. This is separate from the Transfer object because it can be very large.</p>",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "id",
+            "description": "<p>Transfer <a href=\"http://en.wikipedia.org/wiki/Universally_unique_identifier\">UUID</a>.</p>"
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Get Transfer Fulfillment:",
+        "content": "curl -X GET\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment2",
+        "type": "shell"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "200 Fulfillment Response:",
+          "content": "HTTP/1.1 200 OK\n{\"condition_fulfillment\":\"oAKAAA\",\"fulfillment_data\":\"ABAB\"}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "src/controllers/transfers.js",
+    "groupTitle": "Transfer_Methods",
+    "error": {
+      "fields": {
+        "Error 4xx": [
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "NotFoundError",
+            "description": "<p>The requested resource could not be found.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "NotFoundError",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"id\": \"NotFoundError\",\n  \"message\": \"Error description here.\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
     "url": "/transfers/:id/state",
     "title": "Get Signed Transfer State",
     "name": "GetTransferState",
@@ -899,6 +958,120 @@ define({ "api": [
         {
           "title": "200 Fulfillment Accepted Response:",
           "content": "HTTP/1.1 200 OK\noAKAAA",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "src/controllers/transfers.js",
+    "groupTitle": "Transfer_Methods",
+    "error": {
+      "fields": {
+        "Error 4xx": [
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "UnmetConditionError",
+            "description": "<p>Execution Condition Not Met</p>"
+          },
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "UnprocessableEntityError",
+            "description": "<p>The provided entity is syntactically correct, but there is a generic semantic problem with it.</p>"
+          },
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "InvalidUriParameterError",
+            "description": "<p>(One of) the provided URI parameter(s) was invalid.</p>"
+          },
+          {
+            "group": "Error 4xx",
+            "optional": false,
+            "field": "InvalidBodyError",
+            "description": "<p>The submitted JSON entity does not match the required schema.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "UnmetConditionError",
+          "content": "HTTP/1.1 422 Unprocessable Entity\n{\n  \"id\": \"UnmetConditionError\",\n  \"message\": \"Error description here.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "UnprocessableEntityError",
+          "content": "HTTP/1.1 422 Unprocessable Entity\n{\n  \"id\": \"UnprocessableEntityError\",\n  \"message\": \"Error description here.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "InvalidUriParameterError",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidUriParameterError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
+          "type": "json"
+        },
+        {
+          "title": "InvalidBodyError",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"id\": \"InvalidBodyError\",\n  \"message\": \"Error description here.\",\n  \"validationErrors\": [ ... ]\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "put",
+    "url": "/transfers/:id/fulfillment2",
+    "title": "Fulfill transfer condition",
+    "name": "PutTransferFulfillment2",
+    "group": "Transfer_Methods",
+    "version": "1.0.0",
+    "description": "<p>Execute or cancel a transfer that has already been prepared. If the prepared transfer has an <code>execution_condition</code>, you can submit the fulfillment of that condition to execute the transfer. If the prepared transfer has a <code>cancellation_condition</code>, you can submit the fulfillment of that condition to cancel the transfer.</p> <p>The difference between /fulfillment and /fulfillment2 is that /fulfillment2 expects a JSON object, which may have fulfillment and fulfillment_data properties.</p>",
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Content-Type",
+            "description": "<p>Must be <code>text/plain</code>.</p>"
+          }
+        ]
+      }
+    },
+    "parameter": {
+      "fields": {
+        "URL Parameters": [
+          {
+            "group": "URL Parameters",
+            "type": "String",
+            "optional": false,
+            "field": "id",
+            "description": "<p>Transfer <a href=\"http://en.wikipedia.org/wiki/Universally_unique_identifier\">UUID</a>.</p>"
+          }
+        ],
+        "Request Body": [
+          {
+            "group": "Request Body",
+            "type": "Fulfillment",
+            "optional": false,
+            "field": "Fulfillment",
+            "description": "<p>A <a href=\"#cryptoconditions\">Fulfillment</a> object.</p>"
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Put Transfer Fulfillment:",
+        "content": "curl -X PUT -H \"Content-Type: text/plain\" -d \\\n'{\"condition_fulfillment\":\"oAKAAA\",\"fulfillment_data\":\"ABAB\"}' \\\nhttp://usd-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment2",
+        "type": "shell"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "200 Fulfillment Accepted Response:",
+          "content": "HTTP/1.1 200 OK\n{\"condition_fulfillment\":\"oAKAAA\",\"fulfillment_data\":\"ABAB\"}",
           "type": "json"
         }
       ]
