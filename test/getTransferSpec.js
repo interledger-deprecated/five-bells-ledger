@@ -50,6 +50,7 @@ describe('GET /transfers/:uuid', function () {
   afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
+    appHelper.close(this)
   })
 
   it('should return 200 for an existing transfer', async function () {

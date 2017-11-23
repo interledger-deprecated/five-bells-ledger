@@ -57,6 +57,7 @@ describe('POST /messages', function () {
 
   afterEach(async function () {
     this.socket.terminate()
+    appHelper.close(this)
   })
 
   it('returns 201 if the message is valid', async function () {

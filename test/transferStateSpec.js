@@ -50,6 +50,7 @@ describe('Transfer State', function () {
 
   afterEach(async function () {
     this.clock.restore()
+    appHelper.close(this)
   })
 
   describe('GET /transfers/:uuid/state', function () {

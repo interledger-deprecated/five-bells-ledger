@@ -87,3 +87,7 @@ exports.create = function (context, app) {
     return new WebSocket(processedUri, protocols, options)
   }
 }
+
+exports.close = function (context) {
+  context.server.close()
+}

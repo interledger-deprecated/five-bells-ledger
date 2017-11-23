@@ -71,6 +71,7 @@ describe('Notifications', function () {
 
   afterEach(function () {
     this.clock.restore()
+    appHelper.close(this)
   })
 
   describe('GET /websocket as alice (regular user)', function () {
@@ -1019,11 +1020,14 @@ describe('Notifications', function () {
           resolve()
         })
       })
+      this.socket.terminate()
     })
 
-    it('closes the websocket if an invalid token is passed', function (done) {
+    it('closes the websocket if an invalid token is passed', async function () {
       this.socket = this.ws('http://localhost/websocket?token=foo', {})
-      this.socket.on('close', () => done())
+      await new Promise(resolve => {
+        this.socket.on('close', resolve)
+      })
     })
   })
 })

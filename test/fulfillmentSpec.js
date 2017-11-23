@@ -49,6 +49,7 @@ describe('GET /fulfillment', function () {
   afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
+    appHelper.close(this)
   })
 
   it('should return 401 if the request is not authenticated', async function () {
@@ -240,6 +241,7 @@ describe('GET /fulfillment2', function () {
   afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
+    appHelper.close(this)
   })
 
   it('should return 401 if the request is not authenticated', async function () {
@@ -429,6 +431,7 @@ describe('PUT /fulfillment', function () {
   afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
+    appHelper.close(this)
   })
 
   it('should return 401 if the request is not authenticated', async function () {
@@ -682,6 +685,7 @@ describe('PUT /fulfillment2', function () {
   afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
+    appHelper.close(this)
   })
 
   it('should return 401 if the request is not authenticated', async function () {

@@ -73,6 +73,7 @@ describe('PUT /transfers/:id', function () {
   afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
+    appHelper.close(this)
   })
 
   /* Invalid transfer objects */

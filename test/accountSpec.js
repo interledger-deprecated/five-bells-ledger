@@ -65,6 +65,10 @@ describe('Accounts', function () {
     ])
   })
 
+  afterEach(function () {
+    appHelper.close(this)
+  })
+
   describe('GET /accounts', function () {
     it('should return 200', async function () {
       const account1 = this.adminAccount

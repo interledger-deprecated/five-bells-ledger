@@ -57,6 +57,7 @@ describe('PUT /rejection', function () {
   afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
+    appHelper.close(this)
   })
 
   it('should return 401 if the request is not authenticated', async function () {
