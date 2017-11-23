@@ -54,8 +54,8 @@ describe('GET /fulfillment', function () {
 
   it('should return 401 if the request is not authenticated', async function () {
     await this.request()
-        .get(this.executedTransfer.id + '/fulfillment')
-        .expect(401)
+      .get(this.executedTransfer.id + '/fulfillment')
+      .expect(401)
   })
 
   /* GET fulfillments */
@@ -246,8 +246,8 @@ describe('GET /fulfillment2', function () {
 
   it('should return 401 if the request is not authenticated', async function () {
     await this.request()
-        .get(this.executedTransfer.id + '/fulfillment2')
-        .expect(401)
+      .get(this.executedTransfer.id + '/fulfillment2')
+      .expect(401)
   })
 
   /* GET fulfillments */
@@ -483,70 +483,70 @@ describe('PUT /fulfillment', function () {
 
   it('should set the state to "rejected" if and only if the ' +
     'cancellation_condition_fulfillment is present',
-    async function () {
-      const transfer = this.preparedTransfer
+  async function () {
+    const transfer = this.preparedTransfer
 
-      await this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
+    await this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
 
       // Invalid fulfillment
-      const invalidCancellationConditionFulfillment = 'oAiABp6LXGp3Hg'
-      await this.request()
-        .put(transfer.id + '/fulfillment')
-        .auth('alice', 'alice')
-        .send(invalidCancellationConditionFulfillment)
-        .expect(422)
-        .expect({
-          id: 'UnmetConditionError',
-          message: 'Fulfillment does not match any condition'
-        })
+    const invalidCancellationConditionFulfillment = 'oAiABp6LXGp3Hg'
+    await this.request()
+      .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .send(invalidCancellationConditionFulfillment)
+      .expect(422)
+      .expect({
+        id: 'UnmetConditionError',
+        message: 'Fulfillment does not match any condition'
+      })
 
       // Check balances
-      expect((await getAccount('alice')).balance).to.equal(90)
-      expect((await getAccount('bob')).balance).to.equal(0)
+    expect((await getAccount('alice')).balance).to.equal(90)
+    expect((await getAccount('bob')).balance).to.equal(0)
 
-      await this.request()
-        .put(transfer.id + '/fulfillment')
-        .auth('alice', 'alice')
-        .send(this.cancellationConditionFulfillment)
-        .expect(201)
-        .expect(this.cancellationConditionFulfillment)
-        .expect(validator.validateFulfillment)
+    await this.request()
+      .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .send(this.cancellationConditionFulfillment)
+      .expect(201)
+      .expect(this.cancellationConditionFulfillment)
+      .expect(validator.validateFulfillment)
 
       // Check balances
-      expect((await getAccount('alice')).balance).to.equal(100)
-      expect((await getAccount('bob')).balance).to.equal(0)
-    })
+    expect((await getAccount('alice')).balance).to.equal(100)
+    expect((await getAccount('bob')).balance).to.equal(0)
+  })
 
   /* Execution conditions */
   it('should update the state from "prepared" to "executed" ' +
   'when the execution criteria is met',
-    async function () {
-      const transfer = this.preparedTransfer
+  async function () {
+    const transfer = this.preparedTransfer
 
-      await this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
+    await this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
 
-      await this.request()
-        .put(transfer.id + '/fulfillment')
-        .auth('alice', 'alice')
-        .send(this.executionConditionFulfillment)
-        .expect(201)
-        .expect(this.executionConditionFulfillment)
-        .expect(validator.validateFulfillment)
+    await this.request()
+      .put(transfer.id + '/fulfillment')
+      .auth('alice', 'alice')
+      .send(this.executionConditionFulfillment)
+      .expect(201)
+      .expect(this.executionConditionFulfillment)
+      .expect(validator.validateFulfillment)
 
       // Check balances
-      expect((await getAccount('alice')).balance).to.equal(90)
-      expect((await getAccount('bob')).balance).to.equal(10)
-    })
+    expect((await getAccount('alice')).balance).to.equal(90)
+    expect((await getAccount('bob')).balance).to.equal(10)
+  })
 
   it('should execute when the condition is type "and"',
     async function () {
@@ -737,72 +737,72 @@ describe('PUT /fulfillment2', function () {
 
   it('should set the state to "rejected" if and only if the ' +
     'cancellation_condition_fulfillment is present',
-    async function () {
-      const transfer = this.preparedTransfer
+  async function () {
+    const transfer = this.preparedTransfer
 
-      await this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
+    await this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
 
       // Invalid fulfillment
-      const invalidCancellationConditionFulfillment = {
-        condition_fulfillment: 'oAiABp6LXGp3Hg'
-      }
-      await this.request()
-        .put(transfer.id + '/fulfillment2')
-        .auth('alice', 'alice')
-        .send(invalidCancellationConditionFulfillment)
-        .expect(422)
-        .expect({
-          id: 'UnmetConditionError',
-          message: 'Fulfillment does not match any condition'
-        })
+    const invalidCancellationConditionFulfillment = {
+      condition_fulfillment: 'oAiABp6LXGp3Hg'
+    }
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('alice', 'alice')
+      .send(invalidCancellationConditionFulfillment)
+      .expect(422)
+      .expect({
+        id: 'UnmetConditionError',
+        message: 'Fulfillment does not match any condition'
+      })
 
       // Check balances
-      expect((await getAccount('alice')).balance).to.equal(90)
-      expect((await getAccount('bob')).balance).to.equal(0)
+    expect((await getAccount('alice')).balance).to.equal(90)
+    expect((await getAccount('bob')).balance).to.equal(0)
 
-      await this.request()
-        .put(transfer.id + '/fulfillment2')
-        .auth('alice', 'alice')
-        .send(this.cancellationConditionFulfillment)
-        .expect(201)
-        .expect(this.cancellationConditionFulfillment)
-        .expect(validator.validateFulfillmentModel)
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('alice', 'alice')
+      .send(this.cancellationConditionFulfillment)
+      .expect(201)
+      .expect(this.cancellationConditionFulfillment)
+      .expect(validator.validateFulfillmentModel)
 
       // Check balances
-      expect((await getAccount('alice')).balance).to.equal(100)
-      expect((await getAccount('bob')).balance).to.equal(0)
-    })
+    expect((await getAccount('alice')).balance).to.equal(100)
+    expect((await getAccount('bob')).balance).to.equal(0)
+  })
 
   /* Execution conditions */
   it('should update the state from "prepared" to "executed" ' +
   'when the execution criteria is met',
-    async function () {
-      const transfer = this.preparedTransfer
+  async function () {
+    const transfer = this.preparedTransfer
 
-      await this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
+    await this.request()
+      .put(transfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(201)
+      .expect(validator.validateTransfer)
 
-      await this.request()
-        .put(transfer.id + '/fulfillment2')
-        .auth('alice', 'alice')
-        .send(this.executionConditionFulfillment)
-        .expect(201)
-        .expect(this.executionConditionFulfillment)
-        .expect(validator.validateFulfillmentModel)
+    await this.request()
+      .put(transfer.id + '/fulfillment2')
+      .auth('alice', 'alice')
+      .send(this.executionConditionFulfillment)
+      .expect(201)
+      .expect(this.executionConditionFulfillment)
+      .expect(validator.validateFulfillmentModel)
 
       // Check balances
-      expect((await getAccount('alice')).balance).to.equal(90)
-      expect((await getAccount('bob')).balance).to.equal(10)
-    })
+    expect((await getAccount('alice')).balance).to.equal(90)
+    expect((await getAccount('bob')).balance).to.equal(10)
+  })
 
   it('should execute the transfer when there is no fulfillment data',
     async function () {

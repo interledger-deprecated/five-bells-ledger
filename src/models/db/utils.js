@@ -52,7 +52,7 @@ function createModule (tableName, convertToPersistent, convertFromPersistent) {
   function insertAll (data, transaction) {
     return Promise.all(_.map(data.map(convertToPersistent), (tableRow) => {
       return (transaction || knex).insert(tableRow)
-      .into(tableName)
+        .into(tableName)
     }))
   }
 

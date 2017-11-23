@@ -970,11 +970,11 @@ describe('Notifications', function () {
 
         const transfer = this.transfer
         await this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
+          .put(transfer.id)
+          .auth('alice', 'alice')
+          .send(transfer)
+          .expect(201)
+          .expect(validator.validateTransfer)
 
         // TODO: Is there a more elegant way?
         await timingHelper.sleep(49)

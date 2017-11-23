@@ -38,8 +38,8 @@ function renderSchema (schemaRelativePath) {
 
 function main () {
   const locals = {
-//    importFile: importFile,
-//    renderFixture: renderFixture,
+    //    importFile: importFile,
+    //    renderFixture: renderFixture,
     renderSchema: renderSchema
   }
 

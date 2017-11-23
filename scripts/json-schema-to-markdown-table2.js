@@ -115,7 +115,7 @@ function overrideDescription (schema, description) {
 }
 
 function generateRowsForBranch (branchSchemas, path, description, schemas,
-    isRequired) {
+  isRequired) {
   const nonNullSchemas = branchSchemas.filter(schema => schema.type !== 'null')
   const rows = flatten(nonNullSchemas.map(branchSchema =>
     generateRowsForSchema(overrideDescription(branchSchema, description),
