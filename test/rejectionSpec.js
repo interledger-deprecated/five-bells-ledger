@@ -26,7 +26,10 @@ describe('PUT /rejection', function () {
   beforeEach(async function () {
     appHelper.create(this, app)
     await dbHelper.clean()
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date']
+    })
 
     this.proposedTransfer = _.cloneDeep(require('./data/transfers/proposed'))
     this.preparedTransfer = _.cloneDeep(require('./data/transfers/prepared'))
@@ -54,6 +57,7 @@ describe('PUT /rejection', function () {
   afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
+    appHelper.close(this)
   })
 
   it('should return 401 if the request is not authenticated', async function () {

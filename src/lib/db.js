@@ -64,10 +64,11 @@ function withSerializableTransaction (callback, retries = DEFAULT_DB_RETRIES) {
     minTimeout: 10, // milliseconds
     factor: 1.2, // consecutive retries have an increasing timeout
     retries,
-    randomize: true // randomizing the duration after which the retry occurs helps if a batch
-                    // of transfers/fulfillments are submitted at the same time. Since the
-                    // retries do not happen all at the same time, they have a higher likelihood
-                    // of succeeding.
+    // randomizing the duration after which the retry occurs helps if a batch
+    // of transfers/fulfillments are submitted at the same time. Since the
+    // retries do not happen all at the same time, they have a higher likelihood
+    // of succeeding.
+    randomize: true
   })
 }
 
@@ -167,12 +168,12 @@ async function truncateTables () {
 
 async function isConnected () {
   return knex.raw('SELECT 1')
-  .then(() => {
-    return true
-  })
-  .catch(() => {
-    return false
-  })
+    .then(() => {
+      return true
+    })
+    .catch(() => {
+      return false
+    })
 }
 
 function readLookupTables () {

@@ -60,15 +60,15 @@ async function getFulfillment (transferUuid, options) {
 
   return db.selectOne({TRANSFER_ID: transferId},
     options && options.transaction).then((result) => {
-      if (!result) {
-        if (transfer.expires_at && moment().isAfter(transfer.expires_at)) {
-          throw new MissingFulfillmentError('This transfer expired before it was fulfilled')
-        }
-        throw new MissingFulfillmentError('This transfer has not yet been fulfilled')
+    if (!result) {
+      if (transfer.expires_at && moment().isAfter(transfer.expires_at)) {
+        throw new MissingFulfillmentError('This transfer expired before it was fulfilled')
       }
-      result.transfer_id = transferUuid
-      return result
-    })
+      throw new MissingFulfillmentError('This transfer has not yet been fulfilled')
+    }
+    result.transfer_id = transferUuid
+    return result
+  })
 }
 
 async function maybeGetFulfillment (transferUuid, options) {

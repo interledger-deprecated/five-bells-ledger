@@ -35,7 +35,10 @@ describe('Accounts', function () {
     appHelper.create(this, app)
     await dbHelper.clean()
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date']
+    })
 
     // Define example data
     this.exampleAccounts = _.cloneDeep(require('./data/accounts'))
@@ -60,6 +63,10 @@ describe('Accounts', function () {
       this.traderAccount,
       this.disabledAccount
     ])
+  })
+
+  afterEach(function () {
+    appHelper.close(this)
   })
 
   describe('GET /accounts', function () {
@@ -449,17 +456,17 @@ describe('Accounts', function () {
         minimum_allowed_balance: '0',
         name: 'abbey'
       }
-      await this.request()  // create "abbey" account
+      await this.request() // create "abbey" account
         .put(uri)
         .auth('admin', 'admin')
         .send(account)
         .expect(201)
-      await this.request()  // disable "abbey" account
+      await this.request() // disable "abbey" account
         .put(uri)
         .auth('admin', 'admin')
         .send(updatedAccount)
         .expect(200)
-      await this.request()  // check "abbey" account
+      await this.request() // check "abbey" account
         .get(uri)
         .auth('admin', 'admin')
         .expect(expected)

@@ -97,28 +97,28 @@
  *     }
  */
 
- /**
-  * @apiDefine UnmetConditionError
-  *
-  * @apiError UnmetConditionError Execution Condition Not Met
-  *
-  * @apiErrorExample UnmetConditionError
-  *     HTTP/1.1 422 Unprocessable Entity
-  *     {
-  *       "id": "UnmetConditionError",
-  *       "message": "Error description here."
-  *     }
-  */
+/**
+ * @apiDefine UnmetConditionError
+ *
+ * @apiError UnmetConditionError Execution Condition Not Met
+ *
+ * @apiErrorExample UnmetConditionError
+ *     HTTP/1.1 422 Unprocessable Entity
+ *     {
+ *       "id": "UnmetConditionError",
+ *       "message": "Error description here."
+ *     }
+ */
 
- /**
-  * @apiDefine NoSubscriptionsError
-  *
-  * @apiError NoSubscriptionsError Destination account could not be reached
-  *
-  * @apiErrorExample NoSubscriptionsError
-  *     HTTP/1.1 422 Unprocessable Entity
-  *     {
-  *       "id": "NoSubscriptionsError",
-  *       "message": "Error description here."
-  *     }
-  */
+/**
+ * @apiDefine NoSubscriptionsError
+ *
+ * @apiError NoSubscriptionsError Destination account could not be reached
+ *
+ * @apiErrorExample NoSubscriptionsError
+ *     HTTP/1.1 422 Unprocessable Entity
+ *     {
+ *       "id": "NoSubscriptionsError",
+ *       "message": "Error description here."
+ *     }
+ */

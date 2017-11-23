@@ -31,7 +31,10 @@ describe('Notifications', function () {
     appHelper.create(this, app)
     await dbHelper.clean()
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date', 'setInterval', 'clearInterval')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date', 'setInterval', 'clearInterval']
+    })
 
     // Define example data
     this.exampleAccounts = _.cloneDeep(require('./data/accounts'))
@@ -68,6 +71,7 @@ describe('Notifications', function () {
 
   afterEach(function () {
     this.clock.restore()
+    appHelper.close(this)
   })
 
   describe('GET /websocket as alice (regular user)', function () {
@@ -966,11 +970,11 @@ describe('Notifications', function () {
 
         const transfer = this.transfer
         await this.request()
-        .put(transfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(201)
-        .expect(validator.validateTransfer)
+          .put(transfer.id)
+          .auth('alice', 'alice')
+          .send(transfer)
+          .expect(201)
+          .expect(validator.validateTransfer)
 
         // TODO: Is there a more elegant way?
         await timingHelper.sleep(49)
@@ -1016,11 +1020,14 @@ describe('Notifications', function () {
           resolve()
         })
       })
+      this.socket.terminate()
     })
 
-    it('closes the websocket if an invalid token is passed', function (done) {
+    it('closes the websocket if an invalid token is passed', async function () {
       this.socket = this.ws('http://localhost/websocket?token=foo', {})
-      this.socket.on('close', () => done())
+      await new Promise(resolve => {
+        this.socket.on('close', resolve)
+      })
     })
   })
 })

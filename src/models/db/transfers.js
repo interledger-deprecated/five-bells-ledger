@@ -93,16 +93,16 @@ function convertToPersistent (data) {
 
 function getTransferWhere (where, options) {
   return db.selectOne(where, options && options.transaction)
-  .then((transfer) => {
-    if (transfer === null) {
-      return null
-    }
-    return adjustments.getAdjustments(transfer._id, options)
-    .then((adjustments) => {
-      const result = _.assign({}, transfer, adjustments)
-      return _.isEmpty(result) ? null : _.omit(result, '_id')
+    .then((transfer) => {
+      if (transfer === null) {
+        return null
+      }
+      return adjustments.getAdjustments(transfer._id, options)
+        .then((adjustments) => {
+          const result = _.assign({}, transfer, adjustments)
+          return _.isEmpty(result) ? null : _.omit(result, '_id')
+        })
     })
-  })
 }
 
 function getTransfer (uuid, options) {
@@ -112,7 +112,7 @@ function getTransfer (uuid, options) {
 function getTransferId (uuid, options) {
   return db.selectOne({TRANSFER_UUID: uuid},
     options && options.transaction).then(
-      (transfer) => transfer ? transfer._id : null)
+    (transfer) => transfer ? transfer._id : null)
 }
 
 function getTransferById (id, options) {
@@ -146,14 +146,14 @@ function insertTransfers (transfers, options) {
 function upsertTransfer (transfer, options) {
   const transaction = options && options.transaction
   return db.upsert(transfer, {TRANSFER_UUID: transfer.id}, transaction)
-  .then((result) => {
-    return db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
-    .then((dbTransfer) => {
-      const transferWithId = _.assign({}, transfer, {'_id': dbTransfer._id})
-      return adjustments.upsertAdjustments(transferWithId, options)
-        .then(() => result)
+    .then((result) => {
+      return db.selectOne({TRANSFER_UUID: transfer.id}, transaction)
+        .then((dbTransfer) => {
+          const transferWithId = _.assign({}, transfer, {'_id': dbTransfer._id})
+          return adjustments.upsertAdjustments(transferWithId, options)
+            .then(() => result)
+        })
     })
-  })
 }
 
 module.exports = {

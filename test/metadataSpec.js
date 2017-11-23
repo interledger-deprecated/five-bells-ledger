@@ -9,19 +9,24 @@ const app = require('../src/services/app')
 const logger = require('../src/services/log')
 const logHelper = require('./helpers/log')
 
-function request () {
-  return superagent(app.koa.listen())
-}
-
 describe('Metadata', function () {
   logHelper(logger)
+
+  before(function () {
+    this.server = app.koa.listen()
+    this.request = () => superagent(this.server)
+  })
+
+  after(function () {
+    this.server.close()
+  })
 
   delete process.env.LEDGER_AMOUNT_PRECISION
   delete process.env.UNIT_TEST_OVERRIDE
 
   describe('GET /', function () {
     it('should return metadata', async function () {
-      await request()
+      await this.request()
         .get('/')
         .expect(200)
         .expect(function (res) {
@@ -66,7 +71,8 @@ describe('Metadata', function () {
         timerWorker: require('../src/services/timerWorker'),
         notificationBroadcaster: require('../src/services/notificationBroadcaster')
       })
-      const agent = superagent(newApp.koa.listen())
+      const server = newApp.koa.listen()
+      const agent = superagent(server)
 
       await agent
         .get('/')
@@ -105,6 +111,8 @@ describe('Metadata', function () {
       delete process.env.LEDGER_CURRENCY_CODE
       delete process.env.LEDGER_CURRENCY_SYMBOL
       delete process.env.LEDGER_ILP_PREFIX
+
+      server.close()
     })
   })
 })

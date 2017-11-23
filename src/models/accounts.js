@@ -87,7 +87,7 @@ async function setAccount (externalAccount, requestingUser) {
   const allowedKeys = ['name', 'connector', 'password_hash', 'fingerprint',
     'public_key']
   if (!requestingUser.is_admin && !(requestingUser.name === account.name && (
-      _.every(_.keys(account), (key) => _.includes(allowedKeys, key))))) {
+    _.every(_.keys(account), (key) => _.includes(allowedKeys, key))))) {
     throw new HttpErrors.Forbidden('Not authorized')
   }
   const existed = await db.upsertAccount(account)

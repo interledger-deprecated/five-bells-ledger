@@ -69,9 +69,9 @@ function getAccountById (id, options) {
 function getAccountId (name, options) {
   const transaction = options && options.transaction
   return (transaction || knex).from(TABLE_NAME).select()
-  .where('NAME', name).then((accounts) => {
-    return accounts.length === 1 ? accounts[0].ACCOUNT_ID : null
-  })
+    .where('NAME', name).then((accounts) => {
+      return accounts.length === 1 ? accounts[0].ACCOUNT_ID : null
+    })
 }
 
 function adjustBalance (name, amount, options) {

@@ -39,7 +39,10 @@ describe('PUT /transfers/:id', function () {
     appHelper.create(this, app)
     await dbHelper.clean()
 
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date']
+    })
 
     // Define example data
     this.exampleTransfer = _.cloneDeep(require('./data/transfers/simple'))
@@ -70,6 +73,7 @@ describe('PUT /transfers/:id', function () {
   afterEach(async function () {
     nock.cleanAll()
     this.clock.restore()
+    appHelper.close(this)
   })
 
   /* Invalid transfer objects */
@@ -369,18 +373,18 @@ describe('PUT /transfers/:id', function () {
       .expect(validator.validateTransfer)
 
     await this.request()
-    .get(this.executedTransfer.credits[0].account)
-    .auth('admin', 'admin')
-    .expect(200)
-    .expect({
-      id: 'http://localhost/accounts/bob',
-      name: 'bob',
-      balance: '10',
-      is_disabled: true,
-      ledger: 'http://localhost',
-      minimum_allowed_balance: '0'
-    })
-    .expect(validator.validateAccount)
+      .get(this.executedTransfer.credits[0].account)
+      .auth('admin', 'admin')
+      .expect(200)
+      .expect({
+        id: 'http://localhost/accounts/bob',
+        name: 'bob',
+        balance: '10',
+        is_disabled: true,
+        ledger: 'http://localhost',
+        minimum_allowed_balance: '0'
+      })
+      .expect(validator.validateAccount)
 
     await this.request()
       .get(this.executedTransfer.debits[0].account)
@@ -977,39 +981,39 @@ describe('PUT /transfers/:id', function () {
   /* Execution conditions */
   it('should update the state from "proposed" to "prepared" when ' +
   'authorization is added and an execution condition is present',
-    async function () {
-      const transfer = this.executedTransfer
+  async function () {
+    const transfer = this.executedTransfer
 
-      const transferWithoutAuthorization = _.cloneDeep(transfer)
-      delete transferWithoutAuthorization.debits[0].authorized
+    const transferWithoutAuthorization = _.cloneDeep(transfer)
+    delete transferWithoutAuthorization.debits[0].authorized
 
-      await this.request()
-        .put(this.executedTransfer.id)
-        .auth('alice', 'alice')
-        .send(transferWithoutAuthorization)
-        .expect(201)
-        .expect(_.assign({}, transferWithoutAuthorization, {
-          state: transferStates.TRANSFER_STATE_PROPOSED,
-          timeline: {
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .expect(validator.validateTransfer)
+    await this.request()
+      .put(this.executedTransfer.id)
+      .auth('alice', 'alice')
+      .send(transferWithoutAuthorization)
+      .expect(201)
+      .expect(_.assign({}, transferWithoutAuthorization, {
+        state: transferStates.TRANSFER_STATE_PROPOSED,
+        timeline: {
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .expect(validator.validateTransfer)
 
-      await this.request()
-        .put(this.executedTransfer.id)
-        .auth('alice', 'alice')
-        .send(transfer)
-        .expect(200)
-        .expect(_.assign({}, transfer, {
-          state: transferStates.TRANSFER_STATE_PREPARED,
-          timeline: {
-            prepared_at: '2015-06-16T00:00:00.000Z',
-            proposed_at: '2015-06-16T00:00:00.000Z'
-          }
-        }))
-        .expect(validator.validateTransfer)
-    })
+    await this.request()
+      .put(this.executedTransfer.id)
+      .auth('alice', 'alice')
+      .send(transfer)
+      .expect(200)
+      .expect(_.assign({}, transfer, {
+        state: transferStates.TRANSFER_STATE_PREPARED,
+        timeline: {
+          prepared_at: '2015-06-16T00:00:00.000Z',
+          proposed_at: '2015-06-16T00:00:00.000Z'
+        }
+      }))
+      .expect(validator.validateTransfer)
+  })
 
   /* Multiple credits and/or debits */
   it('should handle transfers with multiple credits', async function () {

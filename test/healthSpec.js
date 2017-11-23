@@ -10,24 +10,27 @@ const logger = require('../src/services/log')
 const logHelper = require('./helpers/log')
 const expect = require('chai').expect
 
-function request () {
-  return superagent(app.koa.listen())
-}
-
 describe('Health', function () {
   logHelper(logger)
 
-  before(function * () {
-    yield dbHelper.init()
-    yield dbHelper.clean()
-    yield dbHelper.addAccounts([
+  before(async function () {
+    await dbHelper.init()
+    await dbHelper.clean()
+    await dbHelper.addAccounts([
       accounts.admin
     ])
+
+    this.server = app.koa.listen()
+    this.request = () => superagent(this.server)
+  })
+
+  after(function () {
+    this.server.close()
   })
 
   describe('GET /health', function () {
     it('should return 200 for an authenticated request', async function () {
-      await request()
+      await this.request()
         .get('/health')
         .auth('admin', 'admin')
         .expect(200)
@@ -38,11 +41,10 @@ describe('Health', function () {
         })
     })
 
-    it('should return 401 for an unauthenticated request', function * () {
-      yield request()
+    it('should return 401 for an unauthenticated request', async function () {
+      await this.request()
         .get('/health')
         .expect(401)
-        .end()
     })
   })
 })

@@ -31,7 +31,10 @@ describe('Transfer State', function () {
   beforeEach(async function () {
     appHelper.create(this, app)
     await dbHelper.clean()
-    this.clock = sinon.useFakeTimers(START_DATE, 'Date')
+    this.clock = sinon.useFakeTimers({
+      now: START_DATE,
+      toFake: ['Date']
+    })
 
     this.keyPair = tweetnacl.sign.keyPair.fromSeed(
       Buffer.from(config.getIn(['keys', 'ed25519', 'secret']), 'base64')
@@ -47,6 +50,7 @@ describe('Transfer State', function () {
 
   afterEach(async function () {
     this.clock.restore()
+    appHelper.close(this)
   })
 
   describe('GET /transfers/:uuid/state', function () {

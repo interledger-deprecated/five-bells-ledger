@@ -240,7 +240,7 @@ function validateAuthorizationsAndRejections (authorizedAccount, fundsList, prev
 function validatePositiveAmounts (adjustments) {
   if (_.some(adjustments, (adjustment) => parseFloat(adjustment.amount) <= 0)) {
     throw new HttpErrors.UnprocessableEntity(
-        'Amount must be a positive number excluding zero.')
+      'Amount must be a positive number excluding zero.')
   }
 }
 
@@ -256,7 +256,7 @@ function validatePrecisionAmounts (adjustments) {
 
   if (invalid) {
     throw new HttpErrors.UnprocessableEntity(
-        'Amount exceeds allowed precision scale=' + allowedScale + ' precision=' + allowedPrecision)
+      'Amount exceeds allowed precision scale=' + allowedScale + ' precision=' + allowedPrecision)
   }
 }
 
@@ -306,7 +306,7 @@ function isAuthorized (transfer) {
 
 async function processTransitionToPreparedState (transfer, transaction) {
   if (transfer.state === transferStates.TRANSFER_STATE_PROPOSED && isAuthorized(transfer)) {
-    await holds.holdFunds(transfer, transaction)  // hold sender funds
+    await holds.holdFunds(transfer, transaction) // hold sender funds
     updateState(transfer, transferStates.TRANSFER_STATE_PREPARED)
   }
 }

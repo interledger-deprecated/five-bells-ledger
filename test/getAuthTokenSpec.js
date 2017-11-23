@@ -25,6 +25,10 @@ describe('GET /auth_token', function () {
     await dbHelper.addAccounts(_.values(_.omit(accounts, 'noBalance')))
   })
 
+  afterEach(function () {
+    appHelper.close(this)
+  })
+
   it('returns 200 and a token on success', async function () {
     await this.request()
       .get('/auth_token')
