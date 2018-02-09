@@ -22,14 +22,14 @@ class KoaWebSocketServer {
     this.server.on('connection', this.onConnection.bind(this))
   }
 
-  onConnection (socket) {
+  onConnection (socket, req) {
     log.debug('Connection received')
     socket.on('error', (err) => { log.debug('Error occurred:', err) })
     const fn = compose(this.middleware)
 
-    const context = this.app.createContext(socket.upgradeReq)
+    const context = this.app.createContext(req)
     context.websocket = socket
-    context.path = url.parse(socket.upgradeReq.url).pathname
+    context.path = url.parse(req.url).pathname
 
     fn(context).catch((err) => { log.debug(err) })
   }
