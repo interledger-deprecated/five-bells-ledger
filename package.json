@@ -67,7 +67,7 @@
     "riverpig": "^1.1.2",
     "spdy": "^3.4.4",
     "tweetnacl": "^1.0.0-rc.1",
-    "ws": "^2.2.3"
+    "ws": "^3.3.1"
   },
   "optionalDependencies": {
     "mysql": "^2.13.0",
