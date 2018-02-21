@@ -41,7 +41,7 @@
     "five-bells-condition": "^5.0.1",
     "five-bells-shared": "^26.1.0",
     "http-errors": "^1.6.2",
-    "jsonwebtoken": "^7.3.0",
+    "jsonwebtoken": "^8.1.1",
     "kcors": "^2.2.1",
     "knex": "^0.12.9",
     "koa": "^2.2.0",
