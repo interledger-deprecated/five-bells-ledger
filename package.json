@@ -43,7 +43,7 @@
     "http-errors": "^1.6.2",
     "jsonwebtoken": "^8.1.1",
     "kcors": "^2.2.1",
-    "knex": "^0.12.9",
+    "knex": "^0.14.4",
     "koa": "^2.2.0",
     "koa-compose": "^3.2.1",
     "koa-compress": "^2.0.0",
